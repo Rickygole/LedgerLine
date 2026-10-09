@@ -10,6 +10,7 @@ let app: Client;
 let maria: string;
 let daniel: string;
 let target: { assignment: string; form: string };
+let ein: string;
 
 beforeAll(async () => {
   owner = await connect(ownerUrl());
@@ -17,6 +18,7 @@ beforeAll(async () => {
   maria = await userId(owner, "maria.santos");
   daniel = await userId(owner, "daniel.cho");
   const orgId = (await owner.query("SELECT org_id FROM app_user WHERE id = $1", [maria])).rows[0].org_id;
+  ein = (await owner.query("SELECT ein FROM organization WHERE id = $1", [orgId])).rows[0].ein;
   target = (
     await owner.query(
       `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
@@ -149,14 +151,14 @@ describe("[US-022] several supporting documents can be attached to one report", 
       const id = await startDraft();
       const tx = asTx(app);
       for (let n = 1; n <= 3; n++) {
-        const item = await insertAttachment(tx, { submissionId: id, pathname: `00-1040217/${id}/f${n}.pdf`, filename: `invoice-${n}.pdf`, bytes: 1000 * n, mime: "application/pdf" });
+        const item = await insertAttachment(tx, { submissionId: id, pathname: `${ein}/${id}/f${n}.pdf`, filename: `invoice-${n}.pdf`, bytes: 1000 * n, mime: "application/pdf" });
         expect(item.filename).toBe(`invoice-${n}.pdf`);
       }
       const names = (await app.query("SELECT filename FROM attachment WHERE submission_id = $1 ORDER BY filename", [id])).rows.map((r) => r.filename);
       expect(names).toEqual(["invoice-1.pdf", "invoice-2.pdf", "invoice-3.pdf"]);
       expect(await attachmentLimitProblem(tx, id, 1000)).toBeNull();
       for (let n = 4; n <= 20; n++) {
-        await insertAttachment(tx, { submissionId: id, pathname: `00-1040217/${id}/f${n}.pdf`, filename: `invoice-${n}.pdf`, bytes: 1000, mime: "application/pdf" });
+        await insertAttachment(tx, { submissionId: id, pathname: `${ein}/${id}/f${n}.pdf`, filename: `invoice-${n}.pdf`, bytes: 1000, mime: "application/pdf" });
       }
       expect(await attachmentLimitProblem(tx, id, 1000)).toBe("A report can have at most 20 files. Remove one to add another.");
     });
