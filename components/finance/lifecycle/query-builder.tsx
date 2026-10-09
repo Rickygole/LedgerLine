@@ -87,12 +87,22 @@ export function QueryBuilder({ params, errors, periods, categories, initiatives,
         {select("q-flag", "flag", "Flag type", FLAG_OPTIONS.map((o) => ({ ...o })), "No flag filter")}
         <div>
           <Label htmlFor="q-award-min">Award at least</Label>
-          <Input id="q-award-min" type="text" inputMode="numeric" value={values.award_min ?? ""} onChange={(e) => set("award_min", e.target.value, 400)} placeholder="Dollars" aria-invalid={errors.award_min ? true : undefined} aria-describedby={errors.award_min ? "q-award-min-error" : undefined} />
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
+              $
+            </span>
+            <Input id="q-award-min" type="text" inputMode="numeric" value={values.award_min ?? ""} onChange={(e) => set("award_min", e.target.value, 400)} className="num pl-7" aria-invalid={errors.award_min ? true : undefined} aria-describedby={errors.award_min ? "q-award-min-error" : undefined} />
+          </div>
           <FieldError id="q-award-min-error">{errors.award_min}</FieldError>
         </div>
         <div>
           <Label htmlFor="q-award-max">Award at most</Label>
-          <Input id="q-award-max" type="text" inputMode="numeric" value={values.award_max ?? ""} onChange={(e) => set("award_max", e.target.value, 400)} placeholder="Dollars" aria-invalid={errors.award_max ? true : undefined} aria-describedby={errors.award_max ? "q-award-max-error" : undefined} />
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
+              $
+            </span>
+            <Input id="q-award-max" type="text" inputMode="numeric" value={values.award_max ?? ""} onChange={(e) => set("award_max", e.target.value, 400)} className="num pl-7" aria-invalid={errors.award_max ? true : undefined} aria-describedby={errors.award_max ? "q-award-max-error" : undefined} />
+          </div>
           <FieldError id="q-award-max-error">{errors.award_max}</FieldError>
         </div>
       </div>
