@@ -170,6 +170,11 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
 
   async function submit() {
     setMessage("");
+    if (blocking.length > 0) {
+      setServerIssues(null);
+      showProblems();
+      return;
+    }
     setServerIssues(null);
     setSubmitting(true);
     try {
@@ -326,7 +331,7 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
             <CardHeader title={<span tabIndex={-1} className="outline-none">Review and submit</span>} description="Check every section, then send the report to Council Finance." />
             <CardBody className="space-y-5">
               {blocking.length === 0 ? (
-                <p className="inline-flex items-start gap-2 rounded-md bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">
+                <p className="flex items-start gap-2 rounded-md border border-ok/20 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                   Everything required is complete. You can submit this report.
                 </p>
@@ -335,14 +340,14 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
                   <p className="text-sm font-semibold text-ink">
                     {blocking.length} {blocking.length === 1 ? "thing needs" : "things need"} your attention before you can submit.
                   </p>
-                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+                  <ul className="mt-2 space-y-1 pl-5 text-sm marker:text-muted list-disc">
                     {blocking.map((issue, index) => {
                       const target = fieldTargetId(issue.field);
                       return (
                         <li key={`${issue.field}-${index}`}>
                           <a
                             href={`#${target}`}
-                            className="text-navy-800 underline underline-offset-2"
+                            className="text-navy-700 underline underline-offset-2 hover:text-navy-900"
                             onClick={(event) => {
                               event.preventDefault();
                               focusField(target);
@@ -362,15 +367,12 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
               </p>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Button onClick={() => void submit()} disabled={blocking.length > 0 || submitting || halted} aria-describedby="submit-hint">
+                <Button onClick={() => void submit()} disabled={submitting || halted} aria-describedby="submit-hint">
                   <Send className="h-4 w-4" aria-hidden="true" />
-                  {submitting ? "Submitting…" : "Submit report"}
-                </Button>
-                <Button variant="secondary" onClick={showProblems} disabled={blocking.length === 0}>
-                  Show problems at the top
+                  {submitting ? "Submitting" : "Submit report"}
                 </Button>
                 <p id="submit-hint" className="text-sm text-muted">
-                  {blocking.length > 0 ? "Fix the problems above to turn on Submit." : "Ready to send."}
+                  {blocking.length > 0 ? "Submit checks every section and lists anything left to fix." : "Ready to send."}
                 </p>
               </div>
               {message ? (

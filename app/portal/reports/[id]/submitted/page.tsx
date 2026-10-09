@@ -41,12 +41,12 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
             columns={2}
             items={[
               { label: "Submitted", value: `${formatDateTime(header.submittedAt)} ET` },
-              { label: "Reference number", value: <span className="num font-semibold">{header.referenceNo}</span> },
+              { label: "Reference number", value: <span className="num whitespace-nowrap font-mono text-[13px] font-semibold">{header.referenceNo}</span> },
               { label: "Revision", value: <span className="num">{header.revision}</span> },
               { label: "Submitted by", value: header.submittedByName ?? user.fullName },
             ]}
           />
-          <p className="rounded-md bg-surface px-4 py-3 text-sm text-ink">We will email you if Finance needs changes. A copy of this report was sent to {user.email}.</p>
+          <p className="rounded-md border border-line bg-surface px-4 py-3 text-sm leading-6 text-ink">We will email you if Finance needs changes. A copy of this report was sent to {user.email}.</p>
           <div className="flex flex-wrap gap-3">
             <ButtonLink href={`/portal/reports/${id}`}>View submitted copy</ButtonLink>
             <ButtonLink href="/portal" variant="secondary">

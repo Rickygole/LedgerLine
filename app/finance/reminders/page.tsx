@@ -121,9 +121,9 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                   const fires = shiftDate(period.due_on, rule.offset_days);
                   return (
                     <TR key={rule.id}>
-                      <TD>{describeOffset(rule.offset_days)}</TD>
-                      <TD>
-                        <Link href={`${base}&date=${fires}`} className="text-navy-800 hover:underline">
+                      <TD className="whitespace-nowrap">{describeOffset(rule.offset_days)}</TD>
+                      <TD className="whitespace-nowrap">
+                        <Link href={`${base}&date=${fires}`} className="font-semibold text-navy-700 hover:underline">
                           {formatDate(fires)}
                         </Link>
                       </TD>
@@ -181,7 +181,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                           {t.org_name}
                         </Link>
                         <details className="mt-1">
-                          <summary className="cursor-pointer text-xs text-muted">Show message</summary>
+                          <summary className="cursor-pointer text-xs font-medium text-navy-700 hover:underline">Show message</summary>
                           <div className="mt-2 max-w-xl rounded-md border border-line bg-surface p-3 text-sm">
                             <p className="font-semibold">{t.subject}</p>
                             <p className="mt-2 whitespace-pre-wrap">{t.body}</p>
@@ -193,22 +193,24 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                         <div className="text-xs text-muted">{t.to_email}</div>
                       </TD>
                       <TD className="max-w-xs">{t.initiatives}</TD>
-                      <TD>{describeOffset(t.offset_days)}</TD>
+                      <TD className="whitespace-nowrap">{describeOffset(t.offset_days)}</TD>
                       <TD>{t.already_sent ? <Badge tone="info" icon={Check}>Already sent</Badge> : <Badge tone="warn" icon={BellRing}>Will send</Badge>}</TD>
                     </TR>
                   ))}
                 </tbody>
               </Table>
               {canEdit ? (
-                <CardBody className="border-t border-line">
+                <CardBody className="sticky bottom-0 z-10 rounded-b-xl border-t border-line bg-white/95 backdrop-blur">
                   <SendNowForm period={period.id} date={date} count={targets.length} fresh={fresh} />
                 </CardBody>
               ) : null}
             </>
           ) : (
-            <CardBody>
-              <p className="text-sm text-muted">Nothing would be sent on this date. Pick the date a rule fires on from the table above to see its recipients.</p>
-            </CardBody>
+            <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+              <BellRing className="h-6 w-6 text-muted" aria-hidden="true" />
+              <p className="text-[15px] font-semibold text-ink">Nothing goes out on this date</p>
+              <p className="max-w-md text-sm text-muted">Pick a date from the Fires on column above to see who that rule would email.</p>
+            </div>
           )}
         </Card>
       </div>

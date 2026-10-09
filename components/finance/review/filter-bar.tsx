@@ -24,7 +24,7 @@ export function FilterBar({
 }) {
   const has = (f: (typeof fields)[number]) => fields.includes(f);
   return (
-    <form method="get" action={action} role="search" aria-label="Filter reports" className="mb-4 rounded-lg border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+    <form method="get" action={action} role="search" aria-label="Filter reports" className="mb-4 rounded-xl border border-line bg-white p-4 shadow-card">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {has("q") ? (
           <div>
@@ -105,6 +105,7 @@ export function FilterBar({
           </div>
         ) : null}
       </div>
+      {!has("bucket") && filters.bucket ? <input type="hidden" name="bucket" value={filters.bucket} /> : null}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Button type="submit" size="sm">
           <Search className="h-4 w-4" aria-hidden="true" />

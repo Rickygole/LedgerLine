@@ -1,13 +1,15 @@
 "use client";
 
-import { AlertTriangle, BookOpen, CheckCircle2, FileUp, Sparkles, Trash2, Undo2 } from "lucide-react";
-import { useId, useRef, useState, useTransition } from "react";
+import { AlertTriangle, BookOpen, Check, CheckCircle2, FileUp, Pencil, Undo2, X } from "lucide-react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { analyzeTemplate, applyDraft, rejectDraft } from "@/app/finance/forms/[formId]/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
-import { Badge } from "@/components/ui/status-badge";
-import { DRAFTABLE_TYPES, TYPE_LABEL } from "@/lib/forms/editor/definition";
+import { AiDraftBadge, Badge } from "@/components/ui/status-badge";
+import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
+import { cn } from "@/lib/cn";
+import { DRAFTABLE_TYPES, TYPE_LABEL, slugKey } from "@/lib/forms/editor/definition";
 import { LIBRARY_KEYS, SECTION_KEYS, checkField, type ProposedField } from "@/lib/forms/editor/draft-core";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
 import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
@@ -26,7 +28,9 @@ type Analysis = {
   fields: { id: number; field: ProposedField }[];
 };
 
-type Row = { id: number; field: ProposedField; removed: boolean; editing: boolean };
+type Decision = "pending" | "accepted" | "discarded";
+
+type Row = { id: number; field: ProposedField; decision: Decision; editing: boolean };
 
 const SECTION_LABEL: Record<string, string> = { performance: "Program performance", narrative: "Narrative", organization: "Organization and contact" };
 
@@ -44,7 +48,7 @@ function Highlighted({ paragraph, quote }: { paragraph: string; quote: string })
   );
 }
 
-export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { formId: string; initiallyOpen?: boolean; onApplied: (summary: string) => void; onClose: () => void }) {
+export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgress }: { formId: string; initiallyOpen?: boolean; onApplied: (summary: string) => void; onClose: () => void; onProgress?: (reviewed: number, total: number) => void }) {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
@@ -67,7 +71,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { for
       if (!result.ok) return showErrors(result.errors);
       setErrors([]);
       setAnalysis(result);
-      setRows(result.fields.map(({ id, field }) => ({ id, field, removed: false, editing: false })));
+      setRows(result.fields.map(({ id, field }) => ({ id, field, decision: "pending", editing: false })));
     });
   }
 
@@ -79,9 +83,15 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { for
     setRows((current) => current.map((row) => (row.id === id ? { ...row, field: { ...row.field, ...patch } } : row)));
   }
 
-  const kept = rows.filter((row) => !row.removed);
+  const kept = rows.filter((row) => row.decision === "accepted");
+  const reviewed = rows.filter((row) => row.decision !== "pending").length;
   const checks = analysis ? kept.map((row) => ({ row, check: checkField(analysis.paragraphs, row.field) })) : [];
   const blocked = checks.filter(({ check }) => !check.ok).length;
+  const left = rows.length - reviewed;
+
+  useEffect(() => {
+    onProgress?.(reviewed, rows.length);
+  }, [reviewed, rows.length, onProgress]);
 
   function approve() {
     if (!analysis) return;
@@ -106,7 +116,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { for
   }
 
   return (
-    <Card className="mb-6" role="region" aria-label="Import a legacy Word template">
+    <Card className="mb-6 border-[#c9b8ef]" role="region" aria-label="Import a legacy Word template">
       <CardHeader
         title="Import legacy Word template"
         description="Upload an existing Word report template. A draft of the form is proposed for you to review. Nothing changes until you approve it."
@@ -117,16 +127,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { for
         }
       />
       <CardBody className="space-y-5">
-        {errors.length > 0 ? (
-          <div ref={errorRef} tabIndex={-1} role="alert" className="rounded-md border border-bad/30 bg-bad-bg px-4 py-3 text-sm text-bad focus:outline-none focus:ring-2 focus:ring-bad/30">
-            <p className="font-semibold">{errors.length === 1 ? "There is a problem." : "There are problems to fix."}</p>
-            <ul className="mt-1 list-disc pl-5">
-              {errors.map((error) => (
-                <li key={error}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        <ErrorSummary ref={errorRef} title={problemsTitle(errors.length, "you continue")} items={errors.map((message) => ({ message }))} className="mb-0" />
 
         {!analysis ? (
           <form action={upload} className="flex flex-wrap items-end gap-3">
@@ -141,22 +142,27 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { for
           </form>
         ) : (
           <>
-            <div className="rounded-md border border-warn/30 bg-warn-bg px-4 py-3 text-sm" role="note">
-              <p className="flex items-center gap-2 font-semibold text-warn">
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                AI draft. Needs your review.
-              </p>
-              <p className="mt-1 text-ink">
-                {analysis.modeLabel}
-                {analysis.model ? ` (${analysis.model})` : ""}. The proposals below are not part of the form until you approve them. Your name and the decision are recorded in the audit log.
-              </p>
-              <p className="mt-1 text-xs text-muted">Template fingerprint {analysis.inputSha256.slice(0, 16)}</p>
-              {analysis.notices.map((notice) => (
-                <p key={notice} className="mt-2 flex items-start gap-2 text-ink">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" aria-hidden="true" />
-                  {notice}
+            <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-dashed border-[#c9b8ef] bg-[#faf8fe] px-4 py-3 text-sm" role="note">
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-center gap-2">
+                  <AiDraftBadge />
+                  <span className="text-xs text-muted">
+                    {analysis.modeLabel}
+                    {analysis.model ? `, ${analysis.model}` : ""}
+                  </span>
                 </p>
-              ))}
+                <p className="mt-1.5 max-w-[72ch] text-ink">Each detected question needs Accept or Discard. Nothing is added to the form until you apply your decisions, and your name is recorded in the audit log.</p>
+                <p className="mt-1 font-mono text-xs text-muted">Template fingerprint {analysis.inputSha256.slice(0, 16)}</p>
+                {analysis.notices.map((notice) => (
+                  <p key={notice} className="mt-2 flex items-start gap-2 text-ink">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" aria-hidden="true" />
+                    {notice}
+                  </p>
+                ))}
+              </div>
+              <p className="num rounded-full bg-white px-3 py-1 text-sm font-semibold text-ink ring-1 ring-inset ring-line" aria-live="polite">
+                {reviewed} of {rows.length} reviewed
+              </p>
             </div>
 
             <ul className="space-y-3">
@@ -164,58 +170,94 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { for
                 const check = checkField(analysis.paragraphs, row.field);
                 const library = row.field.library_key ? STANDARD_QUESTIONS.find((q) => q.key === row.field.library_key) : undefined;
                 const paragraphText = analysis.paragraphs[row.field.citation.paragraph - 1];
+                const discarded = row.decision === "discarded";
+                const accepted = row.decision === "accepted";
                 return (
-                  <li key={row.id} className={`rounded-lg border bg-white ${row.removed ? "border-line opacity-60" : check.ok ? "border-line" : "border-bad"}`}>
+                  <li
+                    key={row.id}
+                    className={cn(
+                      "rounded-lg border bg-white",
+                      discarded ? "border-line opacity-60" : accepted ? "border-ok/40" : !check.ok ? "border-bad" : "border-dashed border-[#c9b8ef]"
+                    )}
+                  >
                     <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3">
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm font-semibold text-ink ${row.removed ? "line-through" : ""}`}>{row.field.label || "Untitled field"}</p>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <Badge>{TYPE_LABEL[row.field.type as FieldType] ?? row.field.type}</Badge>
-                          <Badge tone={row.field.required ? "info" : "neutral"}>{row.field.required ? "Required" : "Optional"}</Badge>
-                          <Badge>{SECTION_LABEL[row.field.section] ?? row.field.section}</Badge>
-                          {library ? (
+                      <div className="min-w-0 flex-1 basis-72">
+                        <p className="flex flex-wrap items-center gap-2">
+                          {accepted ? (
+                            <Badge tone="ok" icon={CheckCircle2}>Accepted</Badge>
+                          ) : discarded ? (
+                            <Badge>Discarded</Badge>
+                          ) : (
+                            <AiDraftBadge />
+                          )}
+                          <span className={cn("text-sm font-semibold text-ink", discarded && "line-through")}>{row.field.label || "Untitled field"}</span>
+                        </p>
+                        <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+                          <div className="flex gap-1.5">
+                            <dt className="text-muted">Type</dt>
+                            <dd className="font-semibold text-ink">{TYPE_LABEL[row.field.type as FieldType] ?? row.field.type}</dd>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <dt className="text-muted">Key</dt>
+                            <dd className="font-mono text-ink">{row.field.library_key ?? slugKey(row.field.label)}</dd>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <dt className="text-muted">Section</dt>
+                            <dd className="text-ink">{SECTION_LABEL[row.field.section] ?? row.field.section}</dd>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <dt className="text-muted">Answer</dt>
+                            <dd className="text-ink">{row.field.required ? "Required" : "Optional"}</dd>
+                          </div>
+                        </dl>
+                        {library ? (
+                          <p className="mt-1.5">
                             <Badge tone="info" icon={BookOpen}>
                               Standard library: {library.label}
                             </Badge>
-                          ) : null}
-                          {row.removed ? <Badge tone="neutral">Removed</Badge> : null}
-                        </div>
+                          </p>
+                        ) : null}
                         {row.field.options?.length ? <p className="mt-1.5 text-xs text-muted">Choices: {row.field.options.join(", ")}</p> : null}
                       </div>
-                      <div className="flex items-center gap-1">
-                        {row.removed ? (
-                          <Button variant="secondary" size="sm" onClick={() => patchRow(row.id, { removed: false })}>
-                            <Undo2 className="h-4 w-4" aria-hidden="true" />
-                            Restore
-                          </Button>
-                        ) : (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {row.decision === "pending" ? (
                           <>
-                            <Button variant="secondary" size="sm" aria-expanded={row.editing} onClick={() => patchRow(row.id, { editing: !row.editing })}>
+                            <Button size="sm" onClick={() => patchRow(row.id, { decision: "accepted", editing: false })} disabled={!check.ok} aria-label={`Accept ${row.field.label}`}>
+                              <Check className="h-4 w-4" aria-hidden="true" />
+                              Accept
+                            </Button>
+                            <Button variant="secondary" size="sm" aria-expanded={row.editing} onClick={() => patchRow(row.id, { editing: !row.editing })} aria-label={`${row.editing ? "Close editor for" : "Edit"} ${row.field.label}`}>
+                              <Pencil className="h-4 w-4" aria-hidden="true" />
                               {row.editing ? "Done" : "Edit"}
                             </Button>
-                            <Button variant="ghost" size="sm" aria-label={`Remove ${row.field.label}`} onClick={() => patchRow(row.id, { removed: true, editing: false })}>
-                              <Trash2 className="h-4 w-4" aria-hidden="true" />
-                              Remove
+                            <Button variant="ghost" size="sm" onClick={() => patchRow(row.id, { decision: "discarded", editing: false })} aria-label={`Discard ${row.field.label}`}>
+                              <X className="h-4 w-4" aria-hidden="true" />
+                              Discard
                             </Button>
                           </>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => patchRow(row.id, { decision: "pending" })} aria-label={`Undo decision for ${row.field.label}`}>
+                            <Undo2 className="h-4 w-4" aria-hidden="true" />
+                            Undo
+                          </Button>
                         )}
                       </div>
                     </div>
-                    {!row.removed ? (
-                      <div className="border-t border-line bg-surface/60 px-4 py-2.5 text-xs text-muted">
-                        <span className="font-semibold text-ink">Template paragraph {row.field.citation.paragraph}</span>
-                        <p className="mt-0.5 text-sm text-ink">
-                          {paragraphText !== undefined ? <Highlighted paragraph={paragraphText} quote={row.field.citation.quote} /> : <span className="text-muted">No such paragraph.</span>}
-                        </p>
+                    {!discarded ? (
+                      <div className="border-t border-line bg-surface/60 px-4 py-2.5">
+                        <p className="text-xs font-semibold text-muted">From template paragraph {row.field.citation.paragraph}</p>
+                        <blockquote className="mt-1 border-l-2 border-line-strong pl-3 text-sm italic text-muted">
+                          {paragraphText !== undefined ? <Highlighted paragraph={paragraphText} quote={row.field.citation.quote} /> : <span>No such paragraph.</span>}
+                        </blockquote>
                         {!check.citationOk ? (
-                          <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-bad">
+                          <p className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-bad">
                             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-                            Citation not found in the template
+                            Citation not found in the template. Edit the quote or discard this question.
                           </p>
                         ) : (
-                          <p className="mt-1 flex items-center gap-1.5 text-ok">
+                          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ok">
                             <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                            Quote verified against the template
+                            Quote matches the template
                           </p>
                         )}
                         {check.problems.filter((problem) => problem !== "Citation not found in the template").map((problem) => (
@@ -223,23 +265,24 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose }: { for
                         ))}
                       </div>
                     ) : null}
-                    {row.editing && !row.removed ? <FieldEditor row={row} onChange={(patch) => patchField(row.id, patch)} /> : null}
+                    {row.editing && row.decision === "pending" ? <FieldEditor row={row} onChange={(patch) => patchField(row.id, patch)} /> : null}
                   </li>
                 );
               })}
             </ul>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-line bg-white/95 px-5 py-3 backdrop-blur">
               <p className="text-sm text-muted" aria-live="polite">
-                {kept.length} of {rows.length} fields kept.
-                {blocked > 0 ? ` ${blocked} cannot be approved until fixed or removed.` : ""}
+                {left > 0 ? `${left} still to review. ` : "Everything is reviewed. "}
+                <span className="num">{kept.length}</span> accepted.
+                {blocked > 0 ? ` ${blocked} accepted ${blocked === 1 ? "question needs" : "questions need"} fixing.` : ""}
               </p>
               <div className="flex items-center gap-2">
                 <Button variant="secondary" onClick={discard} disabled={pending}>
                   Discard draft
                 </Button>
-                <Button onClick={approve} disabled={pending || blocked > 0 || kept.length === 0}>
-                  {pending ? "Applying" : `Approve ${kept.length} field${kept.length === 1 ? "" : "s"}`}
+                <Button onClick={approve} disabled={pending || left > 0 || blocked > 0 || kept.length === 0}>
+                  {pending ? "Applying" : `Add ${kept.length} accepted question${kept.length === 1 ? "" : "s"}`}
                 </Button>
               </div>
             </div>

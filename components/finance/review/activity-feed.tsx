@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { actionInWords } from "@/lib/finance/review/audit-words";
 import { formatDateTime } from "@/lib/dates";
+import { AiDraftBadge } from "@/components/ui/status-badge";
 
 export type ActivityItem = {
   id: number;
@@ -15,11 +16,11 @@ export type ActivityItem = {
 };
 
 export function ActivityFeed({ items }: { items: ActivityItem[] }) {
-  if (items.length === 0) return <p className="px-5 py-8 text-center text-sm text-muted">No activity has been recorded yet.</p>;
+  if (items.length === 0) return <p className="px-5 py-12 text-center text-sm text-muted">No activity has been recorded yet.</p>;
   return (
     <ol className="divide-y divide-line">
       {items.map((item) => (
-        <li key={item.id} className="px-5 py-3 text-sm">
+        <li key={item.id} className="px-5 py-3 text-sm hover:bg-navy-50/40">
           <p className="text-ink">
             <span className="font-semibold">{item.actor ?? "System"}</span> {actionInWords(item.action)}
             {item.referenceNo && item.submissionId ? (
@@ -31,7 +32,7 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
                 </Link>
               </>
             ) : null}
-            {item.ai ? <span className="ml-2 rounded bg-info-bg px-1.5 py-0.5 text-xs font-semibold text-info">AI drafted</span> : null}
+            {item.ai ? <span className="ml-2 align-middle"><AiDraftBadge /></span> : null}
           </p>
           <p className="mt-0.5 text-xs text-muted">
             {item.initiative ? `${item.initiative}. ` : ""}

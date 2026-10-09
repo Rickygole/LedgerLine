@@ -1,8 +1,8 @@
-import { AlertTriangle, CheckCircle2, CircleDashed, Clock, Eye, FileText, Flag, RotateCcw, Send } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDashed, Clock, Eye, FileText, Flag, RotateCcw, Send, Sparkles } from "lucide-react";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
 
-export type Tone = "ok" | "bad" | "warn" | "info" | "neutral";
+export type Tone = "ok" | "bad" | "warn" | "info" | "neutral" | "ai_draft";
 
 const tones: Record<Tone, string> = {
   ok: "bg-ok-bg text-ok ring-ok/20",
@@ -10,6 +10,7 @@ const tones: Record<Tone, string> = {
   warn: "bg-warn-bg text-warn ring-warn/25",
   info: "bg-info-bg text-info ring-info/20",
   neutral: "bg-surface text-muted ring-line",
+  ai_draft: "bg-[#f1ecfb] text-[#5b3fa0] ring-[#5b3fa0]/20",
 };
 
 export function Badge({ tone = "neutral", icon: Icon, children, className }: { tone?: Tone; icon?: ComponentType<{ className?: string }>; children: React.ReactNode; className?: string }) {
@@ -50,4 +51,8 @@ export function DueBadge({ daysPastDue }: { daysPastDue: number }) {
 
 export function FlagBadge({ label }: { label: string }) {
   return <Badge tone="warn" icon={Flag}>{label}</Badge>;
+}
+
+export function AiDraftBadge({ label = "AI draft" }: { label?: string }) {
+  return <Badge tone="ai_draft" icon={Sparkles}>{label}</Badge>;
 }

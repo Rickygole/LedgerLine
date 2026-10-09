@@ -1,20 +1,22 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, Play } from "lucide-react";
 import { runRollover, type RolloverState } from "@/app/finance/rollover/actions";
 import { formatCurrency } from "@/lib/rules/money";
 import type { PlanAction, RolloverInitiative } from "@/lib/lifecycle/rollover";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/status-badge";
-import { ErrorSummary } from "@/components/finance/admin/error-summary";
+import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { RolloverSteps } from "@/components/finance/lifecycle/rollover-steps";
 
 type Choice = { action: PlanAction; name: string; group: string };
+
+export type RolloverForm = { initiativeId: string; version: number; questions: number };
 
 const ACTION_LABEL: Record<PlanAction, string> = {
   carry: "Carry forward",
@@ -25,13 +27,35 @@ const ACTION_LABEL: Record<PlanAction, string> = {
 
 const GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-export function RolloverWizard({ from, to, initiatives }: { from: string; to: string; initiatives: RolloverInitiative[] }) {
-  const [step, setStep] = useState<2 | 3>(2);
+export function RolloverWizard({ from, to, initiatives, forms }: { from: string; to: string; initiatives: RolloverInitiative[]; forms: RolloverForm[] }) {
+  const [step, setStep] = useState<2 | 3 | 4>(2);
+  const [tried, setTried] = useState(false);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const serverRef = useRef<HTMLDivElement>(null);
   const [choices, setChoices] = useState<Record<string, Choice>>({});
   const [groupNames, setGroupNames] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("");
   const [state, formAction, pending] = useActionState<RolloverState, FormData>(runRollover, undefined);
+
+  useEffect(() => {
+    if (state?.error) serverRef.current?.focus();
+  }, [state]);
+
+  function go(next: 2 | 3 | 4) {
+    setStep(next);
+    window.scrollTo({ top: 0 });
+  }
+
+  function nextFromPlan() {
+    if (problems.length > 0) {
+      setTried(true);
+      requestAnimationFrame(() => summaryRef.current?.focus());
+      return;
+    }
+    setTried(false);
+    go(3);
+  }
 
   const eligible = useMemo(() => initiatives.filter((i) => !i.alreadyRolled), [initiatives]);
   const choiceFor = (id: string): Choice => choices[id] ?? { action: "carry", name: "", group: "A" };
@@ -84,19 +108,73 @@ export function RolloverWizard({ from, to, initiatives }: { from: string; to: st
     return entry;
   });
 
+  const formFor = new Map(forms.map((f) => [f.initiativeId, f]));
+  const formRows = eligible
+    .filter((i) => {
+      const c = choiceFor(i.id);
+      if (c.action === "retire") return false;
+      if (c.action === "combine") return grouped.get(c.group)?.[0]?.id === i.id;
+      return true;
+    })
+    .map((i) => ({ initiative: i, choice: choiceFor(i.id), form: formFor.get(i.id) ?? null }));
+  const formsCopied = formRows.filter((r) => r.form).length;
+  const notable = formRows.filter((r) => r.choice.action !== "carry" || !r.form);
+  const assignments = eligible.filter((i) => choiceFor(i.id).action !== "retire").reduce((sum, i) => sum + i.orgs, 0);
+
   if (step === 3) {
-    const changes = eligible.filter((i) => choiceFor(i.id).action !== "carry");
     return (
       <>
         <RolloverSteps current={3} />
-        {state?.error ? <ErrorSummary errors={[{ id: "", message: state.error }]} heading="The rollover did not run" /> : null}
+        <Card>
+          <CardHeader title="Forms that come along" description={`Each new initiative starts ${to} with a copy of its published report form.`} />
+          <CardBody>
+            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Summary label="Forms copied" value={formsCopied} />
+              <Summary label="Unchanged" value={formRows.filter((r) => r.choice.action === "carry" && r.form).length} />
+              <Summary label="Renamed or combined" value={notable.filter((r) => r.choice.action !== "carry").length} />
+              <Summary label="No published form" value={formRows.length - formsCopied} />
+            </dl>
+          </CardBody>
+          {notable.length > 0 ? <FormTable rows={notable} to={to} groupNames={groupNames} grouped={grouped} /> : <p className="border-t border-line px-5 py-4 text-sm text-muted">Every form is copied unchanged. Nothing here needs a closer look.</p>}
+          {formRows.length > notable.length ? (
+            <details className="group border-t border-line">
+              <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-navy-700 hover:underline [&::-webkit-details-marker]:hidden">
+                <span className="group-open:hidden">Show all {formRows.length} forms</span>
+                <span className="hidden group-open:inline">Hide the full list</span>
+              </summary>
+              <FormTable rows={formRows} to={to} groupNames={groupNames} grouped={grouped} />
+            </details>
+          ) : null}
+        </Card>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <Button variant="secondary" onClick={() => go(2)}>
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
+          </Button>
+          <Button onClick={() => go(4)}>
+            Continue to confirm <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      </>
+    );
+  }
+
+  if (step === 4) {
+    const changes = eligible.filter((i) => choiceFor(i.id).action !== "carry");
+    return (
+      <>
+        <RolloverSteps current={4} />
+        <ErrorSummary ref={serverRef} title="The rollover did not run" items={state?.error ? [{ message: state.error }] : []} />
         <form action={formAction} className="space-y-6">
           <input type="hidden" name="from" value={from} />
           <input type="hidden" name="to" value={to} />
           <input type="hidden" name="plan" value={JSON.stringify(plan)} />
           <Card>
-            <CardHeader title="Review" description={`Rolling ${from} into ${to}. Everything happens in one transaction: if any part fails, nothing is saved.`} />
+            <CardHeader title="Confirm" description={`Rolling ${from} into ${to}. Everything happens in one transaction, so if any part fails nothing is saved.`} />
             <CardBody>
+              <p className="mb-5 rounded-lg border border-l-4 border-line border-l-navy-800 bg-surface/60 px-4 py-3 text-[15px] text-ink">
+                <span className="num font-semibold">{newInitiatives}</span> {newInitiatives === 1 ? "initiative" : "initiatives"}, {grouped.size > 0 ? "up to " : ""}
+                <span className="num font-semibold">{assignments}</span> {assignments === 1 ? "assignment" : "assignments"} and <span className="num font-semibold">{formsCopied}</span> {formsCopied === 1 ? "form" : "forms"} will be copied to {to}.
+              </p>
               <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <Summary label="Carried forward" value={counts.carry} />
                 <Summary label="Renamed" value={counts.rename} />
@@ -127,7 +205,7 @@ export function RolloverWizard({ from, to, initiatives }: { from: string; to: st
                       <TR key={i.id}>
                         <TD>
                           <span className="font-semibold">{i.name}</span>
-                          <div className="text-xs text-muted">{i.code}</div>
+                          <div className="font-mono text-xs text-muted">{i.code}</div>
                         </TD>
                         <TD>{ACTION_LABEL[c.action]}</TD>
                         <TD>
@@ -143,11 +221,11 @@ export function RolloverWizard({ from, to, initiatives }: { from: string; to: st
             ) : null}
           </Card>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button variant="secondary" onClick={() => setStep(2)} disabled={pending}>
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to the plan
+            <Button variant="secondary" onClick={() => go(3)} disabled={pending}>
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
             </Button>
             <Button type="submit" disabled={pending || problems.length > 0}>
-              <Play className="h-4 w-4" aria-hidden="true" /> {pending ? "Running rollover" : `Run rollover into ${to}`}
+              <Play className="h-4 w-4" aria-hidden="true" /> {pending ? `Creating ${to} records` : `Create ${to} records`}
             </Button>
           </div>
         </form>
@@ -159,7 +237,7 @@ export function RolloverWizard({ from, to, initiatives }: { from: string; to: st
     <>
       <RolloverSteps current={2} />
       <div className="space-y-6">
-      <ErrorSummary errors={problems.filter((p) => p.message !== "")} heading="Resolve these before reviewing" />
+      <ErrorSummary ref={summaryRef} title={problemsTitle(problems.length, "you continue")} items={tried ? problems.map((p) => ({ target: p.id || undefined, message: p.message })) : []} className="mb-0" />
       <Card>
         <CardHeader
           title="Initiatives"
@@ -214,9 +292,9 @@ export function RolloverWizard({ from, to, initiatives }: { from: string; to: st
                   <TR key={i.id}>
                     <TD>
                       <span className="font-semibold">{i.name}</span>
-                      <div className="text-xs text-muted">{i.code}</div>
+                      <div className="font-mono text-xs text-muted">{i.code}</div>
                     </TD>
-                    <TD>{i.category}</TD>
+                    <TD className="whitespace-nowrap">{i.category}</TD>
                     <TD align="right">{i.orgs}</TD>
                     <TD align="right">{formatCurrency(i.funding)}</TD>
                     <TD>
@@ -278,16 +356,16 @@ export function RolloverWizard({ from, to, initiatives }: { from: string; to: st
         </Card>
       ) : null}
       <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
-        <Link href={`/finance/rollover?from=${from}&to=${to}`} className="text-sm font-semibold text-navy-800 hover:underline">
-          Back to choose years
+        <Link href={`/finance/rollover?from=${from}&to=${to}`} className={buttonClass("secondary", "md")}>
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
         </Link>
         <div className="flex items-center gap-4">
           <p className="text-sm text-muted" aria-live="polite">
             <span className="num font-semibold text-ink">{counts.carry}</span> carry, <span className="num font-semibold text-ink">{counts.rename}</span> rename, <span className="num font-semibold text-ink">{counts.combine}</span> combine,{" "}
             <span className="num font-semibold text-ink">{counts.retire}</span> retire
           </p>
-          <Button onClick={() => setStep(3)} disabled={problems.length > 0}>
-            Review <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <Button onClick={nextFromPlan}>
+            Continue to forms <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -302,5 +380,46 @@ function Summary({ label, value }: { label: string; value: React.ReactNode }) {
       <dt className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</dt>
       <dd className="num mt-1 text-xl font-bold text-ink">{value}</dd>
     </div>
+  );
+}
+
+type FormRow = { initiative: RolloverInitiative; choice: Choice; form: RolloverForm | null };
+
+function FormTable({ rows, to, groupNames, grouped }: { rows: FormRow[]; to: string; groupNames: Record<string, string>; grouped: Map<string, RolloverInitiative[]> }) {
+  return (
+    <Table>
+      <THead>
+        <tr>
+          <TH>Initiative in {to}</TH>
+          <TH>Comes from</TH>
+          <TH>Form</TH>
+          <TH align="right">Questions</TH>
+        </tr>
+      </THead>
+      <tbody>
+        {rows.map(({ initiative, choice, form }) => (
+          <TR key={initiative.id}>
+            <TD className="min-w-48">
+              <span className="font-semibold">{choice.action === "rename" ? choice.name : choice.action === "combine" ? groupNames[choice.group]?.trim() || initiative.name : initiative.name}</span>
+            </TD>
+            <TD className="min-w-48 text-muted">
+              {choice.action === "combine" ? `Group ${choice.group}, ${grouped.get(choice.group)?.length ?? 0} initiatives` : initiative.name}
+              <span className="block font-mono text-xs">{initiative.code}</span>
+            </TD>
+            <TD className="whitespace-nowrap">
+              {form ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <FileText className="h-4 w-4 text-muted" aria-hidden="true" />
+                  Version <span className="num">{form.version}</span>
+                </span>
+              ) : (
+                <Badge tone="warn">No published form</Badge>
+              )}
+            </TD>
+            <TD align="right">{form ? form.questions : <span className="text-muted">0</span>}</TD>
+          </TR>
+        ))}
+      </tbody>
+    </Table>
   );
 }
