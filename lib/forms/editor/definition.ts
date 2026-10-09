@@ -90,6 +90,9 @@ export function validateDefinition(definition: FormDefinition): string[] {
       order.push(question);
     }
   }
+  if (!definition.budget.enabled || !definition.budget.mustEqualAward || !definition.sections.some((section) => section.kind === "budget")) {
+    errors.push("Every form must keep the budget section, and the budget total must equal the award.");
+  }
   const { maxLines } = definition.budget;
   if (!Number.isInteger(maxLines) || maxLines < 1 || maxLines > 100) errors.push("Budget lines must be between 1 and 100.");
   return errors;

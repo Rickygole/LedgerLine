@@ -2,13 +2,36 @@
 
 import mammoth from "mammoth";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
 import { draftFormFromDocx, type DraftResult } from "@/lib/ai/form-draft";
-import { cleanDefinition, validateDefinition } from "@/lib/forms/editor/definition";
+import { FIELD_TYPES, validateDefinition } from "@/lib/forms/editor/definition";
 import { checkField, mergeFields, splitParagraphs, type ProposedField } from "@/lib/forms/editor/draft-core";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
 import type { FormDefinition } from "@/lib/rules/types";
+
+const questionSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  help: z.string().optional(),
+  type: z.enum(FIELD_TYPES),
+  required: z.boolean(),
+  scope: z.enum(["standard", "initiative"]),
+  options: z.array(z.string()).optional(),
+  maxLength: z.number().optional(),
+  maxWords: z.number().optional(),
+  visibleWhen: z.object({ key: z.string(), equals: z.string() }).optional(),
+  columns: z.array(z.object({ key: z.string(), label: z.string(), type: z.enum(["text", "integer", "currency", "percent"]) })).optional(),
+  maxRows: z.number().optional(),
+  citation: z.object({ quote: z.string(), paragraph: z.number() }).optional(),
+});
+
+const definitionSchema = z.object({
+  title: z.string(),
+  sections: z.array(z.object({ key: z.string(), title: z.string(), description: z.string().optional(), kind: z.enum(["questions", "budget"]), questions: z.array(questionSchema) })),
+  budget: z.object({ enabled: z.boolean(), mustEqualAward: z.boolean(), maxLines: z.number() }),
+});
 
 type Failure = { ok: false; errors: string[] };
 
@@ -25,7 +48,9 @@ function mapError(error: unknown): string {
 
 export async function saveDefinition(formId: string, definition: FormDefinition): Promise<{ ok: true } | Failure> {
   const user = await requireUser(["finance_admin"]);
-  const clean = cleanDefinition(definition);
+  const parsed = definitionSchema.safeParse(definition);
+  if (!parsed.success) return fail("This form could not be read. Reload the page and try again.");
+  const clean: FormDefinition = parsed.data;
   const errors = validateDefinition(clean);
   if (errors.length > 0) return fail(...errors);
   try {
