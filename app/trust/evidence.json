@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-10-09T04:15:48.791Z",
-  "commit": "98890657e3ab6c5923eefe4961544a1ddd7ed310",
+  "generatedAt": "2026-10-09T05:43:54.480Z",
+  "commit": "6565a6df8bff658f32789c0a50027fe0c6371ffc",
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 32,
-    "passed": 32,
+    "tests": 133,
+    "passed": 133,
     "failed": 0,
     "skipped": 0
   },
   "summary": {
     "verified": {
-      "stories": 13,
-      "rules": 6
+      "stories": 18,
+      "rules": 8
     },
     "not_verified": {
       "stories": 0,
       "rules": 0
     },
     "demonstrated": {
-      "stories": 37,
-      "rules": 15
+      "stories": 36,
+      "rules": 14
     },
     "talk_track": {
-      "stories": 16,
-      "rules": 8
+      "stories": 12,
+      "rules": 7
     }
   },
   "requirements": [
@@ -127,10 +127,35 @@
       "area": "Annual rollover",
       "summary": "Copy the prior fiscal year's structure into a new year",
       "route": null,
-      "state": "talk_track",
+      "state": "verified",
       "reason": null,
       "talk": "Form versions are copied as drafts today; a year-level copy wizard is the next build step.",
-      "tests": []
+      "tests": [
+        {
+          "title": "rollover copies forms and assignments creates the new year, its reporting periods and carried initiatives",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "rollover copies forms and assignments carries every active initiative that the plan does not mention",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "rollover copies forms and assignments renames, retires and does not run twice for the same initiative",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "rollover copies forms and assignments is limited to finance administrators and leaves nothing behind when it fails",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-010",
@@ -147,20 +172,40 @@
       "area": "Annual rollover",
       "summary": "Rename, combine or retire initiatives and reports",
       "route": null,
-      "state": "talk_track",
+      "state": "verified",
       "reason": null,
       "talk": "Initiative status supports retirement; rename and combine with lineage links are designed but not built in this proof of concept.",
-      "tests": []
+      "tests": [
+        {
+          "title": "combine merges assignments and records lineage sums awards per organization and takes the form from the first predecessor",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "combine merges assignments and records lineage rejects a group with a single initiative",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-012",
       "area": "Annual rollover",
       "summary": "History stays linked when initiatives change",
       "route": null,
-      "state": "talk_track",
+      "state": "verified",
       "reason": null,
       "talk": "Submissions pin the form version they were created on, so history is never rewritten.",
-      "tests": []
+      "tests": [
+        {
+          "title": "lineage links predecessors lets finance read lineage and keeps writes with the rollover function",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-013",
@@ -348,6 +393,12 @@
           "suite": "unit"
         },
         {
+          "title": "amount parsing rounds half a cent up using exact digits, not floating point",
+          "file": "tests/unit/money.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "amount parsing rejects text that is not an amount",
           "file": "tests/unit/money.test.ts",
           "status": "passed",
@@ -504,6 +555,18 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "typed answers must hold a real value rejects symbols with no digits and calendar dates that do not exist",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "typed answers must hold a real value still accepts ordinary values",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
         }
       ]
     },
@@ -516,6 +579,12 @@
       "reason": null,
       "talk": null,
       "tests": [
+        {
+          "title": "client upload checks rejects other file types and oversize files in words",
+          "file": "tests/unit/report-budget-rows.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "types and lengths rejects a malformed EIN and phone with plain messages",
           "file": "tests/unit/validate.test.ts",
@@ -731,10 +800,23 @@
       "area": "Data",
       "summary": "Build queries from selected criteria",
       "route": "/finance/submissions",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
       "talk": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "saved queries are private to their owner shows a saved query only to the person who saved it",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "saved queries are private to their owner refuses to save a query on behalf of someone else or for an organization account",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-049",
@@ -771,10 +853,47 @@
       "area": "Notifications",
       "summary": "Automated reminder emails to organizations",
       "route": null,
-      "state": "talk_track",
+      "state": "verified",
       "reason": null,
       "talk": "Every email is written to an outbox table today; scheduled reminders reuse it with a daily job.",
-      "tests": []
+      "tests": [
+        {
+          "title": "reminders queue once per org per rule per day and skip submitted reports emails each owing organization once and a second run adds nothing",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminders queue once per org per rule per day and skip submitted reports skips organizations whose reports are all submitted",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminders queue once per org per rule per day and skip submitted reports ignores initiatives that only exist after a later rollover",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminders queue once per org per rule per day and skip submitted reports sends nothing on a day that matches no rule",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminders queue once per org per rule per day and skip submitted reports is limited to finance administrators and previews for all finance staff",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminders queue once per org per rule per day and skip submitted reports uses a scheduler identity that cannot sign in",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-053",
@@ -1118,20 +1237,52 @@
       "area": "Rules",
       "summary": "Questions and layouts carry into the next fiscal year",
       "route": "/finance/initiatives",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
       "talk": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "rollover copies forms and assignments creates the new year, its reporting periods and carried initiatives",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "rollover copies forms and assignments carries every active initiative that the plan does not mention",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "rollover copies forms and assignments renames, retires and does not run twice for the same initiative",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "rollover copies forms and assignments is limited to finance administrators and leaves nothing behind when it fails",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-016",
       "area": "Rules",
       "summary": "Renamed or combined initiatives keep their history",
       "route": null,
-      "state": "talk_track",
+      "state": "verified",
       "reason": null,
       "talk": "Version pinning keeps history today; lineage links are designed.",
-      "tests": []
+      "tests": [
+        {
+          "title": "lineage links predecessors lets finance read lineage and keeps writes with the rollover function",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-017",
@@ -1243,6 +1394,12 @@
           "suite": "sql"
         },
         {
+          "title": "report budget issues blocks an unbalanced budget and files it under the budget section",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "budget must equal the award blocks when over the award and says by how much",
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
@@ -1277,6 +1434,24 @@
       "reason": null,
       "talk": null,
       "tests": [
+        {
+          "title": "report EIN check accepts the organization's own EIN with or without the dash",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report EIN check flags a well-formed EIN that is not the organization's",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report EIN check does not add a second EIN issue for a malformed value",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "types and lengths rejects a malformed EIN and phone with plain messages",
           "file": "tests/unit/validate.test.ts",
