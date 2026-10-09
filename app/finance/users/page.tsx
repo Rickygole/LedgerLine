@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Check, X } from "lucide-react";
+import { Check, Clock, X } from "lucide-react";
 import { requireUser, roleLabel } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { Input, Select } from "@/components/ui/field";
-import { monogram } from "@/components/ui/profile-header";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
@@ -59,51 +58,56 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
             </Select>
           </FilterField>
         </FilterBar>
-        <Table>
+        <Table density="compact" stack>
           <THead>
             <tr>
               <TH>Name</TH>
               <TH>Email</TH>
               <TH>Role</TH>
               <TH>Organization</TH>
-              <TH>Can sign in</TH>
               <TH>Status</TH>
-              <TH>Actions</TH>
+              <TH>
+                <span className="sr-only">Actions</span>
+              </TH>
             </tr>
           </THead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={7}>No users match these filters.</EmptyRow>
+              <EmptyRow colSpan={6}>No users match these filters.</EmptyRow>
             ) : (
               rows.map((u) => (
                 <TR key={u.id}>
-                  <TD>
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-100 text-[11px] font-bold text-navy-800" aria-hidden="true">
-                        {monogram(u.full_name)}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-semibold">{u.full_name}</span>
-                        {u.id === admin.id ? <span className="ml-2 rounded-sm bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">You</span> : null}
-                        {u.title ? <div className="text-xs text-muted">{u.title}</div> : null}
-                      </div>
-                    </div>
+                  <TD primary>
+                    <span className="font-semibold">{u.full_name}</span>
+                    {u.id === admin.id ? <span className="ml-2 rounded-sm bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">You</span> : null}
+                    {u.title ? <div className="text-xs font-normal text-muted">{u.title}</div> : null}
                   </TD>
-                  <TD className="text-muted">{u.email}</TD>
-                  <TD className="whitespace-nowrap">{roleLabel(u.role)}</TD>
-                  <TD className="max-w-56">{u.org_name ?? <span className="whitespace-nowrap text-muted">Council Finance</span>}</TD>
-                  <TD>
-                    {u.can_sign_in ? (
-                      <Badge tone="ok" icon={Check}>
-                        Yes
-                      </Badge>
-                    ) : (
-                      <Badge icon={X}>No</Badge>
-                    )}
+                  <TD className="max-w-64 break-words text-muted" label="Email">
+                    <span>{u.email}</span>
                   </TD>
-                  <TD>{u.active ? <Badge tone="ok" icon={Check}>Active</Badge> : <Badge tone="bad" icon={X}>Inactive</Badge>}</TD>
-                  <TD>
-                    <UserActions userId={u.id} name={u.full_name} role={u.role} active={u.active} isSelf={u.id === admin.id} isCbo={u.role === "cbo_submitter"} />
+                  <TD className="whitespace-nowrap" label="Role">
+                    <span>{roleLabel(u.role)}</span>
+                  </TD>
+                  <TD className="max-w-56" label="Organization">
+                    {u.org_name ? <span>{u.org_name}</span> : <span className="whitespace-nowrap text-muted">Council Finance</span>}
+                  </TD>
+                  <TD className="whitespace-nowrap" label="Status">
+                    <span>
+                      {!u.active ? (
+                        <Badge icon={X}>Deactivated</Badge>
+                      ) : u.can_sign_in ? (
+                        <Badge tone="ok" icon={Check}>
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge tone="info" icon={Clock}>
+                          Invited, no password yet
+                        </Badge>
+                      )}
+                    </span>
+                  </TD>
+                  <TD className="text-right" action>
+                    <UserActions userId={u.id} name={u.full_name} email={u.email} role={u.role} active={u.active} isSelf={u.id === admin.id} isCbo={u.role === "cbo_submitter"} />
                   </TD>
                 </TR>
               ))
