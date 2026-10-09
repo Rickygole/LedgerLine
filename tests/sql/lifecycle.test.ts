@@ -190,3 +190,72 @@ describe("[US-012][BR-016] lineage links predecessors", () => {
     expect(direct).not.toBeNull();
   });
 });
+
+describe("[US-052] reminders queue once per org per rule per day and skip submitted reports", () => {
+  const today = "2026-10-01";
+
+  async function owingOrgs(): Promise<string[]> {
+    const { rows } = await owner.query(
+      `SELECT DISTINCT a.org_id FROM assignment a
+       JOIN initiative i ON i.id = a.initiative_id AND i.status = 'active'
+       LEFT JOIN submission s ON s.assignment_id = a.id AND s.period_id = 'FY26-YE'
+       WHERE (s.id IS NULL OR s.status IN ('draft', 'returned'))
+         AND EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published')
+         AND EXISTS (SELECT 1 FROM contact c WHERE c.org_id = a.org_id)`
+    );
+    return rows.map((r) => r.org_id).sort();
+  }
+
+  it("emails each owing organization once and a second run adds nothing", async () => {
+    const expected = await owingOrgs();
+    const result = await asUser(app, priya, async () => {
+      const first = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
+      const second = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
+      const rows = (await app.query("SELECT org_id, to_email, subject, body_text FROM outbox WHERE template = 'reminder' ORDER BY org_id")).rows;
+      const audit = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")).rows[0].n;
+      return { first, second, rows, audit };
+    });
+    expect(expected.length).toBeGreaterThan(0);
+    expect(result.first).toBe(expected.length);
+    expect(result.second).toBe(0);
+    expect(result.rows.map((r: { org_id: string }) => r.org_id).sort()).toEqual(expected);
+    expect(result.rows[0].subject).toContain("Past due");
+    expect(result.rows[0].body_text).not.toContain("{");
+    expect(result.audit).toBe(2);
+  });
+
+  it("skips organizations whose reports are all submitted", async () => {
+    const owing = new Set(await owingOrgs());
+    const { rows } = await owner.query("SELECT id FROM organization");
+    const done = rows.map((r) => r.id).filter((id) => !owing.has(id));
+    const queued = await asUser(app, priya, async () => {
+      await app.query("SELECT app.queue_reminders('FY26-YE', $1::date)", [today]);
+      return (await app.query("SELECT DISTINCT org_id FROM outbox WHERE template = 'reminder'")).rows.map((r) => r.org_id);
+    });
+    expect(done.length).toBeGreaterThan(0);
+    for (const id of done) expect(queued).not.toContain(id);
+  });
+
+  it("sends nothing on a day that matches no rule", async () => {
+    const n = await asUser(app, priya, async () => (await app.query("SELECT app.queue_reminders('FY26-YE', '2026-10-05'::date) AS n")).rows[0].n);
+    expect(n).toBe(0);
+  });
+
+  it("is limited to finance administrators and previews for all finance staff", async () => {
+    const denied = await asUser(app, daniel, () => errorCode(() => app.query("SELECT app.queue_reminders('FY26-YE', $1::date)", [today])));
+    expect(denied).toBe("42501");
+    const preview = await asUser(app, daniel, async () => (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n);
+    expect(preview).toBeGreaterThan(0);
+    const org = await asUser(app, maria, () => errorCode(() => app.query("SELECT * FROM app.reminder_targets('FY26-YE', $1::date)", [today])));
+    expect(org).toBe("42501");
+    const write = await asUser(app, daniel, () => errorCode(() => app.query("UPDATE reminder_rule SET active = false")));
+    expect(write).toBeNull();
+    const changed = await asUser(app, daniel, async () => (await app.query("UPDATE reminder_rule SET active = false")).rowCount);
+    expect(changed).toBe(0);
+  });
+
+  it("uses a scheduler identity that cannot sign in", async () => {
+    const { rows } = await owner.query("SELECT role, can_sign_in, password_hash FROM app_user WHERE email = 'system.scheduler@ledgerline.example'");
+    expect(rows[0]).toEqual({ role: "finance_admin", can_sign_in: false, password_hash: null });
+  });
+});
