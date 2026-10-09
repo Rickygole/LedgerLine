@@ -26,10 +26,13 @@ export function cleanFilename(raw: string): string {
   return cleaned.slice(-200) || "attachment";
 }
 
+const OLE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+
 export function contentLooksValid(filename: string, head: Buffer): string | null {
   const ext = extensionOf(filename);
   if (ext === "pdf" && head.subarray(0, 5).toString("latin1") !== "%PDF-") return "This file does not look like a PDF.";
-  if ((ext === "docx" || ext === "xlsx") && head.subarray(0, 2).toString("latin1") !== "PK") return `This file does not look like a ${ext === "docx" ? "Word" : "Excel"} file.`;
+  if ((ext === "docx" || ext === "xlsx") && head.subarray(0, 2).toString("latin1") !== "PK") return `This file does not look like ${ext === "docx" ? "a Word" : "an Excel"} file.`;
+  if ((ext === "doc" || ext === "xls") && !head.subarray(0, 8).equals(OLE_SIGNATURE)) return `This file does not look like ${ext === "doc" ? "a Word" : "an Excel"} file.`;
   if (ext === "csv" && head.includes(0)) return "This file does not look like a CSV.";
   return null;
 }

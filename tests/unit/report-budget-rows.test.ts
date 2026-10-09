@@ -19,7 +19,7 @@ describe("budget rows", () => {
 describe("[US-030] client upload checks", () => {
   it("rejects other file types and oversize files in words", () => {
     expect(clientCheckUpload("setup.exe", 100)).toBe("Use PDF, Word, Excel or CSV.");
-    expect(clientCheckUpload("big.pdf", 31 * 1024 * 1024)).toBe("31 MB. The limit is 25 MB.");
+    expect(clientCheckUpload("big.pdf", 31 * 1024 * 1024)).toBe("This file is 31.0 MB, which is over the 25.0 MB limit for one file.");
     expect(clientCheckUpload("ok.pdf", 100)).toBeNull();
   });
 });
