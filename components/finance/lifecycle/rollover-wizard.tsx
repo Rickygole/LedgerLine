@@ -277,7 +277,7 @@ export function RolloverWizard({ from, to, initiatives }: { from: string; to: st
           </CardBody>
         </Card>
       ) : null}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
         <Link href={`/finance/rollover?from=${from}&to=${to}`} className="text-sm font-semibold text-navy-800 hover:underline">
           Back to choose years
         </Link>

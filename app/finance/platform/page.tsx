@@ -150,7 +150,7 @@ export default async function PlatformPage() {
           <Card>
             <CardHeader title="Data ownership and export" description="The Council owns all system data." actions={<Ids ids={["US-055", "BR-020"]} />} />
             <CardBody className="space-y-3 text-sm">
-              <p>Every record, answer, attachment and audit event belongs to the Council. Nothing is held back, and nothing is locked into a format only the vendor can read.</p>
+              <p>Every record, answer, attachment and audit event belongs to the Council. None of it is stored in a format only the vendor can read.</p>
               <p>All data exports in open formats: Excel workbooks (.xlsx) and comma separated files (.csv). Attachments are returned in the files that organizations uploaded.</p>
               <p>On contract end, the full database and files are handed over and then securely removed from vendor systems on written request.</p>
               <ButtonLink href="/finance/submissions" variant="secondary" size="sm">
@@ -232,7 +232,7 @@ export default async function PlatformPage() {
             </tbody>
           </Table>
           <CardBody className="border-t border-line text-sm text-muted">
-            Every request gets a first response within 24 hours. After launch, the vendor also monitors uptime and errors, applies security patches and keeps the system maintained as part of the support service.
+            Every request gets a first response within 24 hours. After launch, the vendor watches uptime and errors and applies security patches as part of the support service.
           </CardBody>
         </Card>
 
