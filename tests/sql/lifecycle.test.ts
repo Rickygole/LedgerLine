@@ -259,3 +259,33 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
     expect(rows[0]).toEqual({ role: "finance_admin", can_sign_in: false, password_hash: null });
   });
 });
+
+describe("[US-048] saved queries are private to their owner", () => {
+  it("shows a saved query only to the person who saved it", async () => {
+    const result = await asUser(app, daniel, async () => {
+      await app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Bronx missing', $2::jsonb)", [daniel, JSON.stringify({ borough: "Bronx", bucket: "missing" })]);
+      const own = (await app.query("SELECT name, params FROM saved_query")).rows;
+      await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: priya })]);
+      const other = (await app.query("SELECT count(*)::int AS n FROM saved_query")).rows[0].n;
+      const deleted = (await app.query("DELETE FROM saved_query")).rowCount;
+      await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
+      const stillThere = (await app.query("SELECT count(*)::int AS n FROM saved_query")).rows[0].n;
+      return { own, other, deleted, stillThere };
+    });
+    expect(result.own).toEqual([{ name: "Bronx missing", params: { borough: "Bronx", bucket: "missing" } }]);
+    expect(result.other).toBe(0);
+    expect(result.deleted).toBe(0);
+    expect(result.stillThere).toBe(1);
+  });
+
+  it("refuses to save a query on behalf of someone else or for an organization account", async () => {
+    const forged = await asUser(app, daniel, () =>
+      errorCode(() => app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Forged', '{}'::jsonb)", [priya]))
+    );
+    expect(forged).toBe("42501");
+    const org = await asUser(app, maria, () =>
+      errorCode(() => app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Mine', '{}'::jsonb)", [maria]))
+    );
+    expect(org).toBe("42501");
+  });
+});
