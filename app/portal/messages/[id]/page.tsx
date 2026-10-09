@@ -7,13 +7,14 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { templateLabel } from "@/lib/portal/messages";
+import { Badge } from "@/components/ui/status-badge";
+import { deliveryState, templateLabel } from "@/lib/portal/messages";
 
 export const metadata: Metadata = { title: "Message" };
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Row = { id: string; subject: string; template: string; to_email: string; body_text: string; created_at: string; submission_id: string | null; reference_no: string | null };
+type Row = { id: string; subject: string; template: string; to_email: string; body_text: string; created_at: string; status: string; submission_id: string | null; reference_no: string | null };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,7 +24,7 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
   if (!UUID.test(id)) notFound();
   const row = await withClaims(user.id, (tx) =>
     tx.one<Row>(
-      `SELECT o.id, o.subject, o.template, o.to_email, o.body_text, o.created_at, o.submission_id, s.reference_no
+      `SELECT o.id, o.subject, o.template, o.to_email, o.body_text, o.created_at, o.status, o.submission_id, s.reference_no
        FROM outbox o LEFT JOIN submission s ON s.id = o.submission_id
        WHERE o.id = $1 AND o.org_id = $2`,
       [id, user.orgId]
@@ -47,10 +48,11 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
         <CardHeader title="Message details" />
         <CardBody>
           <DescriptionList
-            columns={3}
+            columns={2}
             items={[
-              { label: "Sent to", value: row.to_email },
-              { label: "Sent", value: formatDateTime(row.created_at) },
+              { label: "To", value: row.to_email },
+              { label: "Date", value: formatDateTime(row.created_at) },
+              { label: "Delivery", value: <Badge tone={deliveryState(row.status).tone}>{deliveryState(row.status).label}</Badge> },
               { label: "Type", value: templateLabel(row.template) },
             ]}
           />

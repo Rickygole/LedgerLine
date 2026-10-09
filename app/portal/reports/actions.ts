@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
+import { nowIso, toIsoTimestamp } from "@/lib/dates";
+import { dispatchFor } from "@/lib/outbox-dispatch";
 import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
 import { reportIssues } from "@/lib/report/issues";
@@ -72,18 +74,18 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
         if (current.status !== "draft" && current.status !== "returned") {
           return { status: "locked", message: "This report was already submitted and can no longer be edited." };
         }
-        return { status: "stale", by: current.full_name, at: new Date(current.updated_at).toISOString() };
+        return { status: "stale", by: current.full_name, at: toIsoTimestamp(current.updated_at) };
       }
       const report = await loadReport(tx, input.submissionId);
       if (!report) return { status: "error", message: "This report could not be found." };
       const allowedKeys = new Set([...report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)), VARIANCE_NOTE_KEY]);
       await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget, allowedKeys });
-      return { status: "saved", lockVersion: touched.lock_version, savedAt: new Date(touched.updated_at).toISOString() };
+      return { status: "saved", lockVersion: touched.lock_version, savedAt: toIsoTimestamp(touched.updated_at) };
     });
   } catch (error) {
     const code = pgCode(error);
     if (code === "42501") return { status: "locked", message: "You do not have permission to change this report." };
-    if (code === "40001") return { status: "stale", by: null, at: new Date().toISOString() };
+    if (code === "40001") return { status: "stale", by: null, at: nowIso() };
     return { status: "error", message: "Couldn't save. Keep this tab open." };
   }
 }
@@ -286,7 +288,7 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
         statement: CERTIFICATION_STATEMENT,
         name: (parsed.data.certification?.name ?? "").trim(),
         title: (parsed.data.certification?.title ?? "").trim(),
-        certifiedAt: new Date().toISOString(),
+        certifiedAt: nowIso(),
       };
 
       const attachments = files.map((file) => ({ path: file.path, filename: file.filename, bytes: Number(file.bytes), mime: file.mime }));
@@ -321,11 +323,12 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
     });
   } catch (error) {
     const code = pgCode(error);
-    if (code === "40001") return { status: "stale", by: null, at: new Date().toISOString() };
+    if (code === "40001") return { status: "stale", by: null, at: nowIso() };
     if (code === "42501") return { status: "error", message: "Only your organization can submit this report." };
     if (code === "23514") return { status: "error", message: "This report can no longer be submitted. It may already have been sent." };
     return { status: "error", message: "The report could not be submitted. Your answers are saved. Try again." };
   }
   if (outcome !== "done") return outcome;
+  await dispatchFor(user.id, { submissionId: parsed.data.submissionId });
   redirect(`/portal/reports/${parsed.data.submissionId}/submitted`);
 }

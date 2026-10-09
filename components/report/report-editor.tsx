@@ -433,7 +433,7 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
               </fieldset>
 
               <p className="text-sm text-muted">
-                After you submit, the report is locked. You can change it again only if Council Finance asks for an update. We will email a copy to you.
+                After you submit, the report is locked. You can change it again only if Council Finance asks for an update. A copy is saved in Messages.
               </p>
 
               <div className="flex flex-wrap items-center gap-3">

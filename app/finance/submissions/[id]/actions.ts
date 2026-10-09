@@ -1,10 +1,11 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { REVIEW_ROLES, requireUser } from "@/lib/auth";
-import { withClaims } from "@/lib/db";
+import { pgCode, withClaims } from "@/lib/db";
+import { appOrigin } from "@/lib/origin";
+import { dispatchFor } from "@/lib/outbox-dispatch";
 import { draftReturnNote } from "@/lib/ai/return-note";
 import { loadSubmissionDetail } from "@/lib/finance/review/detail";
 import { plainError, STALE_MESSAGE } from "@/lib/finance/review/errors";
@@ -98,9 +99,7 @@ export async function sendUpdateAction(raw: { submissionId: string; lockVersion:
   if (!note) return failed("Write a note before sending. The organization needs to know what to change.");
   if (containsRuleId(note)) return failed("Remove rule ids such as BR-022 from the note. Organizations should only see plain language.");
   if (note.length > 4000) return failed("Shorten the note to 4,000 characters or fewer.");
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const origin = await appOrigin();
   try {
     const sent = await withClaims(user.id, async (tx) => {
       const detail = await loadSubmissionDetail(tx, input.submissionId);
@@ -126,7 +125,7 @@ export async function sendUpdateAction(raw: { submissionId: string; lockVersion:
         "",
         note,
         "",
-        `Sign in to the Initiative Reporting Portal to update your report: ${proto}://${host}/portal`,
+        `Sign in to LedgerLine to update your report: ${origin}/portal`,
       ].join("\n");
       const outbox = {
         to: detail.primaryContact.email,
@@ -147,6 +146,7 @@ export async function sendUpdateAction(raw: { submissionId: string; lockVersion:
   } catch (error) {
     return failed(plainError(error));
   }
+  await dispatchFor(user.id, { submissionId: input.submissionId });
   refresh(input.submissionId);
   return done("Update request sent. The organization will see the note above its report.");
 }
@@ -243,6 +243,7 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
     });
     if (problem) return failed(problem);
   } catch (error) {
+    if (pgCode(error) === "42501") return failed("Only Finance analysts and administrators can correct a submitted answer.");
     return failed(plainError(error));
   }
   refresh(id);

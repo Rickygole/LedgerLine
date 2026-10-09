@@ -7,6 +7,7 @@ import { formatDateTime } from "@/lib/dates";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, DescriptionList } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
+import { deliveryState } from "@/lib/portal/messages";
 import { loadOutboxMessage, templateLabel } from "@/lib/finance/admin/outbox";
 import { isUuid } from "@/lib/finance/admin/params";
 
@@ -26,7 +27,7 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
       <PageHeader
         title={message.subject}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox", href: "/finance/outbox" }, { label: "Message" }]}
-        meta={<Badge tone={message.status === "failed" ? "bad" : message.status === "sent" ? "ok" : "neutral"}>{message.status === "sent" ? "Sent" : message.status === "failed" ? "Failed" : "Queued"}</Badge>}
+        meta={<Badge tone={deliveryState(message.status).tone}>{deliveryState(message.status).label}</Badge>}
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -43,6 +44,8 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
                 { label: "To", value: message.to_email },
                 { label: "Template", value: templateLabel(message.template) },
                 { label: "Created", value: formatDateTime(message.created_at) },
+                { label: "Emailed", value: message.sent_at ? formatDateTime(message.sent_at) : "Not emailed" },
+                ...(message.failure_reason ? [{ label: "Delivery note", value: message.failure_reason }] : []),
                 { label: "Created by", value: message.created_by_name ?? "System" },
                 { label: "Organization", value: message.org_id ? <Link href={`/finance/organizations/${message.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">{message.org_name}</Link> : null },
                 { label: "Related report", value: message.submission_id ? <Link href={`/finance/submissions/${message.submission_id}`} className="font-mono text-xs font-semibold text-link underline underline-offset-2 hover:text-link-hover">{message.reference_no}</Link> : null },

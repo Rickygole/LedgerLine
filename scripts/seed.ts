@@ -870,7 +870,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       body_text: `We received your report ${base.reference_no} for ${initiative.name}.`,
       submission_id: id,
       org_id: org.id,
-      status: "sent",
+      status: "recorded",
       created_by: submitter,
       created_at: submittedAt,
     });

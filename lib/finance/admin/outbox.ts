@@ -43,8 +43,8 @@ export async function outboxFilterOptions(tx: Tx) {
 }
 
 export async function loadOutboxMessage(tx: Tx, id: string) {
-  return tx.one<OutboxRow & { body_text: string; created_by_name: string | null }>(
-    `SELECT m.id, m.to_email, m.template, m.subject, m.body_text, m.status, m.created_at, m.org_id, o.legal_name AS org_name, m.submission_id, s.reference_no,
+  return tx.one<OutboxRow & { body_text: string; created_by_name: string | null; sent_at: string | null; failure_reason: string | null }>(
+    `SELECT m.id, m.to_email, m.template, m.subject, m.body_text, m.status, m.created_at, m.sent_at, m.failure_reason, m.org_id, o.legal_name AS org_name, m.submission_id, s.reference_no,
             u.full_name AS created_by_name, 1 AS full_count
      FROM outbox m
      LEFT JOIN organization o ON o.id = m.org_id

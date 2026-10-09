@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, DescriptionList } from "@/components/ui/card";
@@ -22,6 +23,9 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
   const report = await withClaims(user.id, (tx) => loadReport(tx, id));
   if (!report) notFound();
   const { header } = report;
+  const copy = await withClaims(user.id, (tx) =>
+    tx.one<{ status: string }>("SELECT status FROM outbox WHERE submission_id = $1 AND template = 'submission_confirmation' ORDER BY created_at DESC LIMIT 1", [id])
+  );
   if (header.status === "draft" || !header.submittedAt) redirect(`/portal/reports/${id}`);
 
   return (
@@ -46,7 +50,13 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
               { label: "Submitted by", value: header.submittedByName ?? user.fullName },
             ]}
           />
-          <p className="rounded-md border border-line bg-surface px-4 py-3 text-sm leading-6 text-ink">We will email you if Finance needs changes. A copy of this report was sent to {user.email}.</p>
+          <p className="rounded-md border border-line bg-surface px-4 py-3 text-sm leading-6 text-ink">
+            If Finance needs changes, the request appears in Messages. A copy of this report is in{" "}
+            <Link href="/portal/messages" className="text-link underline underline-offset-2 hover:text-link-hover">
+              Messages
+            </Link>
+            {copy?.status === "sent" ? ` and was emailed to ${user.email}` : ""}.
+          </p>
           <div className="flex flex-wrap gap-3">
             <ButtonLink href={`/portal/reports/${id}`}>View submitted copy</ButtonLink>
             <ButtonLink href="/portal" variant="secondary">
