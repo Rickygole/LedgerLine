@@ -208,7 +208,7 @@ export default async function PlatformPage() {
               <Stat label="Funded organizations" value={facts.organizations.toLocaleString("en-US")} hint="Live count" href="/finance/organizations" />
             </div>
             <p className="text-sm">
-              This system holds <span className="num font-semibold">{financeUsers}</span> Finance accounts across three permission levels, well within the 50 to 100 expected. Submitting users are not licensed or capped: each funded organization can add as many staff as it needs.
+              This system holds <span className="num font-semibold">{financeUsers}</span> Finance accounts across three permission levels, not counting the system scheduler. The design sets no cap on Finance accounts; the stated need is 50 to 100 users with different permissions. Submitting users are not licensed or capped: each funded organization can add as many staff as it needs.
             </p>
             {user.role === "finance_admin" ? (
               <div>

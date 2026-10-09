@@ -21,7 +21,8 @@ export async function listUsers(tx: Tx, filters: { q: string; role: string; page
   const rows = await tx.query<UserRow>(
     `SELECT u.id, u.email, u.full_name, u.title, u.role, u.org_id, o.legal_name AS org_name, u.can_sign_in, u.active, count(*) OVER ()::int AS full_count
      FROM app_user u LEFT JOIN organization o ON o.id = u.org_id
-     WHERE ($1 = '' OR u.full_name ILIKE $2 OR u.email ILIKE $2 OR o.legal_name ILIKE $2)
+     WHERE u.email <> 'system.scheduler@ledgerline.example'
+       AND ($1 = '' OR u.full_name ILIKE $2 OR u.email ILIKE $2 OR o.legal_name ILIKE $2)
        AND ($3 = '' OR u.role = $3)
      ORDER BY (u.role = 'cbo_submitter'), u.can_sign_in DESC, u.full_name
      LIMIT ${PAGE_SIZE} OFFSET $4`,
