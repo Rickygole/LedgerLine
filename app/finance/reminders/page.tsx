@@ -217,7 +217,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                       </TD>
                       <TD className="max-w-xs">{t.initiatives}</TD>
                       <TD className="whitespace-nowrap">{describeOffset(t.offset_days)}</TD>
-                      <TD>{t.already_sent ? <Badge tone="info" icon={Check}>Already sent</Badge> : <Badge tone="warn" icon={BellRing}>Will send</Badge>}</TD>
+                      <TD className="whitespace-nowrap">{t.already_sent ? <Badge icon={Check}>Already in outbox</Badge> : <Badge tone="info" icon={Mail}>Will be queued</Badge>}</TD>
                     </TR>
                   ))}
                 </tbody>
