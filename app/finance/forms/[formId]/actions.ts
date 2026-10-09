@@ -167,7 +167,7 @@ export async function applyDraft(formId: string, aiActionId: string, submitted: 
       const errors = validateDefinition(merged.definition);
       if (errors.length > 0) return fail(...errors);
 
-      await tx.query("UPDATE form_version SET definition = $2 WHERE id = $1 AND status = 'draft'", [formId, JSON.stringify(merged.definition)]);
+      await tx.query("UPDATE form_version SET definition = $2, source = $3 WHERE id = $1 AND status = 'draft'", [formId, JSON.stringify(merged.definition), action.mode === "live" ? "ai_draft" : "rule_draft"]);
       const status = edited.length > 0 || removed.length > 0 ? "edited" : "accepted";
       const diff = { proposed: original.length, kept: submitted.length, removed, edited, added_keys: merged.added, linked_library_keys: merged.linked, already_in_form: merged.alreadyPresent };
       await tx.query("UPDATE ai_action SET status = $2, approver = app.uid(), decided_at = now(), edit_diff = $3 WHERE id = $1", [aiActionId, status, JSON.stringify(diff)]);
@@ -175,7 +175,7 @@ export async function applyDraft(formId: string, aiActionId: string, submitted: 
         "form_version",
         formId,
         "ai_draft_applied",
-        `Applied ${submitted.length} of ${original.length} proposed fields (${status}, ${action.mode} mode)`,
+        `Imported ${merged.added.length + merged.linked.length} questions from the uploaded Word file (${submitted.length} of ${original.length} proposed fields kept, ${status})`,
         JSON.stringify({ added: merged.added.length, linked_library: merged.linked.length, already_in_form: merged.alreadyPresent.length, removed: removed.length }),
         aiActionId,
       ]);

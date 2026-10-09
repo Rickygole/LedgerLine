@@ -191,3 +191,21 @@ describe("[US-001] initiative names are unique within a fiscal year", () => {
     expect(shared).toBeGreaterThan(0);
   });
 });
+
+describe("[US-003][US-004] a form made from an imported Word file records where it came from", () => {
+  it("lets the app record the draft source and refuses values outside the allowed list", async () => {
+    const result = await asUser(app, priya, async () => {
+      const target = (
+        await app.query(
+          `INSERT INTO form_version (initiative_id, version, status, definition, source)
+           SELECT initiative_id, max(version) + 1, 'draft', (array_agg(definition))[1], 'manual' FROM form_version GROUP BY initiative_id LIMIT 1 RETURNING id`
+        )
+      ).rows[0];
+      const ok = (await app.query("UPDATE form_version SET source = 'rule_draft' WHERE id = $1 RETURNING source", [target.id])).rows[0];
+      const bad = await errorCode(() => app.query("UPDATE form_version SET source = 'unknown' WHERE id = $1", [target.id]));
+      return { ok, bad };
+    });
+    expect(result.ok.source).toBe("rule_draft");
+    expect(result.bad).toBe("23514");
+  });
+});
