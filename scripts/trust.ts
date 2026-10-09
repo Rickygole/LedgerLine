@@ -107,7 +107,7 @@ function main() {
 
   const count = (state: State, prefix: string) => rows.filter((r) => r.state === state && r.id.startsWith(prefix)).length;
   const bySuite = (suite: Suite) => tests.filter((t) => t.suite === suite).length;
-  const dirty = git("git status --porcelain --untracked-files=no", "") !== "";
+  const dirty = git("git status --porcelain --untracked-files=no -- . :!app/trust/evidence.json", "") !== "";
   const evidence = {
     generatedAt: new Date().toISOString(),
     commit: process.env.GITHUB_SHA ?? git("git rev-parse HEAD", "unknown"),

@@ -68,7 +68,7 @@
     { "id": "US-065", "area": "Delivery", "summary": "Formal testing period before go-live", "route": null, "fallback": "planned", "note": "Testing period is part of the delivery timeline on the Platform page." },
     { "id": "US-066", "area": "Delivery", "summary": "Formal training period before go-live", "route": null, "fallback": "planned", "note": "Training period is part of the delivery timeline on the Platform page." },
     { "id": "BR-001", "area": "Rules", "summary": "About 175 initiatives, changing each year", "route": "/finance/initiatives", "fallback": "demonstrated" },
-    { "id": "BR-002", "area": "Rules", "summary": "Each initiative reports at least twice a year", "route": "/finance", "fallback": "planned", "note": "The data model supports any number of reporting periods per fiscal year. The periods configured today are listed on the Submissions page." },
+    { "id": "BR-002", "area": "Rules", "summary": "Each initiative reports at least twice a year", "route": "/finance", "fallback": "demonstrated", "note": "Each fiscal year has a mid-year and a year-end reporting period." },
     { "id": "BR-003", "area": "Rules", "summary": "Reports combine performance, financial and narrative content", "route": "/portal/reports", "fallback": "demonstrated" },
     { "id": "BR-004", "area": "Rules", "summary": "Forms mix common and initiative-specific questions", "route": "/finance/initiatives", "fallback": "demonstrated" },
     { "id": "BR-005", "area": "Rules", "summary": "An initiative can fund one or more than 100 organizations", "route": "/finance/initiatives", "fallback": "demonstrated" },

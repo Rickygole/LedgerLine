@@ -38,7 +38,7 @@ function plan(entries: object[]): string {
 }
 
 describe("[US-009][BR-015] rollover copies forms and assignments", () => {
-  it("creates the new year, its reporting periods and carried initiatives", async () => {
+  it("[US-010][BR-002] creates the new year with a mid-year and a year-end period and carries forms and awards", async () => {
     const [first] = await pickInitiatives(1);
     const result = await asUser(app, priya, async () => {
       const summary = (await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb) AS s", [plan([{ initiative_id: first.id, action: "carry" }])])).rows[0].s;
