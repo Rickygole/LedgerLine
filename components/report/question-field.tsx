@@ -15,6 +15,16 @@ function asRows(value: AnswerValue | undefined): TableRow[] {
   return Array.isArray(value) ? (value as TableRow[]) : [];
 }
 
+const INPUT_WIDTHS: Partial<Record<Question["type"], string>> = {
+  integer: "max-w-[12rem]",
+  number: "max-w-[12rem]",
+  percent: "max-w-[8rem]",
+  currency: "max-w-[16rem]",
+  date: "max-w-[12rem]",
+  ein: "max-w-[10rem]",
+  phone: "max-w-[16rem]",
+};
+
 const INPUT_TYPES: Partial<Record<Question["type"], { type: string; inputMode?: "numeric" | "decimal" | "tel" | "email"; autoComplete?: string }>> = {
   email: { type: "email", inputMode: "email", autoComplete: "email" },
   phone: { type: "tel", inputMode: "tel", autoComplete: "tel" },
@@ -116,8 +126,9 @@ export function QuestionField({
     control = <TableQuestion question={question} rows={asRows(value)} onChange={onChange} onBlur={onBlur} describedBy={describedBy} invalid={Boolean(error)} />;
   } else {
     const spec = INPUT_TYPES[question.type] ?? { type: "text" };
+    const width = INPUT_WIDTHS[question.type];
     control = (
-      <div className="relative">
+      <div className={cn("relative", width)}>
         {question.type === "currency" ? (
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
             $
