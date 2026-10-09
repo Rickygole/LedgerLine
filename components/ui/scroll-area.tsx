@@ -29,7 +29,7 @@ export function ScrollArea({ className, children }: { className?: string; childr
       <span
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 z-[11] w-8 bg-gradient-to-l from-[rgb(16_24_40/0.09)] to-transparent",
+          "pointer-events-none absolute inset-y-0 right-0 z-[11] w-px bg-line-strong",
           more ? "opacity-100" : "opacity-0"
         )}
       />
