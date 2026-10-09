@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronUp, Quote, Trash2 } from "lucide-react";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Badge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
@@ -18,10 +18,18 @@ type Props = {
   onChange: (patch: Partial<Question>) => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
+  selected?: boolean;
 };
 
-export function QuestionEditor({ question, index, count, definition, readOnly, problems, onChange, onMove, onRemove }: Props) {
+export function QuestionEditor({ question, index, count, definition, readOnly, problems, onChange, onMove, onRemove, selected }: Props) {
   const [open, setOpen] = useState(false);
+  const itemRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (!selected) return;
+    setOpen(true);
+    itemRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [selected]);
   const id = useId();
   const shared = question.scope === "standard";
   const editable = !readOnly && !shared;
@@ -39,13 +47,14 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
   }
 
   return (
-    <li className={`rounded-lg border bg-white ${problems.length ? "border-bad" : "border-line"}`}>
+    <li ref={itemRef} id={`question-${question.key}`} className={`scroll-mt-4 rounded-lg border bg-white transition-shadow ${problems.length ? "border-bad" : selected ? "border-navy-600 ring-2 ring-navy-600/15" : "border-line"}`}>
       <div className="flex items-start gap-3 px-4 py-3">
         <span className="num mt-0.5 w-6 shrink-0 text-right text-sm text-muted">{index + 1}</span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">{question.label || "Untitled question"}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <Badge>{TYPE_LABEL[question.type]}</Badge>
+            <span className="font-mono text-xs text-muted">{question.key}</span>
             <Badge tone={question.required ? "info" : "neutral"}>{question.required ? "Required" : "Optional"}</Badge>
             {shared ? (
               <Badge tone="info" icon={BookOpen}>
@@ -53,13 +62,13 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
               </Badge>
             ) : null}
             {question.citation ? (
-              <Badge tone="warn" icon={Quote}>
+              <Badge icon={Quote}>
                 From template paragraph {question.citation.paragraph}
               </Badge>
             ) : null}
             {question.visibleWhen ? <Badge>Conditional</Badge> : null}
           </div>
-          {question.citation ? <p className="mt-1.5 text-xs text-muted">Template text: &ldquo;{question.citation.quote}&rdquo;</p> : null}
+          {question.citation ? <p className="mt-1.5 text-xs italic text-muted">&ldquo;{question.citation.quote}&rdquo;</p> : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {!readOnly ? (

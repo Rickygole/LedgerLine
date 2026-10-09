@@ -73,15 +73,19 @@ function conditionText(definition: FormDefinition, question: Question): string |
   return `Shown only when the answer to "${source?.label ?? question.visibleWhen.key}" is ${question.visibleWhen.equals}.`;
 }
 
-export function FormPreview({ definition, awardLabel }: { definition: FormDefinition; awardLabel?: string }) {
+export function FormPreview({ definition, awardLabel, only }: { definition: FormDefinition; awardLabel?: string; only?: string }) {
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-3 rounded-md border border-info/20 bg-info-bg px-4 py-3 text-sm text-info" role="note">
-        <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        <p>This is a read-only preview of the form exactly as a funded organization sees it. Nothing you type here is saved.</p>
-      </div>
-      <h2 className="text-xl font-bold text-ink">{definition.title}</h2>
-      {definition.sections.map((section, sectionIndex) => (
+      {only ? null : (
+        <>
+          <div className="flex items-start gap-3 rounded-md border border-info/20 bg-info-bg px-4 py-3 text-sm text-info" role="note">
+            <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>This is a read-only preview of the form exactly as a funded organization sees it. Nothing you type here is saved.</p>
+          </div>
+          <h2 className="text-xl font-bold text-ink">{definition.title}</h2>
+        </>
+      )}
+      {definition.sections.map((section, sectionIndex) => only && section.key !== only ? null : (
         <Card key={section.key}>
           <div className="border-b border-line px-5 py-4">
             <h3 className="text-base font-semibold text-ink">
