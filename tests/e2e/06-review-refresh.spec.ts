@@ -16,17 +16,19 @@ test("[US-044] starting a review and accepting a report show the new state witho
   for (const { id } of candidates) {
     await page.goto(`/finance/submissions/${id}`);
     await page.getByRole("button", { name: "Start review" }).click();
+    await expect(page.getByText("Review started. The report is now in review.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Start review" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Accept report" })).toBeEnabled();
 
     await page.getByRole("button", { name: "Accept report" }).click();
-    const outcome = page.getByText("This report is accepted.").or(page.getByText(/Resolve these problems before accepting/));
+    const outcome = page.getByText("Report accepted.").or(page.getByText(/Resolve these problems before accepting/));
     await expect(outcome).toBeVisible();
-    if (await page.getByText("This report is accepted.").isVisible()) {
+    if (await page.getByText("Report accepted.").isVisible()) {
       accepted = true;
       break;
     }
   }
   expect(accepted).toBe(true);
+  await expect(page.getByText("This report is accepted.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept report" })).toHaveCount(0);
 });

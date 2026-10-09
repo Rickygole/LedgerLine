@@ -22,8 +22,12 @@ function Message({ state }: { state: ActionResult | undefined }) {
   );
 }
 
-function TransitionButton({ submissionId, lockVersion, action, label, icon: Icon, variant }: { submissionId: string; lockVersion: number; action: "start_review" | "accept"; label: string; icon: typeof Eye; variant: "primary" | "secondary" }) {
-  const [state, formAction, pending] = useActionState(transitionAction, undefined);
+function TransitionButton({ submissionId, lockVersion, action, label, icon: Icon, variant, onDone }: { submissionId: string; lockVersion: number; action: "start_review" | "accept"; label: string; icon: typeof Eye; variant: "primary" | "secondary"; onDone: (message: string) => void }) {
+  const [state, formAction, pending] = useActionState(async (previous: ActionResult | undefined, formData: FormData) => {
+    const result = await transitionAction(previous, formData);
+    if (result.ok) onDone(result.message);
+    return result;
+  }, undefined);
   return (
     <form action={formAction} className="space-y-2">
       <input type="hidden" name="submissionId" value={submissionId} />
@@ -33,7 +37,7 @@ function TransitionButton({ submissionId, lockVersion, action, label, icon: Icon
         <Icon className="h-4 w-4" aria-hidden="true" />
         {pending ? "Working" : label}
       </Button>
-      <Message state={state} />
+      {state?.ok ? null : <Message state={state} />}
     </form>
   );
 }
@@ -161,6 +165,7 @@ export function ActionsPanel({
   questions: CorrectableQuestion[];
   badge?: React.ReactNode;
 }) {
+  const [notice, setNotice] = useState<string | null>(null);
   const reviewable = status === "submitted" || status === "under_review";
   const correctable = reviewable || status === "accepted";
   return (
@@ -170,11 +175,19 @@ export function ActionsPanel({
         {badge}
       </div>
       <CardBody className="space-y-4">
+        <div aria-live="polite">
+          {notice ? (
+            <p role="status" className="flex items-start gap-2 rounded-md border border-ok/25 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              {notice}
+            </p>
+          ) : null}
+        </div>
         {reviewable ? (
           <div className="space-y-2.5">
-            {status === "submitted" ? <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="start_review" label="Start review" icon={Eye} variant="primary" /> : null}
-            <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="accept" label="Accept report" icon={CheckCircle2} variant={status === "under_review" ? "primary" : "secondary"} />
-            <RequestUpdate submissionId={submissionId} lockVersion={lockVersion} concerns={concerns} />
+            {status === "submitted" ? <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="start_review" label="Start review" icon={Eye} variant="primary" onDone={setNotice} /> : null}
+            <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="accept" label="Accept report" icon={CheckCircle2} variant={status === "under_review" ? "primary" : "secondary"} onDone={setNotice} />
+            <RequestUpdate submissionId={submissionId} lockVersion={lockVersion} concerns={concerns} onDone={setNotice} />
           </div>
         ) : (
           <p className="rounded-md bg-surface px-3 py-2.5 text-sm text-muted">
