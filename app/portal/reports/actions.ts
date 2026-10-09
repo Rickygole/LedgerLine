@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
-import { nowIso, toIsoTimestamp } from "@/lib/dates";
+import { nowEpochSeconds, nowIso, toIsoTimestamp } from "@/lib/dates";
 import { dispatchFor } from "@/lib/outbox-dispatch";
 import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
@@ -113,7 +113,7 @@ export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> 
     if (!target) return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
     if (target.limit) return { status: "rejected", message: target.limit };
     const pathname = buildPath(target.ein, submissionId, filename);
-    const expiresAt = Math.floor(Date.now() / 1000) + UPLOAD_TICKET_SECONDS;
+    const expiresAt = nowEpochSeconds() + UPLOAD_TICKET_SECONDS;
     await withClaims(user.id, (tx) => tx.query("SELECT app.issue_upload_ticket($1, $2, to_timestamp($3))", [pathname, submissionId, expiresAt]));
     return { status: "ok", pathname, signature: signPath(user.id, submissionId, pathname, expiresAt), contentType: mimeFor(filename) };
   } catch {

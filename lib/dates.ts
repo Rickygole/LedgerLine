@@ -47,3 +47,7 @@ export function nowIso(): string {
 export function toIsoTimestamp(value: string | Date): string {
   return new Date(value).toISOString();
 }
+
+export function nowEpochSeconds(): number {
+  return Math.floor(Date.now() / 1000);
+}
