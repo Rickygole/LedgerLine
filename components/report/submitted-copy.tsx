@@ -1,4 +1,4 @@
-import { Download, Fingerprint } from "lucide-react";
+import { Download } from "lucide-react";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
@@ -51,10 +51,9 @@ export function SubmittedCopy({
               { label: revision.kind === "correction" ? "Corrected by" : "Submitted by", value: revision.actorName ?? "Not recorded" },
               { label: "Submitted on", value: `${formatDateTime(revision.createdAt)} ET` },
               {
-                label: "Fingerprint (SHA-256)",
+                label: "Receipt code",
                 value: (
-                  <span className="inline-flex items-center gap-1.5 font-mono text-xs" title={revision.sha256}>
-                    <Fingerprint className="h-4 w-4 text-muted" aria-hidden="true" />
+                  <span className="font-mono text-sm" title="Council Finance can use this code to confirm this copy has not changed.">
                     {revision.sha256.slice(0, 12)}
                   </span>
                 ),
