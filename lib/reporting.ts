@@ -21,7 +21,7 @@ export function bucketFor(status: string | null, dueOn: string): Bucket {
 }
 
 export const BUCKET_LABEL: Record<Bucket, string> = {
-  outstanding: "Outstanding",
+  outstanding: "Not yet due",
   missing: "Missing",
   submitted: "Submitted",
   in_review: "In review",
