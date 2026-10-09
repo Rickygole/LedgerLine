@@ -4,7 +4,8 @@ export function safeNext(value: FormDataEntryValue | string | null | undefined, 
   try {
     const url = new URL(next, "https://ledgerline.invalid");
     if (url.origin !== "https://ledgerline.invalid") return fallback;
-    return `${url.pathname}${url.search}${url.hash}`;
+    const result = `${url.pathname}${url.search}${url.hash}`;
+    return /^\/[^/\\]/.test(result) || result === "/" ? result : fallback;
   } catch {
     return fallback;
   }
