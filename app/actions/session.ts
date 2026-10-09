@@ -79,5 +79,8 @@ export async function unlockGate(_prev: FormState, formData: FormData): Promise<
   if (!expected || !sameSecret(passcode, expected)) return { error: "That passcode is not correct." };
   const store = await cookies();
   store.set(GATE_COOKIE, await signGate(), { ...sessionCookieOptions, maxAge: 60 * 60 * 24 * 7 });
-  redirect(safeNext(formData.get("next"), "/login"));
+  const target = safeNext(formData.get("next"), "/login");
+  const needsSession = target.startsWith("/portal") || target.startsWith("/finance");
+  if (needsSession && !(await verifySessionClaims(store.get(SESSION_COOKIE)?.value))) redirect(`/login?next=${encodeURIComponent(target)}`);
+  redirect(target);
 }
