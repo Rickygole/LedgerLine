@@ -2,7 +2,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Document, Header, Packer, Paragraph, TextRun, AlignmentType } from "docx";
 import mammoth from "mammoth";
-import { splitParagraphs, templateSha } from "../lib/forms/editor/draft-core";
+import { splitParagraphs } from "../lib/forms/editor/draft-core";
+import { templateSha } from "../lib/forms/editor/template-hash";
 
 type Spec = {
   label: string;

@@ -9,11 +9,11 @@ import {
   parseWithRules,
   proposalSchema,
   quotedData,
-  templateSha,
   type FieldCheck,
   type ProposedField,
 } from "@/lib/forms/editor/draft-core";
 import { LIBRARY_KEYS } from "@/lib/forms/editor/draft-core";
+import { templateSha } from "@/lib/forms/editor/template-hash";
 import { DRAFTABLE_TYPES } from "@/lib/forms/editor/definition";
 
 export const PROMPT_VERSION = "form-draft-v1";

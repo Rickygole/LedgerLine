@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { createHash } from "node:crypto";
 import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
 import { DRAFTABLE_TYPES, uniqueKey } from "@/lib/forms/editor/definition";
 import type { FormDefinition, Question } from "@/lib/rules/types";
@@ -82,10 +81,6 @@ export function splitParagraphs(rawText: string): string[] {
 
 export function normalizedTemplate(paragraphs: string[]): string {
   return paragraphs.map((p) => collapse(p)).join("\n");
-}
-
-export function templateSha(paragraphs: string[]): string {
-  return createHash("sha256").update(normalizedTemplate(paragraphs)).digest("hex");
 }
 
 export function quotedData(paragraphs: string[]): string {

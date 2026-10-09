@@ -3,7 +3,8 @@ import path from "node:path";
 import mammoth from "mammoth";
 import { describe, expect, it } from "vitest";
 import { REPLAYS } from "@/lib/ai/replays";
-import { checkField, parseWithRules, proposalSchema, splitParagraphs, templateSha, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { checkField, parseWithRules, proposalSchema, splitParagraphs, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { templateSha } from "@/lib/forms/editor/template-hash";
 
 type Label = { label: string; type: string; required: boolean; paragraph: number; library_key: string | null };
 type Labels = Record<string, { name: string; sha256: string; fields: Label[] }>;

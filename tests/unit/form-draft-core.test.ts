@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkCitation, checkField, mergeFields, parseWithRules, splitParagraphs, templateSha, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { checkCitation, checkField, mergeFields, parseWithRules, splitParagraphs, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { templateSha } from "@/lib/forms/editor/template-hash";
 import { buildDefinition } from "@/lib/forms/standard";
 
 const paragraphs = [
