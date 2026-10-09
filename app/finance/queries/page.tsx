@@ -37,37 +37,42 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
       />
       {one(raw, "saved") === "1" ? <p role="status" className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">Query saved.</p> : null}
       <div className="space-y-6">
-        <Card>
-          <CardHeader title="Query builder" description="Choose any combination of criteria. The count updates as you change them." />
-          <CardBody>
-            <QueryBuilder params={params} periods={options.periods} categories={options.categories} initiatives={options.initiatives} />
-          </CardBody>
-        </Card>
-        <Card>
-          <CardBody className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Matching reports</p>
-              <p className="num text-3xl font-bold text-ink" aria-live="polite" data-testid="match-count">
-                {count}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {lines.map((line) => (
-                  <Badge key={line} tone="info">
-                    {line}
-                  </Badge>
-                ))}
+        <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
+          <Card className="lg:col-span-8">
+            <CardHeader title="Query builder" description="Choose any combination of criteria. The count updates as you change them." />
+            <CardBody>
+              <QueryBuilder params={params} periods={options.periods} categories={options.categories} initiatives={options.initiatives} />
+            </CardBody>
+          </Card>
+          <Card className="border-l-[3px] border-l-navy-600 lg:sticky lg:top-4 lg:col-span-4">
+            <CardBody className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Matching reports</p>
+                <p className="num mt-1 text-[28px] font-bold leading-8 text-ink" aria-live="polite" data-testid="match-count">
+                  {count}
+                </p>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <ButtonLink href={resultsHref(params)}>
-                <ExternalLink className="h-4 w-4" aria-hidden="true" /> Open results
-              </ButtonLink>
-              <ButtonLink href={exportHref(params)} variant="secondary">
-                <Download className="h-4 w-4" aria-hidden="true" /> Export Excel
-              </ButtonLink>
-            </div>
-          </CardBody>
-        </Card>
+              <div>
+                <p className="mb-1.5 text-xs text-muted">Criteria</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {lines.map((line) => (
+                    <Badge key={line} tone="info">
+                      {line}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 border-t border-line pt-4">
+                <ButtonLink href={resultsHref(params)} className="flex-1">
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" /> Open results
+                </ButtonLink>
+                <ButtonLink href={exportHref(params)} variant="secondary" className="flex-1">
+                  <Download className="h-4 w-4" aria-hidden="true" /> Export Excel
+                </ButtonLink>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
         <Card>
           <CardHeader title="Your saved queries" description="Only you can see these." />
           <Table>
@@ -95,7 +100,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                           ))}
                         </div>
                       </TD>
-                      <TD>{formatDate(q.created_at.slice(0, 10))}</TD>
+                      <TD className="whitespace-nowrap text-muted">{formatDate(q.created_at.slice(0, 10))}</TD>
                       <TD>
                         <div className="flex flex-wrap items-center gap-2">
                           <ButtonLink href={resultsHref(p)} variant="secondary" size="sm">
