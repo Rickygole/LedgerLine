@@ -113,3 +113,16 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
   if (row.entity === "user" && row.action === "sign_in") return { actor, verb: "signed in", subject: "" };
   return { actor, verb: `recorded ${row.action.replace(/_/g, " ")} on`, subject: `${row.entity.replace(/_/g, " ")} ${label}` };
 }
+
+export async function auditFilterOptions(tx: Tx) {
+  const actors = await tx.query<{ id: string; full_name: string }>(
+    `SELECT DISTINCT u.id, u.full_name FROM audit_event e JOIN app_user u ON u.id = e.actor_id ORDER BY u.full_name`
+  );
+  const entities = await tx.query<{ entity: string }>(`SELECT DISTINCT entity FROM audit_event ORDER BY entity`);
+  const actions = await tx.query<{ action: string }>(`SELECT DISTINCT action FROM audit_event ORDER BY action`);
+  return { actors, entities: entities.map((e) => e.entity), actions: actions.map((a) => a.action) };
+}
+
+export function actionLabel(action: string): string {
+  return action.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+}
