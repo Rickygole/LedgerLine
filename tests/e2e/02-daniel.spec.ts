@@ -1,4 +1,5 @@
 import { expect, test, type Browser } from "@playwright/test";
+import * as XLSX from "xlsx";
 import { authFile, PEOPLE, submitOverdueDraft } from "./support/app";
 import { ownerQuery } from "./support/db";
 
@@ -107,4 +108,27 @@ test("[US-045][US-057] a correction after acceptance needs a reason and leaves a
   expect(rows).toEqual([{ action: "correction", note: "Title confirmed by phone with the organization" }]);
   await page.goto("/finance/audit");
   await expect(page.getByText(/corrected/i).first()).toBeVisible();
+});
+
+test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filtered list, for finance staff only", async ({ page, browser }) => {
+  const csv = await page.request.get("/api/export?q=00-1040217&period=FY26-YE&format=csv");
+  expect(csv.status()).toBe(200);
+  expect(csv.headers()["content-type"]).toContain("text/csv");
+  expect(csv.headers()["content-disposition"]).toContain("attachment");
+  const lines = (await csv.text()).trim().split("\n");
+  expect(lines[0]).toContain("reference_no");
+  expect(lines.length).toBeGreaterThan(1);
+  for (const line of lines.slice(1)) expect(line).toContain("00-1040217");
+
+  const xlsx = await page.request.get("/api/export?q=00-1040217&period=FY26-YE");
+  expect(xlsx.status()).toBe(200);
+  expect(xlsx.headers()["content-type"]).toContain("spreadsheetml");
+  const book = XLSX.read(await xlsx.body(), { type: "buffer" });
+  expect(book.SheetNames).toEqual(["Submissions", "Budget lines", "README"]);
+  expect(XLSX.utils.sheet_to_json(book.Sheets["Submissions"]).length).toBe(lines.length - 1);
+
+  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+  const denied = await context.request.get("/api/export?period=FY26-YE");
+  expect(denied.status()).toBe(403);
+  await context.close();
 });

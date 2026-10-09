@@ -115,3 +115,17 @@ test("[US-019][US-020][BR-014] a submission is locked and an emailed copy with t
   await page.goto("/portal/messages");
   await expect(page.getByText(/Report received/).first()).toBeVisible();
 });
+
+test("[US-021] the submitted copy prints without the site chrome and saves as a PDF", async ({ page }) => {
+  await page.goto(`/portal/reports/${submittedId}`);
+  await expect(page.getByRole("button", { name: "Print" })).toBeVisible();
+  const [revision] = await ownerQuery<{ sha256: string }>("SELECT sha256 FROM submission_revision WHERE submission_id = $1 AND kind = 'submit'", [submittedId]);
+  await expect(page.getByText(revision.sha256.slice(0, 12))).toBeVisible();
+  await expect(page.getByRole("banner")).toBeVisible();
+  await page.emulateMedia({ media: "print" });
+  await expect(page.getByRole("banner")).toBeHidden();
+  await expect(page.getByText("Mentor stipends").first()).toBeVisible();
+  const pdf = await page.pdf({ format: "Letter" });
+  expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  expect(pdf.length).toBeGreaterThan(5000);
+});
