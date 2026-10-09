@@ -55,7 +55,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
     <>
       <PageHeader
         title={`${form.initiative_name}: report form`}
-        crumbs={[{ label: "Initiatives", href: "/finance/initiatives" }, { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` }, { label: `Form version ${form.version}` }]}
+        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` }, { label: `Form version ${form.version}` }]}
         description={form.status === "draft" ? "A draft is invisible to funded organizations until it is published." : "This version is read-only."}
         meta={
           <>
