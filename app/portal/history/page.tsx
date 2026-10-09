@@ -103,7 +103,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
               shown.map((r) => (
                 <TR key={r.id}>
                   <TD>
-                    <Link href={`/portal/reports/${r.id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-navy-700 hover:underline">
+                    <Link href={`/portal/reports/${r.id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {r.reference_no}
                     </Link>
                   </TD>

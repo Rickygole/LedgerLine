@@ -84,7 +84,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                       </span>
                       <div className="min-w-0">
                         <span className="font-semibold">{u.full_name}</span>
-                        {u.id === admin.id ? <span className="ml-2 rounded-full bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">You</span> : null}
+                        {u.id === admin.id ? <span className="ml-2 rounded-sm bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">You</span> : null}
                         {u.title ? <div className="text-xs text-muted">{u.title}</div> : null}
                       </div>
                     </div>

@@ -22,14 +22,14 @@ export function ScrollArea({ className, children }: { className?: string; childr
   }, []);
 
   return (
-    <div className="relative min-w-0 last:overflow-hidden last:rounded-b-[11px]">
+    <div className="relative min-w-0 last:overflow-hidden last:rounded-b">
       <div ref={ref} className={cn("relative overflow-x-auto overscroll-x-contain", className)}>
         {children}
       </div>
       <span
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 z-[11] w-8 bg-gradient-to-l from-[rgb(16_24_40/0.09)] to-transparent transition-opacity duration-200",
+          "pointer-events-none absolute inset-y-0 right-0 z-[11] w-8 bg-gradient-to-l from-[rgb(16_24_40/0.09)] to-transparent",
           more ? "opacity-100" : "opacity-0"
         )}
       />

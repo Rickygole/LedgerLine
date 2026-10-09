@@ -191,7 +191,7 @@ export default async function PlatformPage() {
                 <li key={title} className="rounded-md border border-line p-4">
                   <p className="flex items-center gap-2 text-sm font-semibold"><ShieldAlert className="h-4 w-4 text-navy-700" aria-hidden="true" /> {title}</p>
                   <p className="mt-1 text-sm text-muted">{text}</p>
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-navy-700">{when}</p>
+                  <p className="mt-2 text-[13px] font-semibold text-navy-700">{when}</p>
                 </li>
               ))}
             </ol>
@@ -212,7 +212,7 @@ export default async function PlatformPage() {
             </p>
             {user.role === "finance_admin" ? (
               <div>
-                <Link href="/finance/users" className="text-sm font-semibold text-navy-800 hover:underline">Manage users and roles</Link>
+                <Link href="/finance/users" className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">Manage users and roles</Link>
               </div>
             ) : null}
           </CardBody>

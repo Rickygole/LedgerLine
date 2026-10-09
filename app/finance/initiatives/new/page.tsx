@@ -60,7 +60,7 @@ export default async function NewInitiativePage({ searchParams }: { searchParams
           const done = number < step;
           const current = number === step;
           return (
-            <li key={label} aria-current={current ? "step" : undefined} className={cn("flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ring-1 ring-inset", current ? "bg-navy-800 text-white ring-navy-800" : done ? "bg-ok-bg text-ok ring-ok/20" : "bg-white text-muted ring-line")}>
+            <li key={label} aria-current={current ? "step" : undefined} className={cn("flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm font-semibold ring-1 ring-inset", current ? "bg-navy-800 text-white ring-navy-800" : done ? "bg-ok-bg text-ok ring-ok/20" : "bg-white text-muted ring-line")}>
               {done ? <Check className="h-4 w-4" aria-hidden="true" /> : <span className="num">{number}</span>}
               {label}
               {done ? <span className="sr-only"> (completed)</span> : null}
@@ -92,7 +92,7 @@ export default async function NewInitiativePage({ searchParams }: { searchParams
                     </li>
                   ))}
                 </ul>
-                <Link href={`/finance/initiatives/new?step=3&initiative=${data.initiative.id}`} className="mt-3 inline-block font-semibold text-navy-800 hover:underline">
+                <Link href={`/finance/initiatives/new?step=3&initiative=${data.initiative.id}`} className="mt-3 inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   Continue to the report form
                 </Link>
               </div>

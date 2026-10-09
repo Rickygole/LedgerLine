@@ -55,7 +55,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
           <Card className="border-l-[3px] border-l-navy-600 lg:sticky lg:top-4 lg:col-span-4">
             <CardBody className="space-y-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Matching reports</p>
+                <p className="text-[13px] font-semibold text-muted">Matching reports</p>
                 <p className="num mt-1 text-[28px] font-bold leading-8 text-ink" aria-live="polite" data-testid="match-count">
                   {count ?? "None"}
                 </p>
@@ -114,7 +114,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                           <ButtonLink href={resultsHref(p)} variant="secondary" size="sm">
                             <Play className="h-3.5 w-3.5" aria-hidden="true" /> Run
                           </ButtonLink>
-                          <Link href={`/finance/queries?${new URLSearchParams(p as Record<string, string>).toString()}`} className="text-sm font-semibold text-navy-800 hover:underline">
+                          <Link href={`/finance/queries?${new URLSearchParams(p as Record<string, string>).toString()}`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                             Edit
                           </Link>
                           <form action={deleteQuery}>

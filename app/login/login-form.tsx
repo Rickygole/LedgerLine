@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { signIn } from "@/app/actions/session";
 import { Button } from "@/components/ui/button";
@@ -9,10 +10,10 @@ export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(signIn, undefined);
 
   return (
-    <form action={action} className="mt-8 space-y-5" noValidate>
+    <form action={action} className="mt-6 space-y-5" noValidate>
       <input type="hidden" name="next" value={next} />
       {state?.error ? (
-        <div role="alert" className="rounded-md border border-bad/30 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
+        <div role="alert" className="border-l-4 border-bad bg-bad-bg px-4 py-3 text-sm font-semibold text-ink">
           {state.error}
         </div>
       ) : null}
@@ -29,7 +30,11 @@ export function LoginForm({ next }: { next: string }) {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in" : "Sign in"}
       </Button>
-      <p className="text-center text-xs leading-5 text-muted">Trouble signing in? Your organization&apos;s administrator or Council Finance can reset your password.</p>
+      <p className="text-sm">
+        <Link href="/help#sign-in" className="text-link underline underline-offset-2 hover:text-link-hover">
+          Forgot your password?
+        </Link>
+      </p>
     </form>
   );
 }

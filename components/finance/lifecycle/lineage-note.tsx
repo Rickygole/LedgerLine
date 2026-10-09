@@ -11,7 +11,7 @@ function phrase(kind: LineageLink["kind"]): string {
 function Item({ link }: { link: LineageLink }) {
   if (!link.other_id) return null;
   return (
-    <Link href={`/finance/initiatives/${link.other_id}`} className="font-semibold text-navy-800 hover:underline">
+    <Link href={`/finance/initiatives/${link.other_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
       {link.other_name} <span className="font-normal text-muted">({link.other_code}, {link.other_year})</span>
     </Link>
   );
@@ -26,7 +26,7 @@ export async function InitiativeLineage({ initiativeId }: { initiativeId: string
   if (predecessors.length === 0 && continued.length === 0 && !retired) return null;
   return (
     <div className="mb-4 rounded-lg border border-line bg-white px-4 py-3 text-sm shadow-[0_1px_2px_rgba(16,24,40,0.04)]" aria-label="Initiative history">
-      <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+      <p className="mb-1 flex items-center gap-2 text-[13px] font-semibold text-muted">
         <GitBranch className="h-3.5 w-3.5" aria-hidden="true" /> History
       </p>
       <ul className="space-y-1">

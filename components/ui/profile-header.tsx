@@ -14,14 +14,14 @@ export function ProfileHeader({ title, subtitle, crumbs, meta, actions, tabs, ch
   return (
     <div className="mb-6">
       {crumbs && crumbs.length > 0 ? <Breadcrumbs crumbs={crumbs} /> : null}
-      <div className="min-w-0 overflow-hidden rounded-xl border border-line bg-white shadow-card">
+      <div className="min-w-0 overflow-hidden rounded border border-line bg-white">
         <div className="flex flex-wrap items-start justify-between gap-4 p-5 sm:p-6">
           <div className="flex min-w-0 flex-1 basis-80 items-start gap-4">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-navy-100 text-lg font-bold text-navy-800" aria-hidden="true">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-navy-100 text-lg font-bold text-navy-800" aria-hidden="true">
               {monogram(title)}
             </span>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight text-ink">{title}</h1>
+              <h1 className="text-xl font-bold text-ink">{title}</h1>
               {subtitle ? <p className="mt-0.5 text-sm text-muted">{subtitle}</p> : null}
               {items.length > 0 ? (
                 <ul className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-muted">

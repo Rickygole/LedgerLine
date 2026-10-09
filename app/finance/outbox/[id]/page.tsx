@@ -31,7 +31,7 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardBody>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">Message body</h2>
+            <h2 className="text-[13px] font-semibold text-muted">Message body</h2>
             <pre className="mt-3 whitespace-pre-wrap break-words rounded-md bg-surface/70 p-4 font-mono text-[13px] leading-relaxed text-ink">{message.body_text}</pre>
           </CardBody>
         </Card>
@@ -44,8 +44,8 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
                 { label: "Template", value: templateLabel(message.template) },
                 { label: "Created", value: formatDateTime(message.created_at) },
                 { label: "Created by", value: message.created_by_name ?? "System" },
-                { label: "Organization", value: message.org_id ? <Link href={`/finance/organizations/${message.org_id}`} className="font-semibold text-navy-800 hover:underline">{message.org_name}</Link> : null },
-                { label: "Related report", value: message.submission_id ? <Link href={`/finance/submissions/${message.submission_id}`} className="font-mono text-xs font-semibold text-navy-800 hover:underline">{message.reference_no}</Link> : null },
+                { label: "Organization", value: message.org_id ? <Link href={`/finance/organizations/${message.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">{message.org_name}</Link> : null },
+                { label: "Related report", value: message.submission_id ? <Link href={`/finance/submissions/${message.submission_id}`} className="font-mono text-xs font-semibold text-link underline underline-offset-2 hover:text-link-hover">{message.reference_no}</Link> : null },
               ]}
             />
           </CardBody>

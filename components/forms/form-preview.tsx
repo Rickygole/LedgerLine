@@ -39,7 +39,7 @@ function PreviewControl({ question, id }: { question: Question; id: string }) {
       return (
         <div className="overflow-x-auto rounded-md border border-line">
           <table className="w-full text-sm">
-            <thead className="bg-surface text-left text-xs font-semibold uppercase tracking-wide text-muted">
+            <thead className="bg-surface text-left text-[13px] font-semibold text-muted">
               <tr>
                 {(question.columns ?? []).map((column) => (
                   <th key={column.key} scope="col" className="px-3 py-2">
@@ -103,7 +103,7 @@ export function FormPreview({ definition, awardLabel, only }: { definition: Form
                   {definition.budget.mustEqualAward ? <p className="font-semibold text-ink">The budget total must equal your award{awardLabel ? ` of ${awardLabel}` : ""} before you can submit.</p> : <p className="text-muted">The budget total does not need to equal your award.</p>}
                   <div className="overflow-x-auto rounded-md border border-line">
                     <table className="w-full text-sm">
-                      <thead className="bg-surface text-left text-xs font-semibold uppercase tracking-wide text-muted">
+                      <thead className="bg-surface text-left text-[13px] font-semibold text-muted">
                         <tr>
                           <th scope="col" className="px-3 py-2">Category</th>
                           <th scope="col" className="px-3 py-2">Description</th>

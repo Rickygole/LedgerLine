@@ -126,7 +126,7 @@ export function BudgetGrid({
 
   return (
     <div id="budget-grid" tabIndex={-1} onPaste={onPaste} className="rounded-lg border border-line bg-white focus:outline-none">
-      <div className="sticky top-[3.75rem] z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-lg border-b border-line bg-white/95 px-3 py-2.5 backdrop-blur sm:px-4">
+      <div className="sticky top-[3.75rem] z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-lg border-b border-line bg-white px-3 py-2.5 sm:px-4">
         <div className="flex flex-wrap gap-2">
           <Button ref={addButton} variant="secondary" size="sm" onClick={addRow} disabled={atLimit}>
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -140,7 +140,7 @@ export function BudgetGrid({
         <div aria-live="polite" aria-atomic="true" className="ml-auto">
           <p
             className={cn(
-              "num inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset",
+              "num inline-flex items-center gap-1.5 rounded-sm px-3 py-1 text-sm font-semibold ring-1 ring-inset",
               balance.tone === "ok" && "bg-ok-bg text-ok ring-ok/25",
               balance.tone === "warn" && "bg-warn-bg text-warn ring-warn/30",
               balance.tone === "bad" && "bg-bad-bg text-bad ring-bad/25"
@@ -203,7 +203,7 @@ export function BudgetGrid({
 
       {gridError ? <p className="border-b border-line px-4 py-2.5 text-sm font-semibold text-bad">{gridError}</p> : null}
 
-      <div className={cn("hidden h-10 border-b border-line bg-surface min-[720px]:items-center text-[11px] font-semibold uppercase tracking-[0.06em] text-muted", COLS)}>
+      <div className={cn("hidden h-10 border-b border-line bg-surface min-[720px]:items-center text-[13px] font-semibold text-muted", COLS)}>
         <span className="px-3 text-right">#</span>
         <span className="px-3">Category</span>
         <span className="px-3">Description</span>

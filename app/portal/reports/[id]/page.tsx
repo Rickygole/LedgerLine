@@ -83,7 +83,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <span className="flex items-center gap-4 text-muted">
                   <span className="num">{formatBytes(file.bytes)}</span>
                   {data.sentIds[file.path] ? (
-                    <a href={`/portal/reports/${id}/files/${data.sentIds[file.path]}`} className="font-semibold text-navy-800 hover:underline" aria-label={`Download ${file.filename}`}>
+                    <a href={`/portal/reports/${id}/files/${data.sentIds[file.path]}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover" aria-label={`Download ${file.filename}`}>
                       Download
                     </a>
                   ) : null}

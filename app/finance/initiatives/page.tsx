@@ -77,7 +77,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             { label: "Missing reports", value: totals.missing, hint: `${data.period.label}, nothing submitted and past due`, bad: totals.missing > 0 },
           ].map((tile) => (
             <div key={tile.label} className="min-w-0 bg-white px-4 py-4 sm:px-5">
-              <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted">
+              <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-muted">
                 {tile.bad ? <AlertTriangle className="h-3.5 w-3.5 text-bad" aria-hidden="true" /> : null}
                 {tile.label}
               </dt>
@@ -92,7 +92,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               Funding by category <span className="font-normal text-muted">(total and number of initiatives)</span>
             </h2>
             {data.category ? (
-              <Link href={buildHref(base, { q, status, agency: data.agency, period: data.period.id })} className="text-sm font-semibold text-navy-700 hover:underline">
+              <Link href={buildHref(base, { q, status, agency: data.agency, period: data.period.id })} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                 Show all categories
               </Link>
             ) : (
@@ -108,7 +108,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                   <Link
                     href={buildHref(base, { q, status, agency: data.agency, period: data.period.id, category: selected ? undefined : c.category })}
                     aria-current={selected ? "true" : undefined}
-                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-navy-50", selected && "bg-navy-50 ring-1 ring-navy-600/30")}
+                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 hover:bg-navy-50", selected && "bg-navy-50 ring-1 ring-navy-600/30")}
                   >
                     <span className="flex items-baseline justify-between gap-3 text-sm">
                       <span className={cn("truncate", selected ? "font-semibold text-navy-900" : "text-ink")}>{c.category}</span>
@@ -194,7 +194,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                 <TR key={row.id}>
                   <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{row.code}</TD>
                   <TD>
-                    <Link href={`${base}/${row.id}`} className="font-semibold text-navy-700 hover:underline">
+                    <Link href={`${base}/${row.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {row.name}
                     </Link>
                     {row.status === "retired" ? <span className="ml-2"><Badge>Retired</Badge></span> : null}

@@ -20,7 +20,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
     return (
       <div className="overflow-x-auto rounded-md border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-surface/70 text-left text-xs font-semibold uppercase tracking-wide text-muted">
+          <thead className="bg-surface/70 text-left text-[13px] font-semibold text-muted">
             <tr>
               {columns.map((c) => (
                 <th key={c.key} scope="col" className={`px-3 py-2 ${c.type === "text" ? "" : "text-right"}`}>
@@ -75,11 +75,11 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
       <nav aria-label="Jump to a section" className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
         <span className="mr-1 text-muted">Jump to</span>
         {sections.map((section) => (
-          <a key={section.key} href={`#review-${section.key}`} className="rounded-md px-2 py-1 font-medium text-navy-700 hover:bg-navy-50 hover:underline">
+          <a key={section.key} href={`#review-${section.key}`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
             {section.title}
           </a>
         ))}
-        <Link href={`/finance/submissions/${row.submissionId}?tab=budget`} className="rounded-md px-2 py-1 font-medium text-navy-700 hover:bg-navy-50 hover:underline">
+        <Link href={`/finance/submissions/${row.submissionId}?tab=budget`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
           Budget
         </Link>
       </nav>
@@ -93,9 +93,9 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
                 {questions.map((q) => {
                   const fix = corrections[q.key];
                   return (
-                    <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "md:col-span-2" : ""}>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">{q.label}</dt>
-                      <dd className="mt-1 text-sm text-ink">
+                    <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "min-w-0 md:col-span-2" : "min-w-0"}>
+                      <dt className="text-[13px] font-semibold text-muted">{q.label}</dt>
+                      <dd className="mt-1 text-sm text-ink break-words">
                         {formatValue(q, row.answers[q.key])}
                         {fix ? (
                           <span className="mt-1.5 block text-xs text-muted">
@@ -128,7 +128,7 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
                 ["Certified on", `${formatDateTime(detail.certification.certifiedAt)} ET`],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">{label}</dt>
+                  <dt className="text-[13px] font-semibold text-muted">{label}</dt>
                   <dd className="mt-1 text-sm text-ink">{value}</dd>
                 </div>
               ))}
@@ -191,7 +191,7 @@ export function AttachmentsTab({ submissionId, attachments }: { submissionId: st
                   {a.uploadedBy ? ` by ${a.uploadedBy}` : ""}
                 </TD>
                 <TD className="text-right">
-                  <a href={`/finance/submissions/${submissionId}/attachments/${a.id}`} className="inline-flex items-center gap-1.5 font-semibold text-navy-700 hover:underline">
+                  <a href={`/finance/submissions/${submissionId}/attachments/${a.id}`} className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     <Download className="h-4 w-4" aria-hidden="true" />
                     Download
                   </a>
@@ -305,7 +305,7 @@ export function RevisionsTab({ revisions, submissionId, fileIds }: { revisions: 
                       {r.files.map((file) => (
                         <li key={file.path} className="flex items-center gap-1.5">
                           {fileIds[file.path] ? (
-                            <a href={`/finance/submissions/${submissionId}/attachments/${fileIds[file.path]}`} className="inline-flex items-center gap-1.5 font-semibold text-navy-700 hover:underline">
+                            <a href={`/finance/submissions/${submissionId}/attachments/${fileIds[file.path]}`} className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                               <Download className="h-3.5 w-3.5" aria-hidden="true" />
                               {file.filename}
                             </a>
@@ -351,10 +351,10 @@ export function TabNav({ id, current, counts }: { id: string; current: string; c
             key={key}
             href={`/finance/submissions/${id}?tab=${key}`}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors ${active ? "border-navy-800 font-semibold text-navy-900" : "border-transparent text-muted hover:border-line-strong hover:text-ink"}`}
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium ${active ? "border-navy-800 font-semibold text-navy-900" : "border-transparent text-muted hover:border-line-strong hover:text-ink"}`}
           >
             {label}
-            {counts[key] !== undefined ? <span className={`num rounded-full px-1.5 text-xs font-semibold ${active ? "bg-navy-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
+            {counts[key] !== undefined ? <span className={`num rounded-sm px-1.5 text-xs font-semibold ${active ? "bg-navy-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
           </Link>
         );
       })}

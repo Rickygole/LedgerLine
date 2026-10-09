@@ -114,12 +114,12 @@ export default async function TraceabilityPage() {
             <DescriptionList
               columns={1}
               items={[
-                { label: "Build", value: <a className="font-mono text-navy-700 hover:underline" href={commitUrl}>{data.commit.slice(0, 7)}</a> },
+                { label: "Build", value: <a className="font-mono text-link underline underline-offset-2 hover:text-link-hover" href={commitUrl}>{data.commit.slice(0, 7)}</a> },
                 { label: "Generated", value: data.generatedAt ? `${formatDateTime(data.generatedAt)} ET` : "Not available" },
                 {
                   label: "Source",
                   value: data.runUrl ? (
-                    <a className="text-navy-700 hover:underline" href={data.runUrl}>
+                    <a className="text-link underline underline-offset-2 hover:text-link-hover" href={data.runUrl}>
                       Continuous integration run
                     </a>
                   ) : (
@@ -171,7 +171,7 @@ export default async function TraceabilityPage() {
           const counts = data.summary[item.state];
           return (
             <div key={item.state} className="rounded-xl border border-line bg-white px-4 py-4 shadow-card">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              <p className="flex items-center gap-2 text-[13px] font-semibold text-muted">
                 <Icon className={`h-4 w-4 ${item.tone}`} aria-hidden="true" />
                 {item.label}
               </p>

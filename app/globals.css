@@ -16,8 +16,15 @@
 
   --color-ink: #1c2430;
   --color-muted: #566173;
-  --color-line: #dfe3ea;
-  --color-line-strong: #c4cad4;
+  --color-line: #d5dae1;
+  --color-line-strong: #a9aeb1;
+  --color-field: #71767a;
+  --color-link: #005ea2;
+  --color-link-hover: #1a4480;
+  --color-action: #005ea2;
+  --color-action-hover: #1a4480;
+  --color-action-active: #162e51;
+  --color-focus: #2491ff;
   --color-surface: #f6f7f9;
 
   --color-ok: #1a7f37;
@@ -29,8 +36,16 @@
   --color-info: #24497c;
   --color-info-bg: #e6edf7;
 
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.03);
-  --shadow-raised: 0 4px 12px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-card: none;
+  --shadow-sm: none;
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.16);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.16);
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
 }
 
 html {
@@ -56,21 +71,14 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-navy-600);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
-  animation: focus-ring 140ms ease-out;
 }
 
-@keyframes focus-ring {
-  from {
-    outline-offset: 5px;
-    outline-color: transparent;
-  }
-}
-
-.on-dark :focus-visible,
-.on-dark:focus-visible {
-  outline-color: #ffffff;
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-offset: 0;
 }
 
 .skip-link {
@@ -79,13 +87,12 @@ body {
   top: 0.5rem;
   z-index: 100;
   transform: translateY(-200%);
-  border-radius: 6px;
   background: #ffffff;
-  color: var(--color-navy-900);
+  color: var(--color-link);
   padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 600;
-  box-shadow: var(--shadow-raised);
+  text-decoration: underline;
 }
 
 .skip-link:focus {
@@ -93,10 +100,8 @@ body {
 }
 
 .eyebrow {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--color-muted);
 }
 
@@ -120,58 +125,10 @@ body {
 
 dialog.nav-drawer {
   inset: 0 auto 0 0;
-  transform: translateX(-100%);
-  transition:
-    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    overlay 220ms allow-discrete,
-    display 220ms allow-discrete;
-}
-
-dialog.nav-drawer[open] {
-  transform: none;
-}
-
-@starting-style {
-  dialog.nav-drawer[open] {
-    transform: translateX(-100%);
-  }
 }
 
 dialog.nav-drawer::backdrop {
-  background: rgb(11 27 51 / 0);
-  transition:
-    background-color 220ms ease-out,
-    overlay 220ms allow-discrete,
-    display 220ms allow-discrete;
-}
-
-dialog.nav-drawer[open]::backdrop {
-  background: rgb(11 27 51 / 0.45);
-}
-
-@starting-style {
-  dialog.nav-drawer[open]::backdrop {
-    background: rgb(11 27 51 / 0);
-  }
-}
-
-.menu-panel {
-  transform-origin: top right;
-  transition:
-    opacity 140ms ease-out,
-    transform 140ms ease-out;
-}
-
-details[open] > .menu-panel {
-  opacity: 1;
-  transform: none;
-}
-
-@starting-style {
-  details[open] > .menu-panel {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.98);
-  }
+  background: rgb(0 0 0 / 0.5);
 }
 
 .skeleton {

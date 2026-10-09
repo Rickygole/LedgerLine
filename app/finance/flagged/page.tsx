@@ -106,13 +106,13 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                       return (
                         <TR key={`${reason}-${row.assignmentId}`}>
                           <TD className="min-w-48">
-                            <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
+                            <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                               {row.orgName}
                             </Link>
                             <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
                           </TD>
                           <TD className="min-w-48">
-                            <Link href={`/finance/initiatives/${row.initiativeId}`} className="hover:text-navy-700 hover:underline">
+                            <Link href={`/finance/initiatives/${row.initiativeId}`} className="hover:text-link hover:underline">
                               {row.initiativeName}
                             </Link>
                           </TD>
@@ -120,11 +120,11 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                           <TD className="max-w-xl text-[13px] leading-5 text-ink">{evidence}</TD>
                           <TD className="whitespace-nowrap text-right">
                             {row.submissionId ? (
-                              <Link href={`/finance/submissions/${row.submissionId}`} className="font-semibold text-navy-700 hover:underline">
+                              <Link href={`/finance/submissions/${row.submissionId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                                 Open <span className="font-mono text-[13px]">{row.referenceNo}</span>
                               </Link>
                             ) : (
-                              <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
+                              <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                                 View organization
                               </Link>
                             )}

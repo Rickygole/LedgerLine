@@ -1,15 +1,34 @@
+import Link from "next/link";
 import { cn } from "@/lib/cn";
-import { LogoMark } from "./logo";
+
+const LINKS = [
+  { href: "/accessibility", label: "Accessibility" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms of use" },
+  { href: "/help", label: "Help" },
+];
 
 export function SiteFooter({ className }: { className?: string }) {
   return (
     <footer className={cn("no-print mt-16 border-t border-line bg-white", className)}>
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <span className="flex items-center gap-2.5">
-          <LogoMark className="h-4 w-4 shrink-0 opacity-70" />
-          <span>&copy; 2026 LedgerLine. Initiative reporting for Council-funded programs.</span>
-        </span>
-        <span className="text-muted">Need help? Contact your LedgerLine administrator.</span>
+      <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6">
+        <nav aria-label="Site information">
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-link underline underline-offset-2 hover:text-link-hover">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      <div className="bg-navy-950 text-navy-100">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-1 px-4 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>&copy; 2026 LedgerLine</p>
+          <p>Support: Monday to Friday, 9 AM to 5 PM ET</p>
+        </div>
       </div>
     </footer>
   );

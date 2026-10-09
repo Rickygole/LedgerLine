@@ -98,9 +98,9 @@ function NavList({ role, onNavigate, compact = false }: { role: Role; onNavigate
     <div className={compact ? "space-y-3" : "space-y-6"}>
       {groupsFor(role).map((group, index) => (
         <div key={group.label ?? index}>
-          {group.label && !compact ? <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">{group.label}</p> : null}
+          {group.label && !compact ? <p className="mb-1 px-3 text-xs font-bold text-muted">{group.label}</p> : null}
           {group.label && compact && index > 0 ? <hr className="mx-2 mb-3 border-line" /> : null}
-          <ul className="space-y-0.5">
+          <ul className="divide-y divide-line border-y border-line">
             {group.items.map((item) => {
               const active = item.match(pathname);
               const Icon = item.icon;
@@ -112,13 +112,13 @@ function NavList({ role, onNavigate, compact = false }: { role: Role; onNavigate
                     title={compact ? item.label : undefined}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group/nav relative flex h-9 items-center gap-2.5 rounded-md text-sm font-medium transition-colors duration-150",
+                      "group/nav relative flex h-10 items-center gap-2.5 text-sm",
                       compact ? "justify-center px-0" : "px-3",
-                      active ? "bg-navy-50 font-semibold text-navy-900" : "text-ink/80 hover:bg-surface hover:text-ink"
+                      active ? "bg-navy-50 font-bold text-link" : "text-ink hover:bg-surface hover:text-link hover:underline"
                     )}
                   >
-                    <span aria-hidden="true" className={cn("absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-navy-700 transition-opacity duration-150", active ? "opacity-100" : "opacity-0")} />
-                    <Icon className={cn("h-4 w-4 shrink-0 transition-colors", active ? "text-navy-700" : "text-muted group-hover/nav:text-ink")} />
+                    {active ? <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-action" /> : null}
+                    <Icon className={cn("h-4 w-4 shrink-0", active ? "text-link" : "text-muted group-hover/nav:text-link")} />
                     <span className={compact ? "sr-only" : "truncate"}>{item.label}</span>
                   </Link>
                 </li>
@@ -151,7 +151,7 @@ export function SideNav({ role, initialCollapsed = false }: { role: Role; initia
             onClick={toggle}
             aria-expanded={!collapsed}
             title={collapsed ? "Expand menu" : undefined}
-            className={cn("flex h-9 w-full items-center gap-2.5 rounded-md text-sm font-medium text-muted transition-colors duration-150 hover:bg-surface hover:text-ink", collapsed ? "justify-center" : "px-3")}
+            className={cn("flex h-9 w-full items-center gap-2.5 rounded-sm text-sm text-link underline underline-offset-2 hover:bg-surface hover:text-link-hover", collapsed ? "justify-center" : "px-3")}
           >
             <Toggle className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className={collapsed ? "sr-only" : undefined}>{collapsed ? "Expand menu" : "Collapse menu"}</span>
@@ -175,8 +175,8 @@ export function TopTabs({ role }: { role: Role }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative whitespace-nowrap rounded-t-md border-b-2 px-3 py-3 text-sm font-medium transition-colors duration-150 focus-visible:bg-navy-50 focus-visible:-outline-offset-2",
-              active ? "border-navy-800 font-semibold text-navy-900" : "border-transparent text-muted hover:border-line-strong hover:text-ink"
+              "relative whitespace-nowrap border-b-4 px-3 py-3 text-sm focus-visible:-outline-offset-4",
+              active ? "border-action font-bold text-link" : "border-transparent text-ink hover:border-line-strong hover:text-link hover:underline"
             )}
           >
             {item.label}
@@ -202,7 +202,7 @@ export function NavDrawer({ role, subtitle, className }: { role: Role; subtitle:
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
-        className={cn("-ml-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white transition-colors hover:bg-white/10", className)}
+        className={cn("-ml-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded text-white hover:bg-navy-800", className)}
         aria-label="Open menu"
         aria-haspopup="dialog"
       >
@@ -211,15 +211,15 @@ export function NavDrawer({ role, subtitle, className }: { role: Role; subtitle:
       <dialog
         ref={ref}
         aria-label="Menu"
-        className="nav-drawer m-0 h-dvh max-h-dvh w-[min(20rem,86vw)] max-w-none overflow-hidden border-0 bg-white p-0 text-ink shadow-raised"
+        className="nav-drawer m-0 h-dvh max-h-dvh w-[min(20rem,86vw)] max-w-none overflow-hidden border-0 border-r border-line bg-white p-0 text-ink"
         onClick={(event) => {
           if (event.target === event.currentTarget) close();
         }}
       >
         <div className="flex h-full flex-col">
-          <div className="on-dark flex h-14 shrink-0 items-center justify-between gap-3 bg-navy-900 px-4">
+          <div className="flex h-14 shrink-0 items-center justify-between gap-3 bg-navy-900 px-4">
             <Logo subtitle={subtitle} />
-            <button type="button" onClick={close} className="flex h-9 w-9 items-center justify-center rounded-md text-white transition-colors hover:bg-white/10" aria-label="Close menu">
+            <button type="button" onClick={close} className="flex h-9 w-9 items-center justify-center rounded text-white hover:bg-navy-800" aria-label="Close menu">
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>

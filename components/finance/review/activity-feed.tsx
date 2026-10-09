@@ -27,7 +27,7 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
               <>
                 {" "}
                 on{" "}
-                <Link href={`/finance/submissions/${item.submissionId}`} className="font-semibold text-navy-700 hover:underline">
+                <Link href={`/finance/submissions/${item.submissionId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   {item.referenceNo}
                 </Link>
               </>

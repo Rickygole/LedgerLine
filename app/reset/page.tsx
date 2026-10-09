@@ -17,18 +17,25 @@ export default async function ResetPage({ searchParams }: { searchParams: Promis
     <AuthFrame>
       {info ? (
         <>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px] sm:leading-9">{info.purpose === "invite" ? "Set your password" : "Choose a new password"}</h1>
-          <p className="mt-2 text-sm leading-6 text-muted">
+          <h1 className="text-2xl font-bold leading-8 text-ink">{info.purpose === "invite" ? "Set your password" : "Choose a new password"}</h1>
+          <p className="mt-2 text-base leading-6 text-ink">
             Account for {info.full_name} ({info.email}). The link you used works once and stops working 30 minutes after it was sent.
           </p>
           <ResetForm token={token} email={info.email} />
+          <p className="mt-8 border-t border-line pt-5 text-sm leading-6 text-ink">
+            Problems with this link? See{" "}
+            <Link href="/help#sign-in" className="text-link underline underline-offset-2 hover:text-link-hover">
+              Help
+            </Link>{" "}
+            or contact Council Finance.
+          </p>
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px] sm:leading-9">This link cannot be used</h1>
-          <p className="mt-2 text-sm leading-6 text-muted">The link has expired, was already used, or is not complete. Ask Council Finance to send you a new one.</p>
+          <h1 className="text-2xl font-bold leading-8 text-ink">This link cannot be used</h1>
+          <p className="mt-2 text-base leading-6 text-ink">The link has expired, was already used, or is not complete. Ask Council Finance to send you a new one.</p>
           <p className="mt-6 text-sm">
-            <Link href="/login" className="font-semibold text-navy-800 hover:underline">
+            <Link href="/login" className="text-link underline underline-offset-2 hover:text-link-hover">
               Back to sign in
             </Link>
           </p>

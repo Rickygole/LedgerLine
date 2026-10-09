@@ -68,7 +68,7 @@ export function StatusStackChart({ title, description, dimension, data, periodLa
             {title}, {periodLabel}. Counts of reports.
           </caption>
           <thead className="bg-surface">
-            <tr className="text-[11px] uppercase tracking-[0.06em] text-muted">
+            <tr className="text-[13px] text-muted">
               <th scope="col" className="whitespace-nowrap px-3 py-2 font-semibold">{dimension}</th>
               {used.map((b) => (
                 <th key={b} scope="col" className="whitespace-nowrap px-3 py-2 text-right font-semibold">{BUCKET_LABEL[b]}</th>
@@ -80,7 +80,7 @@ export function StatusStackChart({ title, description, dimension, data, periodLa
             {rows.map((d) => (
               <tr key={d.name} className="border-t border-line">
                 <th scope="row" className="whitespace-nowrap px-3 py-2 font-medium">
-                  <Link href={d.href} className="font-semibold text-navy-700 hover:underline">{d.name}</Link>
+                  <Link href={d.href} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">{d.name}</Link>
                 </th>
                 {used.map((b) => (
                   <td key={b} className="num px-3 py-2 text-right">{d[b]}</td>

@@ -113,7 +113,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             <Card className="lg:col-span-2">
               <CardHeader title="About" />
               <CardBody>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Mission</h3>
+                <h3 className="text-[13px] font-semibold text-muted">Mission</h3>
                 <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
                 <div className="mt-5 border-t border-line pt-5">
                   <DescriptionList
@@ -150,7 +150,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                 </li>
               </ul>
               <div className="border-t border-line px-5 py-4">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Primary contact</h3>
+                <h3 className="text-[13px] font-semibold text-muted">Primary contact</h3>
                 {primary ? (
                   <div className="mt-2 flex items-start gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-100 text-xs font-bold text-navy-800" aria-hidden="true">

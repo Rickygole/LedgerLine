@@ -66,7 +66,7 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
           {pending ? "Saving" : rule ? "Save rule" : "Add rule"}
         </Button>
         {cancelHref ? (
-          <Link href={cancelHref} className="text-sm font-semibold text-navy-800 hover:underline">
+          <Link href={cancelHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
             Cancel
           </Link>
         ) : null}
@@ -80,7 +80,7 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
   const [deleteState, remove, deleting] = useActionState<ReminderState, FormData>(deleteRule, undefined);
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Link href={editHref} className="text-sm font-semibold text-navy-800 hover:underline">
+      <Link href={editHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
         Edit
       </Link>
       <form action={toggle}>

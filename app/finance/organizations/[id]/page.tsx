@@ -123,7 +123,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
             <Card className="lg:col-span-2">
               <CardHeader title="About" />
               <CardBody>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Mission</h3>
+                <h3 className="text-[13px] font-semibold text-muted">Mission</h3>
                 <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
                 <div className="mt-5 border-t border-line pt-5">
                   <DescriptionList
@@ -157,7 +157,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 </li>
               </ul>
               <div className="border-t border-line px-5 py-4">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Primary contact</h3>
+                <h3 className="text-[13px] font-semibold text-muted">Primary contact</h3>
                 {primary ? (
                   <div className="mt-2 flex items-start gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-100 text-xs font-bold text-navy-800" aria-hidden="true">
@@ -166,7 +166,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                     <div className="min-w-0 text-sm">
                       <p className="font-semibold text-ink">{primary.full_name}</p>
                       <p className="text-muted">{primary.title}</p>
-                      <a href={`mailto:${primary.email}`} className="mt-1 block break-all font-medium text-navy-700 hover:underline">
+                      <a href={`mailto:${primary.email}`} className="mt-1 block break-all font-medium text-link underline underline-offset-2 hover:text-link-hover">
                         {primary.email}
                       </a>
                       {primary.phone ? <p className="num text-muted">{primary.phone}</p> : null}
@@ -182,7 +182,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 title="Awards"
                 description="Active and past awards with report status by period."
                 actions={
-                  <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-navy-700 hover:underline">
+                  <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     Open awards tab
                   </Link>
                 }
@@ -220,7 +220,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 reports.map((r) => (
                   <TR key={r.id}>
                     <TD>
-                      <Link href={`/finance/submissions/${r.id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-navy-700 hover:underline">
+                      <Link href={`/finance/submissions/${r.id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                         {r.reference_no}
                       </Link>
                     </TD>
@@ -335,7 +335,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 messages.map((m) => (
                   <TR key={m.id}>
                     <TD>
-                      <Link href={`/finance/outbox/${m.id}`} className="font-semibold text-navy-700 hover:underline">
+                      <Link href={`/finance/outbox/${m.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                         {m.subject}
                       </Link>
                     </TD>
@@ -377,7 +377,7 @@ function AwardsTable({ awards }: { awards: OrgAward[] }) {
           awards.map((a) => (
             <TR key={a.assignment_id}>
               <TD>
-                <Link href={`/finance/initiatives/${a.initiative_id}`} className="font-semibold text-navy-700 hover:underline">
+                <Link href={`/finance/initiatives/${a.initiative_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   {a.name}
                 </Link>
                 <div className="font-mono text-[13px] text-muted">{a.code}</div>

@@ -152,7 +152,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           <CardHeader title="Recent activity" description="Latest actions across all reports." />
           <ActivityFeed items={activity} />
           <CardBody className="border-t border-line py-3 text-sm">
-            <Link href="/finance/audit" className="font-semibold text-navy-700 hover:underline">
+            <Link href="/finance/audit" className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
               Open the full audit log
             </Link>
           </CardBody>

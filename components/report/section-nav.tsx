@@ -9,11 +9,11 @@ export function SectionNav({ sections, active, onJump }: { sections: NavSection[
   const done = sections.filter((section) => section.state === "complete").length;
   return (
     <nav aria-label="Report sections" className="no-print">
-      <p className="num mb-2 hidden text-xs font-semibold uppercase tracking-[0.06em] text-muted lg:block">
+      <p className="num mb-2 hidden text-[13px] font-semibold text-muted lg:block">
         {done} of {sections.length} sections complete
       </p>
       <div className="mb-3 hidden h-1.5 overflow-hidden rounded-full bg-line lg:block" aria-hidden="true">
-        <div className="h-full bg-ok transition-all" style={{ width: `${Math.round((done / sections.length) * 100)}%` }} />
+        <div className="h-full bg-ok" style={{ width: `${Math.round((done / sections.length) * 100)}%` }} />
       </div>
       <ol className="relative -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-2 [mask-image:linear-gradient(to_right,black_85%,transparent)] lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0 lg:[mask-image:none]">
         {sections.map((section) => {

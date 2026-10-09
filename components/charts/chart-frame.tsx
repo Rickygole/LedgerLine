@@ -50,7 +50,7 @@ export function ChartFrame({ title, description, children, table, source, classN
       </div>
       <div className="flex-1 px-5 pt-4">{children}</div>
       <details className="group mx-5 mt-3 border-t border-line pt-3 text-sm">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-sm font-semibold text-navy-700 hover:underline [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover [&::-webkit-details-marker]:hidden">
           <Table2 className="h-4 w-4" aria-hidden="true" />
           <span className="group-open:hidden">View as table</span>
           <span className="hidden group-open:inline">Hide table</span>

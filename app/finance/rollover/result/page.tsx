@@ -58,7 +58,7 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
           <dl className="mt-4 grid gap-4 sm:grid-cols-4 lg:grid-cols-7">
             {tiles.map(([label, value]) => (
               <div key={label}>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</dt>
+                <dt className="text-[13px] font-semibold text-muted">{label}</dt>
                 <dd className="num mt-1 text-xl font-bold">{value}</dd>
               </div>
             ))}
@@ -66,7 +66,7 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
         </CardBody>
       </Card>
       <Card>
-        <CardHeader title={`${to} reporting periods`} description="Reminder rules for these periods can be set up next." actions={<Link href="/finance/reminders" className="text-sm font-semibold text-navy-800 hover:underline">Open reminders</Link>} />
+        <CardHeader title={`${to} reporting periods`} description="Reminder rules for these periods can be set up next." actions={<Link href="/finance/reminders" className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">Open reminders</Link>} />
         <Table>
           <THead>
             <tr>
