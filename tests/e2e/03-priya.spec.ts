@@ -63,6 +63,6 @@ test("an analyst cannot open the new initiative page", async ({ browser }) => {
   const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("daniel") });
   const page = await context.newPage();
   const response = await page.goto("/finance/initiatives/new");
-  expect(response?.status()).toBe(404);
+  expect(response?.status()).toBe(403);
   await context.close();
 });

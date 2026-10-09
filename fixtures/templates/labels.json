@@ -1,7 +1,7 @@
 {
   "senior-digital-literacy-report.docx": {
     "name": "Senior Digital Literacy",
-    "sha256": "f5a6776c5247fb5177a83281a6514d6abf160841e21135fe7b9b3b4059b9ad5d",
+    "sha256": "4f7e7f8b47f4acd3ab8d7ff7aab6b041641b316ff11f111b3fcc62474cbb1f62",
     "fields": [
       {
         "label": "Number of seniors enrolled in digital literacy classes this period",
@@ -84,7 +84,7 @@
   },
   "youth-sports-league-report.docx": {
     "name": "Youth Sports League",
-    "sha256": "acc91d2b0686b7919d038c43e55c2819d95861b4a8d486c5c8e0717ab1915110",
+    "sha256": "e1382396bd16a35a4e1299e88cbc1cbd91c7d1e134a9db6f4b6a687286dec65b",
     "fields": [
       {
         "label": "Number of youth registered in the league this season",
@@ -167,7 +167,7 @@
   },
   "food-pantry-report-injected.docx": {
     "name": "Food Pantry (injection test)",
-    "sha256": "897fe549cb808c12ef07db14e1212b883851c9502de45a742c8291d274a2cf59",
+    "sha256": "b8e6e89406ef0aedbde6f9fbf6d0cb310ae7271aff9848fefe2b5fc44e476d73",
     "fields": [
       {
         "label": "Number of households served this period",

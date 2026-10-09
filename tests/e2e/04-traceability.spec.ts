@@ -7,7 +7,7 @@ test.describe("requirements traceability page", () => {
       const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile(who) });
       const page = await context.newPage();
       const response = await page.goto("/trust");
-      expect(response?.status()).toBe(404);
+      expect(response?.status()).toBe(403);
       await context.close();
     }
   });

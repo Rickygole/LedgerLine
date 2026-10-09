@@ -22,7 +22,7 @@ type Template = { file: string; name: string; lines: Line[] };
 
 const intro = (title: string): Line[] => [
   { text: title, heading: true },
-  { text: "SAMPLE TEMPLATE. All content in this document is synthetic and was written for a demonstration." },
+  { text: "Council-funded initiative report. Answer every item that applies to your program." },
   { text: "Complete every numbered item and return this form to the Council Finance office by the due date." },
 ];
 
@@ -99,13 +99,13 @@ async function build(template: Template): Promise<Buffer> {
     return new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: line.text, size: 24 })] });
   });
   const doc = new Document({
-    creator: "LedgerLine sample data",
+    creator: "LedgerLine",
     title: template.name,
     sections: [
       {
         headers: {
           default: new Header({
-            children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "SAMPLE TEMPLATE", bold: true, color: "B42318", size: 20 })] })],
+            children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "Council Finance reporting form", bold: true, color: "B42318", size: 20 })] })],
           }),
         },
         children,

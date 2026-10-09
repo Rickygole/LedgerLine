@@ -41,16 +41,19 @@ test("[US-016] a submitter starts the report the organization owes from the port
 test("[BR-021][US-031] submitting with required answers missing lists each one", async ({ page }) => {
   await openOverdueDraft(page);
   await page.getByRole("button", { name: "Submit report" }).click();
-  const summary = page.getByRole("alert").filter({ hasText: /need|problem|fix/i }).first();
+  const summary = page.getByRole("alert").filter({ hasText: /Fix \d+ problems? before you submit/ }).first();
   await expect(summary).toBeVisible();
-  await expect(summary).toContainText(/participants targeted this period/i);
-  await expect(summary).toContainText(/budget line/i);
+  await expect(summary).toContainText("Enter the number of participants served this period.");
+  await expect(summary).toContainText("Add at least one budget line.");
+  await expect(summary).toContainText("Check the box to certify that this report is accurate and complete.");
   await expect(page).toHaveURL(/\/portal\/reports\/[0-9a-f-]{36}$/);
 });
 
 test("[US-017][US-018] answers save automatically and are still there after reload", async ({ page }) => {
   await openOverdueDraft(page);
   await fillRequiredAnswers(page);
+  await page.locator("#q-participants_target").fill("120");
+  await page.locator("#q-sites_count").fill("3");
   await expect(page.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
   await page.reload();
   await expect(page.locator("#q-participants_target")).toHaveValue("120");
@@ -76,6 +79,25 @@ test("[BR-012] the browser refuses a file over 25 MB before sending it and says 
   await expect(page.getByText(/over the 25\.0 MB limit for one file/)).toBeVisible();
 });
 
+test("[BR-022] actual spent shows a variance per line and a submitter must explain a large unspent balance", async ({ page }) => {
+  await openOverdueDraft(page);
+  await fillRequiredAnswers(page);
+  await setBudget(page, [
+    { category: "PS", description: "Mentor stipends", amount: "60000", actual: "30000" },
+    { category: "OTPS", description: "Program supplies", amount: "25000", actual: "10000" },
+  ]);
+  await expect(page.getByText("Actual spent total")).toBeVisible();
+  await expect(page.getByText("Unspent balance (award minus actual spent)")).toBeVisible();
+  await expect(page.getByText("(52.9% of the award)")).toBeVisible();
+  await expect(page.getByLabel("Variance explanation")).toBeVisible();
+  await page.getByRole("button", { name: "Submit report" }).click();
+  const summary = page.getByRole("alert").filter({ hasText: /Fix \d+ problems? before you submit/ }).first();
+  await expect(summary).toContainText("of the award is unspent. Explain why in the variance explanation.");
+  await page.getByLabel("Variance explanation").fill("Two mentor positions were vacant until March and supplies were bought in bulk last year.");
+  await expect(page.getByText("Everything required is complete. You can submit this report.")).toBeVisible();
+  await expect(page).toHaveURL(/\/portal\/reports\/[0-9a-f-]{36}$/);
+});
+
 test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the amount, then submits once fixed", async ({ page }) => {
   await openOverdueDraft(page);
   await fillRequiredAnswers(page);
@@ -88,8 +110,8 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
   const refusal = page.getByRole("alert").filter({ hasText: /must equal award/ }).first();
   await expect(refusal).toContainText("Total $80,000.00 must equal award $85,000.00 (under by $5,000.00).");
   await expect(page).toHaveURL(/\/portal\/reports\/[0-9a-f-]{36}$/);
-  await page.getByLabel("Line 2 Amount").fill("25000");
-  await page.getByLabel("Line 2 Amount").blur();
+  await page.getByLabel("Line 2 Approved budget").fill("25000");
+  await page.getByLabel("Line 2 Approved budget").blur();
   await expect(page.getByText(/Balanced|equals the award/).first()).toBeVisible();
   await expect(page.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Submit report" }).click();

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, CheckCircle2, Eye, FileWarning, Flag, RotateCcw, Send } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, Eye, Flag, RotateCcw, Send } from "lucide-react";
 import { ActivityFeed, type ActivityItem } from "@/components/finance/review/activity-feed";
 import { NeedsAttention, type AttentionItem } from "@/components/finance/review/needs-attention";
 import { PeriodSelect } from "@/components/finance/review/period-select";
@@ -90,7 +90,6 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
 
   const attention: AttentionItem[] = [
     { label: "Missing", detail: "Past due with nothing submitted", count: counts.missing, href: list({ bucket: "missing" }), tone: "bad", icon: AlertTriangle },
-    { label: "Incomplete", detail: "Past due drafts that fail required rules", count: counts.incomplete, href: list({ bucket: "incomplete" }), tone: "bad", icon: FileWarning },
     { label: "Waiting for review", detail: "Submitted, review not started", count: counts.submitted, href: list({ bucket: "submitted" }), tone: "info", icon: Send },
     { label: "Flagged", detail: "At least one open finding", count: flagged, href: hrefWith("/finance/flagged", base, {}), tone: "warn", icon: Flag },
     { label: "Update requested", detail: "Waiting on the organization", count: counts.returned, href: list({ bucket: "returned" }), tone: "warn", icon: RotateCcw },

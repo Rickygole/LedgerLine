@@ -7,6 +7,7 @@ export const PEOPLE = {
   maria: "maria.santos@motthavenyouth.example.org",
   daniel: "daniel.cho@finance.example.gov",
   priya: "priya.raman@finance.example.gov",
+  grace: "grace.chen@finance.example.gov",
 };
 
 export const AUTH_DIR = "reports/auth";
@@ -58,11 +59,19 @@ export async function fillRequiredAnswers(page: Page) {
   if ((await delivery.count()) && (await delivery.inputValue()) === "") await delivery.selectOption("In person");
   const youth = page.getByRole("radio", { name: "No", exact: true });
   if ((await youth.count()) && !(await youth.first().isChecked())) await youth.first().check();
-  const certify = page.getByRole("checkbox", { name: /certif/i });
-  if ((await certify.count()) && !(await certify.first().isChecked())) await certify.first().check();
+  await certify(page);
 }
 
-export async function setBudget(page: Page, lines: { category: "PS" | "OTPS"; description: string; amount: string }[]) {
+export async function certify(page: Page) {
+  const box = page.getByRole("checkbox", { name: /certify this report/i });
+  if (!(await box.isChecked())) await box.check();
+  const name = page.getByLabel("Certifier name");
+  if ((await name.inputValue()) === "") await name.fill("Maria Santos");
+  const title = page.getByLabel("Certifier title");
+  if ((await title.inputValue()) === "") await title.fill("Program Director");
+}
+
+export async function setBudget(page: Page, lines: { category: "PS" | "OTPS"; description: string; amount: string; actual?: string }[]) {
   const existing = await page.getByRole("button", { name: /^Remove line/ }).count();
   for (let i = 0; i < existing; i++) await page.getByRole("button", { name: "Remove line 1" }).first().click();
   for (const [index, line] of lines.entries()) {
@@ -70,8 +79,10 @@ export async function setBudget(page: Page, lines: { category: "PS" | "OTPS"; de
     const n = index + 1;
     await page.getByLabel(`Line ${n} Category`, { exact: false }).selectOption(line.category);
     await page.getByLabel(`Line ${n} Description`).fill(line.description);
-    await page.getByLabel(`Line ${n} Amount`).fill(line.amount);
-    await page.getByLabel(`Line ${n} Amount`).blur();
+    await page.getByLabel(`Line ${n} Approved budget`).fill(line.amount);
+    await page.getByLabel(`Line ${n} Approved budget`).blur();
+    await page.getByLabel(`Line ${n} Actual spent`).fill(line.actual ?? line.amount);
+    await page.getByLabel(`Line ${n} Actual spent`).blur();
   }
 }
 
