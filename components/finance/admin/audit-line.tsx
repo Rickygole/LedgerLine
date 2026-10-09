@@ -1,0 +1,28 @@
+import Link from "next/link";
+import { Bot } from "lucide-react";
+import { Badge } from "@/components/ui/status-badge";
+import { auditEntityHref, auditPhrase, type AuditRow } from "@/lib/finance/admin/audit";
+
+export function AuditSentence({ row }: { row: AuditRow }) {
+  const phrase = auditPhrase(row);
+  const href = auditEntityHref(row);
+  const subject = href && phrase.subject ? (
+    <Link href={href} className="font-semibold text-navy-800 hover:underline">
+      {phrase.subject}
+    </Link>
+  ) : (
+    <span className="font-semibold">{phrase.subject}</span>
+  );
+  return (
+    <span>
+      <span className="font-semibold">{phrase.actor}</span> {phrase.verb} {subject}
+      {row.ai_action_id ? (
+        <span className="ml-2 align-middle">
+          <Badge tone="info" icon={Bot}>
+            AI assisted
+          </Badge>
+        </span>
+      ) : null}
+    </span>
+  );
+}
