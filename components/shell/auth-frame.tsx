@@ -1,12 +1,5 @@
-import { ClipboardCheck, History, Table2 } from "lucide-react";
 import { Logo } from "./logo";
 import { CreditFooter, SyntheticBanner } from "./synthetic-banner";
-
-const POINTS = [
-  { icon: ClipboardCheck, title: "Configurable forms", text: "Reporting forms that change each fiscal year without a rebuild." },
-  { icon: Table2, title: "Budgets that balance", text: "Spreadsheet-style budgets must reconcile to the award before submission." },
-  { icon: History, title: "Complete audit trail", text: "Review, request updates, and keep a permanent record for every report." },
-];
 
 export function AuthFrame({ children }: { children: React.ReactNode }) {
   return (
@@ -23,21 +16,9 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
             <Logo subtitle="Initiative Reporting System" />
           </div>
           <div className="relative max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-navy-300">Every Council-funded initiative, line by line.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-navy-300">Council initiative reporting</p>
             <p className="mt-4 text-4xl font-bold leading-[1.15] tracking-tight xl:text-[42px]">One place for funded organizations to report and for Finance to review.</p>
-            <ul className="mt-10 grid gap-5">
-              {POINTS.map(({ icon: Icon, title, text }) => (
-                <li key={title} className="flex gap-4">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] ring-1 ring-white/15" aria-hidden="true">
-                    <Icon className="h-4 w-4 text-navy-200" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-white">{title}</span>
-                    <span className="mt-0.5 block text-sm text-navy-200">{text}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <p className="mt-6 max-w-lg text-[15px] leading-7 text-navy-200">Organizations file their mid-year and year-end reports here. Finance staff review each one, ask for changes when something is off, and accept it once the budget matches the award.</p>
           </div>
           <p className="relative text-xs text-navy-300">Synthetic demonstration data throughout.</p>
         </section>
