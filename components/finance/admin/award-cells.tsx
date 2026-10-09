@@ -23,6 +23,7 @@ export function AwardPeriods({ periods }: { periods: PeriodCell[] | null }) {
 }
 
 const CONTRACT_TONE: Record<string, Tone> = { registered: "ok", pending: "info", awaiting: "neutral" };
+const QUIET_LABEL: Record<string, string> = { pending: "Pending", awaiting: "Awaiting" };
 const CONTRACT_ICON: Record<string, ComponentType<{ className?: string }>> = { registered: CheckCircle2, pending: Clock, awaiting: CircleDashed };
 
 export function ContractCell({ status, number, registeredOn, quiet = false }: { status: string; number: string | null; registeredOn: string | null; quiet?: boolean }) {
@@ -38,7 +39,16 @@ export function ContractCell({ status, number, registeredOn, quiet = false }: { 
   }
   return (
     <div className="whitespace-nowrap">
-      <Badge tone={CONTRACT_TONE[status] ?? "neutral"} icon={CONTRACT_ICON[status]}>{contractLabel(status)}</Badge>
+      <Badge tone={CONTRACT_TONE[status] ?? "neutral"} icon={CONTRACT_ICON[status]}>
+        {quiet ? (
+          <span title={contractLabel(status)}>
+            <span className="sr-only">Contract </span>
+            {QUIET_LABEL[status] ?? contractLabel(status)}
+          </span>
+        ) : (
+          contractLabel(status)
+        )}
+      </Badge>
       {number ? <div className="mt-1 font-mono text-xs text-muted">{number}</div> : null}
       {registeredOn ? <div className="text-xs text-muted">{formatDate(registeredOn)}</div> : null}
     </div>
