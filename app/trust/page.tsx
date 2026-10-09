@@ -97,7 +97,6 @@ export default async function TraceabilityPage() {
   const data = evidence as unknown as Evidence;
   const stories = data.requirements.filter((r) => r.id.startsWith("US-")).length;
   const rules = data.requirements.filter((r) => r.id.startsWith("BR-")).length;
-  const commitUrl = `https://github.com/${data.repository}/commit/${data.commit}`;
 
   return (
     <AppShell user={user}>
@@ -114,7 +113,7 @@ export default async function TraceabilityPage() {
             <DescriptionList
               columns={1}
               items={[
-                { label: "Build", value: <a className="font-mono text-link underline underline-offset-2 hover:text-link-hover" href={commitUrl}>{data.commit.slice(0, 7)}</a> },
+                { label: "Build", value: <span className="font-mono">{data.commit.slice(0, 7)}</span> },
                 { label: "Generated", value: data.generatedAt ? `${formatDateTime(data.generatedAt)} ET` : "Not available" },
                 {
                   label: "Source",
