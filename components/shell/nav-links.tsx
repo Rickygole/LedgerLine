@@ -108,6 +108,7 @@ function NavList({ role, onNavigate, compact = false }: { role: Role; onNavigate
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    prefetch={false}
                     onClick={onNavigate}
                     title={compact ? item.label : undefined}
                     aria-current={active ? "page" : undefined}
@@ -173,6 +174,7 @@ export function TopTabs({ role }: { role: Role }) {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             aria-current={active ? "page" : undefined}
             className={cn(
               "relative whitespace-nowrap border-b-4 px-3 py-3 text-sm focus-visible:-outline-offset-4",
