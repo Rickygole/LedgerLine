@@ -17,7 +17,7 @@ export const FIXED_COLUMNS = [
 
 export const BUDGET_COLUMNS = ["reference_no", "position", "category", "description", "amount"] as const;
 
-export const DISCLAIMER = "SYNTHETIC DEMO DATA. Not NYC Council records.";
+export const DISCLAIMER = "Exported from LedgerLine. Figures reflect submissions on file at the time of export.";
 
 export type ExportBudgetLine = { position: number; category: string; description: string; amount: number };
 

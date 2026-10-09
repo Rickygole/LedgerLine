@@ -6,7 +6,7 @@ const sample = (over: Partial<ExportSubmission> = {}): ExportSubmission => ({
   referenceNo: "LL-26YE-00001",
   ein: "00-1040217",
   organization: "Mott Haven Youth Futures, Inc.",
-  initiative: "After School Enrichment (sample)",
+  initiative: "After School Enrichment",
   category: "Youth Services",
   borough: "Bronx",
   period: "FY26-YE",
@@ -71,11 +71,11 @@ describe("workbook", () => {
     expect(sheet["O2"].v).toBe("Under 10 5");
   });
 
-  it("round trips through xlsx and carries the disclaimer", () => {
+  it("round trips through xlsx and carries the export note", () => {
     const parsed = XLSX.read(workbookToBuffer(book), { type: "buffer" });
     expect(parsed.SheetNames).toEqual(["Submissions", "Budget lines", "README"]);
     const readme = XLSX.utils.sheet_to_csv(parsed.Sheets["README"]);
-    expect(readme).toContain("SYNTHETIC DEMO DATA. Not NYC Council records.");
+    expect(readme).toContain("Exported from LedgerLine.");
     expect(readme).toContain("borough = Bronx");
     const budget = XLSX.utils.sheet_to_json<Record<string, unknown>>(parsed.Sheets["Budget lines"]);
     expect(budget).toEqual([{ reference_no: "LL-26YE-00001", position: 1, category: "PS", description: "Coordinator", amount: 40000 }]);

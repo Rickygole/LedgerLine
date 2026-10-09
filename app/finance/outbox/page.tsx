@@ -38,7 +38,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Outbox" description="Every email LedgerLine would send. Nothing leaves this demonstration; messages are stored here so you can read them." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]} />
+      <PageHeader title="Outbox" description="Every email LedgerLine has generated, including confirmations, update requests, reminders and password resets." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]} />
       <Card>
         <FilterBar action={base} clearHref={base}>
           <FilterField label="Template" htmlFor="template">
