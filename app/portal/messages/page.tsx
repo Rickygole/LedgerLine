@@ -53,7 +53,7 @@ export default async function MessagesPage() {
               rows.map((r) => (
                 <TR key={r.id}>
                   <TD>
-                    <Link href={`/portal/messages/${r.id}`} className="flex items-center gap-2 font-medium text-navy-800 hover:underline">
+                    <Link href={`/portal/messages/${r.id}`} className="flex items-center gap-2 font-semibold text-navy-700 hover:underline">
                       <Mail className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                       {r.subject}
                     </Link>
@@ -65,7 +65,7 @@ export default async function MessagesPage() {
                   <TD className="whitespace-nowrap">{formatDateTime(r.created_at)}</TD>
                   <TD>
                     {r.submission_id ? (
-                      <Link href={`/portal/reports/${r.submission_id}`} className="font-mono text-navy-800 hover:underline">
+                      <Link href={`/portal/reports/${r.submission_id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-navy-700 hover:underline">
                         {r.reference_no}
                       </Link>
                     ) : (
