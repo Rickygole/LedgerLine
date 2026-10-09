@@ -87,11 +87,8 @@ test("[US-044] an analyst requests an update with a note, the organization resub
 
   await page.goto(`/finance/submissions/${submissionId}`);
   await page.getByRole("button", { name: "Accept report" }).click();
-  await expect
-    .poll(async () => (await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]))[0].status)
-    .toBe("accepted");
-  await page.reload();
   await expect(page.getByText("This report is accepted.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept report" })).toHaveCount(0);
   const [after] = await ownerQuery<{ status: string; revision: number }>("SELECT status, revision FROM submission WHERE id = $1", [submissionId]);
   expect(after).toEqual({ status: "accepted", revision: 2 });
 });

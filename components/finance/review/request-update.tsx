@@ -11,7 +11,7 @@ import { StaleNotice, isStale } from "./stale-notice";
 
 type Draft = { text: string; mode: "live" | "fallback"; aiActionId: string | null; ruleIds: string[]; dropped: number };
 
-export function RequestUpdate({ submissionId, lockVersion, concerns }: { submissionId: string; lockVersion: number; concerns: Concern[] }) {
+export function RequestUpdate({ submissionId, lockVersion, concerns, onDone }: { submissionId: string; lockVersion: number; concerns: Concern[]; onDone: (message: string) => void }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -54,18 +54,14 @@ export function RequestUpdate({ submissionId, lockVersion, concerns }: { submiss
     startTransition(async () => {
       const res = await sendUpdateAction({ submissionId, lockVersion, text, aiActionId: usedDraft });
       if (!res.ok) setError(res.message);
-      else setResult(res);
+      else {
+        setResult(res);
+        onDone(res.message);
+      }
     });
   };
 
-  if (result) {
-    return (
-      <p role="status" className="flex items-start gap-2 rounded-md border border-ok/25 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">
-        <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        {result.message}
-      </p>
-    );
-  }
+  if (result) return null;
 
   if (!open) {
     return (
