@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, Check, Pause } from "lucide-react";
+import { BellRing, Check, Mail, Pause } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
 import { isoDate, one, type SearchParams } from "@/lib/finance/admin/params";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
-import { describeOffset, listPeriods, listRules, offsetFor, previewTargets, shiftDate } from "@/lib/lifecycle/reminders";
+import { describeOffset, listPeriods, listRules, offsetFor, previewTargets, renderSubject, shiftDate } from "@/lib/lifecycle/reminders";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
@@ -108,7 +108,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                 <TH>Fires on</TH>
                 <TH>Subject</TH>
                 <TH>Status</TH>
-                <TH align="right">Sent</TH>
+                <TH>Last run</TH>
                 {canEdit ? <TH>Actions</TH> : null}
               </tr>
             </THead>
@@ -131,9 +131,23 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                           {formatDate(fires)}
                         </Link>
                       </TD>
-                      <TD className="max-w-md">{rule.template_subject}</TD>
+                      <TD className="max-w-md">
+                        {renderSubject(rule.template_subject, { label: period.label, dueOn: period.due_on })}
+                        <span className="mt-0.5 block text-xs text-muted">Template: {rule.template_subject}</span>
+                      </TD>
                       <TD>{rule.active ? <Badge tone="ok" icon={Check}>On</Badge> : <Badge icon={Pause}>Off</Badge>}</TD>
-                      <TD align="right">{rule.sent}</TD>
+                      <TD className="whitespace-nowrap">
+                        {rule.last_sent ? (
+                          <>
+                            {formatDate(rule.last_sent)}
+                            <span className="num block text-xs text-muted">
+                              {rule.sent} {rule.sent === 1 ? "message" : "messages"} queued
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-muted">Not run yet</span>
+                        )}
+                      </TD>
                       {canEdit ? (
                         <TD>
                           <RuleActions rule={rule} editHref={`${base}&date=${date}&edit=${rule.id}`} />
