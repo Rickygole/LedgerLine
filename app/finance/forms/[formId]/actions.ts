@@ -132,7 +132,8 @@ export async function applyDraft(formId: string, aiActionId: string, submitted: 
       for (const item of submitted) {
         const base = original[item.id];
         const names = ["label", "help", "type", "required", "options", "max_words", "section", "library_key", "citation"] as const;
-        const changed: string[] = names.filter((name) => JSON.stringify(base[name] ?? null) !== JSON.stringify(item[name] ?? null));
+        const same = (name: (typeof names)[number]) => (name === "citation" ? base.citation.paragraph === item.citation.paragraph && base.citation.quote === item.citation.quote : JSON.stringify(base[name] ?? null) === JSON.stringify(item[name] ?? null));
+        const changed: string[] = names.filter((name) => !same(name));
         if (changed.length > 0) edited.push({ id: item.id, label: item.label, changed });
       }
       const keptIds = new Set(submitted.map((item) => item.id));
