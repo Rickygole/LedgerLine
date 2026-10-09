@@ -6,8 +6,8 @@ declare global {
 
 function pool(): Pool {
   if (!globalThis.ledgerPool) {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) throw new Error("DATABASE_URL is not set");
+    const connectionString = process.env.APP_DATABASE_URL;
+    if (!connectionString) throw new Error("APP_DATABASE_URL is not set");
     globalThis.ledgerPool = new Pool({
       connectionString,
       max: Number(process.env.DB_POOL_MAX ?? 3),
