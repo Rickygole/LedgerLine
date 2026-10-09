@@ -109,11 +109,11 @@ export function SendNowForm({ period, date, today, count, fresh }: { period: str
       <input type="hidden" name="period" value={period} />
       <input type="hidden" name="date" value={date} />
       <Button type="submit" disabled={pending || fresh === 0 || !isToday}>
-        <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Sending" : "Send now"}
+        <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Adding" : "Add to outbox"}
       </Button>
       <span className="text-sm text-muted">
         <Mail className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-        {isToday ? `${fresh} of ${count} will be added to the outbox` : "Send now works for today only. This is a preview of another date."}
+        {isToday ? `${fresh} of ${count} will be added to the outbox` : "Reminders can be added to the outbox for today only. This is a preview of another date."}
       </span>
       <Status state={state} />
     </form>

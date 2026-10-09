@@ -176,7 +176,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             description={
               matching.length === 0
                 ? `No active rule fires on this date. For ${period.label} this date is ${describeOffset(offset).toLowerCase()}.`
-                : `${targets.length} ${targets.length === 1 ? "organization qualifies" : "organizations qualify"} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Send now would queue.`
+                : `${targets.length} ${targets.length === 1 ? "organization qualifies" : "organizations qualify"} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Add to outbox would queue.`
             }
           />
           {targets.length > 0 ? (
