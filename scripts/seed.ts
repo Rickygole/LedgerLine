@@ -455,7 +455,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     const [f, ...r] = full.split(" ");
     const id = randomUUID();
     if (role !== "finance_viewer") reviewerIds.push(id);
-    financeRows.push({ id, email: `${slug(f)}.${slug(r.join(""))}@finance.example.gov`, full_name: full, title: pick(FINANCE_TITLES[role]), role, org_id: null, password_hash: null, can_sign_in: false });
+    financeRows.push({ id, email: `${slug(f)}.${slug(r.join(""))}@finance.example.gov`, full_name: full, title: pick(FINANCE_TITLES[role]), role, org_id: null, password_hash: role === "finance_viewer" ? hash : null, can_sign_in: role === "finance_viewer" });
   }
   reviewerIds.push(ids.priya);
   await insertRows(client, "app_user", [...userRows, ...financeRows], ["id", "email", "full_name", "title", "role", "org_id", "password_hash", "can_sign_in"]);
