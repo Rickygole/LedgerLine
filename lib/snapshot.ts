@@ -1,3 +1,4 @@
+import type { Certification } from "@/lib/rules/certify";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
 
 export type SnapshotAttachment = { path: string; filename: string; bytes: number; mime: string };
@@ -7,6 +8,7 @@ export type Snapshot = {
   answers: Answers;
   budget: Omit<BudgetLine, "rowId">[];
   attachments: SnapshotAttachment[];
+  certification?: Certification;
 };
 
 function sortKeys(value: unknown): unknown {
@@ -26,6 +28,7 @@ export function buildSnapshot(input: {
   answers: Answers;
   budget: BudgetLine[];
   attachments: SnapshotAttachment[];
+  certification?: Certification;
 }): Snapshot {
   return sortKeys({
     formVersionId: input.formVersionId,
@@ -40,5 +43,6 @@ export function buildSnapshot(input: {
         ...(actual === null || actual === undefined ? {} : { actual }),
       })),
     attachments: [...input.attachments].sort((a, b) => a.path.localeCompare(b.path)),
+    ...(input.certification ? { certification: input.certification } : {}),
   }) as Snapshot;
 }
