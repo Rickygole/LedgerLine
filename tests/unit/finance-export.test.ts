@@ -101,6 +101,31 @@ describe("workbook", () => {
     expect(csv).toContain("2026-09-18 10:05");
     expect(csv).not.toContain("README");
   });
+
+  it("[US-047] writes award and budget total as plain numbers, not formatted text", () => {
+    const csv = submissionsToCsv(buildWorkbook([sample({ award: 30000, budgetTotal: 30000.5 })], meta));
+    const [header, row] = csv.split("\n");
+    const columns = header.split(",");
+    expect(row).toContain(",30000,");
+    expect(row).toContain(",30000.5,");
+    expect(row).not.toContain("30,000");
+    expect(columns.indexOf("award")).toBeGreaterThan(-1);
+  });
+
+  it("[US-046] carries actual spent on the budget sheet as a number and leaves it empty when not entered", () => {
+    const withActual = sample({
+      budget: [
+        { position: 1, category: "PS", description: "Coordinator", amount: 40000, actual: 38250.25 },
+        { position: 2, category: "OTPS", description: "Supplies", amount: 22500, actual: null },
+      ],
+    });
+    const parsed = XLSX.read(workbookToBuffer(buildWorkbook([withActual], meta)), { type: "buffer" });
+    const sheet = parsed.Sheets["Budget lines"];
+    expect(sheet["F1"].v).toBe("actual_spent");
+    expect(sheet["F2"].t).toBe("n");
+    expect(sheet["F2"].v).toBe(38250.25);
+    expect(sheet["F3"]).toBeUndefined();
+  });
 });
 
 describe("export filename", () => {

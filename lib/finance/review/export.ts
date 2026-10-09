@@ -21,11 +21,11 @@ export const FIXED_COLUMNS = [
   "contract_registered_on",
 ] as const;
 
-export const BUDGET_COLUMNS = ["reference_no", "position", "category", "description", "amount"] as const;
+export const BUDGET_COLUMNS = ["reference_no", "position", "category", "description", "amount", "actual_spent"] as const;
 
 export const DISCLAIMER = "Exported from LedgerLine. Figures reflect submissions on file at the time of export.";
 
-export type ExportBudgetLine = { position: number; category: string; description: string; amount: number };
+export type ExportBudgetLine = { position: number; category: string; description: string; amount: number; actual?: number | null };
 
 export type ExportSubmission = {
   referenceNo: string;
@@ -177,10 +177,11 @@ export function budgetSheet(submissions: ExportSubmission[]): XLSX.WorkSheet {
       sheet[XLSX.utils.encode_cell({ r, c: 2 })] = textCell(line.category);
       sheet[XLSX.utils.encode_cell({ r, c: 3 })] = textCell(line.description);
       sheet[XLSX.utils.encode_cell({ r, c: 4 })] = numberCell(line.amount, "#,##0.00");
+      if (line.actual !== null && line.actual !== undefined) sheet[XLSX.utils.encode_cell({ r, c: 5 })] = numberCell(line.actual, "#,##0.00");
       r += 1;
     }
   }
-  sheet["!cols"] = [{ wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 44 }, { wch: 14 }];
+  sheet["!cols"] = [{ wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 44 }, { wch: 14 }, { wch: 14 }];
   setRange(sheet, r, BUDGET_COLUMNS.length);
   return sheet;
 }
@@ -192,7 +193,7 @@ export function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
     [],
     ["Sheet", "What it contains"],
     ["Submissions", "One row per submitted report. Drafts and reports returned to the organization are not included. Fixed columns first, then one column per question key found in the answers."],
-    ["Budget lines", "One row per budget line, linked to Submissions by reference_no. Amounts are numbers in US dollars."],
+    ["Budget lines", "One row per budget line, linked to Submissions by reference_no. Amounts and actual spent are numbers in US dollars; actual_spent is empty where the organization has not entered it."],
     ["README", "This sheet."],
     [],
     ["Reporting period", meta.periodLabel],
@@ -225,7 +226,17 @@ export function workbookToBuffer(book: XLSX.WorkBook): Buffer {
 }
 
 export function submissionsToCsv(book: XLSX.WorkBook): string {
-  return XLSX.utils.sheet_to_csv(book.Sheets["Submissions"], { forceQuotes: false });
+  const source = book.Sheets["Submissions"];
+  const sheet: XLSX.WorkSheet = {};
+  for (const [address, cell] of Object.entries(source)) {
+    if (address.startsWith("!")) {
+      sheet[address] = cell;
+      continue;
+    }
+    const typed = cell as XLSX.CellObject;
+    sheet[address] = typed.t === "n" && typeof typed.z === "string" && /y/.test(typed.z) ? { t: "s", v: XLSX.SSF.format(typed.z, typed.v as number) } : typed;
+  }
+  return XLSX.utils.sheet_to_csv(sheet, { forceQuotes: false, rawNumbers: true });
 }
 
 export function exportFilename(period: string, date: string, ext: "xlsx" | "csv"): string {

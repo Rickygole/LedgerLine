@@ -67,8 +67,8 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
       )
     : [];
   const budgetRows = submissionIds.length
-    ? await tx.query<{ submission_id: string; row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number }>(
-        "SELECT submission_id, row_id, position, category, description, amount::float8 AS amount FROM budget_line WHERE submission_id = ANY($1::uuid[]) ORDER BY position",
+    ? await tx.query<{ submission_id: string; row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number; actual: number | null }>(
+        "SELECT submission_id, row_id, position, category, description, amount::float8 AS amount, actual_spent::float8 AS actual FROM budget_line WHERE submission_id = ANY($1::uuid[]) ORDER BY position",
         [submissionIds]
       )
     : [];
@@ -85,7 +85,7 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
   const budgetBySubmission = new Map<string, BudgetLine[]>();
   for (const line of budgetRows) {
     const list = budgetBySubmission.get(line.submission_id) ?? [];
-    list.push({ rowId: line.row_id, position: line.position, category: line.category, description: line.description, amount: line.amount });
+    list.push({ rowId: line.row_id, position: line.position, category: line.category, description: line.description, amount: line.amount, actual: line.actual });
     budgetBySubmission.set(line.submission_id, list);
   }
   const definitions = new Map(formRows.map((r) => [r.id, r.definition]));

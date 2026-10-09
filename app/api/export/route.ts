@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     contractNumber: row.contractNumber ?? "",
     contractRegisteredOn: row.contractRegisteredOn ?? "",
     answers: row.definition ? visibleAnswers(row.definition, row.answers) : {},
-    budget: row.budget.map(({ position, category, description, amount }) => ({ position, category, description, amount })),
+    budget: row.budget.map(({ position, category, description, amount, actual }) => ({ position, category, description, amount, actual })),
   }));
 
   const book = buildWorkbook(submissions, {
