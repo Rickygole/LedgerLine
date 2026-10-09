@@ -90,7 +90,7 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
         const questions = section.questions.filter((q) => isVisible(q, row.answers));
         return (
           <Card key={section.key} id={`review-${section.key}`} className="scroll-mt-4">
-            <CardHeader title={section.title} description={section.description} />
+            <CardHeader title={section.title} />
             <CardBody>
               <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
                 {questions.map((q) => {
