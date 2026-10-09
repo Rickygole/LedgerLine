@@ -9,7 +9,7 @@ const MESSAGE_MAP: [RegExp, string][] = [
   [/only accepted reports can be reopened/i, "Only accepted reports can be reopened."],
 ];
 
-export const STALE_MESSAGE = "Someone else changed this report while you were working. Reload the page to see the latest version, then try again.";
+export const STALE_MESSAGE = "Someone else changed this report. Reload to see their changes.";
 
 export function plainError(error: unknown): string {
   const code = pgCode(error);
