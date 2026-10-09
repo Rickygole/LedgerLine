@@ -160,7 +160,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                   </p>
                 ))}
               </div>
-              <p className="num rounded-full bg-white px-3 py-1 text-sm font-semibold text-ink ring-1 ring-inset ring-line" aria-live="polite">
+              <p className="num rounded-sm bg-white px-3 py-1 text-sm font-semibold text-ink ring-1 ring-inset ring-line" aria-live="polite">
                 {reviewed} of {rows.length} reviewed
               </p>
             </div>

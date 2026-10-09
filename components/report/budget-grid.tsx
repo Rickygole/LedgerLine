@@ -140,7 +140,7 @@ export function BudgetGrid({
         <div aria-live="polite" aria-atomic="true" className="ml-auto">
           <p
             className={cn(
-              "num inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset",
+              "num inline-flex items-center gap-1.5 rounded-sm px-3 py-1 text-sm font-semibold ring-1 ring-inset",
               balance.tone === "ok" && "bg-ok-bg text-ok ring-ok/25",
               balance.tone === "warn" && "bg-warn-bg text-warn ring-warn/30",
               balance.tone === "bad" && "bg-bad-bg text-bad ring-bad/25"

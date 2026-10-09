@@ -179,7 +179,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
               {pending ? "Saving" : dirty ? "Save draft" : "Saved"}
             </Button>
             {review && importOpen ? (
-              <span className={cn("num rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset", reviewing ? "bg-[#f1ecfb] text-[#5b3fa0] ring-[#5b3fa0]/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
+              <span className={cn("num rounded-sm px-2.5 py-1 text-xs font-semibold ring-1 ring-inset", reviewing ? "bg-[#f1ecfb] text-[#5b3fa0] ring-[#5b3fa0]/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
                 {review.reviewed} of {review.total} reviewed
               </span>
             ) : null}
