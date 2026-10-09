@@ -42,13 +42,13 @@ function FlagsCell({ row }: { row: ReportRow }) {
 
 export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; emptyHref: string }) {
   return (
-    <Table density="compact" stack>
+    <Table density="compact" stack className="@container">
       <THead>
         <tr>
           <TH>Reference</TH>
           <TH>Organization</TH>
           <TH>Initiative</TH>
-          <TH>Council Member</TH>
+          <TH className="@max-[72rem]:hidden">Council Member</TH>
           <TH>Contract</TH>
           <TH align="right">Award</TH>
           <TH>State</TH>
@@ -66,17 +66,17 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
         ) : (
           rows.map((row) => (
             <TR key={row.assignmentId} className={row.bucket === "missing" ? "bg-bad-bg/40" : undefined}>
-              <TD className="whitespace-nowrap" primary>
+              <TD primary>
                 {row.submissionId ? (
                   <Link href={`/finance/submissions/${row.submissionId}`} className="num font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     {row.referenceNo}
                   </Link>
                 ) : (
-                  <span className="text-[13px] text-muted">Not started</span>
+                  <span className="whitespace-nowrap text-[13px] text-muted">Not started</span>
                 )}
                 {row.updatedAt ? <span className="block text-xs text-muted">Updated {formatDate(row.updatedAt)}</span> : null}
               </TD>
-              <TD className="min-w-48" label="Organization">
+              <TD className="min-w-44" label="Organization">
                 <div>
                   <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     {row.orgName}
@@ -91,8 +91,11 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                   {row.initiativeName}
                 </Link>
                 <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>
+                <span className="hidden text-xs text-muted @max-[72rem]:block" title={row.sponsors.map((s) => s.name).join(", ")}>
+                  {row.sponsors.length > 0 ? `${sponsorShort(row.sponsors)}, ` : ""}{fundingLabel(row.fundingSource)}
+                </span>
               </TD>
-              <TD className="min-w-28" stackHidden>
+              <TD className="min-w-28 @max-[72rem]:hidden" stackHidden>
                 <span title={row.sponsors.map((s) => s.name).join(", ")}>{sponsorShort(row.sponsors)}</span>
                 <span className="block text-xs text-muted">{fundingLabel(row.fundingSource)}</span>
               </TD>
