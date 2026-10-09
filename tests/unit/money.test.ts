@@ -18,6 +18,15 @@ describe("[US-025] amount parsing", () => {
     expect(parseAmount("2M")).toBe(2_000_000);
   });
 
+  it("rounds half a cent up using exact digits, not floating point", () => {
+    expect(parseAmount("0.285")).toBe(0.29);
+    expect(parseAmount("1.005")).toBe(1.01);
+    expect(parseAmount("1.004")).toBe(1);
+    expect(parseAmount("(2.675)")).toBe(-2.68);
+    expect(parseAmount("1.23455K")).toBe(1234.55);
+    expect(parseAmount(".5")).toBe(0.5);
+  });
+
   it("rejects text that is not an amount", () => {
     expect(parseAmount("Program Director")).toBeNull();
     expect(parseAmount("")).toBeNull();
