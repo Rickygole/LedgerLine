@@ -167,6 +167,11 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
           />
           {targets.length > 0 ? (
             <>
+              {canEdit ? (
+                <CardBody className="border-b border-line">
+                  <SendNowForm period={period.id} date={date} today={today} count={targets.length} fresh={fresh} />
+                </CardBody>
+              ) : null}
               <Table>
                 <THead>
                   <tr>
@@ -203,11 +208,6 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                   ))}
                 </tbody>
               </Table>
-              {canEdit ? (
-                <CardBody className="sticky bottom-0 z-10 rounded-b-xl border-t border-line bg-white">
-                  <SendNowForm period={period.id} date={date} today={today} count={targets.length} fresh={fresh} />
-                </CardBody>
-              ) : null}
             </>
           ) : (
             <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
