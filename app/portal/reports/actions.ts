@@ -122,6 +122,14 @@ export async function recordBlobUpload(raw: unknown): Promise<UploadActionResult
     await blob.del(meta.url).catch(() => undefined);
     return { status: "rejected", message: problem ?? "Use PDF, Word, Excel or CSV." };
   }
+  const start = await fetch(meta.downloadUrl ?? meta.url, { headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`, range: "bytes=0-4095" } })
+    .then(async (response) => (response.ok ? Buffer.from(await response.arrayBuffer()).subarray(0, 4096) : null))
+    .catch(() => null);
+  const invalid = start ? contentLooksValid(filename, start) : "The uploaded file could not be checked. Try again.";
+  if (invalid) {
+    await blob.del(meta.url).catch(() => undefined);
+    return { status: "rejected", message: invalid };
+  }
   try {
     const attachment = await withClaims(user.id, (tx) => insertAttachment(tx, { submissionId, pathname, filename, bytes: meta.size, mime: mimeFor(filename) }));
     return { status: "ok", attachment };
