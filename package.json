@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "db:migrate": "tsx scripts/migrate.ts",
-    "db:role": "tsx scripts/role-password.ts"
+    "db:role": "tsx scripts/role-password.ts",
+    "db:seed": "tsx scripts/seed.ts fresh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",
