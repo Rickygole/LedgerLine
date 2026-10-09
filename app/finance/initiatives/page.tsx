@@ -132,7 +132,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
       </Card>
 
       <Card>
-        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })}>
+        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })} applied={[data.category, data.agency, status].filter(Boolean).length}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Code or name" />
           </FilterField>

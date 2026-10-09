@@ -43,7 +43,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         <CreateUserForm orgs={orgs} />
       </Card>
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={base} applied={role ? 1 : 0}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Name, email or organization" />
           </FilterField>

@@ -46,7 +46,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader title="Audit log" description="A permanent record of who did what and when. Entries cannot be edited or removed." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Audit log" }]} />
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={base} keep={0} applied={[data.actor, data.entity, data.action, from, to].filter(Boolean).length}>
           <FilterField label="Actor" htmlFor="actor" className="min-w-48">
             <Select id="actor" name="actor" defaultValue={data.actor}>
               <option value="">Everyone</option>

@@ -40,7 +40,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
         crumbs={[{ label: "Dashboard", href: "/finance" }, ...(user.role === "finance_admin" ? [{ label: "Annual rollover", href: "/finance/rollover" }] : []), { label: "Lineage" }]}
       />
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={base} applied={[kind, year].filter(Boolean).length}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Initiative name or code" />
           </FilterField>

@@ -40,7 +40,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
     <>
       <PageHeader title="Outbox" description="Every email LedgerLine has generated, including confirmations, update requests, reminders and password resets." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]} />
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={base} keep={0} applied={[data.template, data.org, from, to].filter(Boolean).length}>
           <FilterField label="Template" htmlFor="template">
             <Select id="template" name="template" defaultValue={data.template}>
               <option value="">All templates</option>

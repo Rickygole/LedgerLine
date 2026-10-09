@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
+import { FilterDisclosure } from "@/components/ui/filter-disclosure";
 import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
 import { FLAG_LABEL, FLAG_ORDER, BOROUGHS, STATUS_OPTIONS } from "@/lib/finance/review/filters";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
@@ -28,6 +29,8 @@ export function FilterBar({
   clearHref: string;
 }) {
   const has = (f: (typeof fields)[number]) => fields.includes(f);
+  const values: Partial<Record<(typeof fields)[number], string>> = { initiative: filters.initiative, category: filters.category, borough: filters.borough, member: filters.member ? String(filters.member) : "", funding: filters.funding, contract: filters.contract, agency: filters.agency, bucket: filters.bucket, status: filters.status, flag: filters.flag };
+  const applied = fields.filter((f) => f !== "q" && f !== "period" && values[f]).length;
   return (
     <form method="get" action={action} role="search" aria-label="Filter reports" className="mb-4 rounded-xl border border-line bg-white p-4 shadow-card">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -37,6 +40,7 @@ export function FilterBar({
             <Input id="f-q" name="q" defaultValue={filters.q} placeholder="Reference, EIN, organization, contract" />
           </div>
         ) : null}
+        <FilterDisclosure layout="grid" applied={applied} className="col-span-full sm:grid-cols-2">
         {has("initiative") ? (
           <div>
             <Label htmlFor="f-initiative">Initiative</Label>
@@ -153,6 +157,7 @@ export function FilterBar({
             </Select>
           </div>
         ) : null}
+        </FilterDisclosure>
       </div>
       {!has("bucket") && filters.bucket ? <input type="hidden" name="bucket" value={filters.bucket} /> : null}
       <div className="mt-4 flex flex-wrap items-center gap-3">

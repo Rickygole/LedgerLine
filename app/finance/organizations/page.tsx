@@ -48,7 +48,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
     <>
       <PageHeader title="Organizations" description={`Every organization funded through Council initiatives. Awards and compliance count the ${period.label} reports that fall due for ${period.fiscalYearId} awards.`} crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations" }]} />
       <Card>
-        <FilterBar action={base} clearHref={`${base}?period=${period.id}`}>
+        <FilterBar action={base} clearHref={`${base}?period=${period.id}`} applied={[borough, type, missing ? "1" : ""].filter(Boolean).length}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Name or 12-3456789" />
           </FilterField>
