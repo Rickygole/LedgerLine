@@ -41,22 +41,22 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
       {org ? <OrgSummary org={org} activeAwards={awards.size} totalAwarded={totalAwarded} /> : null}
 
       {urgent.length > 0 ? (
-        <section aria-labelledby="action-needed" className="mb-6 rounded-lg border border-bad/30 bg-bad-bg px-5 py-4">
-          <h2 id="action-needed" className="flex items-center gap-2 text-base font-semibold text-bad">
-            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+        <section aria-labelledby="action-needed" className="mb-6 rounded-xl border border-l-4 border-line border-l-bad bg-white px-5 py-4 shadow-card">
+          <h2 id="action-needed" className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+            <AlertTriangle className="h-4 w-4 text-bad" aria-hidden="true" />
             Action needed
           </h2>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-3 divide-y divide-line">
             {urgent.map((o) => {
               const action = actionFor(o);
               return (
-                <li key={`${o.assignmentId}-${o.periodId}`} className="flex flex-wrap items-center justify-between gap-3 text-sm text-ink">
-                  <span>
+                <li key={`${o.assignmentId}-${o.periodId}`} className="flex flex-wrap items-center justify-between gap-3 py-2.5 text-sm text-ink first:pt-0 last:pb-0">
+                  <span className="min-w-0 flex-1 basis-72">
                     <span className="font-semibold">{o.initiativeName}</span>, {o.periodLabel}:{" "}
                     {o.state === "returned" ? "Finance asked for changes." : `due ${formatDate(o.dueOn)}, now ${o.pastDue} ${o.pastDue === 1 ? "day" : "days"} past due.`}
                   </span>
-                  <ButtonLink href={action.href} size="sm" variant="danger">
-                    {action.label}
+                  <ButtonLink href={action.href} size="sm" className="max-sm:w-full">
+                    {action.label === "Continue" ? "Continue report" : action.label}
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </ButtonLink>
                 </li>
@@ -80,7 +80,34 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
             />
           }
         />
-        <Table>
+        <ul className="divide-y divide-line md:hidden">
+          {rows.length === 0 ? <li className="px-5 py-10 text-center text-sm text-muted">No reporting obligations for this period. Council Finance assigns initiatives to your organization.</li> : null}
+          {rows.map((o) => {
+            const action = actionFor(o);
+            return (
+              <li key={`${o.assignmentId}-${o.periodId}`} className={o.needsAction ? "bg-[#fef7f6] px-5 py-4" : "px-5 py-4"}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-ink">{o.initiativeName}</p>
+                    <p className="whitespace-nowrap font-mono text-[13px] text-muted">{o.initiativeCode}{o.referenceNo ? `, ${o.referenceNo}` : ""}</p>
+                  </div>
+                  <StateBadge state={o.state} audience="cbo" />
+                </div>
+                <p className="mt-2 text-sm text-ink">
+                  {o.periodLabel} <span className="text-muted">due</span> <span className="whitespace-nowrap">{formatDate(o.dueOn)}</span>
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span className="num text-muted">Award {formatCurrency(o.award)}</span>
+                  {o.status === null || o.status === "draft" || o.status === "returned" ? <DueBadge daysPastDue={o.pastDue} /> : null}
+                </div>
+                <ButtonLink href={action.href} variant={action.primary ? "primary" : "secondary"} size="md" className="mt-3 w-full">
+                  {action.label}
+                </ButtonLink>
+              </li>
+            );
+          })}
+        </ul>
+        <Table className="hidden md:block">
           <THead>
             <tr>
               <TH>Initiative</TH>
@@ -101,10 +128,10 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
               rows.map((o) => {
                 const action = actionFor(o);
                 return (
-                  <TR key={`${o.assignmentId}-${o.periodId}`} className={o.needsAction ? "bg-bad-bg/30" : undefined}>
+                  <TR key={`${o.assignmentId}-${o.periodId}`} className={o.needsAction ? "bg-[#fef7f6] hover:bg-[#fdeeec]" : undefined}>
                     <TD>
                       <p className="font-medium text-ink">{o.initiativeName}</p>
-                      <p className="num text-xs text-muted">{o.initiativeCode}{o.referenceNo ? `, ${o.referenceNo}` : ""}</p>
+                      <p className="whitespace-nowrap font-mono text-[13px] text-muted">{o.initiativeCode}{o.referenceNo ? `, ${o.referenceNo}` : ""}</p>
                     </TD>
                     <TD>
                       <p>{o.periodLabel}</p>
