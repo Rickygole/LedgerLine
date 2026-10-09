@@ -15,6 +15,8 @@ export type ReportRow = {
   orgName: string;
   ein: string;
   borough: string;
+  councilDistrict: number | null;
+  orgType: string;
   initiativeId: string;
   initiativeName: string;
   initiativeCode: string;
@@ -45,6 +47,10 @@ export type Filters = {
   initiative: string;
   category: string;
   borough: string;
+  district: string;
+  orgType: string;
+  awardMin: string;
+  awardMax: string;
   period: string;
   bucket: string;
   status: string;

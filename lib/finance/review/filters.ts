@@ -42,6 +42,10 @@ export function parseFilters(raw: Raw, periodIds: string[]): Filters {
     initiative: one(raw, "initiative").slice(0, 120),
     category: one(raw, "category").slice(0, 80),
     borough: one(raw, "borough").slice(0, 40),
+    district: /^\d{1,2}$/.test(one(raw, "district")) ? one(raw, "district") : "",
+    orgType: ["cbo", "agency"].includes(one(raw, "org_type")) ? one(raw, "org_type") : "",
+    awardMin: /^\d{1,10}(\.\d{1,2})?$/.test(one(raw, "award_min")) ? one(raw, "award_min") : "",
+    awardMax: /^\d{1,10}(\.\d{1,2})?$/.test(one(raw, "award_max")) ? one(raw, "award_max") : "",
     period: periodIds.includes(period) ? period : periodIds.includes(DEFAULT_PERIOD) ? DEFAULT_PERIOD : (periodIds[0] ?? DEFAULT_PERIOD),
     bucket: one(raw, "bucket").slice(0, 30),
     status: one(raw, "status").slice(0, 30),
@@ -52,10 +56,11 @@ export function parseFilters(raw: Raw, periodIds: string[]): Filters {
 
 export function filtersToParams(filters: Partial<Filters>, include: { page?: boolean } = {}): URLSearchParams {
   const params = new URLSearchParams();
-  const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "period", "bucket", "status", "flag"];
+  const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "district", "orgType", "awardMin", "awardMax", "period", "bucket", "status", "flag"];
+  const names: Partial<Record<keyof Filters, string>> = { orgType: "org_type", awardMin: "award_min", awardMax: "award_max" };
   for (const key of keys) {
     const value = filters[key];
-    if (typeof value === "string" && value !== "") params.set(key, value);
+    if (typeof value === "string" && value !== "") params.set(names[key] ?? key, value);
   }
   if (include.page && filters.page && filters.page > 1) params.set("page", String(filters.page));
   return params;
@@ -68,5 +73,5 @@ export function hrefWith(base: string, filters: Partial<Filters>, changes: Parti
 }
 
 export function activeFilterCount(filters: Filters): number {
-  return [filters.q, filters.initiative, filters.category, filters.borough, filters.bucket, filters.status, filters.flag].filter((v) => v !== "").length;
+  return [filters.q, filters.initiative, filters.category, filters.borough, filters.district, filters.orgType, filters.awardMin, filters.awardMax, filters.bucket, filters.status, filters.flag].filter((v) => v !== "").length;
 }

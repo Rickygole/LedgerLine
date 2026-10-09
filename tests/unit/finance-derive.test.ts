@@ -38,6 +38,8 @@ afterAll(() => {
 
 function row(over: Partial<Omit<ReportRow, "issues" | "bucket" | "daysPastDue" | "flags">> = {}): ReportRow {
   return finishRow({
+    councilDistrict: 8,
+    orgType: "cbo",
     assignmentId: "a1",
     orgId: "o1",
     orgName: "Mott Haven Youth Futures, Inc.",

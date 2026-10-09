@@ -148,6 +148,10 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
     }
     if (use("category") && row.category !== filters.category) return false;
     if (use("borough") && row.borough !== filters.borough) return false;
+    if (use("district") && String(row.councilDistrict ?? "") !== filters.district) return false;
+    if (use("orgType") && row.orgType !== filters.orgType) return false;
+    if (use("awardMin") && row.award < Number(filters.awardMin)) return false;
+    if (use("awardMax") && row.award > Number(filters.awardMax)) return false;
     if (use("bucket") && row.bucket !== filters.bucket) return false;
     if (use("status") && statusKey(row) !== filters.status) return false;
     if (use("flag")) {

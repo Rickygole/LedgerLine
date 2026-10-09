@@ -41,6 +41,8 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     legal_name: string;
     ein: string;
     borough: string;
+    council_district: number | null;
+    org_type: string;
     initiative_id: string;
     initiative_name: string;
     code: string;
@@ -59,7 +61,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     submitted_by_name: string | null;
     definition: FormDefinition;
   }>(
-    `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, i.id AS initiative_id, i.name AS initiative_name, i.code, i.category,
+    `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, o.council_district, o.org_type, i.id AS initiative_id, i.name AS initiative_name, i.code, i.category,
             a.award_amount::float8 AS award, p.id AS period_id, p.label AS period_label, p.due_on::text AS due_on,
             s.reference_no, s.status, s.revision, s.lock_version, ${ISO("s.submitted_at")} AS submitted_at, ${ISO("s.updated_at")} AS updated_at,
             s.form_version_id, u.full_name AS submitted_by_name, f.definition
@@ -115,6 +117,8 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     orgName: base.legal_name,
     ein: base.ein,
     borough: base.borough,
+    councilDistrict: base.council_district,
+    orgType: base.org_type,
     initiativeId: base.initiative_id,
     initiativeName: base.initiative_name,
     initiativeCode: base.code,

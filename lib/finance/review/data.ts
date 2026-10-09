@@ -16,6 +16,8 @@ type BaseRow = {
   legal_name: string;
   ein: string;
   borough: string;
+  council_district: number | null;
+  org_type: string;
   initiative_id: string;
   initiative_name: string;
   code: string;
@@ -33,7 +35,7 @@ type BaseRow = {
 
 export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<ReportRow[]> {
   const base = await tx.query<BaseRow>(
-    `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough,
+    `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, o.council_district, o.org_type,
             i.id AS initiative_id, i.name AS initiative_name, i.code, i.category,
             a.award_amount::float8 AS award,
             s.id AS submission_id, s.reference_no, s.status, s.revision, s.lock_version,
@@ -91,6 +93,8 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
       orgName: r.legal_name,
       ein: r.ein,
       borough: r.borough,
+      councilDistrict: r.council_district,
+      orgType: r.org_type,
       initiativeId: r.initiative_id,
       initiativeName: r.initiative_name,
       initiativeCode: r.code,
