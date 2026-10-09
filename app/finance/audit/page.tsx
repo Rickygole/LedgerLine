@@ -119,7 +119,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                         <AuditSentence row={row} />
                         {row.note ? <p className="mt-1 text-muted">Note: {row.note}</p> : null}
                       </TD>
-                      <TD className="align-top">{row.org_name ?? <span className="text-muted">Not applicable</span>}</TD>
+                      <TD className="align-top">{row.org_name ?? <span className="sr-only">None</span>}</TD>
                       <TD className="align-top">
                         <Badge>{entityLabel(row.entity)}</Badge>
                       </TD>
