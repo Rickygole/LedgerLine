@@ -31,18 +31,18 @@ export default async function MessagesPage() {
     <>
       <PageHeader
         title="Messages"
-        description="Copies of the emails LedgerLine has sent to your organization, such as submission confirmations and update requests."
+        description="Copies of the emails LedgerLine prepares for your organization, such as submission confirmations and update requests. Each one is kept here even if the email is delayed."
         crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages" }]}
       />
       <Card>
-        <CardHeader title="Sent messages" description={`${rows.length} ${rows.length === 1 ? "message" : "messages"}, newest first.`} />
+        <CardHeader title="Your messages" description={`${rows.length} ${rows.length === 1 ? "message" : "messages"}, newest first.`} />
         <Table stack>
           <THead>
             <tr>
               <TH>Subject</TH>
               <TH>Type</TH>
-              <TH>Sent to</TH>
-              <TH>Sent</TH>
+              <TH>To</TH>
+              <TH>Created</TH>
               <TH>Related report</TH>
             </tr>
           </THead>
@@ -61,8 +61,8 @@ export default async function MessagesPage() {
                   <TD label="Type">
                     <Badge tone="neutral">{templateLabel(r.template)}</Badge>
                   </TD>
-                  <TD label="Sent to" className="break-all">{r.to_email}</TD>
-                  <TD className="whitespace-nowrap" label="Sent">{formatDateTime(r.created_at)}</TD>
+                  <TD label="To" className="break-all">{r.to_email}</TD>
+                  <TD className="whitespace-nowrap" label="Created">{formatDateTime(r.created_at)}</TD>
                   <TD label="Related report">
                     {r.submission_id ? (
                       <Link href={`/portal/reports/${r.submission_id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
