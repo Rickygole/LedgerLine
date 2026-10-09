@@ -31,7 +31,7 @@ export default async function MessagesPage() {
     <>
       <PageHeader
         title="Messages"
-        description="Emails the system has sent to your organization, such as submission confirmations. In this demo no real email leaves the system, so each message is shown here."
+        description="Copies of the emails LedgerLine has sent to your organization, such as submission confirmations and update requests."
         crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages" }]}
       />
       <Card>
