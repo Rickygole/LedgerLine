@@ -207,6 +207,7 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
   if (!lock.success) return failed("That action is not available.");
   if (!key) return failed("Choose the question to correct.");
   if (!reason) return failed("Enter a reason. Every correction is recorded with its reason.");
+  if (reason.length > 2000) return failed("Shorten the reason to 2,000 characters or fewer.");
   try {
     const problem = await withClaims(user.id, async (tx) => {
       await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [id]);
