@@ -1,38 +1,48 @@
+import { Inbox } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export function Table({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
+    <div className={cn("relative overflow-x-auto overscroll-x-contain", className)}>
       <table className="w-full border-collapse text-sm">{children}</table>
     </div>
   );
 }
 
 export function THead({ children }: { children: React.ReactNode }) {
-  return <thead className="border-b border-line bg-surface/70 text-left text-xs font-semibold uppercase tracking-wide text-muted">{children}</thead>;
+  return (
+    <thead className="sticky top-0 z-10 bg-surface text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted shadow-[inset_0_-1px_0_var(--color-line)]">
+      {children}
+    </thead>
+  );
 }
 
 export function TH({ children, className, align = "left" }: { children?: React.ReactNode; className?: string; align?: "left" | "right" }) {
   return (
-    <th scope="col" className={cn("px-4 py-2.5 font-semibold", align === "right" && "text-right", className)}>
+    <th scope="col" className={cn("whitespace-nowrap px-4 py-2.5 font-semibold", align === "right" && "text-right", className)}>
       {children}
     </th>
   );
 }
 
 export function TR({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <tr className={cn("border-b border-line last:border-0 hover:bg-navy-50/40", className)}>{children}</tr>;
+  return <tr className={cn("border-b border-line/80 transition-colors last:border-0 hover:bg-navy-50/60", className)}>{children}</tr>;
 }
 
 export function TD({ children, className, align = "left" }: { children?: React.ReactNode; className?: string; align?: "left" | "right" }) {
-  return <td className={cn("px-4 py-3 align-middle", align === "right" && "num text-right", className)}>{children}</td>;
+  return <td className={cn("px-4 py-3 align-middle text-ink", align === "right" && "num whitespace-nowrap text-right", className)}>{children}</td>;
 }
 
 export function EmptyRow({ colSpan, children }: { colSpan: number; children: React.ReactNode }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-4 py-10 text-center text-sm text-muted">
-        {children}
+      <td colSpan={colSpan} className="px-4 py-12 text-center">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-50 text-navy-600 ring-1 ring-navy-100" aria-hidden="true">
+            <Inbox className="h-5 w-5" />
+          </span>
+          <div className="text-sm text-muted">{children}</div>
+        </div>
       </td>
     </tr>
   );
