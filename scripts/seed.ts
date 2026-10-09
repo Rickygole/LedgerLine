@@ -288,9 +288,10 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   const usedNames = new Set<string>([PERSONAS.maria.name, PERSONAS.james.name, PERSONAS.daniel.name, PERSONAS.priya.name, PERSONAS.tomas.name, PERSONAS.grace.name]);
   const orgName = nameMaker({ first: ORG_FIRST_NAMES, last: ORG_LAST_NAMES }, usedNames);
   const financeName = nameMaker({ first: FINANCE_FIRST_NAMES, last: FINANCE_LAST_NAMES }, usedNames);
-  const councilName = nameMaker({ first: COUNCIL_FIRST_NAMES, last: COUNCIL_LAST_NAMES }, usedNames);
-
-  const councilRows = Array.from({ length: 51 }, (_, i) => ({ district: i + 1, full_name: councilName() }));
+  const councilFirsts = shuffle(COUNCIL_FIRST_NAMES);
+  const councilLasts = shuffle(COUNCIL_LAST_NAMES);
+  const councilRows = Array.from({ length: 51 }, (_, i) => ({ district: i + 1, full_name: `${councilFirsts[i]} ${councilLasts[i]}` }));
+  for (const row of councilRows) usedNames.add(row.full_name);
   await insertRows(client, "council_member", councilRows, ["district", "full_name"]);
 
   const orgs: OrgRow[] = [];
@@ -889,11 +890,11 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
 
     const year = random();
     const lateSubmitDate = chance(0.1) ? dateBetween("2026-10-01", TODAY) : undefined;
-    if (year < 0.58) createSubmission({ assignment, period: "FY26-YE", status: "accepted", quality: chance(0.04) ? "low" : "normal", submittedOn: lateSubmitDate && lateSubmitDate <= "2026-10-03" ? lateSubmitDate : undefined });
-    else if (year < 0.67) createSubmission({ assignment, period: "FY26-YE", status: "submitted", quality: chance(0.25) ? "zero" : chance(0.3) ? "low" : "normal", submittedOn: dateBetween("2026-09-24", TODAY) });
-    else if (year < 0.73) createSubmission({ assignment, period: "FY26-YE", status: "under_review", submittedOn: dateBetween("2026-09-15", "2026-10-04") });
-    else if (year < 0.76) createSubmission({ assignment, period: "FY26-YE", status: "returned", submittedOn: dateBetween("2026-08-20", "2026-09-28") });
-    else if (year < 0.87) createSubmission({ assignment, period: "FY26-YE", status: "draft", unbalanced: chance(0.5) });
+    if (year < 0.66) createSubmission({ assignment, period: "FY26-YE", status: "accepted", quality: chance(0.03) ? "low" : "normal", submittedOn: lateSubmitDate && lateSubmitDate <= "2026-10-03" ? lateSubmitDate : undefined });
+    else if (year < 0.75) createSubmission({ assignment, period: "FY26-YE", status: "submitted", quality: chance(0.08) ? "zero" : chance(0.12) ? "low" : "normal", submittedOn: dateBetween("2026-09-24", TODAY) });
+    else if (year < 0.81) createSubmission({ assignment, period: "FY26-YE", status: "under_review", submittedOn: dateBetween("2026-09-15", "2026-10-04") });
+    else if (year < 0.84) createSubmission({ assignment, period: "FY26-YE", status: "returned", submittedOn: dateBetween("2026-08-20", "2026-09-28") });
+    else if (year < 0.93) createSubmission({ assignment, period: "FY26-YE", status: "draft", unbalanced: chance(0.5) });
   }
 
   auditRows.push({

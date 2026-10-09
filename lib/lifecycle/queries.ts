@@ -186,7 +186,7 @@ export async function queryOptions(tx: Tx) {
     loadPeriods(tx),
     tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative ORDER BY category"),
     tx.query<{ name: string }>("SELECT DISTINCT name FROM initiative ORDER BY name"),
-    tx.query<{ district: number; full_name: string }>("SELECT district, full_name FROM council_member ORDER BY full_name"),
+    tx.query<{ district: number; full_name: string }>("SELECT district, full_name FROM council_member ORDER BY district"),
   ]);
   return {
     periods,

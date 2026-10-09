@@ -137,7 +137,7 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
 export async function loadFilterOptions(tx: Tx) {
   const categories = await tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative ORDER BY category");
   const members = await tx.query<{ district: number; full_name: string }>(
-    "SELECT district, full_name FROM council_member WHERE district IN (SELECT district FROM assignment_sponsor) ORDER BY full_name"
+    "SELECT district, full_name FROM council_member WHERE district IN (SELECT district FROM assignment_sponsor) ORDER BY district"
   );
   const agencies = await tx.query<{ agency: string }>("SELECT DISTINCT sponsoring_agency AS agency FROM assignment WHERE sponsoring_agency IS NOT NULL ORDER BY 1");
   return {

@@ -5,6 +5,7 @@ import type { ReportState } from "@/components/ui/status-badge";
 
 export type Obligation = {
   assignmentId: string;
+  fiscalYearId: string;
   periodId: string;
   periodLabel: string;
   startsOn: string;
@@ -26,6 +27,7 @@ export type Obligation = {
 
 type ObligationRow = {
   assignment_id: string;
+  fiscal_year_id: string;
   period_id: string;
   period_label: string;
   starts_on: string;
@@ -44,7 +46,7 @@ type ObligationRow = {
 
 export async function loadObligations(tx: Tx, orgId: string): Promise<Obligation[]> {
   const rows = await tx.query<ObligationRow>(
-    `SELECT a.id AS assignment_id, p.id AS period_id, p.label AS period_label,
+    `SELECT a.id AS assignment_id, p.fiscal_year_id, p.id AS period_id, p.label AS period_label,
             to_char(p.starts_on, 'YYYY-MM-DD') AS starts_on, to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on,
             to_char(p.due_on, 'YYYY-MM-DD') AS due_on,
             i.code, i.name, a.award_amount::text AS award_amount,
@@ -66,6 +68,7 @@ export async function loadObligations(tx: Tx, orgId: string): Promise<Obligation
     const state = reportState(row.status, row.due_on);
     return {
       assignmentId: row.assignment_id,
+      fiscalYearId: row.fiscal_year_id,
       periodId: row.period_id,
       periodLabel: row.period_label,
       startsOn: row.starts_on,
@@ -86,6 +89,13 @@ export async function loadObligations(tx: Tx, orgId: string): Promise<Obligation
     };
   });
   return list.sort((a, b) => rank(a) - rank(b) || a.dueOn.localeCompare(b.dueOn) || a.initiativeName.localeCompare(b.initiativeName));
+}
+
+export async function currentFiscalYear(tx: Tx, today: string): Promise<string> {
+  const row = await tx.one<{ id: string }>("SELECT id FROM fiscal_year WHERE $1::date BETWEEN starts_on AND ends_on", [today]);
+  if (row) return row.id;
+  const latest = await tx.one<{ id: string }>("SELECT id FROM fiscal_year ORDER BY starts_on DESC LIMIT 1");
+  return latest?.id ?? "";
 }
 
 function rank(o: Obligation): number {
