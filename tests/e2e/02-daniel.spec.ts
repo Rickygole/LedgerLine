@@ -112,7 +112,7 @@ test("[US-045][US-057] a correction after acceptance needs a reason and leaves a
   );
   expect(rows).toEqual([{ action: "correction", note: "Title confirmed by phone with the organization" }]);
   await page.goto("/finance/audit");
-  await expect(page.getByText(/corrected/i).first()).toBeVisible();
+  await expect(page.locator("main table").getByText(/corrected/i).first()).toBeVisible();
 });
 
 test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filtered list, for finance staff only", async ({ page, browser }) => {
