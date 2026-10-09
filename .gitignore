@@ -44,3 +44,7 @@ next-env.d.ts
 /.storage
 /test-results
 /playwright-report
+
+.mint.*
+.shots.*
+!.env.example
