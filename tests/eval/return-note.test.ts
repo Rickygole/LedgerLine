@@ -93,7 +93,28 @@ describe.each(cases)("return note, $name", (c) => {
   it("keeps rule ids and contact details out of the organization text", async () => {
     const draft = await draftReturnNote(fakeTx(), { submissionId: "s1", concerns });
     expect(containsRuleId(draft.text)).toBe(false);
-    expect(draft.text).not.toMatch(/@|Alex|Rivera|Pat Example/);
+    expect(draft.text).not.toMatch(/@|Pat Example/);
+  });
+});
+
+describe("[US-044] the analyst's own flag text reaches the drafted note", () => {
+  const flagged = { ...cases[4], flags: [{ id: "f9", kind: "manual", note: "Youth age-group table was submitted blank, ask for the real counts. Contact alex@example.org or 718-555-0142." }] };
+  const concerns = concernsFor(flagged);
+
+  it("carries the flag note into the concern", () => {
+    expect(concerns.find((c) => c.kind === "flag")?.detail).toBe("Youth age-group table was submitted blank, ask for the real counts. Contact [email removed] or [phone removed].");
+  });
+
+  it("writes the flag text into the rule based note and leaves contact details out", async () => {
+    const draft = await draftReturnNote(fakeTx(), { submissionId: "s1", concerns });
+    expect(draft.mode).toBe("fallback");
+    expect(draft.text).toContain("Youth age-group table was submitted blank, ask for the real counts.");
+    expect(draft.text).not.toMatch(/alex@|718-555|555-0142/);
+  });
+
+  it("falls back to the kind of flag when the analyst left no text", () => {
+    const bare = concernsFor({ ...cases[4], flags: [{ id: "f8", kind: "manual", note: "  " }] }).find((c) => c.kind === "flag");
+    expect(bare?.detail).toBeNull();
   });
 });
 

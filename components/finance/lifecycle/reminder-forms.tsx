@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Mail, Plus, Save, Send } from "lucide-react";
 import { deleteRule, restoreDefaults, saveRule, sendNow, toggleRule, type ReminderState } from "@/app/finance/reminders/actions";
-import { PLACEHOLDERS, type RuleRow } from "@/lib/lifecycle/reminders";
+import { PLACEHOLDERS, sendNowSummary, type RuleRow } from "@/lib/lifecycle/reminders";
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
@@ -101,16 +101,32 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
   );
 }
 
-export function SendNowForm({ period, date, today, count, fresh }: { period: string; date: string; today: string; count: number; fresh: number }) {
+export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs }: { period: string; date: string; dateLabel: string; today: string; count: number; fresh: number; orgs: number }) {
   const isToday = date === today;
   const [state, action, pending] = useActionState<ReminderState, FormData>(sendNow, undefined);
+  const [confirming, setConfirming] = useState(false);
+  useEffect(() => {
+    if (state?.ok || state?.error) setConfirming(false);
+  }, [state]);
   return (
     <form action={action} className="flex flex-wrap items-center gap-3">
       <input type="hidden" name="period" value={period} />
       <input type="hidden" name="date" value={date} />
-      <Button type="submit" disabled={pending || fresh === 0 || !isToday}>
-        <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Sending" : "Send now"}
-      </Button>
+      {confirming ? (
+        <div role="alertdialog" aria-label="Confirm sending reminders" className="flex w-full flex-wrap items-center gap-3 rounded-md border border-line bg-surface px-3 py-2">
+          <p className="text-sm font-semibold text-ink">{sendNowSummary(orgs, fresh, dateLabel)} Send them?</p>
+          <Button type="submit" disabled={pending}>
+            <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Sending" : `Yes, send to ${orgs} ${orgs === 1 ? "organization" : "organizations"}`}
+          </Button>
+          <Button type="button" variant="secondary" disabled={pending} onClick={() => setConfirming(false)}>
+            Cancel
+          </Button>
+        </div>
+      ) : (
+        <Button type="button" disabled={fresh === 0 || !isToday} onClick={() => setConfirming(true)}>
+          <Send className="h-4 w-4" aria-hidden="true" /> Send now
+        </Button>
+      )}
       <span className="text-sm text-muted">
         <Mail className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
         {isToday ? `${fresh} of ${count} will be added to the outbox` : "Send now works for today only. This is a preview of another date."}

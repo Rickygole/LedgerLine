@@ -54,7 +54,9 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
   const { periods, period, rules, targets } = data;
   const base = `/finance/reminders?period=${period.id}`;
   const editing = rules.find((r) => r.id === editId);
-  const fresh = targets.filter((t) => !t.already_sent).length;
+  const freshTargets = targets.filter((t) => !t.already_sent);
+  const fresh = freshTargets.length;
+  const freshOrgs = new Set(freshTargets.map((t) => t.org_id)).size;
   const offset = offsetFor(period.due_on, date);
   const matching = rules.filter((r) => r.active && r.offset_days === offset);
 
@@ -205,7 +207,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
               </Table>
               {canEdit ? (
                 <CardBody className="sticky bottom-0 z-10 rounded-b-xl border-t border-line bg-white">
-                  <SendNowForm period={period.id} date={date} today={today} count={targets.length} fresh={fresh} />
+                  <SendNowForm period={period.id} date={date} dateLabel={formatDate(date)} today={today} count={targets.length} fresh={fresh} orgs={freshOrgs} />
                 </CardBody>
               ) : null}
             </>

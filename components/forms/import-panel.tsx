@@ -88,6 +88,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
   const checks = analysis ? kept.map((row) => ({ row, check: checkField(analysis.paragraphs, row.field) })) : [];
   const blocked = checks.filter(({ check }) => !check.ok).length;
   const left = rows.length - reviewed;
+  const live = analysis?.mode === "live";
 
   useEffect(() => {
     onProgress?.(reviewed, rows.length);
@@ -145,10 +146,10 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
             <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-dashed border-[#c9b8ef] bg-[#faf8fe] px-4 py-3 text-sm" role="note">
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2">
-                  <AiDraftBadge />
+                  {live ? <AiDraftBadge /> : <Badge>Drafted from the rules</Badge>}
                   <span className="text-xs text-muted">
-                    {analysis.modeLabel}
-                    {analysis.model ? `, ${analysis.model}` : ""}
+                    {live ? analysis.modeLabel : analysis.mode === "replay" ? "Drafted from the rules and a saved, reviewed draft for this template. No model was used." : "Drafted from the rules. No model was used."}
+                    {live && analysis.model ? `, ${analysis.model}` : ""}
                   </span>
                 </p>
                 <p className="mt-1.5 max-w-[72ch] text-ink">Each detected question needs Accept or Discard. Nothing is added to the form until you apply your decisions, and your name is recorded in the audit log.</p>
@@ -187,8 +188,10 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                             <Badge tone="ok" icon={CheckCircle2}>Accepted</Badge>
                           ) : discarded ? (
                             <Badge>Discarded</Badge>
-                          ) : (
+                          ) : live ? (
                             <AiDraftBadge />
+                          ) : (
+                            <Badge>Drafted from the rules</Badge>
                           )}
                           <span className={cn("text-sm font-semibold text-ink", discarded && "line-through")}>{row.field.label || "Untitled field"}</span>
                         </p>
@@ -203,7 +206,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                           </div>
                           <div className="flex gap-1.5">
                             <dt className="text-muted">Section</dt>
-                            <dd className="text-ink">{SECTION_LABEL[row.field.section] ?? row.field.section}</dd>
+                            <dd className="text-ink">{row.field.section_title || SECTION_LABEL[row.field.section] || row.field.section}</dd>
                           </div>
                           <div className="flex gap-1.5">
                             <dt className="text-muted">Answer</dt>
@@ -218,6 +221,9 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                           </p>
                         ) : null}
                         {row.field.options?.length ? <p className="mt-1.5 text-xs text-muted">Choices: {row.field.options.join(", ")}</p> : null}
+                        {row.field.type === "table" && row.field.columns?.length ? (
+                          <p className="mt-1.5 text-xs text-muted">Columns: {row.field.columns.map((column) => `${column.label} (${TYPE_LABEL[column.type as FieldType] ?? column.type})`).join(", ")}</p>
+                        ) : null}
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {row.decision === "pending" ? (
@@ -309,7 +315,7 @@ function FieldEditor({ row, onChange }: { row: Row; onChange: (patch: Partial<Pr
       <div>
         <Label htmlFor={`${id}-type`}>Answer type</Label>
         <Select id={`${id}-type`} value={field.type} onChange={(e) => onChange({ type: e.target.value, options: e.target.value === "select" ? (field.options?.length ? field.options : ["Option 1", "Option 2"]) : undefined })}>
-          {DRAFTABLE_TYPES.map((type) => (
+          {(field.type === "table" ? [...DRAFTABLE_TYPES, "table" as const] : DRAFTABLE_TYPES).map((type) => (
             <option key={type} value={type}>
               {TYPE_LABEL[type]}
             </option>

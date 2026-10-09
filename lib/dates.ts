@@ -31,6 +31,10 @@ export function formatTime(value: string | Date): string {
   return new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", minute: "2-digit" }).format(new Date(value));
 }
 
+export function isToday(value: string | Date, today: string = todayInNewYork()): boolean {
+  return toIsoDate(value) === today;
+}
+
 export function toIsoDate(value: string | Date): string {
   if (typeof value === "string") return value.slice(0, 10);
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(value);

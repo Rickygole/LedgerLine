@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 import { MAX_UPLOAD_BYTES, clientCheckUpload, formatBytes, oversizeMessage } from "@/lib/report/upload-rules";
 import { ALLOWED_TYPES, checkUpload } from "@/lib/storage";
 
-describe("[BR-012] upload size limit", () => {
+describe("[BR-012][US-024] upload size limit", () => {
   it("keeps the 25 MB cap and accepts a file exactly at it", () => {
     expect(MAX_UPLOAD_BYTES).toBe(26_214_400);
     expect(checkUpload("report.pdf", MAX_UPLOAD_BYTES)).toBeNull();

@@ -19,7 +19,7 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
   const fe = state?.fieldErrors ?? {};
   const [chosenRole, setChosenRole] = useState<string | null>(null);
   const role = chosenRole ?? state?.values?.role ?? "";
-  const summary = [...(state?.error ? [{ id: "", message: state.error }] : []), ...Object.entries(fe).map(([key, message]) => ({ id: key, message }))];
+  const summary = [...(state?.error ? [{ id: "", message: state.error }] : []), ...Object.entries(fe).map(([key, message]) => ({ id: key === "role" ? "new-user-role" : key, message }))];
   return (
     <form action={action} noValidate className="space-y-4 px-5 py-4" onReset={() => setChosenRole(null)}>
       <ErrorSummary errors={summary} />
@@ -50,10 +50,10 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
           <FieldError id="title-error">{fe.title}</FieldError>
         </div>
         <div>
-          <Label htmlFor="role" required>
+          <Label htmlFor="new-user-role" required>
             Role
           </Label>
-          <Select key={state?.values?.role ?? ""} id="role" name="role" defaultValue={state?.values?.role ?? ""} onChange={(event) => setChosenRole(event.target.value)} aria-invalid={fe.role ? true : undefined} aria-describedby={fe.role ? "role-error" : undefined}>
+          <Select key={state?.values?.role ?? ""} id="new-user-role" name="role" defaultValue={state?.values?.role ?? ""} onChange={(event) => setChosenRole(event.target.value)} aria-invalid={fe.role ? true : undefined} aria-describedby={fe.role ? "new-user-role-error" : undefined}>
             <option value="" disabled>
               Choose a role
             </option>
@@ -63,7 +63,7 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
               </option>
             ))}
           </Select>
-          <FieldError id="role-error">{fe.role}</FieldError>
+          <FieldError id="new-user-role-error">{fe.role}</FieldError>
         </div>
         {role === "cbo_submitter" ? (
           <div className="md:col-span-2">

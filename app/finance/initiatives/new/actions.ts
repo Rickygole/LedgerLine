@@ -131,7 +131,7 @@ export async function chooseTemplate(_prev: FormState, formData: FormData): Prom
       );
       await tx.query(`SELECT app.write_audit('form_version', $1, 'create_draft', $2, NULL, $3::jsonb, NULL)`, [
         row!.id,
-        "Started from the standard template",
+        mode === "import" ? "Started to import an uploaded Word template" : "Started from the standard template",
         JSON.stringify({ initiative_id: initiativeId, version: next!.next }),
       ]);
       return row!.id;

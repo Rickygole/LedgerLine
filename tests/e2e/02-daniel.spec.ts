@@ -1,6 +1,6 @@
 import { expect, test, type Browser } from "@playwright/test";
 import * as XLSX from "xlsx";
-import { authFile, certify, PEOPLE, submitOverdueDraft } from "./support/app";
+import { authFile, certify, PEOPLE, submitOverdueDraft, SAVED_LABEL } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -79,7 +79,7 @@ test("[US-044] an analyst requests an update with a note, the organization resub
     await maria.goto(`/portal/reports/${submissionId}`);
     await expect(maria.getByText(NOTE)).toBeVisible();
     await maria.locator("#q-contact_title").fill("Executive Director");
-    await expect(maria.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
+    await expect(maria.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
     await certify(maria);
     await maria.getByRole("button", { name: "Submit report" }).click();
     await maria.waitForURL(/\/submitted$/);

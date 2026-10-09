@@ -114,7 +114,10 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
 
   const remember = useCallback(
     (sectionKey: string | null) => {
-      if (sectionKey) window.localStorage.setItem(storageKey, sectionKey);
+      if (!sectionKey) return;
+      window.localStorage.setItem(storageKey, sectionKey);
+      setResume(sectionKey);
+      setResumeDismissed(true);
     },
     [storageKey]
   );
@@ -231,7 +234,7 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
 
       <div className="min-w-0">
         <div className="no-print sticky top-0 z-20 -mx-1 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-2.5 shadow-sm">
-          <SaveStatus state={state} lastSavedAt={lastSavedAt} />
+          <SaveStatus state={state} lastSavedAt={lastSavedAt} today={payload.today} />
           <Button variant="secondary" size="sm" onClick={() => void saveAndExit()}>
             <LogOut className="h-4 w-4" aria-hidden="true" />
             Save and exit

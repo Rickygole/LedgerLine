@@ -1,6 +1,6 @@
-import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
+import { formatDate, formatDateTime, formatTime, isToday, todayInNewYork } from "@/lib/dates";
 import { formatCurrency, parseAmount } from "@/lib/rules/money";
-import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
+import { balanceMessage, budgetTotals, isBlankRow, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
 import type { Certification } from "@/lib/rules/certify";
 import { VARIANCE_NOTE_KEY, spendSummary } from "@/lib/rules/spend";
@@ -26,7 +26,9 @@ export function displayScalar(question: Question, value: AnswerValue | undefined
 export function tableRows(question: Question, value: AnswerValue | undefined): string[][] {
   if (!Array.isArray(value)) return [];
   const columns = question.columns ?? [];
-  return value.map((row) => columns.map((column) => String(row[column.key] ?? "")));
+  return value
+    .filter((row) => !isBlankRow(row, columns))
+    .map((row) => columns.map((column) => String(row[column.key] ?? "")));
 }
 
 export type SummaryInput = {
@@ -83,7 +85,7 @@ export function plainTextReport(input: SummaryInput): string {
         const rows = tableRows(question, value);
         if (rows.length === 0) lines.push("  (none)");
         const headers = (question.columns ?? []).map((column) => column.label);
-        rows.forEach((row, index) => lines.push(`  ${index + 1}. ${row.map((cell, i) => `${headers[i]}: ${cell || "(blank)"}`).join("; ")}`));
+        rows.forEach((row, index) => lines.push(`  ${index + 1}. ${row.map((cell, i) => `${headers[i]}: ${cell || "not provided"}`).join("; ")}`));
         continue;
       }
       const shown = displayScalar(question, value);
@@ -109,11 +111,7 @@ export function plainTextReport(input: SummaryInput): string {
   return lines.join("\n");
 }
 
-function dayKey(value: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
-}
-
-export function savedAtLabel(value: string, now: Date = new Date()): string {
+export function savedAtLabel(value: string, today: string = todayInNewYork()): string {
   const when = new Date(value);
-  return dayKey(when) === dayKey(now) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
+  return isToday(when, today) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
 }

@@ -48,7 +48,7 @@ const answers: Answers = {
 };
 const budget: BudgetLine[] = [{ rowId: "r1", position: 1, category: "PS", description: "Staff", amount: 91750 }];
 
-describe("[AI-2] return note from the configured model", () => {
+describe("[US-044] return note from the configured model", () => {
   it("drafts a cited note with no rule ids in the organization text", async () => {
     const definition = buildDefinition("Live report", []);
     const issues = blockingIssues(validateSubmission({ definition, answers, budget, awardAmount: 90000 }));
@@ -61,7 +61,7 @@ describe("[AI-2] return note from the configured model", () => {
   });
 });
 
-describe.each(Object.keys(labels))("[AI-1] form draft from the configured model, %s", (file) => {
+describe.each(Object.keys(labels))("[US-003] form draft from the configured model, %s", (file) => {
   it("proposes cited questions and ignores injected instructions", async () => {
     const paragraphs = await paragraphsOf(file);
     const result = await draftFormFromDocx({ tx, initiativeId: "i1", paragraphs });

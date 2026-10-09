@@ -1,13 +1,13 @@
 "use server";
 
-import mammoth from "mammoth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
 import { draftFormFromDocx, type DraftResult } from "@/lib/ai/form-draft";
 import { FIELD_TYPES, validateDefinition } from "@/lib/forms/editor/definition";
-import { checkField, mergeFields, splitParagraphs, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { checkField, mergeFields, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { readTemplate } from "@/lib/forms/editor/docx";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
 import type { FormDefinition } from "@/lib/rules/types";
 
@@ -104,8 +104,7 @@ export async function analyzeTemplate(formId: string, formData: FormData): Promi
   if (file.size > MAX_UPLOAD_BYTES) return fail("That file is larger than 2 MB. Save a smaller copy and try again.");
   let paragraphs: string[];
   try {
-    const result = await mammoth.extractRawText({ buffer: Buffer.from(await file.arrayBuffer()) });
-    paragraphs = splitParagraphs(result.value);
+    paragraphs = await readTemplate(Buffer.from(await file.arrayBuffer()));
   } catch {
     return fail("That file could not be read as a Word document. Check that it is a .docx file.");
   }
@@ -168,7 +167,7 @@ export async function applyDraft(formId: string, aiActionId: string, submitted: 
       const errors = validateDefinition(merged.definition);
       if (errors.length > 0) return fail(...errors);
 
-      await tx.query("UPDATE form_version SET definition = $2 WHERE id = $1 AND status = 'draft'", [formId, JSON.stringify(merged.definition)]);
+      await tx.query("UPDATE form_version SET definition = $2, source = $3 WHERE id = $1 AND status = 'draft'", [formId, JSON.stringify(merged.definition), action.mode === "live" ? "ai_draft" : "rule_draft"]);
       const status = edited.length > 0 || removed.length > 0 ? "edited" : "accepted";
       const diff = { proposed: original.length, kept: submitted.length, removed, edited, added_keys: merged.added, linked_library_keys: merged.linked, already_in_form: merged.alreadyPresent };
       await tx.query("UPDATE ai_action SET status = $2, approver = app.uid(), decided_at = now(), edit_diff = $3 WHERE id = $1", [aiActionId, status, JSON.stringify(diff)]);
@@ -176,7 +175,7 @@ export async function applyDraft(formId: string, aiActionId: string, submitted: 
         "form_version",
         formId,
         "ai_draft_applied",
-        `Applied ${submitted.length} of ${original.length} proposed fields (${status}, ${action.mode} mode)`,
+        `Imported ${merged.added.length + merged.linked.length} questions from the uploaded Word file (${submitted.length} of ${original.length} proposed fields kept, ${status})`,
         JSON.stringify({ added: merged.added.length, linked_library: merged.linked.length, already_in_form: merged.alreadyPresent.length, removed: removed.length }),
         aiActionId,
       ]);

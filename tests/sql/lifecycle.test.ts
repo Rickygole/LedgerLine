@@ -1,5 +1,6 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { todayInNewYork } from "@/lib/dates";
 import { appUrl, asUser, connect, errorCode, ownerUrl, userId } from "./helpers";
 
 let owner: Client;
@@ -195,6 +196,15 @@ describe("[US-012][BR-016] lineage links predecessors", () => {
 describe("[US-052] reminders queue once per org per rule per day and skip submitted reports", () => {
   const today = "2026-10-01";
 
+  beforeAll(async () => {
+    await owner.query("DELETE FROM outbox WHERE template = 'reminder'");
+  });
+
+  afterAll(async () => {
+    await owner.query("DELETE FROM outbox WHERE template = 'reminder'");
+    await owner.query("SELECT app.backfill_reminder_history($1::date)", [todayInNewYork()]);
+  });
+
   async function owingOrgs(): Promise<string[]> {
     const { rows } = await owner.query(
       `SELECT DISTINCT o.org_id FROM obligation o
@@ -209,10 +219,11 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
     const expected = await owingOrgs();
     const result = await asUser(app, priya, async () => {
       await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
+      const auditBefore = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")).rows[0].n;
       const first = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
       const second = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
       const rows = (await app.query("SELECT org_id, to_email, subject, body_text FROM outbox WHERE template = 'reminder' ORDER BY org_id")).rows;
-      const audit = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")).rows[0].n;
+      const audit = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")).rows[0].n - auditBefore;
       return { first, second, rows, audit };
     });
     expect(expected.length).toBeGreaterThan(0);
@@ -304,5 +315,44 @@ describe("[US-048] saved queries are private to their owner", () => {
       errorCode(() => app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Mine', '{}'::jsonb)", [maria]))
     );
     expect(org).toBe("42501");
+  });
+});
+
+describe("[US-052] reminder history and wording", () => {
+  it("shows what the rules that already fired sent", async () => {
+    const rows = (
+      await owner.query(
+        `SELECT r.offset_days, count(o.id)::int AS sent, min(o.created_at)::date::text AS first_sent
+         FROM reminder_rule r LEFT JOIN outbox o ON o.reminder_key LIKE r.id::text || ':%'
+         WHERE r.period_id = 'FY26-YE' GROUP BY r.offset_days ORDER BY r.offset_days`
+      )
+    ).rows;
+    const byOffset = Object.fromEntries(rows.map((r) => [r.offset_days, r]));
+    expect(byOffset[-14].first_sent).toBe("2026-09-16");
+    expect(byOffset[-3].first_sent).toBe("2026-09-27");
+    expect(byOffset[1].first_sent).toBe("2026-10-01");
+    for (const offset of [-14, -3, 1]) expect(byOffset[offset].sent).toBeGreaterThan(0);
+    const today = todayInNewYork();
+    const due = (await owner.query("SELECT (due_on + 14)::text AS d FROM reporting_period WHERE id = 'FY26-YE'")).rows[0].d;
+    if (today <= due) expect(byOffset[14].sent).toBe(0);
+  });
+
+  it("greets the primary contact by name", async () => {
+    const { rows } = await owner.query(
+      `SELECT o.body_text, c.full_name FROM outbox o
+       JOIN contact c ON c.org_id = o.org_id AND c.email = o.to_email
+       WHERE o.template = 'reminder' LIMIT 25`
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) expect(row.body_text.startsWith(`Hello ${row.full_name},`)).toBe(true);
+  });
+
+  it("greets by name in a live preview too", async () => {
+    const preview = await asUser(app, priya, async () => {
+      await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
+      return (await app.query("SELECT body, contact_name FROM app.reminder_targets('FY26-YE', '2026-10-14'::date) LIMIT 5")).rows;
+    });
+    expect(preview.length).toBeGreaterThan(0);
+    for (const row of preview) expect(row.body.startsWith(`Hello ${row.contact_name},`)).toBe(true);
   });
 });

@@ -24,6 +24,14 @@ export const PRESET_CONCERNS: Concern[] = [
 const RULE_ID_PATTERN = /\b[A-Z]{2}-\d{2,3}\b/;
 const DOLLAR_PATTERN = /\$[\d,]+(?:\.\d{1,2})?/g;
 
+export function redactContactDetails(text: string): string {
+  return text
+    .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[email removed]")
+    .replace(/\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g, "[phone removed]")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function containsRuleId(text: string): boolean {
   return RULE_ID_PATTERN.test(text);
 }
@@ -80,7 +88,9 @@ export function buildConcerns(input: {
   for (const flag of input.openFlags) {
     const id = `FL-001:${flag.id}`;
     const kind = FLAG_LABEL[flag.kind === "spend_spike" ? "manual" : flag.kind] ?? "Flagged item";
-    concerns.push({ id, ruleId: "FL-001", kind: "flag", label: kind, detail: null });
+    const cleaned = flag.note ? redactContactDetails(flag.note) : "";
+    const note = cleaned === "" ? null : cleaned;
+    concerns.push({ id, ruleId: "FL-001", kind: "flag", label: kind, detail: note });
   }
   return concerns;
 }
@@ -112,8 +122,11 @@ export function fallbackSentence(concern: Concern): string {
       return "Please attach supporting documentation for personnel lines.";
     case "PR-002":
       return "Please confirm the participant counts.";
-    case "FL-001":
-      return `Finance flagged this report for follow up (${lower}). Please review it and respond.`;
+    case "FL-001": {
+      if (!concern.detail) return `Finance flagged this report for follow up (${lower}). Please review it and respond.`;
+      const note = concern.detail.replace(/\s+/g, " ").trim();
+      return `Finance flagged this report for follow up: ${/[.!?]$/.test(note) ? note : `${note}.`} Please review it and respond.`;
+    }
     default:
       return `Please review ${lower} and update it.`;
   }

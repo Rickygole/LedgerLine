@@ -3,7 +3,7 @@ import { amountBoundsProblem, numericProblem } from "@/lib/rules/bounds";
 import { blockingIssues, validateSubmission } from "@/lib/rules/validate";
 import type { BudgetLine, FormDefinition } from "@/lib/rules/types";
 
-describe("[US-029][D5] integer counts", () => {
+describe("[US-029] integer counts", () => {
   it("rejects negatives", () => {
     expect(numericProblem("integer", "-5", "Participants targeted")).toBe("Participants targeted cannot be negative.");
   });
@@ -20,7 +20,7 @@ describe("[US-029][D5] integer counts", () => {
   });
 });
 
-describe("[US-029][D5] currency amounts", () => {
+describe("[US-029] currency amounts", () => {
   it("accepts up to 999,999,999.99 and rejects more", () => {
     expect(numericProblem("currency", "$999,999,999.99", "Cost")).toBeNull();
     expect(numericProblem("currency", "1000000000", "Cost")).toBe("Cost must be $999,999,999.99 or less.");
@@ -38,7 +38,7 @@ describe("[US-029][D5] currency amounts", () => {
   });
 });
 
-describe("[US-029][D5] percentages", () => {
+describe("[US-029] percentages", () => {
   it("accepts 0 to 100 and rejects values outside it or with long fractions", () => {
     expect(numericProblem("percent", "0", "Completion")).toBeNull();
     expect(numericProblem("percent", "100%", "Completion")).toBeNull();
@@ -77,7 +77,7 @@ const definition: FormDefinition = {
 
 const line = (amount: number, actual?: number | null): BudgetLine => ({ rowId: "r1", position: 1, category: "PS", description: "Staff", amount, actual });
 
-describe("[US-029][BR-022][D5] submit re-validates bounds", () => {
+describe("[US-029][BR-022] submit re-validates bounds", () => {
   it("blocks a negative table cell", () => {
     const issues = validateSubmission({ definition, answers: { served: "5", ages: [{ group: "5 to 9", count: "-4" }] }, budget: [line(100)], awardAmount: 100 });
     expect(issues.some((i) => i.field === "ages" && i.message.includes("cannot be negative"))).toBe(true);

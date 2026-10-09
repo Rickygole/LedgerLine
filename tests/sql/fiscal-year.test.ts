@@ -134,7 +134,7 @@ describe("[BR-002] Mid-Year and Year-End cover the fiscal year", () => {
   });
 });
 
-describe("[US-001][US-009] award fields", () => {
+describe("award fields", () => {
   it("inherits the administering agency from the initiative", async () => {
     const agency = await asUser(app, priya, async () => {
       const init = await addFy27Initiative("Neighborhood Reading Hours");
@@ -155,7 +155,7 @@ describe("[US-001][US-009] award fields", () => {
     expect(code).toBe("23514");
   });
 
-  it("carries funding source and sponsors through a rollover", async () => {
+  it("[US-009][US-010] carries funding source and sponsors through a rollover", async () => {
     const result = await asUser(app, priya, async () => {
       await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)");
       return (
@@ -189,5 +189,23 @@ describe("[US-001] initiative names are unique within a fiscal year", () => {
       await owner.query(`SELECT count(*)::int AS n FROM initiative a JOIN initiative b ON lower(b.name) = lower(a.name) AND b.fiscal_year_id = 'FY27' WHERE a.fiscal_year_id = 'FY26'`)
     ).rows[0].n;
     expect(shared).toBeGreaterThan(0);
+  });
+});
+
+describe("[US-003][US-004] a form made from an imported Word file records where it came from", () => {
+  it("lets the app record the draft source and refuses values outside the allowed list", async () => {
+    const result = await asUser(app, priya, async () => {
+      const target = (
+        await app.query(
+          `INSERT INTO form_version (initiative_id, version, status, definition, source)
+           SELECT initiative_id, max(version) + 1, 'draft', (array_agg(definition))[1], 'manual' FROM form_version GROUP BY initiative_id LIMIT 1 RETURNING id`
+        )
+      ).rows[0];
+      const ok = (await app.query("UPDATE form_version SET source = 'rule_draft' WHERE id = $1 RETURNING source", [target.id])).rows[0];
+      const bad = await errorCode(() => app.query("UPDATE form_version SET source = 'unknown' WHERE id = $1", [target.id]));
+      return { ok, bad };
+    });
+    expect(result.ok.source).toBe("rule_draft");
+    expect(result.bad).toBe("23514");
   });
 });

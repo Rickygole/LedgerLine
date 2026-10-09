@@ -34,7 +34,7 @@ export function AuditTimeline({ events, labels, compact = false }: { events: Aud
             <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
               <time dateTime={event.at}>{formatDateTime(event.at)}</time>
               {event.aiActionId ? (
-                event.aiMode === "fallback" ? <Badge>{`Template, sent by ${event.actor ?? "a reviewer"}`}</Badge> : <AiDraftBadge label={`AI draft, sent by ${event.actor ?? "a reviewer"}`} />
+                event.aiMode === "fallback" ? <Badge>{`Drafted from the rules, sent by ${event.actor ?? "a reviewer"}`}</Badge> : <AiDraftBadge label={`AI draft, sent by ${event.actor ?? "a reviewer"}`} />
               ) : null}
             </p>
             {beforeStatus && afterStatus && beforeStatus !== afterStatus && !compact ? (

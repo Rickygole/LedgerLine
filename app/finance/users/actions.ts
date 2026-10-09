@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { personNameProblem } from "@/lib/rules/person-name";
 import { requireUser } from "@/lib/auth";
 import { appOrigin } from "@/lib/origin";
 import { pgCode, withClaims } from "@/lib/db";
@@ -85,7 +86,15 @@ export async function sendPasswordReset(_prev: UserActionState, formData: FormDa
 
 const createSchema = z
   .object({
-    fullName: z.string().trim().min(1, "Enter the person's full name.").max(120, "Use 120 characters or fewer."),
+    fullName: z
+      .string()
+      .trim()
+      .min(1, "Enter the person's full name.")
+      .max(120, "Use 120 characters or fewer.")
+      .superRefine((value, ctx) => {
+        const problem = personNameProblem(value, "full name");
+        if (problem) ctx.addIssue({ code: "custom", message: problem });
+      }),
     email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254, "Use 254 characters or fewer."),
     title: z.string().trim().max(120, "Use 120 characters or fewer."),
     role: z.enum(["finance_viewer", "finance_analyst", "finance_admin", "cbo_submitter"], { message: "Choose a role." }),

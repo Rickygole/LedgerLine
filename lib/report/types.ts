@@ -38,6 +38,7 @@ export type EditorPayload = {
   attachments: AttachmentItem[];
   storage: "blob" | "local";
   resumeSection: string | null;
+  today: string;
   hasProgress: boolean;
   currentUserName: string;
   currentUserTitle: string;

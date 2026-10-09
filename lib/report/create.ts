@@ -1,14 +1,13 @@
 import "server-only";
-import { randomInt, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { pgCode, withClaims } from "@/lib/db";
 
 export type StartResult = { status: "ok"; submissionId: string; created: boolean } | { status: "not_found" } | { status: "no_form" };
 
-function referenceFor(periodId: string): string {
-  const match = /^FY(\d{2})-([A-Z]+)$/.exec(periodId);
-  const code = match ? `${match[1]}${match[2]}` : periodId.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-  return `LL-${code}-${String(randomInt(10000, 100000))}`;
-}
+const OWED_PERIOD = `SELECT p.id FROM assignment a
+  JOIN initiative i ON i.id = a.initiative_id
+  JOIN reporting_period p ON p.fiscal_year_id = i.fiscal_year_id
+  WHERE a.id = $1 AND p.id = $2`;
 
 export async function startReport(userId: string, assignmentId: string, periodId: string): Promise<StartResult> {
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -21,7 +20,7 @@ export async function startReport(userId: string, assignmentId: string, periodId
           [assignmentId]
         );
         if (!assignment) return { status: "not_found" };
-        const period = await tx.one<{ id: string }>("SELECT id FROM reporting_period WHERE id = $1", [periodId]);
+        const period = await tx.one<{ id: string }>(OWED_PERIOD, [assignmentId, periodId]);
         if (!period) return { status: "not_found" };
 
         const existing = await tx.one<{ id: string }>("SELECT id FROM submission WHERE assignment_id = $1 AND period_id = $2", [assignmentId, periodId]);
@@ -31,10 +30,11 @@ export async function startReport(userId: string, assignmentId: string, periodId
         if (!form) return { status: "no_form" };
 
         const created = { id: randomUUID() };
+        const reference = await tx.one<{ reference_no: string }>("SELECT app.next_reference_no($1) AS reference_no", [periodId]);
         await tx.query(
           `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
            VALUES ($1, $2, $3, $4, $5, 'draft', app.uid(), app.uid())`,
-          [created.id, referenceFor(periodId), assignmentId, periodId, form.id]
+          [created.id, reference!.reference_no, assignmentId, periodId, form.id]
         );
         await tx.query(
           `INSERT INTO answer (submission_id, question_key, value, updated_by)
@@ -59,7 +59,7 @@ export async function findReport(userId: string, assignmentId: string, periodId:
   return withClaims(userId, async (tx): Promise<ExistingReport> => {
     const assignment = await tx.one<{ id: string }>("SELECT id FROM assignment WHERE id = $1 AND org_id = app.org_id()", [assignmentId]);
     if (!assignment) return { status: "not_found" };
-    const period = await tx.one<{ id: string }>("SELECT id FROM reporting_period WHERE id = $1", [periodId]);
+    const period = await tx.one<{ id: string }>(OWED_PERIOD, [assignmentId, periodId]);
     if (!period) return { status: "not_found" };
     const existing = await tx.one<{ id: string }>("SELECT id FROM submission WHERE assignment_id = $1 AND period_id = $2", [assignmentId, periodId]);
     return existing ? { status: "found", submissionId: existing.id } : { status: "none" };
