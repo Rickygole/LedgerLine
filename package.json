@@ -17,7 +17,8 @@
     "eval:live": "vitest run -c vitest.live.config.ts --disableConsoleIntercept",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:role": "tsx scripts/role-password.ts",
-    "db:seed": "tsx scripts/seed.ts fresh"
+    "db:seed": "tsx scripts/seed.ts fresh",
+    "cron:reminders": "tsx scripts/run-reminders.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",

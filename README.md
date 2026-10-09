@@ -57,6 +57,7 @@ You need Node 22, pnpm 10 and Docker.
 | `pnpm db:migrate` | Apply SQL files in `db/migrations` |
 | `pnpm db:role` | Set the `app_server` password from `APP_SERVER_PASSWORD` |
 | `pnpm db:seed` | Reset and load the starting data set |
+| `pnpm cron:reminders` | Call the reminders cron route of the running app |
 | `pnpm evidence` | Run tests and regenerate `app/trust/evidence.json` |
 
 ## Tests
@@ -78,6 +79,10 @@ The app is set up for Vercel with a Postgres database such as Neon. Run `pnpm db
 - Optional: `DEMO_TODAY`, `DB_POOL_MAX`
 
 CI (`.github/workflows/ci.yml`) runs migrations, seed, lint, type check, tests, the evidence script and a build against a Postgres service. It deploys only if the repository variable `DEPLOY_ENABLED` is `true`.
+
+## Running the reminders locally
+
+The reminders job is the route `/api/cron/reminders`. On Vercel the schedule in `vercel.json` calls it once a day. Locally, set `CRON_SECRET` in `.env.local` (any string), start the app, then run `pnpm cron:reminders`. The script sends the secret as a bearer token to `APP_URL`, or to `http://localhost:3000` when that is not set, and prints the date it used and how many reminders it queued. Use `PORT` to point it at another local port. The route works out today's date in New York, finds every active rule whose date is today for periods due within 120 days, and adds one email per organization and rule to the outbox. Running it twice on the same day queues nothing the second time. Without `CRON_SECRET` the route answers 503, and with a wrong token it answers 401. The seed also loads the reminders that earlier rules already sent, so the Sent column and the outbox show history from the first run.
 
 ## Layout
 

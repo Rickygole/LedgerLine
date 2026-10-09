@@ -28,12 +28,18 @@ export type TargetRow = {
   already_sent: boolean;
 };
 
-export const PLACEHOLDERS = ["{organization}", "{initiative}", "{period}", "{due_date}"] as const;
+export const PLACEHOLDERS = ["{contact}", "{organization}", "{initiative}", "{period}", "{due_date}"] as const;
 
 export function describeOffset(days: number): string {
   if (days === 0) return "On the due date";
   const n = Math.abs(days);
   return `${n} ${n === 1 ? "day" : "days"} ${days < 0 ? "before" : "after"} the due date`;
+}
+
+export function sendNowSummary(orgs: number, emails: number, date: string): string {
+  const org = `${orgs} ${orgs === 1 ? "organization" : "organizations"}`;
+  const mail = `${emails} ${emails === 1 ? "email" : "emails"}`;
+  return `This will add ${mail} to the outbox for ${org} for ${date}.`;
 }
 
 export function shiftDate(isoDate: string, days: number): string {

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { Client } from "pg";
 import { buildDefinition, CATEGORY_METRICS } from "../lib/forms/standard";
 import { buildSnapshot } from "../lib/snapshot";
+import { todayInNewYork } from "../lib/dates";
 import type { Answers, BudgetLine, FormDefinition } from "../lib/rules/types";
 import {
   ACCOMPLISHMENTS,
@@ -1002,6 +1003,7 @@ async function main() {
     await client.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: summary.ids.priya })]);
     await client.query("SELECT app.ensure_scheduler()");
     await client.query("SELECT app.restore_reminder_defaults(id) FROM reporting_period");
+    await client.query("SELECT app.backfill_reminder_history($1::date)", [todayInNewYork()]);
     await client.query("SELECT set_config('request.jwt.claims', '', true)");
     await client.query("COMMIT");
     console.log(`seeded ${summary.orgs} organizations, ${summary.initiatives} initiatives, ${summary.assignments} assignments, ${summary.submissions} submissions`);
