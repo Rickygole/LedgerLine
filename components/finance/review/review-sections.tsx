@@ -75,17 +75,6 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
   const corrections = correctionsFrom(detail);
   return (
     <div className="space-y-5">
-      <nav aria-label="Jump to a section" className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-        <span className="mr-1 text-muted">Jump to</span>
-        {sections.map((section) => (
-          <a key={section.key} href={`#review-${section.key}`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
-            {section.title}
-          </a>
-        ))}
-        <Link href={`/finance/submissions/${row.submissionId}?tab=budget`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
-          Budget
-        </Link>
-      </nav>
       {sections.map((section) => {
         const questions = section.questions.filter((q) => isVisible(q, row.answers));
         return (
