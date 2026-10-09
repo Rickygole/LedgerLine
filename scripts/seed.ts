@@ -450,16 +450,16 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   const initiativeRows: Record<string, unknown>[] = [];
   const formRows: Record<string, unknown>[] = [];
   const lineageRows: Record<string, unknown>[] = [];
-  const counters = { FY26: 0, FY27: 0 };
+  let initiativeSeq = 0;
 
   const addInitiative = (spec: { name: string; category: Category; kind: "named" | "local"; awards: [number, number]; amount: [number, number]; description: string; retired?: boolean }, fiscalYear: "FY26" | "FY27", source?: SeedInitiative) => {
     const id = randomUUID();
     const formId = randomUUID();
-    counters[fiscalYear]++;
+    initiativeSeq++;
     const definition = buildDefinition(`${spec.name} report`, CATEGORY_METRICS[spec.category]);
     const row: SeedInitiative = {
       id,
-      code: `CI-${fiscalYear.slice(2)}-${String(counters[fiscalYear]).padStart(3, "0")}`,
+      code: `CI-${String(initiativeSeq).padStart(3, "0")}`,
       name: spec.name,
       category: spec.category,
       fiscalYear,
