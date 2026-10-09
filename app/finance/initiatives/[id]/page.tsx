@@ -7,6 +7,7 @@ import { formatDateTime } from "@/lib/dates";
 import { expectedState } from "@/lib/finance/admin/state";
 import { formatCurrency } from "@/lib/rules/money";
 import { PageHeader } from "@/components/ui/page-header";
+import { InitiativeLineage } from "@/components/finance/lifecycle/lineage-note";
 import { Card, CardHeader, CardBody, DescriptionList } from "@/components/ui/card";
 import { Badge, StateBadge } from "@/components/ui/status-badge";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
@@ -33,6 +34,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
 
   return (
     <>
+      <InitiativeLineage initiativeId={id} />
       <PageHeader
         title={initiative.name}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: initiative.code }]}
