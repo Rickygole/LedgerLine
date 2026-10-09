@@ -78,7 +78,7 @@ export function flagsForRow(input: {
       const diff = Math.round((total - input.award) * 100) / 100;
       flags.push({
         reason: "unbalanced",
-        evidence: `Total ${formatCurrency(total)} vs award ${formatCurrency(input.award)} (${diff > 0 ? "over" : "under"} by ${formatCurrency(Math.abs(diff))})`,
+        evidence: `Budget total ${formatCurrency(total)} is ${formatCurrency(Math.abs(diff))} ${diff > 0 ? "over" : "under"} the ${formatCurrency(input.award)} award.`,
       });
     }
   }
@@ -111,7 +111,7 @@ export function flagsForRow(input: {
     const reason = KIND_TO_REASON[open.kind] ?? "manual";
     const note = open.note?.trim() ? `Flagged by Finance: ${open.note.trim()}` : "Flagged by Finance";
     const existing = flags.find((f) => f.reason === reason);
-    if (existing) existing.evidence = `${existing.evidence}. ${note}`;
+    if (existing) existing.evidence = `${existing.evidence.replace(/\.$/, "")}. ${note}`;
     else flags.push({ reason, evidence: note });
   }
 

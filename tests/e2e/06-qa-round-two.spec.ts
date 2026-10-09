@@ -61,7 +61,7 @@ test("[US-018] the resume prompt goes away once the user edits the report", asyn
   await context.close();
 });
 
-test("[US-052] Send now asks for confirmation with the number of organizations and queues nothing until confirmed", async ({ browser }) => {
+test("[US-052] Add to outbox asks for confirmation with the number of organizations and queues nothing until confirmed", async ({ browser }) => {
   const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("priya") });
   const page = await context.newPage();
   const first = await page.goto("/finance/reminders");
@@ -75,15 +75,15 @@ test("[US-052] Send now asks for confirmation with the number of organizations a
   expect(rule, `an active rule fires on ${today}`).toBeTruthy();
   await page.goto(`/finance/reminders?period=${rule.period_id}`);
   const before = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1", [today]);
-  await page.getByRole("button", { name: "Send now" }).click();
-  const dialog = page.getByRole("alertdialog", { name: "Confirm sending reminders" });
+  await page.getByRole("button", { name: "Add to outbox" }).click();
+  const dialog = page.getByRole("alertdialog", { name: "Confirm adding reminders to the outbox" });
   await expect(dialog).toContainText(/This will add \d+ emails? to the outbox for \d+ organizations?/);
   const afterOpen = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1", [today]);
   expect(afterOpen[0].n).toBe(before[0].n);
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toHaveCount(0);
-  await page.getByRole("button", { name: "Send now" }).click();
-  await dialog.getByRole("button", { name: /^Yes, send to/ }).click();
+  await page.getByRole("button", { name: "Add to outbox" }).click();
+  await dialog.getByRole("button", { name: /^Yes, add for/ }).click();
   await expect
     .poll(async () => (await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1", [today]))[0].n)
     .toBeGreaterThan(before[0].n);

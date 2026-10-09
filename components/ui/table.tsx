@@ -5,9 +5,11 @@ import { ScrollArea } from "./scroll-area";
 const pin =
   "max-lg:[&_tbody_td:first-child:not([colspan])]:sticky max-lg:[&_tbody_td:first-child:not([colspan])]:left-0 max-lg:[&_tbody_td:first-child:not([colspan])]:z-[1] max-lg:[&_tbody_td:first-child:not([colspan])]:min-w-[11rem] max-lg:[&_tbody_td:first-child:not([colspan])]:bg-inherit max-lg:[&_tbody_td:first-child:not([colspan])]:shadow-[inset_-1px_0_0_var(--color-line)] max-lg:[&_thead_th:first-child]:sticky max-lg:[&_thead_th:first-child]:left-0 max-lg:[&_thead_th:first-child]:z-[2] max-lg:[&_thead_th:first-child]:bg-surface max-lg:[&_thead_th:first-child]:shadow-[inset_-1px_0_0_var(--color-line)]";
 
-export function Table({ children, className, stack = false }: { children: React.ReactNode; className?: string; stack?: boolean }) {
+const compact = "[&_td]:px-3 [&_th]:px-3 [&_td:not([colspan])]:py-2";
+
+export function Table({ children, className, stack = false, density = "default" }: { children: React.ReactNode; className?: string; stack?: boolean; density?: "default" | "compact" }) {
   return (
-    <ScrollArea className={cn(stack ? "table-stack" : pin, className)}>
+    <ScrollArea className={cn(stack ? "table-stack" : pin, density === "compact" && compact, className)}>
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:min-w-0">{children}</table>
     </ScrollArea>
   );
@@ -33,9 +35,9 @@ export function TR({ children, className }: { children: React.ReactNode; classNa
   return <tr className={cn("border-b border-line bg-white last:border-0 hover:bg-navy-50/60", className)}>{children}</tr>;
 }
 
-export function TD({ children, className, align = "left", label, primary, action }: { children?: React.ReactNode; className?: string; align?: "left" | "right"; label?: string; primary?: boolean; action?: boolean }) {
+export function TD({ children, className, align = "left", label, primary, action, stackHidden }: { children?: React.ReactNode; className?: string; align?: "left" | "right"; label?: string; primary?: boolean; action?: boolean; stackHidden?: boolean }) {
   return (
-    <td data-label={label} data-primary={primary ? "" : undefined} data-action={action ? "" : undefined} className={cn("px-4 py-3 align-middle text-ink", align === "right" && "num whitespace-nowrap text-right", className)}>
+    <td data-label={label} data-primary={primary ? "" : undefined} data-action={action ? "" : undefined} data-stack-hidden={stackHidden ? "" : undefined} className={cn("px-4 py-3 align-middle text-ink", align === "right" && "num whitespace-nowrap text-right", className)}>
       {children}
     </td>
   );

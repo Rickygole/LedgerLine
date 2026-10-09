@@ -1,3 +1,5 @@
+import type { ComponentType } from "react";
+import { CheckCircle2, CircleDashed, Clock } from "lucide-react";
 import { Badge, StateBadge, type Tone } from "@/components/ui/status-badge";
 import { formatDate } from "@/lib/dates";
 import { contractLabel, fundingLabel } from "@/lib/finance/awards";
@@ -20,12 +22,33 @@ export function AwardPeriods({ periods }: { periods: PeriodCell[] | null }) {
   );
 }
 
-const CONTRACT_TONE: Record<string, Tone> = { registered: "ok", pending: "warn", awaiting: "neutral" };
+const CONTRACT_TONE: Record<string, Tone> = { registered: "ok", pending: "info", awaiting: "neutral" };
+const QUIET_LABEL: Record<string, string> = { pending: "Pending", awaiting: "Awaiting" };
+const CONTRACT_ICON: Record<string, ComponentType<{ className?: string }>> = { registered: CheckCircle2, pending: Clock, awaiting: CircleDashed };
 
-export function ContractCell({ status, number, registeredOn }: { status: string; number: string | null; registeredOn: string | null }) {
+export function ContractCell({ status, number, registeredOn, quiet = false }: { status: string; number: string | null; registeredOn: string | null; quiet?: boolean }) {
+  if (quiet && status === "registered") {
+    return (
+      <div className="whitespace-nowrap text-xs text-muted">
+        <span className="sr-only">Registered. </span>
+        {number ? <div className="font-mono">{number}</div> : null}
+        {registeredOn ? <div>{formatDate(registeredOn)}</div> : null}
+        {!number && !registeredOn ? <div>Registered</div> : null}
+      </div>
+    );
+  }
   return (
     <div className="whitespace-nowrap">
-      <Badge tone={CONTRACT_TONE[status] ?? "neutral"}>{contractLabel(status)}</Badge>
+      <Badge tone={CONTRACT_TONE[status] ?? "neutral"} icon={CONTRACT_ICON[status]}>
+        {quiet ? (
+          <span title={contractLabel(status)}>
+            <span className="sr-only">Contract </span>
+            {QUIET_LABEL[status] ?? contractLabel(status)}
+          </span>
+        ) : (
+          contractLabel(status)
+        )}
+      </Badge>
       {number ? <div className="mt-1 font-mono text-xs text-muted">{number}</div> : null}
       {registeredOn ? <div className="text-xs text-muted">{formatDate(registeredOn)}</div> : null}
     </div>

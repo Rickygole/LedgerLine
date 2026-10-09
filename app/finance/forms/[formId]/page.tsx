@@ -47,7 +47,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
   );
   if (!form) notFound();
   const editable = user.role === "finance_admin" && form.status === "draft";
-  const tone = form.status === "published" ? "ok" : form.status === "draft" ? "warn" : "neutral";
+  const tone = form.status === "published" ? "ok" : "neutral";
   const icon = form.status === "published" ? CheckCircle2 : form.status === "draft" ? CircleDashed : History;
   const statusLabel = { draft: "Draft", published: "Published", superseded: "Superseded" }[form.status];
 
@@ -55,7 +55,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
     <>
       <PageHeader
         title={`${form.initiative_name}: report form`}
-        crumbs={[{ label: "Initiatives", href: "/finance/initiatives" }, { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` }, { label: `Form version ${form.version}` }]}
+        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` }, { label: `Form version ${form.version}` }]}
         description={form.status === "draft" ? "A draft is invisible to funded organizations until it is published." : "This version is read-only."}
         meta={
           <>

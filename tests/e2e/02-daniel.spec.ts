@@ -59,7 +59,7 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
   await page.getByLabel("Flag note").fill(note);
   await page.getByRole("button", { name: "Add manual flag" }).click();
   await expect(page.getByText(/flag.*added|added.*flag/i).first()).toBeVisible();
-  await page.goto("/finance/flagged");
+  await page.goto("/finance/flagged?flag=manual");
   await expect(page.getByText(note).first()).toBeVisible();
 });
 
@@ -109,7 +109,7 @@ test("[US-045][US-057] a correction after acceptance needs a reason and leaves a
   );
   expect(rows).toEqual([{ action: "correction", note: "Title confirmed by phone with the organization" }]);
   await page.goto("/finance/audit");
-  await expect(page.getByText(/corrected/i).first()).toBeVisible();
+  await expect(page.locator("main table").getByText(/corrected/i).first()).toBeVisible();
 });
 
 test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filtered list, for finance staff only", async ({ page, browser }) => {

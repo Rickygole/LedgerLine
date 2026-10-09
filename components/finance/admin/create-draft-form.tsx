@@ -13,7 +13,7 @@ export function CreateDraftForm({ initiativeId }: { initiativeId: string }) {
       <input type="hidden" name="initiativeId" value={initiativeId} />
       <Button type="submit" variant="secondary" disabled={pending}>
         <FilePlus2 className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Creating draft" : "Create draft from published"}
+        {pending ? "Creating draft" : "Edit form (creates a draft)"}
       </Button>
       <div role="alert">
         <FieldError>{state?.error}</FieldError>

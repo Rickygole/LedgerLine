@@ -1,61 +1,51 @@
 import Link from "next/link";
-import { GitBranch } from "lucide-react";
-import { getCurrentUser } from "@/lib/auth";
-import { withClaims } from "@/lib/db";
-import { lineageFor, type LineageLink } from "@/lib/lifecycle/rollover";
+import type { LineageLink } from "@/lib/lifecycle/rollover";
 
-function phrase(kind: LineageLink["kind"]): string {
-  return { renamed: " (renamed)", combined: " (combined)", carried: "", retired: "" }[kind];
+function suffix(kind: LineageLink["kind"]): string {
+  return { renamed: ", renamed", combined: ", combined", carried: "", retired: "" }[kind];
 }
 
-function Item({ link }: { link: LineageLink }) {
+function Code({ link }: { link: LineageLink }) {
   if (!link.other_id) return null;
   return (
-    <Link href={`/finance/initiatives/${link.other_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-      {link.other_name} <span className="font-normal text-muted">({link.other_code}, {link.other_year})</span>
+    <Link href={`/finance/initiatives/${link.other_id}`} title={link.other_name ?? undefined} className="font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+      {link.other_code}
     </Link>
   );
 }
 
-export async function InitiativeLineage({ initiativeId }: { initiativeId: string }) {
-  const user = await getCurrentUser();
-  if (!user || user.role === "cbo_submitter") return null;
-  const { predecessors, successors } = await withClaims(user.id, (tx) => lineageFor(tx, initiativeId));
-  const retired = successors.find((s) => s.kind === "retired");
+export function lineageMeta({ predecessors, successors }: { predecessors: LineageLink[]; successors: LineageLink[] }): React.ReactNode[] {
+  const items: React.ReactNode[] = [];
+  const earlier = predecessors.filter((p) => p.other_id);
   const continued = successors.filter((s) => s.other_id);
-  if (predecessors.length === 0 && continued.length === 0 && !retired) return null;
-  return (
-    <div className="mb-4 rounded-lg border border-line bg-white px-4 py-3 text-sm shadow-[0_1px_2px_rgba(16,24,40,0.04)]" aria-label="Initiative history">
-      <p className="mb-1 flex items-center gap-2 text-[13px] font-semibold text-muted">
-        <GitBranch className="h-3.5 w-3.5" aria-hidden="true" /> History
-      </p>
-      <ul className="space-y-1">
-        {predecessors.length > 0 ? (
-          <li>
-            Continues:{" "}
-            {predecessors.map((p, index) => (
-              <span key={`${p.other_id}`}>
-                {index > 0 ? ", " : ""}
-                <Item link={p} />
-                <span className="text-muted">{phrase(p.kind)}</span>
-              </span>
-            ))}
-          </li>
-        ) : null}
-        {continued.length > 0 ? (
-          <li>
-            Continued as:{" "}
-            {continued.map((s, index) => (
-              <span key={`${s.other_id}`}>
-                {index > 0 ? ", " : ""}
-                <Item link={s} />
-                <span className="text-muted">{phrase(s.kind)}</span>
-              </span>
-            ))}
-          </li>
-        ) : null}
-        {retired ? <li>Retired at the rollover into {retired.fiscal_year_id}. Its reports stay available.</li> : null}
-      </ul>
-    </div>
-  );
+  const retired = successors.find((s) => s.kind === "retired");
+  if (earlier.length > 0) {
+    items.push(
+      <span key="continues" className="whitespace-nowrap">
+        Continues{" "}
+        {earlier.map((p, index) => (
+          <span key={p.other_id}>
+            {index > 0 ? ", " : ""}
+            {p.other_year} <Code link={p} />
+            {suffix(p.kind)}
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (continued.length > 0) {
+    items.push(
+      <span key="continued" className="whitespace-nowrap">
+        {continued.map((s, index) => (
+          <span key={s.other_id}>
+            {index > 0 ? ", " : "Continued in "}
+            {s.other_year} as <Code link={s} />
+            {suffix(s.kind)}
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (retired) items.push(<span key="retired">Retired at the rollover into {retired.fiscal_year_id}</span>);
+  return items;
 }

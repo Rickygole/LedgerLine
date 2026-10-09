@@ -50,12 +50,12 @@ export function BudgetTable({ lines, award, answers, totalLabel = "Approved budg
           </tbody>
           <tfoot className="border-t border-line bg-surface/60 text-sm">
             <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">PS subtotal</td>
+              <td colSpan={span} className="px-4 py-2 text-right font-semibold">Personal services (PS) subtotal</td>
               <td className="num px-4 py-2 text-right">{formatCurrency(totals.ps)}</td>
               <td colSpan={2} />
             </tr>
             <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">OTPS subtotal</td>
+              <td colSpan={span} className="px-4 py-2 text-right font-semibold">Other than personal services (OTPS) subtotal</td>
               <td className="num px-4 py-2 text-right">{formatCurrency(totals.otps)}</td>
               <td colSpan={2} />
             </tr>

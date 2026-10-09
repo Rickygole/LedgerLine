@@ -24,10 +24,10 @@ export function CardBody({ className, children }: { className?: string; children
   return <div className={cn("px-5 py-4", className)}>{children}</div>;
 }
 
-export function DescriptionList({ items, columns = 2 }: { items: { label: string; value: React.ReactNode }[]; columns?: 1 | 2 | 3 }) {
+export function DescriptionList({ items, columns = 2, compact = false }: { items: { label: string; value: React.ReactNode }[]; columns?: 1 | 2 | 3; compact?: boolean }) {
   const cols = { 1: "sm:grid-cols-1", 2: "sm:grid-cols-2", 3: "sm:grid-cols-3" }[columns];
   return (
-    <dl className={cn("grid grid-cols-1 gap-x-6 gap-y-4", cols)}>
+    <dl className={cn("grid gap-x-6", compact ? "grid-cols-2 gap-y-3 sm:gap-y-4" : "grid-cols-1 gap-y-4", cols)}>
       {items.map((item) => (
         <div key={item.label} className="min-w-0">
           <dt className="text-sm font-semibold text-muted">{item.label}</dt>

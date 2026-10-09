@@ -7,7 +7,7 @@ import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
 import { isMissing, reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
-import { ProfileHeader, monogram } from "@/components/ui/profile-header";
+import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { TabNav } from "@/components/finance/admin/tab-nav";
 import { AuditSentence } from "@/components/finance/admin/audit-line";
 import { loadOrganization, type OrgAward } from "@/lib/finance/admin/organizations";
 import { orgActivity } from "@/lib/finance/admin/audit";
+import { templateLabel } from "@/lib/finance/admin/outbox";
 import { orgTypeLabel } from "@/lib/finance/admin/sql";
 import { isUuid, one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
 
@@ -57,7 +58,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
         subtitle={org.dba_name ? `Doing business as ${org.dba_name}` : undefined}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations", href: "/finance/organizations" }, { label: org.legal_name }]}
         meta={[
-          <Badge key="type" tone="info">
+          <Badge key="type">
             {orgTypeLabel(org.org_type)}
           </Badge>,
           <span key="ein" className="whitespace-nowrap font-mono text-[13px]">
@@ -114,7 +115,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       {tab === "overview" ? (
         <>
           <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <Stat label="Total awarded" value={formatCurrency(totalAwarded)} hint={`Across ${awards.length} ${awards.length === 1 ? "award" : "awards"}`} icon={Landmark} />
+            <Stat label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} hint={`Across ${awards.length} ${awards.length === 1 ? "award" : "awards"}`} icon={Landmark} />
             <Stat label="Awards" value={awards.length} hint={years.join(" and ") || "No fiscal year"} icon={FolderOpen} />
             <Stat label="Reports accepted" value={accepted} tone="ok" hint={`${reports.length} submitted or started`} icon={CheckCircle2} />
             <Stat label="Missing reports" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} hint="Nothing submitted and past due" icon={AlertTriangle} />
@@ -140,7 +141,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 </div>
               </CardBody>
             </Card>
-            <Card className="self-start lg:row-span-2">
+            <Card className="self-start">
               <CardHeader title="Contact" />
               <ul className="space-y-3 px-5 py-4 text-sm">
                 <li className="flex gap-2.5">
@@ -159,10 +160,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
               <div className="border-t border-line px-5 py-4">
                 <h3 className="text-[13px] font-semibold text-muted">Primary contact</h3>
                 {primary ? (
-                  <div className="mt-2 flex items-start gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-100 text-xs font-bold text-navy-800" aria-hidden="true">
-                      {monogram(primary.full_name)}
-                    </span>
+                  <div className="mt-2">
                     <div className="min-w-0 text-sm">
                       <p className="font-semibold text-ink">{primary.full_name}</p>
                       <p className="text-muted">{primary.title}</p>
@@ -177,19 +175,19 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 )}
               </div>
             </Card>
-            <Card className="lg:col-span-2">
-              <CardHeader
-                title="Awards"
-                description="Active and past awards with report status by period."
-                actions={
-                  <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-                    Open awards tab
-                  </Link>
-                }
-              />
-              <AwardsTable awards={awards} />
-            </Card>
           </div>
+          <Card className="mt-6">
+            <CardHeader
+              title="Awards"
+              description="Active and past awards with report status by period."
+              actions={
+                <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                  Open awards tab
+                </Link>
+              }
+            />
+            <AwardsTable awards={awards} />
+          </Card>
         </>
       ) : null}
 
@@ -255,7 +253,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{c.full_name}</span>
                     {c.is_primary ? (
-                      <Badge tone="ok" icon={Star}>
+                      <Badge tone="info" icon={Star}>
                         Primary
                       </Badge>
                     ) : null}
@@ -330,7 +328,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
             </THead>
             <tbody>
               {messages.length === 0 ? (
-                <EmptyRow colSpan={5}>No messages have been sent to this organization.</EmptyRow>
+                <EmptyRow colSpan={5}>No messages for this organization yet.</EmptyRow>
               ) : (
                 messages.map((m) => (
                   <TR key={m.id}>
@@ -339,10 +337,10 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                         {m.subject}
                       </Link>
                     </TD>
-                    <TD className="font-mono text-[13px] text-muted">{m.template}</TD>
+                    <TD className="whitespace-nowrap">{templateLabel(m.template)}</TD>
                     <TD>{m.to_email}</TD>
                     <TD>
-                      <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status}</Badge>
+                      <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}</Badge>
                     </TD>
                     <TD>{formatDateTime(m.created_at)}</TD>
                   </TR>
@@ -358,7 +356,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
 
 function AwardsTable({ awards }: { awards: OrgAward[] }) {
   return (
-    <Table>
+    <Table density="compact">
       <THead>
         <tr>
           <TH>Initiative</TH>
@@ -372,11 +370,11 @@ function AwardsTable({ awards }: { awards: OrgAward[] }) {
       </THead>
       <tbody>
         {awards.length === 0 ? (
-          <EmptyRow colSpan={8}>This organization has no awards yet.</EmptyRow>
+          <EmptyRow colSpan={7}>This organization has no awards yet.</EmptyRow>
         ) : (
           awards.map((a) => (
             <TR key={a.assignment_id}>
-              <TD>
+              <TD className="min-w-[14rem]">
                 <Link href={`/finance/initiatives/${a.initiative_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   {a.name}
                 </Link>

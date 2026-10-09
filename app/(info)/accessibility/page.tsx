@@ -21,11 +21,11 @@ export default function AccessibilityPage() {
       <h2 id="testing">How we test</h2>
       <p>We check changes against the target before they are released:</p>
       <ul>
+        <li>automated accessibility checks run on every change and cover the sign-in pages, the reporting portal and the main Finance pages</li>
         <li>we complete the main tasks, such as signing in, filling in and submitting a report and reviewing a submission, using only a keyboard</li>
-        <li>we check text and control colors with a contrast checker</li>
-        <li>we review pages on a narrow phone screen and at high zoom</li>
-        <li>we check page structure, headings, labels and status messages with a screen reader</li>
+        <li>we review pages at phone width and at 200 percent zoom</li>
       </ul>
+      <p>Automated checks find only some problems. We have not yet tested LedgerLine with a screen reader.</p>
       <p>LedgerLine has not yet had an independent accessibility audit. Until it has, we do not claim full conformance with WCAG 2.1 AA.</p>
 
       <h2 id="known-issues">Known limitations</h2>

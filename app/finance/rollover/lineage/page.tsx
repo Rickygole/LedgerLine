@@ -40,7 +40,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
         crumbs={[{ label: "Dashboard", href: "/finance" }, ...(user.role === "finance_admin" ? [{ label: "Annual rollover", href: "/finance/rollover" }] : []), { label: "Lineage" }]}
       />
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={base} applied={[kind, year].filter(Boolean).length}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Initiative name or code" />
           </FilterField>
@@ -89,7 +89,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
                     </div>
                   </TD>
                   <TD>
-                    <Badge tone={row.kind === "retired" ? "warn" : row.kind === "carried" ? "neutral" : "info"} icon={row.kind === "retired" ? undefined : ArrowRight}>
+                    <Badge tone={row.kind === "retired" || row.kind === "carried" ? "neutral" : "info"} icon={row.kind === "retired" ? undefined : ArrowRight}>
                       {KIND_LABEL[row.kind]}
                     </Badge>
                   </TD>

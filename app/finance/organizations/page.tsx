@@ -48,7 +48,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
     <>
       <PageHeader title="Organizations" description={`Every organization funded through Council initiatives. Awards and compliance count the ${period.label} reports that fall due for ${period.fiscalYearId} awards.`} crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations" }]} />
       <Card>
-        <FilterBar action={base} clearHref={`${base}?period=${period.id}`}>
+        <FilterBar action={base} clearHref={`${base}?period=${period.id}`} applied={[borough, type, missing ? "1" : ""].filter(Boolean).length}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Name or 12-3456789" />
           </FilterField>
@@ -88,7 +88,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
             </Select>
           </FilterField>
         </FilterBar>
-        <Table>
+        <Table density="compact" stack>
           <THead>
             <tr>
               <SortHeader base={base} params={kept} field="name" label="Organization" sort={sort} dir={dir} />
@@ -108,19 +108,27 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
             ) : (
               rows.map((row) => (
                 <TR key={row.id}>
-                  <TD>
+                  <TD className="min-w-[16rem]" primary>
                     <Link href={`${base}/${row.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {row.legal_name}
                     </Link>
                   </TD>
-                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{row.ein}</TD>
-                  <TD className="whitespace-nowrap">{orgTypeLabel(row.org_type)}</TD>
-                  <TD className="whitespace-nowrap">{row.borough}</TD>
-                  <TD align="right">{row.council_district ?? ""}</TD>
-                  <TD align="right">{row.awards}</TD>
-                  <TD align="right">{formatCurrency(Number(row.total))}</TD>
-                  <TD>{row.awards > 0 ? <ProgressBar value={row.accepted} max={row.awards} label={`${row.legal_name} accepted reports`} /> : <span className="text-muted">No awards</span>}</TD>
-                  <TD align="right">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">0</span>}</TD>
+                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted" label="EIN">
+                    <span>{row.ein}</span>
+                  </TD>
+                  <TD className="whitespace-nowrap" stackHidden>{orgTypeLabel(row.org_type)}</TD>
+                  <TD className="whitespace-nowrap" label="Borough">
+                    <span>{row.borough}</span>
+                  </TD>
+                  <TD align="right" stackHidden>{row.council_district ?? ""}</TD>
+                  <TD align="right" label="Awards">
+                    <span>{row.awards}</span>
+                  </TD>
+                  <TD align="right" label="Awarded">
+                    <span>{formatCurrency(Number(row.total), { cents: false })}</span>
+                  </TD>
+                  <TD label={period.label}>{row.awards > 0 ? <ProgressBar value={row.accepted} max={row.awards} label={`${row.legal_name} accepted reports`} /> : <span className="text-muted">No awards</span>}</TD>
+                  <TD align="right" label="Missing">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">None</span>}</TD>
                 </TR>
               ))
             )}

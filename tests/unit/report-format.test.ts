@@ -24,7 +24,7 @@ describe("confirmation email body", () => {
     expect(body).toContain("roster.pdf (2 KB)");
   });
 
-  it("[BR-021][US-031] never prints a blank table row", () => {
+  it("[BR-021][US-031] leaves out blank table rows and formats counts", () => {
     const body = plainTextReport({
       title: "Youth Mentoring Networks",
       referenceNo: "LL-26YE-12345",
@@ -33,12 +33,28 @@ describe("confirmation email body", () => {
       ein: "00-1040217",
       awardAmount: 1000,
       definition: buildDefinition("t", []),
-      answers: { served_youth: "Yes", youth_breakdown: [{ age_group: "", count: "" }, { age_group: "13 to 17", count: "98" }] },
+      answers: { contact_name: "Maria Santos", served_youth: "Yes", youth_breakdown: [{ age_group: "13 to 17", count: "1136" }, { age_group: "", count: "" }] },
       budget: [{ position: 1, category: "PS", description: "Director", amount: 1000 }],
       attachments: [],
     });
+    expect(body).toContain("1. Age group: 13 to 17; Participants: 1,136");
     expect(body).not.toContain("(blank)");
-    expect(body).toContain("1. Age group: 13 to 17; Participants: 98");
     expect(body).not.toContain("2. Age group");
+  });
+
+  it("says no rows were entered when a table is empty", () => {
+    const body = plainTextReport({
+      title: "Youth Mentoring Networks",
+      referenceNo: "LL-26YE-12345",
+      periodLabel: "FY26 Year-End",
+      orgName: "Mott Haven Youth Futures, Inc.",
+      ein: "00-1040217",
+      awardAmount: 1000,
+      definition: buildDefinition("t", []),
+      answers: { served_youth: "Yes", youth_breakdown: [{ age_group: "", count: "" }] },
+      budget: [],
+      attachments: [],
+    });
+    expect(body).toContain("No rows entered.");
   });
 });

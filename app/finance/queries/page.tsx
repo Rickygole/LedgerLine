@@ -64,7 +64,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                 <p className="mb-1.5 text-xs text-muted">Criteria</p>
                 <div className="flex flex-wrap gap-1.5">
                   {lines.map((line) => (
-                    <Badge key={line} tone="info">
+                    <Badge key={line}>
                       {line}
                     </Badge>
                   ))}

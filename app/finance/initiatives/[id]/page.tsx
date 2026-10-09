@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
-import { InitiativeLineage } from "@/components/finance/lifecycle/lineage-note";
+import { lineageMeta } from "@/components/finance/lifecycle/lineage-note";
+import { lineageFor } from "@/lib/lifecycle/rollover";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
@@ -20,31 +22,35 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Initiative" };
 
-const FORM_TONE = { published: "ok", draft: "warn", superseded: "neutral" } as const;
+const FORM_TONE = { published: "ok", draft: "neutral", superseded: "neutral" } as const;
 const SOURCE_LABEL: Record<string, string> = { seed: "Imported", manual: "Manual", ai_draft: "Imported from Word, AI draft", rule_draft: "Imported from Word" };
 
 export default async function InitiativeDetail({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser(FINANCE_ROLES);
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const data = await withClaims(user.id, (tx) => loadInitiative(tx, id));
+  const data = await withClaims(user.id, async (tx) => {
+    const loaded = await loadInitiative(tx, id);
+    if (!loaded) return null;
+    return { ...loaded, lineage: await lineageFor(tx, id) };
+  });
   if (!data) notFound();
-  const { initiative, funded, forms } = data;
+  const { initiative, funded, forms, lineage } = data;
   const hasDraft = forms.some((f) => f.status === "draft");
   const hasSource = forms.some((f) => f.status !== "draft");
 
   return (
     <>
-      <InitiativeLineage initiativeId={id} />
       <ProfileHeader
         title={initiative.name}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: initiative.code }]}
         meta={[
           <span key="code" className="whitespace-nowrap font-mono text-[13px]">{initiative.code}</span>,
-          <Badge key="category" tone="info">{initiative.category}</Badge>,
-          <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
+          <Badge key="category">{initiative.category}</Badge>,
+          <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"} icon={initiative.status === "active" ? CheckCircle2 : undefined}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
           <span key="fy" className="whitespace-nowrap">{initiative.fiscal_year_id}</span>,
           <span key="agency" className="whitespace-nowrap">{initiative.administering_agency ? `Administered by ${initiative.administering_agency}` : "No administering agency"}</span>,
+          ...lineageMeta(lineage),
         ]}
         actions={<PrintButton label="Print" />}
       >
@@ -53,7 +59,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <dl className="grid grid-cols-2 gap-4 lg:border-l lg:border-line lg:pl-6">
             <div>
               <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
-              <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding))}</dd>
+              <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding), { cents: false })}</dd>
             </div>
             <div>
               <dt className="text-[13px] font-semibold text-muted">Organizations</dt>
@@ -65,7 +71,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
 
       <Card className="mb-6">
         <CardHeader title="Funded organizations" description={`${funded.length} ${funded.length === 1 ? "organization receives" : "organizations receive"} funding through this initiative.`} />
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Organization</TH>
@@ -84,7 +90,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             ) : (
               funded.map((f) => (
                 <TR key={f.assignment_id}>
-                  <TD>
+                  <TD className="min-w-[12rem]">
                     <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {f.legal_name}
                     </Link>

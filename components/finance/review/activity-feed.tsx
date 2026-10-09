@@ -1,16 +1,14 @@
 import Link from "next/link";
-import { actionInWords } from "@/lib/finance/review/audit-words";
 import { formatDateTime } from "@/lib/dates";
 import { AiDraftBadge } from "@/components/ui/status-badge";
 
 export type ActivityItem = {
-  id: number;
+  id: string;
   at: string;
-  actor: string | null;
-  action: string;
-  entity: string;
-  submissionId: string | null;
-  referenceNo: string | null;
+  actor: string;
+  verb: string;
+  subject: string;
+  href: string | null;
   initiative: string | null;
   ai: boolean;
 };
@@ -22,14 +20,17 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
       {items.map((item) => (
         <li key={item.id} className="px-5 py-3 text-sm hover:bg-navy-50/40">
           <p className="text-ink">
-            <span className="font-semibold">{item.actor ?? "System"}</span> {actionInWords(item.action)}
-            {item.referenceNo && item.submissionId ? (
+            <span className="font-semibold">{item.actor}</span> {item.verb}
+            {item.subject ? (
               <>
                 {" "}
-                on{" "}
-                <Link href={`/finance/submissions/${item.submissionId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-                  {item.referenceNo}
-                </Link>
+                {item.href ? (
+                  <Link href={item.href} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    {item.subject}
+                  </Link>
+                ) : (
+                  <span className="font-semibold">{item.subject}</span>
+                )}
               </>
             ) : null}
             {item.ai ? <span className="ml-2 align-middle"><AiDraftBadge /></span> : null}

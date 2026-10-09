@@ -19,7 +19,7 @@ export default async function ResetPage({ searchParams }: { searchParams: Promis
         <>
           <h1 className="text-2xl font-bold leading-8 text-ink">{info.purpose === "invite" ? "Set your password" : "Choose a new password"}</h1>
           <p className="mt-2 text-base leading-6 text-ink">
-            Account for {info.full_name} ({info.email}). The link you used works once and stops working 30 minutes after it was sent.
+            Account for {info.full_name} ({info.email}). The link you used works once and stops working 30 minutes after it was issued.
           </p>
           <ResetForm token={token} email={info.email} />
           <p className="mt-8 border-t border-line pt-5 text-sm leading-6 text-ink">

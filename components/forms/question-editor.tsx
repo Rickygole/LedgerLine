@@ -1,8 +1,7 @@
 "use client";
 
-import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronUp, Quote, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { Badge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
 import { FIELD_TYPES, TYPE_LABEL, earlierYesNo } from "@/lib/forms/editor/definition";
@@ -52,22 +51,12 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
         <span className="num mt-0.5 w-6 shrink-0 text-right text-sm text-muted">{index + 1}</span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">{question.label || "Untitled question"}</p>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <Badge>{TYPE_LABEL[question.type]}</Badge>
-            <span className="font-mono text-xs text-muted">{question.key}</span>
-            <Badge tone={question.required ? "info" : "neutral"}>{question.required ? "Required" : "Optional"}</Badge>
-            {shared ? (
-              <Badge tone="info" icon={BookOpen}>
-                Standard library
-              </Badge>
-            ) : null}
-            {question.citation ? (
-              <Badge icon={Quote}>
-                From template paragraph {question.citation.paragraph}
-              </Badge>
-            ) : null}
-            {question.visibleWhen ? <Badge>Conditional</Badge> : null}
-          </div>
+          <p className="mt-1 text-xs text-muted">
+            {[TYPE_LABEL[question.type], question.required ? "required" : "optional", shared ? "from standard library" : null, question.visibleWhen ? "shown only when a condition is met" : null, question.citation ? `from template paragraph ${question.citation.paragraph}` : null]
+              .filter(Boolean)
+              .join(", ")}
+            . Key: <span className="font-mono">{question.key}</span>
+          </p>
           {question.citation ? <p className="mt-1.5 text-xs italic text-muted">&ldquo;{question.citation.quote}&rdquo;</p> : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">

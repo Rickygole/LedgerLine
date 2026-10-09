@@ -10,13 +10,16 @@ import type { AttachmentRow, AuditRecord, FlagRecord, RevisionRecord, Submission
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCount, formatCurrency } from "@/lib/rules/money";
+import { cellText } from "@/lib/report/format";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
 
 function formatValue(question: Question, value: AnswerValue | undefined): React.ReactNode {
   if (value === null || value === undefined || value === "") return <span className="text-muted">Not answered</span>;
   if (question.type === "table" && Array.isArray(value)) {
     const columns = question.columns ?? [];
+    const filled = value.filter((row) => columns.some((c) => String(row[c.key] ?? "").trim() !== ""));
+    if (filled.length === 0) return <span className="text-muted">No rows entered</span>;
     return (
       <div className="overflow-x-auto rounded-md border border-line">
         <table className="w-full text-sm">
@@ -30,11 +33,11 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
             </tr>
           </thead>
           <tbody>
-            {value.map((row, index) => (
+            {filled.map((row, index) => (
               <tr key={index} className="border-t border-line">
                 {columns.map((c) => (
                   <td key={c.key} className={`px-3 py-2 ${c.type === "text" ? "" : "num text-right"}`}>
-                    {String(row[c.key] ?? "")}
+                    {cellText(c.type, row[c.key])}
                   </td>
                 ))}
               </tr>
@@ -46,7 +49,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
   }
   if (question.type === "currency") return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")))}</span>;
   if (question.type === "percent") return <span className="num">{String(value)}%</span>;
-  if (question.type === "integer" || question.type === "number") return <span className="num">{String(value)}</span>;
+  if (question.type === "integer" || question.type === "number") return <span className="num">{formatCount(String(value))}</span>;
   if (question.type === "textarea") return <span className="block whitespace-pre-wrap">{String(value)}</span>;
   return String(value);
 }
@@ -72,22 +75,11 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
   const corrections = correctionsFrom(detail);
   return (
     <div className="space-y-5">
-      <nav aria-label="Jump to a section" className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-        <span className="mr-1 text-muted">Jump to</span>
-        {sections.map((section) => (
-          <a key={section.key} href={`#review-${section.key}`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
-            {section.title}
-          </a>
-        ))}
-        <Link href={`/finance/submissions/${row.submissionId}?tab=budget`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
-          Budget
-        </Link>
-      </nav>
       {sections.map((section) => {
         const questions = section.questions.filter((q) => isVisible(q, row.answers));
         return (
           <Card key={section.key} id={`review-${section.key}`} className="scroll-mt-4">
-            <CardHeader title={section.title} description={section.description} />
+            <CardHeader title={section.title} />
             <CardBody>
               <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
                 {questions.map((q) => {
@@ -144,7 +136,7 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
   return (
     <Card>
-      <CardHeader title="Budget" description="Personnel services (PS) and other than personnel services (OTPS) lines as reported, with actual spent and variance." />
+      <CardHeader title="Budget" description="Personal services (PS) and other than personal services (OTPS) lines as reported, with actual spent and variance." />
       <CardBody>
         {row.budget.length === 0 ? (
           <p className="text-sm text-muted">No budget has been entered yet.</p>

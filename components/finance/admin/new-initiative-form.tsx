@@ -17,8 +17,8 @@ export function NewInitiativeForm({ categories, nextCode }: { categories: string
         <Label htmlFor="name" required>
           Initiative name
         </Label>
-        <Hint id="name-hint">Shown to every funded organization. The code {nextCode} is assigned automatically.</Hint>
-        <Input id="name" name="name" defaultValue={state?.values?.name} placeholder="Senior Digital Literacy" maxLength={120} aria-invalid={fe.name ? true : undefined} aria-describedby={fe.name ? "name-hint name-error" : "name-hint"} />
+        <Hint id="name-hint">For example, Senior Digital Literacy. Shown to every funded organization. The code {nextCode} is assigned automatically.</Hint>
+        <Input id="name" name="name" defaultValue={state?.values?.name} maxLength={120} aria-invalid={fe.name ? true : undefined} aria-describedby={fe.name ? "name-hint name-error" : "name-hint"} />
         <FieldError id="name-error">{fe.name}</FieldError>
       </div>
       <div>

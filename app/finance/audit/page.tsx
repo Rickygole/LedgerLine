@@ -11,7 +11,7 @@ import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { AuditSentence } from "@/components/finance/admin/audit-line";
-import { actionLabel, auditFilterOptions, listAudit } from "@/lib/finance/admin/audit";
+import { actionLabel, auditFilterOptions, entityLabel, listAudit } from "@/lib/finance/admin/audit";
 import { one, pageNumber, PAGE_SIZE, type SearchParams, isoDate } from "@/lib/finance/admin/params";
 
 export const runtime = "nodejs";
@@ -46,7 +46,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader title="Audit log" description="A permanent record of who did what and when. Entries cannot be edited or removed." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Audit log" }]} />
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={base} keep={0} applied={[data.actor, data.entity, data.action, from, to].filter(Boolean).length}>
           <FilterField label="Actor" htmlFor="actor" className="min-w-48">
             <Select id="actor" name="actor" defaultValue={data.actor}>
               <option value="">Everyone</option>
@@ -62,7 +62,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
               <option value="">All entities</option>
               {data.options.entities.map((e) => (
                 <option key={e} value={e}>
-                  {actionLabel(e)}
+                  {entityLabel(e)}
                 </option>
               ))}
             </Select>
@@ -119,9 +119,9 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                         <AuditSentence row={row} />
                         {row.note ? <p className="mt-1 text-muted">Note: {row.note}</p> : null}
                       </TD>
-                      <TD className="align-top">{row.org_name ?? <span className="text-muted">Not applicable</span>}</TD>
+                      <TD className="align-top">{row.org_name ?? <span className="sr-only">None</span>}</TD>
                       <TD className="align-top">
-                        <Badge>{actionLabel(row.entity)}</Badge>
+                        <Badge>{entityLabel(row.entity)}</Badge>
                       </TD>
                     </TR>
                   </Fragment>

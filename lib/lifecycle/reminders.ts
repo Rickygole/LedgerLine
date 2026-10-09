@@ -30,6 +30,19 @@ export type TargetRow = {
 
 export const PLACEHOLDERS = ["{contact}", "{organization}", "{initiative}", "{period}", "{due_date}"] as const;
 
+export function longDate(isoDate: string): string {
+  const [y, m, d] = isoDate.slice(0, 10).split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d)));
+}
+
+export function renderSubject(template: string, period: { label: string; dueOn: string }): string {
+  return template
+    .replaceAll("{period}", period.label)
+    .replaceAll("{due_date}", longDate(period.dueOn))
+    .replaceAll("{organization}", "(organization name)")
+    .replaceAll("{initiative}", "(initiative names)");
+}
+
 export function describeOffset(days: number): string {
   if (days === 0) return "On the due date";
   const n = Math.abs(days);

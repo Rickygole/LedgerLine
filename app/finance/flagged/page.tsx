@@ -31,6 +31,18 @@ const EXPLAIN: Record<FlagReason, string> = {
   manual: "Flags added by Finance staff that are still open.",
 };
 
+const GROUP_LIMIT = 10;
+
+const FLAG_NOUN: Record<FlagReason, string> = {
+  unbalanced: "unbalanced budgets",
+  incomplete: "incomplete reports",
+  missing: "missing reports",
+  validation: "reports failing validation",
+  zero_outcomes: "reports with no participants",
+  low_outcomes: "reports with low outcomes",
+  manual: "flags added by Finance",
+};
+
 export default async function FlaggedPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
@@ -85,10 +97,12 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
         <div className="space-y-5">
           {visible.map((reason) => {
             const items = flaggedRows.filter((r) => r.flags.some((f) => f.reason === reason));
+            const capped = filters.flag !== reason && items.length > GROUP_LIMIT;
+            const shown = capped ? items.slice(0, GROUP_LIMIT) : items;
             return (
               <Card key={reason}>
                 <CardHeader title={`${FLAG_LABEL[reason]} (${items.length})`} description={EXPLAIN[reason]} />
-                <Table>
+                <Table density="compact">
                   <THead>
                     <tr>
                       <TH>Organization</TH>
@@ -101,7 +115,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                     </tr>
                   </THead>
                   <tbody>
-                    {items.map((row) => {
+                    {shown.map((row) => {
                       const evidence = row.flags.find((f) => f.reason === reason)!.evidence;
                       return (
                         <TR key={`${reason}-${row.assignmentId}`}>
@@ -134,6 +148,16 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                     })}
                   </tbody>
                 </Table>
+                {capped ? (
+                  <div className="border-t border-line px-5 py-3 text-sm">
+                    <span className="text-muted">
+                      Showing {GROUP_LIMIT} of {items.length}.{" "}
+                    </span>
+                    <Link href={hrefWith(base, filters, { flag: reason })} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                      Show all {items.length} {FLAG_NOUN[reason]}
+                    </Link>
+                  </div>
+                ) : null}
               </Card>
             );
           })}

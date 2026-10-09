@@ -18,6 +18,22 @@ I built LedgerLine as a proof of concept for the NYC Council Initiative Reportin
 - Sign-in is a shared passcode gate plus a per-user password and a signed session cookie.
 - Two optional AI features: importing a report form from a Word template, and drafting the note when Finance returns a report. They only propose. Nothing is written until a person reviews and approves it, and each call is logged. Without an API key they run in offline replay (recorded responses for known inputs, labeled as such) or a rule-based fallback.
 
+## Interface conventions
+
+Status badges (`components/ui/status-badge.tsx`) always pair a color with an icon and a word, so color is never the only signal. Each color has one meaning:
+
+| Tone | Color | Meaning | Examples |
+| --- | --- | --- | --- |
+| `ok` | Green | Done or in good standing | Accepted, Active, Registered, Published |
+| `warn` | Amber | Someone needs to act | Update requested, flags, due soon, no published form |
+| `bad` | Red | Late, failed or missing | Missing, past due, failed message |
+| `info` | Blue | In progress or waiting on someone else | Submitted, In review, Registration pending, Will be queued, Invited |
+| `neutral` | Gray | A plain fact or a closed state | Not started, Draft, Queued, Deactivated, Retired, categories |
+
+Pick the tone by meaning, not by how eye catching it is. Amber is for things that need action; a queued email or a pending registration is not a warning.
+
+Numbers use `formatCurrency` and `formatCount` from `lib/rules/money.ts`: thousands separators everywhere, cents on budget screens, whole dollars (`formatCurrency(value, { cents: false })`) on lists and summaries. Audit events are worded only through `lib/finance/audit-actions.ts`; a unit test fails if the database or the app can write an action that has no wording there. Staff tables use `<Table density="compact">`, and list tables pass `stack` so rows become cards on phones. An end to end test fails if any finance table scrolls sideways at 1440 pixels with the sidebar open.
+
 ## Requirement evidence
 
 `/trust` lists each requirement ID from `traceability.json` with the tests that cover it. Tests carry the ID in their title, for example `[BR-008]`. `scripts/trust.ts` reads the test results from `reports/` and writes `app/trust/evidence.json`, which the page renders. CI regenerates it on every run.

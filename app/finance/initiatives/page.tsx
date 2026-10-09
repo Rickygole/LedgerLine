@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
-import { formatCompactCurrency, formatCurrency } from "@/lib/rules/money";
+import { formatCompactCurrency, formatCount, formatCurrency } from "@/lib/rules/money";
 import { PageHeader } from "@/components/ui/page-header";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -71,9 +71,9 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
       <Card className="mb-6">
         <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-t-xl border-b border-line bg-line lg:grid-cols-4">
           {[
-            { label: "Total funding", value: formatCurrency(totals.funding), hint: `${data.summary.length} categories` },
+            { label: "Total funding", value: formatCurrency(totals.funding, { cents: false }), hint: `${data.summary.length} categories` },
             { label: "Initiatives", value: totals.initiatives, hint: `${totals.assignments} organization awards` },
-            { label: `${data.period.id} accepted`, value: `${totals.accepted} of ${totals.assignments}`, hint: `${data.period.label} reports accepted` },
+            { label: "Reports accepted", value: `${formatCount(totals.accepted)} of ${formatCount(totals.assignments)}`, hint: data.period.label },
             { label: "Missing reports", value: totals.missing, hint: `${data.period.label}, nothing submitted and past due`, bad: totals.missing > 0 },
           ].map((tile) => (
             <div key={tile.label} className="min-w-0 bg-white px-4 py-4 sm:px-5">
@@ -132,7 +132,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
       </Card>
 
       <Card>
-        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })}>
+        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })} applied={[data.category, data.agency, status].filter(Boolean).length}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Code or name" />
           </FilterField>
@@ -173,7 +173,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             </Select>
           </FilterField>
         </FilterBar>
-        <Table>
+        <Table density="compact" stack>
           <THead>
             <tr>
               <TH>Code</TH>
@@ -192,19 +192,27 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             ) : (
               data.rows.map((row) => (
                 <TR key={row.id}>
-                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{row.code}</TD>
-                  <TD>
+                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted" label="Code">
+                    <span>{row.code}</span>
+                  </TD>
+                  <TD className="min-w-[14rem]" primary>
                     <Link href={`${base}/${row.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {row.name}
                     </Link>
                     {row.status === "retired" ? <span className="ml-2"><Badge>Retired</Badge></span> : null}
                   </TD>
-                  <TD className="whitespace-nowrap">{row.category}</TD>
-                  <TD className="whitespace-nowrap">{row.agency ?? <span className="text-muted">Not set</span>}</TD>
-                  <TD align="right">{row.orgs}</TD>
-                  <TD align="right">{formatCurrency(Number(row.funding))}</TD>
-                  <TD>{row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>
-                  <TD align="right">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">0</span>}</TD>
+                  <TD className="whitespace-nowrap" label="Category">
+                    <span>{row.category}</span>
+                  </TD>
+                  <TD className="whitespace-nowrap" stackHidden>{row.agency ?? <span className="text-muted">Not set</span>}</TD>
+                  <TD align="right" label="Organizations">
+                    <span>{row.orgs}</span>
+                  </TD>
+                  <TD align="right" label="Total funding">
+                    <span>{formatCurrency(Number(row.funding), { cents: false })}</span>
+                  </TD>
+                  <TD label={data.period.label}>{row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>
+                  <TD align="right" label="Missing">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">None</span>}</TD>
                 </TR>
               ))
             )}

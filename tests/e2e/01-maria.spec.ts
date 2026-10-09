@@ -117,6 +117,9 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
   await page.getByRole("button", { name: "Submit report" }).click();
   await page.waitForURL(/\/submitted$/);
   await expect(page.getByRole("heading", { name: "Report received" })).toBeVisible();
+  await expect(page.getByText(/We are emailing a copy of this report to/)).toBeVisible();
+  await expect(page.getByText(/was sent to/)).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "What happens next" })).toBeVisible();
   submittedId = page.url().split("/").slice(-2)[0];
 });
 

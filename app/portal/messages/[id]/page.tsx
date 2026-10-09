@@ -49,8 +49,8 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
           <DescriptionList
             columns={3}
             items={[
-              { label: "Sent to", value: row.to_email },
-              { label: "Sent", value: formatDateTime(row.created_at) },
+              { label: "To", value: row.to_email },
+              { label: "Created", value: formatDateTime(row.created_at) },
               { label: "Type", value: templateLabel(row.template) },
             ]}
           />

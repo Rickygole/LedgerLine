@@ -40,7 +40,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
     <>
       <PageHeader title="Outbox" description="Every email LedgerLine has generated, including confirmations, update requests, reminders and password resets." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]} />
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={base} keep={0} applied={[data.template, data.org, from, to].filter(Boolean).length}>
           <FilterField label="Template" htmlFor="template">
             <Select id="template" name="template" defaultValue={data.template}>
               <option value="">All templates</option>
@@ -68,7 +68,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
             <Input id="to" name="to" type="date" defaultValue={to} />
           </FilterField>
         </FilterBar>
-        <Table>
+        <Table density="compact" stack>
           <THead>
             <tr>
               <TH>Subject</TH>
@@ -85,26 +85,34 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
             ) : (
               data.rows.map((m) => (
                 <TR key={m.id}>
-                  <TD className="max-w-md">
+                  <TD className="min-w-[18rem]" primary>
                     <Link href={`${base}/${m.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {m.subject}
                     </Link>
                   </TD>
-                  <TD className="whitespace-nowrap">{templateLabel(m.template)}</TD>
-                  <TD className="text-muted">{m.to_email}</TD>
-                  <TD>
+                  <TD className="min-w-28" label="Template">
+                    <span>{templateLabel(m.template)}</span>
+                  </TD>
+                  <TD className="max-w-[14rem] text-muted" label="To">
+                    <span className="block min-w-0 truncate" title={m.to_email}>
+                      {m.to_email}
+                    </span>
+                  </TD>
+                  <TD className="min-w-[12rem]" label="Organization">
                     {m.org_id ? (
-                      <Link href={`/finance/organizations/${m.org_id}`} className="hover:underline">
+                      <Link href={`/finance/organizations/${m.org_id}`} className="text-link underline underline-offset-2 hover:text-link-hover">
                         {m.org_name}
                       </Link>
                     ) : (
-                      <span className="text-muted">Not tied to an organization</span>
+                      <span className="text-muted">None</span>
                     )}
                   </TD>
-                  <TD>
+                  <TD label="Status">
                     <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}</Badge>
                   </TD>
-                  <TD className="whitespace-nowrap">{formatDateTime(m.created_at)}</TD>
+                  <TD className="min-w-28" label="Created">
+                    <span>{formatDateTime(m.created_at)}</span>
+                  </TD>
                 </TR>
               ))
             )}

@@ -138,24 +138,28 @@ export function BudgetGrid({
           </Button>
         </div>
         <div aria-live="polite" aria-atomic="true" className="ml-auto">
-          <p
-            className={cn(
-              "num inline-flex items-center gap-1.5 rounded-sm px-3 py-1 text-sm font-semibold ring-1 ring-inset",
-              balance.tone === "ok" && "bg-ok-bg text-ok ring-ok/25",
-              balance.tone === "warn" && "bg-warn-bg text-warn ring-warn/30",
-              balance.tone === "bad" && "bg-bad-bg text-bad ring-bad/25"
-            )}
-          >
-            <BalanceIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            {balance.text}
-          </p>
+          {rows.length === 0 ? (
+            <p className="num text-sm text-muted">Budget lines must add up to your award of {formatCurrency(award)}.</p>
+          ) : (
+            <p
+              className={cn(
+                "num inline-flex items-center gap-1.5 rounded-sm px-3 py-1 text-sm font-semibold ring-1 ring-inset",
+                balance.tone === "ok" && "bg-ok-bg text-ok ring-ok/25",
+                balance.tone === "warn" && "bg-warn-bg text-warn ring-warn/30",
+                balance.tone === "bad" && "bg-bad-bg text-bad ring-bad/25"
+              )}
+            >
+              <BalanceIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {balance.text}
+            </p>
+          )}
         </div>
       </div>
 
       <p className="flex items-start gap-2 border-b border-line bg-surface/60 px-3 py-2 text-sm text-muted sm:px-4">
         <ClipboardPaste className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
-          Paste rows from Excel. Columns: category, description, amount. <span className="num">{rows.length}</span> of <span className="num">{maxLines}</span> lines used.
+          Category is PS for personal services, such as salaries and fringe, or OTPS for other than personal services, such as supplies, rent and contracts. Paste rows from Excel. Columns: category, description, amount. <span className="num">{rows.length}</span> of <span className="num">{maxLines}</span> lines used.
         </span>
       </p>
 
@@ -253,8 +257,8 @@ export function BudgetGrid({
                     Category
                   </label>
                   <select id={`budget-cat-${row.rowId}`} value={row.category} onChange={(event) => update(row.rowId, { category: event.target.value as "PS" | "OTPS" })} className={cn(cell, "pr-8")}>
-                    <option value="PS">PS</option>
-                    <option value="OTPS">OTPS</option>
+                    <option value="PS" title="Personal services">PS</option>
+                    <option value="OTPS" title="Other than personal services">OTPS</option>
                   </select>
                 </div>
                 <div className="max-[719px]:order-last max-[719px]:col-span-2 min-[720px]:border-r min-[720px]:border-line">
@@ -343,10 +347,11 @@ export function BudgetGrid({
         </ul>
       )}
 
-      <dl className={cn("border-t border-line bg-surface/60 text-sm", !explainVariance && "rounded-b-lg")}>
+      <div className={cn("border-t border-line bg-surface/60 text-sm", !explainVariance && "rounded-b-lg")}>
+      <dl>
         {[
-          ["PS subtotal", totals.ps],
-          ["OTPS subtotal", totals.otps],
+          ["Personal services (PS) subtotal", totals.ps],
+          ["Other than personal services (OTPS) subtotal", totals.otps],
         ].map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4">
             <dt className="text-muted">{label}</dt>
@@ -378,10 +383,10 @@ export function BudgetGrid({
               </dd>
             </div>
           </>
-        ) : (
-          <p className="px-3 pb-2.5 text-muted sm:px-4">Enter what was actually spent on each line to see the variance and the unspent balance. Actual spent does not have to equal the approved budget.</p>
-        )}
+        ) : null}
       </dl>
+      {spend.entered ? null : <p className="px-3 pb-2.5 text-muted sm:px-4">Enter what was actually spent on each line to see the variance and the unspent balance. Actual spent does not have to equal the approved budget.</p>}
+      </div>
 
       {explainVariance ? (
         <div className="rounded-b-lg border-t border-line px-3 py-4 sm:px-4">

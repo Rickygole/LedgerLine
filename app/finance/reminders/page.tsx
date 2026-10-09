@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, Check, Pause } from "lucide-react";
+import { BellRing, Check, Mail, Pause } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
 import { isoDate, one, type SearchParams } from "@/lib/finance/admin/params";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
-import { describeOffset, listPeriods, listRules, offsetFor, previewTargets, shiftDate } from "@/lib/lifecycle/reminders";
+import { describeOffset, listPeriods, listRules, offsetFor, previewTargets, renderSubject, shiftDate } from "@/lib/lifecycle/reminders";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
@@ -110,7 +110,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                 <TH>Fires on</TH>
                 <TH>Subject</TH>
                 <TH>Status</TH>
-                <TH align="right">Sent</TH>
+                <TH>Last run</TH>
                 {canEdit ? <TH>Actions</TH> : null}
               </tr>
             </THead>
@@ -133,9 +133,23 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                           {formatDate(fires)}
                         </Link>
                       </TD>
-                      <TD className="max-w-md">{rule.template_subject}</TD>
+                      <TD className="max-w-md">
+                        {renderSubject(rule.template_subject, { label: period.label, dueOn: period.due_on })}
+                        <span className="mt-0.5 block text-xs text-muted">Template: {rule.template_subject}</span>
+                      </TD>
                       <TD>{rule.active ? <Badge tone="ok" icon={Check}>On</Badge> : <Badge icon={Pause}>Off</Badge>}</TD>
-                      <TD align="right">{rule.sent}</TD>
+                      <TD className="whitespace-nowrap">
+                        {rule.last_sent ? (
+                          <>
+                            {formatDate(rule.last_sent)}
+                            <span className="num block text-xs text-muted">
+                              {rule.sent} {rule.sent === 1 ? "message" : "messages"} queued
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-muted">Not run yet</span>
+                        )}
+                      </TD>
                       {canEdit ? (
                         <TD>
                           <RuleActions rule={rule} editHref={`${base}&date=${date}&edit=${rule.id}`} />
@@ -164,11 +178,16 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             description={
               matching.length === 0
                 ? `No active rule fires on this date. For ${period.label} this date is ${describeOffset(offset).toLowerCase()}.`
-                : `${targets.length} ${targets.length === 1 ? "organization qualifies" : "organizations qualify"} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Send now would queue.`
+                : `${targets.length} ${targets.length === 1 ? "organization qualifies" : "organizations qualify"} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Add to outbox would queue.`
             }
           />
           {targets.length > 0 ? (
             <>
+              {canEdit ? (
+                <CardBody className="border-b border-line">
+                  <SendNowForm period={period.id} date={date} dateLabel={formatDate(date)} today={today} count={targets.length} fresh={fresh} orgs={freshOrgs} />
+                </CardBody>
+              ) : null}
               <Table>
                 <THead>
                   <tr>
@@ -200,16 +219,11 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                       </TD>
                       <TD className="max-w-xs">{t.initiatives}</TD>
                       <TD className="whitespace-nowrap">{describeOffset(t.offset_days)}</TD>
-                      <TD>{t.already_sent ? <Badge tone="info" icon={Check}>Already sent</Badge> : <Badge tone="warn" icon={BellRing}>Will send</Badge>}</TD>
+                      <TD className="whitespace-nowrap">{t.already_sent ? <Badge icon={Check}>Already in outbox</Badge> : <Badge tone="info" icon={Mail}>Will be queued</Badge>}</TD>
                     </TR>
                   ))}
                 </tbody>
               </Table>
-              {canEdit ? (
-                <CardBody className="sticky bottom-0 z-10 rounded-b-xl border-t border-line bg-white">
-                  <SendNowForm period={period.id} date={date} dateLabel={formatDate(date)} today={today} count={targets.length} fresh={fresh} orgs={freshOrgs} />
-                </CardBody>
-              ) : null}
             </>
           ) : (
             <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">

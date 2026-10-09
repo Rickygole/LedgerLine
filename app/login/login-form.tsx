@@ -17,15 +17,15 @@ export function LoginForm({ next }: { next: string }) {
           {state.error}
         </div>
       ) : null}
-      <div>
+      <div className={state?.fieldErrors?.email ? "border-l-4 border-bad pl-4" : undefined}>
         <Label htmlFor="email">Work email</Label>
+        <FieldError id="email-error" className="mb-1.5 mt-0">{state?.fieldErrors?.email}</FieldError>
         <Input id="email" name="email" type="email" autoComplete="username" defaultValue={state?.values?.email} required aria-invalid={state?.fieldErrors?.email ? true : undefined} aria-describedby={state?.fieldErrors?.email ? "email-error" : undefined} />
-        <FieldError id="email-error">{state?.fieldErrors?.email}</FieldError>
       </div>
-      <div>
+      <div className={state?.fieldErrors?.password ? "border-l-4 border-bad pl-4" : undefined}>
         <Label htmlFor="password">Password</Label>
+        <FieldError id="password-error" className="mb-1.5 mt-0">{state?.fieldErrors?.password}</FieldError>
         <Input id="password" name="password" type="password" autoComplete="current-password" required aria-invalid={state?.fieldErrors?.password ? true : undefined} aria-describedby={state?.fieldErrors?.password ? "password-error" : undefined} />
-        <FieldError id="password-error">{state?.fieldErrors?.password}</FieldError>
       </div>
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in" : "Sign in"}

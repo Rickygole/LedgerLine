@@ -1,6 +1,6 @@
 import { formatDate, formatDateTime, formatTime, isToday, todayInNewYork } from "@/lib/dates";
-import { formatCurrency, parseAmount } from "@/lib/rules/money";
-import { balanceMessage, budgetTotals, isBlankRow, isVisible } from "@/lib/rules/validate";
+import { formatCount, formatCurrency, parseAmount } from "@/lib/rules/money";
+import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
 import type { Certification } from "@/lib/rules/certify";
 import { VARIANCE_NOTE_KEY, spendSummary } from "@/lib/rules/spend";
@@ -18,17 +18,28 @@ export function displayScalar(question: Question, value: AnswerValue | undefined
   if (question.type === "date") return formatDate(text);
   if (question.type === "integer" || question.type === "number") {
     const n = Number(text.replace(/,/g, ""));
-    return Number.isFinite(n) ? n.toLocaleString("en-US") : text;
+    return Number.isFinite(n) ? formatCount(n) : text;
   }
   return text;
+}
+
+export function cellText(type: string, raw: unknown): string {
+  const text = String(raw ?? "").trim();
+  if (text === "" || type === "text") return text;
+  if (type === "currency") {
+    const amount = parseAmount(text);
+    return amount === null ? text : formatCurrency(amount);
+  }
+  if (type === "percent") return text.endsWith("%") ? text : `${text}%`;
+  return formatCount(text);
 }
 
 export function tableRows(question: Question, value: AnswerValue | undefined): string[][] {
   if (!Array.isArray(value)) return [];
   const columns = question.columns ?? [];
   return value
-    .filter((row) => !isBlankRow(row, columns))
-    .map((row) => columns.map((column) => String(row[column.key] ?? "")));
+    .map((row) => columns.map((column) => cellText(column.type, row[column.key])))
+    .filter((cells) => cells.some((cell) => cell !== ""));
 }
 
 export type SummaryInput = {
@@ -63,8 +74,8 @@ export function plainTextReport(input: SummaryInput): string {
         const spent = line.actual === null || line.actual === undefined ? "" : `, actual spent ${formatCurrency(line.actual)}`;
         lines.push(`${line.position}. [${line.category}] ${line.description}: ${formatCurrency(line.amount)}${spent}`);
       }
-      lines.push(`PS subtotal: ${formatCurrency(totals.ps)}`);
-      lines.push(`OTPS subtotal: ${formatCurrency(totals.otps)}`);
+      lines.push(`Personal services (PS) subtotal: ${formatCurrency(totals.ps)}`);
+      lines.push(`Other than personal services (OTPS) subtotal: ${formatCurrency(totals.otps)}`);
       lines.push(`Total: ${formatCurrency(totals.total)}`);
       lines.push(`Award: ${formatCurrency(input.awardAmount)}`);
       lines.push(balanceMessage(totals.total, input.awardAmount).message);
@@ -83,7 +94,7 @@ export function plainTextReport(input: SummaryInput): string {
       if (question.type === "table") {
         lines.push(`${question.label}:`);
         const rows = tableRows(question, value);
-        if (rows.length === 0) lines.push("  (none)");
+        if (rows.length === 0) lines.push("  No rows entered.");
         const headers = (question.columns ?? []).map((column) => column.label);
         rows.forEach((row, index) => lines.push(`  ${index + 1}. ${row.map((cell, i) => `${headers[i]}: ${cell || "not provided"}`).join("; ")}`));
         continue;

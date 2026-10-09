@@ -63,17 +63,17 @@ export function StatusStackChart({ title, description, dimension, data, periodLa
       className={className}
       source={`Source: LedgerLine reporting data, ${periodLabel}`}
       table={
-        <table className="w-full min-w-[36rem] text-left text-sm">
+        <table className="w-full min-w-[36rem] text-left text-sm lg:min-w-0">
           <caption className="sr-only">
             {title}, {periodLabel}. Counts of reports.
           </caption>
           <thead className="bg-surface">
             <tr className="text-[13px] text-muted">
-              <th scope="col" className="whitespace-nowrap px-3 py-2 font-semibold">{dimension}</th>
+              <th scope="col" className="whitespace-nowrap px-3 py-2 align-bottom font-semibold">{dimension}</th>
               {used.map((b) => (
-                <th key={b} scope="col" className="whitespace-nowrap px-3 py-2 text-right font-semibold">{BUCKET_LABEL[b]}</th>
+                <th key={b} scope="col" className="px-3 py-2 text-right align-bottom font-semibold">{BUCKET_LABEL[b]}</th>
               ))}
-              <th scope="col" className="px-3 py-2 text-right font-semibold">Total</th>
+              <th scope="col" className="px-3 py-2 text-right align-bottom font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>

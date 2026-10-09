@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRight, CalendarRange, Landmark, Layers, Users } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatCompactCurrency, formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/rules/money";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { fiscalYears, nextFiscalYear, validFiscalYear, yearSummary } from "@/lib/lifecycle/rollover";
 import { PageHeader } from "@/components/ui/page-header";
@@ -60,7 +60,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               </div>
               <div>
                 <Label htmlFor="to">Roll over to</Label>
-                <Hint id="to-hint">Use the form FY28. The year and its two reporting periods are created if they do not exist.</Hint>
+                <Hint id="to-hint">Enter FY and two digits, for example FY28. The year and its two reporting periods are created if they do not exist.</Hint>
                 <Input id="to" name="to" defaultValue={to} pattern="FY[0-9]{2}" maxLength={4} aria-describedby="to-hint" />
               </div>
               <Button type="submit" variant="secondary">
@@ -76,8 +76,8 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <Stat label="Initiatives" value={summary.initiatives} icon={Layers} hint={`Active in ${from}`} />
                 <Stat label="Organizations" value={summary.organizations} icon={Users} hint="With at least one award" />
-                <Stat label="Assignments" value={summary.assignments} icon={CalendarRange} hint="Organization and initiative pairs" />
-                <Stat label="Funding" value={formatCompactCurrency(summary.totalFunding)} icon={Landmark} hint={formatCurrency(summary.totalFunding)} />
+                <Stat label="Awards" value={summary.assignments} icon={CalendarRange} hint="One per organization and initiative" />
+                <Stat label="Funding" value={formatCurrency(summary.totalFunding, { cents: false })} icon={Landmark} hint={`Total awarded in ${from}`} />
               </div>
               {targetSummary && targetSummary.initiatives > 0 ? (
                 <p className="mt-4 rounded-md border border-warn/30 bg-warn-bg px-3 py-2 text-sm text-warn">

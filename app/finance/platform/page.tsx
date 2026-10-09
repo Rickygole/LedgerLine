@@ -76,7 +76,7 @@ function Ids({ ids }: { ids: string[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {ids.map((id) => (
-        <Badge key={id} tone="info">
+        <Badge key={id}>
           {id}
         </Badge>
       ))}
@@ -93,9 +93,9 @@ export default async function PlatformPage() {
     <>
       <PageHeader
         title="Platform and delivery"
-        description="How LedgerLine meets the hosting, security, data, support and delivery requirements. Sections describe the proposed approach. Figures marked as live come from this running system."
+        description="How LedgerLine addresses the hosting, security, data, support and delivery requirements. Sections describe the proposed approach. Figures marked as live come from this running system."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Platform and delivery" }]}
-        meta={<Badge tone="warn">Proposed approach, not a contract term</Badge>}
+        meta={<Badge tone="info">Proposed approach, not a contract term</Badge>}
         actions={
           user.role === "finance_admin" ? (
             <ButtonLink href="/trust" variant="ghost" size="sm">
@@ -107,7 +107,7 @@ export default async function PlatformPage() {
 
       <div className="space-y-6">
         <Card>
-          <CardHeader title="Hosting and security" description="Hosted outside Council owned servers, in a cloud that meets NIST 800-53." actions={<Ids ids={["US-053", "US-054", "BR-026"]} />} />
+          <CardHeader title="Hosting and security" description="Proposed: hosted outside Council owned servers in Azure Government, with controls mapped to NIST 800-53." actions={<Ids ids={["US-053", "US-054", "BR-026"]} />} />
           <CardBody className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-md border border-line p-4">
@@ -127,7 +127,7 @@ export default async function PlatformPage() {
                     <tr>
                       <TH>Control</TH>
                       <TH>What it asks for</TH>
-                      <TH>How LedgerLine meets it</TH>
+                      <TH>How LedgerLine addresses it</TH>
                       <TH>Live evidence</TH>
                     </tr>
                   </THead>
@@ -232,7 +232,7 @@ export default async function PlatformPage() {
             <tbody>
               {SUPPORT_TIERS.map((t) => (
                 <TR key={t.tier} className="align-top">
-                  <TD className="font-semibold"><span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-navy-700" aria-hidden="true" />{t.tier}</span></TD>
+                  <TD className="whitespace-nowrap font-semibold"><span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-navy-700" aria-hidden="true" />{t.tier}</span></TD>
                   <TD>{t.who}</TD>
                   <TD className="max-w-md text-muted">{t.scope}</TD>
                   <TD>{t.target}</TD>

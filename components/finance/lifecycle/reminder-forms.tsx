@@ -113,10 +113,10 @@ export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs
       <input type="hidden" name="period" value={period} />
       <input type="hidden" name="date" value={date} />
       {confirming ? (
-        <div role="alertdialog" aria-label="Confirm sending reminders" className="flex w-full flex-wrap items-center gap-3 rounded-md border border-line bg-surface px-3 py-2">
-          <p className="text-sm font-semibold text-ink">{sendNowSummary(orgs, fresh, dateLabel)} Send them?</p>
+        <div role="alertdialog" aria-label="Confirm adding reminders to the outbox" className="flex w-full flex-wrap items-center gap-3 rounded-md border border-line bg-surface px-3 py-2">
+          <p className="text-sm font-semibold text-ink">{sendNowSummary(orgs, fresh, dateLabel)} Add them to the outbox?</p>
           <Button type="submit" disabled={pending}>
-            <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Sending" : `Yes, send to ${orgs} ${orgs === 1 ? "organization" : "organizations"}`}
+            <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Adding" : `Yes, add for ${orgs} ${orgs === 1 ? "organization" : "organizations"}`}
           </Button>
           <Button type="button" variant="secondary" disabled={pending} onClick={() => setConfirming(false)}>
             Cancel
@@ -124,12 +124,12 @@ export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs
         </div>
       ) : (
         <Button type="button" disabled={fresh === 0 || !isToday} onClick={() => setConfirming(true)}>
-          <Send className="h-4 w-4" aria-hidden="true" /> Send now
+          <Send className="h-4 w-4" aria-hidden="true" /> Add to outbox
         </Button>
       )}
       <span className="text-sm text-muted">
         <Mail className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-        {isToday ? `${fresh} of ${count} will be added to the outbox` : "Send now works for today only. This is a preview of another date."}
+        {isToday ? `${fresh} of ${count} will be added to the outbox` : "Reminders can be added to the outbox for today only. This is a preview of another date."}
       </span>
       <Status state={state} />
     </form>
