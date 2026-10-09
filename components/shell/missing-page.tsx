@@ -35,7 +35,7 @@ export function ForbiddenPanel({ role, roleText, portalArea = false }: { role: R
       actions={
         <ButtonLink href={home}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          {role ? "Back to dashboard" : "Sign in"}
+          {role === "cbo_submitter" ? "Back to My reports" : role ? "Back to dashboard" : "Sign in"}
         </ButtonLink>
       }
     >
