@@ -32,7 +32,7 @@ export type OrgRow = {
 
 export async function listOrganizations(tx: Tx, today: string, filters: { q: string; borough: string; type: string; missing: boolean; sort: OrgSort; dir: "asc" | "desc"; page: number }) {
   const direction = filters.dir === "desc" ? "DESC" : "ASC";
-  const orderBy = `${ORG_SORTS[filters.sort]} ${direction} NULLS LAST, legal_name ASC`;
+  const orderBy = `${ORG_SORTS[filters.sort]} ${direction} NULLS LAST, legal_name ASC, id ASC`;
   const rows = await tx.query<OrgRow>(
     `WITH ${ASSIGNMENT_STATE},
      agg AS (
