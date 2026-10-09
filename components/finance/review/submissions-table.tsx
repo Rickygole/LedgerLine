@@ -68,7 +68,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
             <TR key={row.assignmentId} className={row.bucket === "missing" ? "bg-bad-bg/40" : undefined}>
               <TD primary>
                 {row.submissionId ? (
-                  <Link href={`/finance/submissions/${row.submissionId}`} className="num font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                  <Link href={`/finance/submissions/${row.submissionId}`} className="num whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     {row.referenceNo}
                   </Link>
                 ) : (
