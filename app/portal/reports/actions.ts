@@ -150,3 +150,23 @@ export async function uploadLocalAttachment(formData: FormData): Promise<UploadA
     return { status: "error", message: "The file could not be uploaded. Try again." };
   }
 }
+
+export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } | { status: "signed_out" } | { status: "error"; message: string }> {
+  const parsed = z.object({ submissionId: z.uuid(), attachmentId: z.uuid() }).safeParse(raw);
+  if (!parsed.success) return { status: "error", message: "That file could not be found." };
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) return { status: "signed_out" };
+  try {
+    const removed = await withClaims(user.id, async (tx) => {
+      const rows = await tx.query<{ filename: string }>("DELETE FROM attachment WHERE id = $1 AND submission_id = $2 RETURNING filename", [parsed.data.attachmentId, parsed.data.submissionId]);
+      if (rows[0]) {
+        await tx.query("SELECT app.write_audit('submission', $1, 'attachment_removed', $2, NULL, NULL, NULL)", [parsed.data.submissionId, rows[0].filename]);
+      }
+      return rows.length;
+    });
+    if (removed === 0) return { status: "error", message: "That file is already gone or the report is no longer open for editing." };
+    return { status: "ok" };
+  } catch {
+    return { status: "error", message: "The file could not be removed. Try again." };
+  }
+}
