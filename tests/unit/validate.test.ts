@@ -97,3 +97,33 @@ describe("[US-029][US-030][BR-023] types and lengths", () => {
     expect(issues.find((i) => i.field === "delivery")?.ruleId).toBe("US-008");
   });
 });
+
+describe("[US-029] typed answers must hold a real value", () => {
+  const typed: FormDefinition = {
+    title: "Typed",
+    budget: { enabled: false, mustEqualAward: false, maxLines: 10 },
+    sections: [
+      {
+        key: "s",
+        title: "S",
+        kind: "questions",
+        questions: [
+          { key: "spent", label: "Spent", type: "currency", required: true, scope: "initiative" },
+          { key: "share", label: "Share", type: "percent", required: true, scope: "initiative" },
+          { key: "held_on", label: "Held on", type: "date", required: true, scope: "initiative" },
+        ],
+      },
+    ],
+  };
+  const fields = (answers: Record<string, string>) => validateSubmission({ definition: typed, answers, budget: [], awardAmount: 0 }).map((i) => i.field);
+
+  it("rejects symbols with no digits and calendar dates that do not exist", () => {
+    expect(fields({ spent: "$", share: "%", held_on: "2025-02-30" })).toEqual(["spent", "share", "held_on"]);
+    expect(fields({ spent: ".", share: "0x10", held_on: "2023-02-29" })).toEqual(["spent", "share", "held_on"]);
+  });
+
+  it("still accepts ordinary values", () => {
+    expect(fields({ spent: "$1,250.00", share: "45%", held_on: "2024-02-29" })).toEqual([]);
+    expect(fields({ spent: "1250", share: "12.5", held_on: "2025-12-31" })).toEqual([]);
+  });
+});
