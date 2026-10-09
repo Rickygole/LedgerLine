@@ -59,3 +59,67 @@ export async function listCategories(tx: Tx) {
   const rows = await tx.query<{ category: string }>(`SELECT DISTINCT category FROM initiative ORDER BY category`);
   return rows.map((r) => r.category);
 }
+
+export type InitiativeDetail = {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  description: string;
+  fiscal_year_id: string;
+  total_funding: string;
+  status: string;
+};
+
+export type FundedOrg = {
+  assignment_id: string;
+  org_id: string;
+  legal_name: string;
+  ein: string;
+  borough: string;
+  award_amount: string;
+  sponsoring_agency: string | null;
+  ye_status: string | null;
+  mid_status: string | null;
+};
+
+export type FormVersionRow = {
+  id: string;
+  version: number;
+  status: "draft" | "published" | "superseded";
+  source: string;
+  created_at: string;
+  published_at: string | null;
+  created_by_name: string | null;
+  published_by_name: string | null;
+};
+
+export async function loadInitiative(tx: Tx, id: string) {
+  const initiative = await tx.one<InitiativeDetail>(
+    `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status FROM initiative WHERE id = $1`,
+    [id]
+  );
+  if (!initiative) return null;
+  const funded = await tx.query<FundedOrg>(
+    `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, a.award_amount, a.sponsoring_agency,
+            sy.status AS ye_status, sm.status AS mid_status
+     FROM assignment a
+     JOIN organization o ON o.id = a.org_id
+     LEFT JOIN submission sy ON sy.assignment_id = a.id AND sy.period_id = 'FY26-YE'
+     LEFT JOIN submission sm ON sm.assignment_id = a.id AND sm.period_id = 'FY27-MY'
+     WHERE a.initiative_id = $1
+     ORDER BY o.legal_name`,
+    [id]
+  );
+  const forms = await tx.query<FormVersionRow>(
+    `SELECT f.id, f.version, f.status, f.source, f.created_at, f.published_at, cu.full_name AS created_by_name, pu.full_name AS published_by_name
+     FROM form_version f
+     LEFT JOIN app_user cu ON cu.id = f.created_by
+     LEFT JOIN app_user pu ON pu.id = f.published_by
+     WHERE f.initiative_id = $1
+     ORDER BY f.version DESC`,
+    [id]
+  );
+  const periods = await tx.query<{ id: string; due_on: string }>(`SELECT id, due_on::text FROM reporting_period`);
+  return { initiative, funded, forms, due: Object.fromEntries(periods.map((p) => [p.id, p.due_on])) as Record<string, string> };
+}
