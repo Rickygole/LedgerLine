@@ -22,7 +22,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Initiative" };
 
-const FORM_TONE = { published: "ok", draft: "info", superseded: "neutral" } as const;
+const FORM_TONE = { published: "ok", draft: "neutral", superseded: "neutral" } as const;
 const SOURCE_LABEL: Record<string, string> = { seed: "Imported", manual: "Manual", ai_draft: "AI draft", rule_draft: "Rule draft" };
 
 export default async function InitiativeDetail({ params }: { params: Promise<{ id: string }> }) {
