@@ -81,7 +81,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
             <Segmented label="Filter by initiative" param="initiative" base={base("initiative")} current={initiative} options={[{ value: "all", label: "All initiatives" }, ...initiatives.map(([id, name]) => ({ value: id, label: name }))]} />
           </CardBody>
         ) : null}
-        <Table>
+        <Table stack>
           <THead>
             <tr>
               <TH>Reference</TH>
@@ -107,15 +107,15 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                       {r.reference_no}
                     </Link>
                   </TD>
-                  <TD>{r.initiative_name}</TD>
-                  <TD>{r.period_label}</TD>
-                  <TD>
+                  <TD primary>{r.initiative_name}</TD>
+                  <TD label="Period">{r.period_label}</TD>
+                  <TD label="Status">
                     <Badge tone={TONE[r.status] ?? "neutral"}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
                   </TD>
-                  <TD align="right">{r.revision}</TD>
-                  <TD>{r.submitted_by_name ?? "Unknown"}</TD>
-                  <TD className="whitespace-nowrap">{formatDateTime(r.submitted_at)}</TD>
-                  <TD className="text-right">
+                  <TD align="right" label="Revision">{r.revision}</TD>
+                  <TD label="Submitted by">{r.submitted_by_name ?? "Unknown"}</TD>
+                  <TD className="whitespace-nowrap" label="Submitted">{formatDateTime(r.submitted_at)}</TD>
+                  <TD className="text-right" action>
                     <ButtonLink href={`/portal/reports/${r.id}`} variant="secondary" size="sm">
                       View
                     </ButtonLink>
