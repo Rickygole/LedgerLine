@@ -1,5 +1,5 @@
 import "server-only";
-import { randomInt } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { pgCode, withClaims } from "@/lib/db";
 
 export type StartResult = { status: "ok"; submissionId: string } | { status: "not_found" } | { status: "no_form" };
@@ -30,13 +30,12 @@ export async function startReport(userId: string, assignmentId: string, periodId
         const form = await tx.one<{ id: string }>("SELECT id FROM form_version WHERE initiative_id = $1 AND status = 'published'", [assignment.initiative_id]);
         if (!form) return { status: "no_form" };
 
-        const created = await tx.one<{ id: string }>(
-          `INSERT INTO submission (reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
-           VALUES ($1, $2, $3, $4, 'draft', app.uid(), app.uid())
-           RETURNING id`,
-          [referenceFor(periodId), assignmentId, periodId, form.id]
+        const created = { id: randomUUID() };
+        await tx.query(
+          `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
+           VALUES ($1, $2, $3, $4, $5, 'draft', app.uid(), app.uid())`,
+          [created.id, referenceFor(periodId), assignmentId, periodId, form.id]
         );
-        if (!created) return { status: "not_found" };
         await tx.query(
           `INSERT INTO answer (submission_id, question_key, value, updated_by)
            VALUES ($1, 'org_legal_name', to_jsonb($2::text), app.uid()), ($1, 'org_ein', to_jsonb($3::text), app.uid())`,

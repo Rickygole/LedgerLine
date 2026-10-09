@@ -135,3 +135,40 @@ describe("[US-037] view-only finance users cannot write", () => {
     expect(result.flag).toBe("42501");
   });
 });
+
+describe("[US-016][BR-009] an organization can start a report it owes", () => {
+  it("creates a draft for its own assignment and cannot create one for another organization", async () => {
+    const own = (
+      await owner.query(
+        `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
+         WHERE a.org_id = $1 AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY') LIMIT 1`,
+        [mariaOrg]
+      )
+    ).rows[0];
+    const other = (
+      await owner.query(
+        `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
+         WHERE a.org_id <> $1 LIMIT 1`,
+        [mariaOrg]
+      )
+    ).rows[0];
+    const result = await asUser(app, maria, async () => {
+      await app.query(
+        `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
+         VALUES (gen_random_uuid(), 'LL-TEST-OWN', $1, 'FY27-MY', $2, 'draft', app.uid(), app.uid())`,
+        [own.assignment, own.form]
+      );
+      const visible = (await app.query("SELECT count(*)::int AS n FROM submission WHERE reference_no = 'LL-TEST-OWN'")).rows[0].n;
+      await app.query("SAVEPOINT s");
+      const foreign = await errorCode(() =>
+        app.query(
+          `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
+           VALUES (gen_random_uuid(), 'LL-TEST-OTHER', $1, 'FY27-MY', $2, 'draft', app.uid(), app.uid())`,
+          [other.assignment, other.form]
+        )
+      );
+      return { visible, foreign };
+    });
+    expect(result).toEqual({ visible: 1, foreign: "42501" });
+  });
+});
