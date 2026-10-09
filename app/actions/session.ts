@@ -1,11 +1,13 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { homeFor, type Role } from "@/lib/auth";
 import { anonymous, withClaims } from "@/lib/db";
+import { safeNext } from "@/lib/redirect";
 import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession } from "@/lib/session";
 
 const loginSchema = z.object({
@@ -13,11 +15,30 @@ const loginSchema = z.object({
   password: z.string().min(1, "Enter your password."),
 });
 
+const DUMMY_HASH = "$2b$10$ub.I6pzHcfPjvdwuphNjf.D0PorzRHkVo7g34JoMBQE4O5FnPI8TO";
+const TOO_MANY = "Too many attempts. Wait 15 minutes and try again.";
+
 export type FormState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
+
+async function clientKey(): Promise<string> {
+  const h = await headers();
+  return (h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? "local").split(",")[0].trim();
+}
+
+async function allowed(key: string, limit: number): Promise<boolean> {
+  const rows = await anonymous<{ ok: boolean }>("SELECT app.record_attempt($1, 15, $2) AS ok", [key, limit]);
+  return rows[0]?.ok === true;
+}
 
 async function lookup(email: string): Promise<{ id: string; password_hash: string } | null> {
   const rows = await anonymous<{ id: string; password_hash: string }>("SELECT * FROM app.login_lookup($1)", [email]);
   return rows[0] ?? null;
+}
+
+function sameSecret(a: string, b: string): boolean {
+  const left = createHash("sha256").update(a).digest();
+  const right = createHash("sha256").update(b).digest();
+  return timingSafeEqual(left, right);
 }
 
 export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -27,8 +48,12 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     for (const issue of parsed.error.issues) fieldErrors[String(issue.path[0])] = issue.message;
     return { fieldErrors };
   }
-  const account = await lookup(parsed.data.email);
-  const valid = account ? await bcrypt.compare(parsed.data.password, account.password_hash) : false;
+  const ip = await clientKey();
+  const email = parsed.data.email.toLowerCase();
+  if (!(await allowed(`login-ip:${ip}`, 30)) || !(await allowed(`login-email:${email}`, 8))) return { error: TOO_MANY };
+
+  const account = await lookup(email);
+  const valid = await bcrypt.compare(parsed.data.password, account?.password_hash ?? DUMMY_HASH);
   if (!account || !valid) return { error: "That email and password do not match an account." };
 
   const role = await withClaims(account.id, async (tx) => {
@@ -40,8 +65,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
 
   const store = await cookies();
   store.set(SESSION_COOKIE, await signSession(account.id), sessionCookieOptions);
-  const next = String(formData.get("next") ?? "");
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : homeFor(role));
+  redirect(safeNext(formData.get("next"), homeFor(role)));
 }
 
 export async function signOut() {
@@ -51,11 +75,12 @@ export async function signOut() {
 }
 
 export async function unlockGate(_prev: FormState, formData: FormData): Promise<FormState> {
-  const passcode = String(formData.get("passcode") ?? "");
-  const expected = process.env.GATE_PASSCODE;
-  if (!expected || passcode.trim() !== expected) return { error: "That passcode is not correct." };
+  const ip = await clientKey();
+  if (!(await allowed(`gate:${ip}`, 20))) return { error: TOO_MANY };
+  const passcode = String(formData.get("passcode") ?? "").trim();
+  const expected = (process.env.GATE_PASSCODE ?? "").trim();
+  if (!expected || !sameSecret(passcode, expected)) return { error: "That passcode is not correct." };
   const store = await cookies();
   store.set(GATE_COOKIE, await signGate(), { ...sessionCookieOptions, maxAge: 60 * 60 * 24 * 7 });
-  const next = String(formData.get("next") ?? "");
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/login");
+  redirect(safeNext(formData.get("next"), "/login"));
 }
