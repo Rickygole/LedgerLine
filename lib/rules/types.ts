@@ -64,6 +64,7 @@ export type BudgetLine = {
   category: "PS" | "OTPS";
   description: string;
   amount: number;
+  actual?: number | null;
 };
 
 export type AnswerValue = string | number | boolean | null | Array<Record<string, string | number | null>>;
