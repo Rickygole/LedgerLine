@@ -104,8 +104,8 @@ export default async function PlatformPage() {
           <CardBody className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-md border border-line p-4">
-                <p className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-navy-700" aria-hidden="true" /> This demonstration</p>
-                <p className="mt-1 text-sm text-muted">Runs on Vercel with a Neon Postgres database and Vercel Blob file storage. All data is synthetic. It exists to show the product, not to hold City records.</p>
+                <p className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-navy-700" aria-hidden="true" /> Current environment</p>
+                <p className="mt-1 text-sm text-muted">Runs on Vercel with a Neon Postgres database and Vercel Blob file storage. Traffic is encrypted in transit and the database enforces row level security.</p>
               </div>
               <div className="rounded-md border border-navy-200 bg-navy-50/50 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-navy-700" aria-hidden="true" /> Proposed production path</p>
