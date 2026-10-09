@@ -82,7 +82,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                     {u.id === admin.id ? <span className="ml-2 rounded-sm bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">You</span> : null}
                     {u.title ? <div className="text-xs font-normal text-muted">{u.title}</div> : null}
                   </TD>
-                  <TD className="max-w-64 break-words text-muted" label="Email">
+                  <TD className="whitespace-nowrap text-muted" label="Email">
                     <span>{u.email}</span>
                   </TD>
                   <TD className="whitespace-nowrap" label="Role">
