@@ -7,7 +7,6 @@ export const CHART_COLORS: Record<Bucket, string> = {
   in_review: "#0072B2",
   submitted: "#56B4E9",
   returned: "#E69F00",
-  incomplete: "#CC79A7",
   missing: "#B84F00",
   outstanding: "#BFC5CE",
 };
@@ -17,12 +16,11 @@ export const LABEL_ON_DARK: Record<Bucket, boolean> = {
   in_review: true,
   submitted: false,
   returned: false,
-  incomplete: false,
   missing: true,
   outstanding: false,
 };
 
-export const STACK: Bucket[] = ["accepted", "in_review", "submitted", "returned", "incomplete", "missing", "outstanding"];
+export const STACK: Bucket[] = ["accepted", "in_review", "submitted", "returned", "missing", "outstanding"];
 
 export const AXIS = { fontSize: 12, fill: "#566173" };
 export const GRID = "#dfe3ea";
