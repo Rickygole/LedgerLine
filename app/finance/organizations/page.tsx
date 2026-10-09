@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2 } from "lucide-react";
 import { requireUser, FINANCE_ROLES } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
@@ -81,8 +80,8 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
               <SortHeader base={base} params={kept} field="type" label="Type" sort={sort} dir={dir} />
               <SortHeader base={base} params={kept} field="borough" label="Borough" sort={sort} dir={dir} />
               <SortHeader base={base} params={kept} field="district" label="District" sort={sort} dir={dir} align="right" />
-              <SortHeader base={base} params={kept} field="awards" label="Active awards" sort={sort} dir={dir} align="right" />
-              <SortHeader base={base} params={kept} field="total" label="Total awarded" sort={sort} dir={dir} align="right" />
+              <SortHeader base={base} params={kept} field="awards" label="Awards" sort={sort} dir={dir} align="right" />
+              <SortHeader base={base} params={kept} field="total" label="Awarded" sort={sort} dir={dir} align="right" />
               <SortHeader base={base} params={kept} field="compliance" label="FY26 Year-End" sort={sort} dir={dir} />
               <SortHeader base={base} params={kept} field="missing" label="Missing" sort={sort} dir={dir} align="right" />
             </tr>
@@ -94,14 +93,13 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
               rows.map((row) => (
                 <TR key={row.id}>
                   <TD>
-                    <Link href={`${base}/${row.id}`} className="inline-flex items-center gap-2 font-semibold text-navy-800 hover:underline">
-                      <Building2 className="h-4 w-4 text-muted" aria-hidden="true" />
+                    <Link href={`${base}/${row.id}`} className="font-semibold text-navy-700 hover:underline">
                       {row.legal_name}
                     </Link>
                   </TD>
-                  <TD className="font-mono text-xs">{row.ein}</TD>
-                  <TD>{orgTypeLabel(row.org_type)}</TD>
-                  <TD>{row.borough}</TD>
+                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{row.ein}</TD>
+                  <TD className="whitespace-nowrap">{orgTypeLabel(row.org_type)}</TD>
+                  <TD className="whitespace-nowrap">{row.borough}</TD>
                   <TD align="right">{row.council_district ?? ""}</TD>
                   <TD align="right">{row.awards}</TD>
                   <TD align="right">{formatCurrency(Number(row.total))}</TD>
