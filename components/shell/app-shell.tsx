@@ -22,6 +22,7 @@ const PORTAL_NAV: NavItem[] = [
   { href: "/portal", label: "My reports", exact: true },
   { href: "/portal/history", label: "Submission history" },
   { href: "/portal/organization", label: "Organization profile" },
+  { href: "/portal/messages", label: "Messages" },
 ];
 
 function initials(name: string) {
