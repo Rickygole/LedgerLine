@@ -8,5 +8,9 @@ export function plainError(error: unknown): string {
   if (code === "23505") return "A record with those details already exists.";
   if (code === "23503") return "A related record could not be found. Reload the page and try again.";
   if (code === "22P02") return "One of the values is not in a valid format.";
+  if (code === "22003") return "One of the numbers is too large. Check the amounts and try again.";
+  if (code === "22001") return "One of the values is too long. Shorten it and try again.";
+  if (code === "22007" || code === "22008") return "One of the dates is not a real calendar date.";
+  if (code === "23502") return "A required value is missing. Fill in every required field.";
   return "Something went wrong and nothing was saved. Try again, and contact support if it keeps happening.";
 }
