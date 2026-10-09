@@ -45,7 +45,7 @@ export function Attachments({
     setPending((list) => (next === null ? list.filter((item) => item.key !== key) : list.map((item) => (item.key === key ? { ...item, ...next } : item))));
   }
 
-  async function sendOne(file: File, key: string): Promise<UploadActionResult> {
+  async function sendOne(file: File): Promise<UploadActionResult> {
     if (storage === "local") {
       const form = new FormData();
       form.set("submissionId", submissionId);
@@ -75,7 +75,7 @@ export function Attachments({
       }
       setPending((current) => [...current, { key, name: file.name, bytes: file.size, state: "uploading" }]);
       try {
-        const result = await sendOne(file, key);
+        const result = await sendOne(file);
         if (result.status === "ok") {
           patch(key, null);
           onAdded(result.attachment);
