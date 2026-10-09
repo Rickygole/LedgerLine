@@ -14,7 +14,7 @@ export function appUrl(): string {
 }
 
 export async function connect(url: string): Promise<Client> {
-  const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : { rejectUnauthorized: false } });
+  const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : true });
   await client.connect();
   return client;
 }

@@ -12,7 +12,7 @@ function pool(): Pool {
       connectionString,
       max: Number(process.env.DB_POOL_MAX ?? 3),
       idleTimeoutMillis: 10_000,
-      ssl: connectionString.includes("localhost") ? undefined : { rejectUnauthorized: false },
+      ssl: connectionString.includes("localhost") ? undefined : true,
     });
   }
   return globalThis.ledgerPool;
