@@ -58,6 +58,14 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-navy-600);
   outline-offset: 2px;
+  animation: focus-ring 140ms ease-out;
+}
+
+@keyframes focus-ring {
+  from {
+    outline-offset: 5px;
+    outline-color: transparent;
+  }
 }
 
 .on-dark :focus-visible,
