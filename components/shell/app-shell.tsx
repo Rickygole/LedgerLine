@@ -24,11 +24,11 @@ export async function AppShell({ user, children }: { user: CurrentUser; children
   const collapsed = !isCbo && (await cookies()).get(NAV_COOKIE)?.value === "collapsed";
 
   const header = (
-    <header className="no-print on-dark relative z-30 bg-navy-900 text-white">
+    <header className="no-print relative z-30 bg-navy-900 text-white">
       <div className="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <NavDrawer role={user.role} subtitle={subtitle} className={isCbo ? "md:hidden" : "lg:hidden"} />
-          <Link href={home} className="shrink-0 rounded-md" aria-label={`LedgerLine ${subtitle} home`}>
+          <Link href={home} className="shrink-0 rounded-sm" aria-label={`LedgerLine ${subtitle} home`}>
             <Logo subtitle={subtitle} />
           </Link>
         </div>
