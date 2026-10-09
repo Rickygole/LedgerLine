@@ -71,7 +71,7 @@ describe("workbook", () => {
     expect(sheet["O2"].v).toBe("Under 10 5");
   });
 
-  it("round trips through xlsx and carries the export note", () => {
+  it("[US-046] round trips through xlsx and carries the export note", () => {
     const parsed = XLSX.read(workbookToBuffer(book), { type: "buffer" });
     expect(parsed.SheetNames).toEqual(["Submissions", "Budget lines", "README"]);
     const readme = XLSX.utils.sheet_to_csv(parsed.Sheets["README"]);
@@ -81,7 +81,7 @@ describe("workbook", () => {
     expect(budget).toEqual([{ reference_no: "LL-26YE-00001", position: 1, category: "PS", description: "Coordinator", amount: 40000 }]);
   });
 
-  it("builds a CSV of the Submissions sheet only", () => {
+  it("[US-047] builds a CSV of the Submissions sheet only", () => {
     const csv = submissionsToCsv(book);
     const [header] = csv.split("\n");
     expect(header.startsWith("reference_no,ein,organization")).toBe(true);
