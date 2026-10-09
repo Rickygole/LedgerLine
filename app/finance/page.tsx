@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, CheckCircle2, Flag, Landmark, Layers } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, Eye, FileWarning, Flag, RotateCcw, Send } from "lucide-react";
 import { ActivityFeed, type ActivityItem } from "@/components/finance/review/activity-feed";
-import { BucketCards } from "@/components/finance/review/bucket-cards";
-import { DueSoonList } from "@/components/finance/review/due-soon";
+import { NeedsAttention, type AttentionItem } from "@/components/finance/review/needs-attention";
 import { PeriodSelect } from "@/components/finance/review/period-select";
-import { CompletionByCategoryChart } from "@/components/charts/completion-by-category";
-import { StatusByBoroughChart } from "@/components/charts/status-by-borough";
-import { ButtonLink } from "@/components/ui/button";
+import { StatusStackChart, type StackDatum } from "@/components/charts/status-stack";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Stat } from "@/components/ui/stat";
@@ -15,8 +12,9 @@ import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { daysBetween, formatDate, todayInNewYork } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
-import { boroughSeries, completionByCategory, countBuckets, isSubmittedStatus } from "@/lib/finance/review/derive";
+import { countBuckets, groupBy } from "@/lib/finance/review/derive";
 import { hrefWith, parseFilters } from "@/lib/finance/review/filters";
+import type { Filters, ReportRow } from "@/lib/finance/review/types";
 import { formatCompactCurrency } from "@/lib/rules/money";
 
 export const runtime = "nodejs";
@@ -61,15 +59,14 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
   const { periods, period, rows } = data;
   const counts = countBuckets(rows);
   const awarded = rows.reduce((sum, row) => sum + row.award, 0);
-  const submitted = rows.filter((row) => isSubmittedStatus(row.status)).length;
   const flagged = rows.filter((row) => row.flags.length > 0).length;
-  const percent = rows.length === 0 ? 0 : Math.round((submitted / rows.length) * 1000) / 10;
   const untilDue = daysBetween(todayInNewYork(), period.dueOn);
+  const pct = (n: number) => (rows.length === 0 ? "0%" : `${Math.round((n / rows.length) * 100)}%`);
 
-  const waiting = rows
-    .filter((row) => row.status === null || row.status === "draft" || row.status === "returned")
+  const overdue = rows
+    .filter((row) => (row.status === null || row.status === "draft") && row.daysPastDue > 0)
     .sort((a, b) => b.daysPastDue - a.daysPastDue || b.award - a.award)
-    .slice(0, 8);
+    .slice(0, 4);
 
   const activity: ActivityItem[] = data.activity.map((a) => ({
     id: Number(a.id),
@@ -83,51 +80,72 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
     ai: a.ai,
   }));
 
-  const filterBase = { period: period.id };
+  const base = { period: period.id };
+  const list = (extra: Partial<Filters>) => hrefWith("/finance/submissions", base, extra);
+  const stack = (key: (row: ReportRow) => string, param: "category" | "borough"): StackDatum[] =>
+    [...groupBy(rows, key).entries()].map(([name, group]) => ({ name, href: list({ [param]: name }), ...countBuckets(group) }));
+
+  const attention: AttentionItem[] = [
+    { label: "Missing", detail: "Past due with nothing submitted", count: counts.missing, href: list({ bucket: "missing" }), tone: "bad", icon: AlertTriangle },
+    { label: "Incomplete", detail: "Past due drafts that fail required rules", count: counts.incomplete, href: list({ bucket: "incomplete" }), tone: "bad", icon: FileWarning },
+    { label: "Waiting for review", detail: "Submitted, review not started", count: counts.submitted, href: list({ bucket: "submitted" }), tone: "info", icon: Send },
+    { label: "Flagged", detail: "At least one open finding", count: flagged, href: hrefWith("/finance/flagged", base, {}), tone: "warn", icon: Flag },
+    { label: "Update requested", detail: "Waiting on the organization", count: counts.returned, href: list({ bucket: "returned" }), tone: "warn", icon: RotateCcw },
+  ];
+
+  const due = untilDue < 0 ? `${Math.abs(untilDue)} ${Math.abs(untilDue) === 1 ? "day" : "days"} past due` : untilDue === 0 ? "due today" : `due in ${untilDue} ${untilDue === 1 ? "day" : "days"}`;
 
   return (
     <>
       <PageHeader
         title="Dashboard"
-        description={`${period.label}: due ${formatDate(period.dueOn)}${untilDue < 0 ? `, ${Math.abs(untilDue)} ${Math.abs(untilDue) === 1 ? "day" : "days"} past due` : `, in ${untilDue} ${untilDue === 1 ? "day" : "days"}`}.`}
+        description={`${period.label} reports ${untilDue < 0 ? "were" : "are"} due ${formatDate(period.dueOn)}, ${due}.`}
+        meta={
+          <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted">
+            <li>
+              <span className="num font-semibold text-ink">{data.initiatives}</span> active initiatives
+            </li>
+            <li className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
+            <li>
+              <span className="num font-semibold text-ink">{formatCompactCurrency(awarded)}</span> awarded across <span className="num">{rows.length}</span> awards
+            </li>
+          </ul>
+        }
         actions={<PeriodSelect periods={periods} value={period.id} />}
       />
 
-      <section aria-label="Key figures" className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Stat label="Active initiatives" value={data.initiatives} icon={Layers} href="/finance/initiatives" hint="Across all fiscal years" />
-        <Stat label="Total awarded" value={formatCompactCurrency(awarded)} icon={Landmark} hint={`${rows.length} awards`} />
-        <Stat label="Reports due" value={rows.length} icon={CalendarClock} hint={`For ${period.label}`} href={hrefWith("/finance/submissions", filterBase, {})} />
-        <Stat label="Percent submitted" value={`${percent}%`} icon={CheckCircle2} tone="ok" hint={`${submitted} of ${rows.length} reports`} />
-        <Stat label="Missing" value={counts.missing} icon={AlertTriangle} tone="bad" hint="Not submitted, past due" href={hrefWith("/finance/submissions", filterBase, { bucket: "missing" })} />
-        <Stat label="Flagged items" value={flagged} icon={Flag} tone="warn" hint="Reports needing a look" href={hrefWith("/finance/flagged", filterBase, {})} />
+      <section aria-label="Key figures" className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label="Reports due" value={rows.length} icon={CalendarClock} tone="info" hint={period.label} href={list({})} />
+        <Stat label="Accepted" value={counts.accepted} icon={CheckCircle2} tone="ok" hint={`${pct(counts.accepted)} of reports due`} href={list({ bucket: "accepted" })} />
+        <Stat label="In review" value={counts.in_review} icon={Eye} tone="neutral" hint={`${counts.submitted} more waiting to start`} href={list({ bucket: "in_review" })} />
+        <Stat label="Missing" value={counts.missing} icon={AlertTriangle} tone="bad" hint="Past due, nothing submitted" href={list({ bucket: "missing" })} />
       </section>
 
-      <section aria-labelledby="buckets-heading" className="mb-8">
-        <h2 id="buckets-heading" className="mb-3 text-base font-semibold text-ink">
-          Reports by bucket
-        </h2>
-        <BucketCards counts={counts} period={period.id} total={rows.length} />
+      <section aria-label="Status and attention" className="mb-6 grid gap-4 xl:grid-cols-12">
+        <StatusStackChart
+          title="Report status by category"
+          description={`Where each ${period.label} report stands, by initiative category.`}
+          dimension="Category"
+          data={stack((row) => row.category, "category")}
+          periodLabel={period.label}
+          className="xl:col-span-8"
+        />
+        <div className="min-w-0 xl:col-span-4">
+          <NeedsAttention items={attention} overdue={overdue} overdueHref={list({ bucket: "missing" })} />
+        </div>
       </section>
 
-      <section aria-label="Charts" className="mb-8 grid gap-4 xl:grid-cols-2">
-        <StatusByBoroughChart data={boroughSeries(rows)} periodLabel={period.label} />
-        <CompletionByCategoryChart data={completionByCategory(rows)} periodLabel={period.label} />
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-5">
-        <Card className="xl:col-span-3">
-          <CardHeader
-            title={untilDue < 0 ? "Overdue" : "Due soon"}
-            description="Organizations that still owe a report, longest wait first."
-            actions={
-              <ButtonLink href={hrefWith("/finance/submissions", filterBase, { bucket: untilDue < 0 ? "missing" : "outstanding" })} variant="secondary" size="sm">
-                View all
-              </ButtonLink>
-            }
+      <section aria-label="Borough and activity" className="grid gap-4 xl:grid-cols-12">
+        <div className="min-w-0 xl:col-span-7">
+          <StatusStackChart
+            title="Report status by borough"
+            description="The same reports, grouped by where the organization is based."
+            dimension="Borough"
+            data={stack((row) => row.borough, "borough")}
+            periodLabel={period.label}
           />
-          <DueSoonList rows={waiting} />
-        </Card>
-        <Card className="xl:col-span-2">
+        </div>
+        <Card className="xl:col-span-5">
           <CardHeader title="Recent activity" description="Latest actions across all reports." />
           <ActivityFeed items={activity} />
           <CardBody className="border-t border-line py-3 text-sm">
