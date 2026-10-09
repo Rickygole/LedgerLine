@@ -150,7 +150,7 @@ export function resumeSectionFor(definition: FormDefinition, updatedAt: Record<s
   return best?.key ?? null;
 }
 
-export async function loadEditorPayload(tx: Tx, report: LoadedReport, currentUserName: string): Promise<EditorPayload> {
+export async function loadEditorPayload(tx: Tx, report: LoadedReport, currentUserName: string, currentUserTitle: string): Promise<EditorPayload> {
   const { answers, updatedAt } = await loadAnswers(tx, report.header.id);
   const budget = await loadBudget(tx, report.header.id);
   const attachments = await loadAttachments(tx, report.header.id);
@@ -164,5 +164,6 @@ export async function loadEditorPayload(tx: Tx, report: LoadedReport, currentUse
     resumeSection: resumeSectionFor(report.definition, updatedAt),
     hasProgress: Object.keys(updatedAt).some((key) => key !== "org_legal_name" && key !== "org_ein") || budget.length > 0,
     currentUserName,
+    currentUserTitle,
   };
 }

@@ -27,7 +27,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     if (!report) return null;
     const editable = report.header.status === "draft" || report.header.status === "returned";
     if (editable) {
-      const payload = await loadEditorPayload(tx, report, user.fullName);
+      const payload = await loadEditorPayload(tx, report, user.fullName, user.title ?? "");
       const note = report.header.status === "returned" ? await loadReturnNote(tx, id) : null;
       return { kind: "edit" as const, report, payload, note };
     }

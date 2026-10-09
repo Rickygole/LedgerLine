@@ -5,13 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
-import { amountProblem, emptyRow, formatAmountText, isBlankRow, linesFromRows, newRowId, type BudgetRow } from "@/lib/report/budget-rows";
+import { actualProblem, amountProblem, emptyRow, formatAmountText, isBlankRow, linesFromRows, newRowId, type BudgetRow } from "@/lib/report/budget-rows";
 import { formatCurrency, parseAmount } from "@/lib/rules/money";
 import { balanceCopy } from "./balance";
 import { parseBudgetPaste } from "@/lib/rules/paste";
+import { lineVariance, needsVarianceNote, spendSummary, VARIANCE_NOTE_MAX, VARIANCE_THRESHOLD_PERCENT } from "@/lib/rules/spend";
 import { budgetTotals } from "@/lib/rules/validate";
 
-const COLS = "min-[720px]:grid min-[720px]:grid-cols-[3rem_7.5rem_minmax(0,1fr)_11rem_2.75rem] min-[720px]:items-stretch";
+const COLS = "min-[720px]:grid min-[720px]:grid-cols-[3rem_6.5rem_minmax(0,1fr)_9.5rem_9.5rem_8.5rem_2.75rem] min-[720px]:items-stretch";
 
 const cell =
   "block h-10 w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-600 min-[720px]:rounded-none min-[720px]:border-0 min-[720px]:bg-transparent min-[720px]:hover:bg-navy-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
@@ -25,6 +26,9 @@ export function BudgetGrid({
   maxLines,
   rowErrors,
   gridError,
+  varianceNote,
+  onVarianceNote,
+  varianceError,
 }: {
   rows: BudgetRow[];
   onChange: (rows: BudgetRow[]) => void;
@@ -32,6 +36,9 @@ export function BudgetGrid({
   maxLines: number;
   rowErrors: Record<string, string>;
   gridError?: string;
+  varianceNote: string;
+  onVarianceNote: (value: string) => void;
+  varianceError?: string;
 }) {
   const [highlight, setHighlight] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<Toast | null>(null);
@@ -44,6 +51,8 @@ export function BudgetGrid({
 
   const lines = useMemo(() => linesFromRows(rows), [rows]);
   const totals = useMemo(() => budgetTotals(lines), [lines]);
+  const spend = useMemo(() => spendSummary(lines, award), [lines, award]);
+  const explainVariance = useMemo(() => needsVarianceNote(lines, award), [lines, award]);
   const balance = balanceCopy(totals.total, award);
   const atLimit = rows.length >= maxLines;
 
@@ -84,7 +93,7 @@ export function BudgetGrid({
     const room = Math.max(0, maxLines - base.length);
     const accepted = result.rows.slice(0, room);
     const trimmed = result.rows.length - accepted.length;
-    const added = accepted.map((row) => ({ rowId: newRowId(), category: row.category, description: row.description, amountText: formatAmountText(row.amount) }));
+    const added = accepted.map((row) => ({ rowId: newRowId(), category: row.category, description: row.description, amountText: formatAmountText(row.amount), actualText: "" }));
     const skipped = result.skipped.length + trimmed;
 
     if (added.length === 0) {
@@ -198,7 +207,9 @@ export function BudgetGrid({
         <span className="px-3 text-right">#</span>
         <span className="px-3">Category</span>
         <span className="px-3">Description</span>
-        <span className="px-3 text-right">Amount</span>
+        <span className="px-3 text-right">Approved budget</span>
+        <span className="px-3 text-right">Actual spent</span>
+        <span className="px-3 text-right">Variance</span>
         <span className="sr-only">Actions</span>
       </div>
 
@@ -214,6 +225,8 @@ export function BudgetGrid({
             const n = index + 1;
             const error = rowErrors[row.rowId];
             const badAmount = amountProblem(row);
+            const badActual = actualProblem(row);
+            const variance = lineVariance(lines[index]);
             const errorId = `budget-row-error-${row.rowId}`;
             return (
               <li
@@ -263,7 +276,7 @@ export function BudgetGrid({
                 <div className="min-[720px]:border-r min-[720px]:border-line">
                   <label htmlFor={`budget-amt-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted min-[720px]:sr-only">
                     <span className="sr-only">Line {n} </span>
-                    Amount
+                    Approved budget
                   </label>
                   <div className="relative">
                     <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
@@ -285,13 +298,42 @@ export function BudgetGrid({
                     />
                   </div>
                 </div>
+                <div className="min-[720px]:border-r min-[720px]:border-line">
+                  <label htmlFor={`budget-act-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted min-[720px]:sr-only">
+                    <span className="sr-only">Line {n} </span>
+                    Actual spent
+                  </label>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
+                      $
+                    </span>
+                    <input
+                      id={`budget-act-${row.rowId}`}
+                      inputMode="decimal"
+                      value={row.actualText}
+                      aria-invalid={badActual || undefined}
+                      aria-describedby={badActual || error ? errorId : undefined}
+                      onChange={(event) => update(row.rowId, { actualText: event.target.value })}
+                      onBlur={() => {
+                        const parsed = parseAmount(row.actualText);
+                        if (parsed !== null) update(row.rowId, { actualText: formatAmountText(parsed) });
+                      }}
+                      placeholder="0.00"
+                      className={cn(cell, "num pl-7 text-right")}
+                    />
+                  </div>
+                </div>
+                <div className="num flex items-center justify-between px-3 text-sm min-[720px]:justify-end min-[720px]:border-r min-[720px]:border-line max-[719px]:col-span-2">
+                  <span className="text-xs font-semibold text-muted min-[720px]:sr-only">Variance</span>
+                  <span className={cn(variance === null ? "text-muted" : variance < 0 ? "font-semibold text-warn" : "text-ink")}>{variance === null ? "Not entered" : formatCurrency(variance)}</span>
+                </div>
                 <div className="hidden items-center justify-center min-[720px]:flex">
                   <button type="button" onClick={() => removeRow(row.rowId, n)} aria-label={`Remove line ${n}`} className="rounded-md p-2 text-muted hover:bg-bad-bg hover:text-bad">
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
                 {error ? (
-                  <p id={errorId} className="text-sm font-semibold text-bad max-[719px]:order-last max-[719px]:col-span-2 min-[720px]:col-span-5 min-[720px]:border-t min-[720px]:border-line min-[720px]:bg-bad-bg/40 min-[720px]:px-3 min-[720px]:py-1.5 min-[720px]:pl-[3.75rem]">
+                  <p id={errorId} className="text-sm font-semibold text-bad max-[719px]:order-last max-[719px]:col-span-2 min-[720px]:col-span-7 min-[720px]:border-t min-[720px]:border-line min-[720px]:bg-bad-bg/40 min-[720px]:px-3 min-[720px]:py-1.5 min-[720px]:pl-[3.75rem]">
                     {error}
                   </p>
                 ) : null}
@@ -301,25 +343,71 @@ export function BudgetGrid({
         </ul>
       )}
 
-      <dl className="rounded-b-lg border-t border-line bg-surface/60 text-sm">
+      <dl className={cn("border-t border-line bg-surface/60 text-sm", !explainVariance && "rounded-b-lg")}>
         {[
           ["PS subtotal", totals.ps],
           ["OTPS subtotal", totals.otps],
         ].map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4 min-[720px]:pr-[3.5rem]!">
+          <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4">
             <dt className="text-muted">{label}</dt>
             <dd className="num text-ink">{formatCurrency(value as number)}</dd>
           </div>
         ))}
-        <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4 min-[720px]:pr-[3.5rem]!">
-          <dt className="font-semibold text-ink">Total</dt>
+        <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4">
+          <dt className="font-semibold text-ink">Approved budget total</dt>
           <dd className="num font-bold text-ink">{formatCurrency(totals.total)}</dd>
         </div>
-        <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 min-[720px]:pr-[3.5rem]!">
+        <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4">
           <dt className="text-muted">Award</dt>
           <dd className="num text-muted">{formatCurrency(award)}</dd>
         </div>
+        <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4">
+          <dt className="font-semibold text-ink">Actual spent total</dt>
+          <dd className="num font-bold text-ink">{spend.entered ? formatCurrency(spend.actual) : "Not entered"}</dd>
+        </div>
+        {spend.entered ? (
+          <>
+            <div className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4">
+              <dt className="text-muted">Variance (approved budget minus actual spent)</dt>
+              <dd className="num text-ink">{formatCurrency(spend.variance)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4">
+              <dt className="text-muted">Unspent balance (award minus actual spent)</dt>
+              <dd className={cn("num font-semibold", explainVariance ? "text-warn" : "text-ink")}>
+                {formatCurrency(spend.unspent)} <span className="font-normal text-muted">({spend.unspentPercent.toFixed(1)}% of the award)</span>
+              </dd>
+            </div>
+          </>
+        ) : (
+          <p className="px-3 pb-2.5 text-muted sm:px-4">Enter what was actually spent on each line to see the variance and the unspent balance. Actual spent does not have to equal the approved budget.</p>
+        )}
       </dl>
+
+      {explainVariance ? (
+        <div className="rounded-b-lg border-t border-line px-3 py-4 sm:px-4">
+          <label htmlFor="budget-variance-note" className="block text-sm font-semibold text-ink">
+            Variance explanation
+          </label>
+          <p id="budget-variance-hint" className="mt-1 text-sm text-muted">
+            More than {VARIANCE_THRESHOLD_PERCENT}% of the award is unspent. Say briefly why, for example a vacancy, a late start or a vendor delay.
+          </p>
+          <Textarea
+            id="budget-variance-note"
+            value={varianceNote}
+            onChange={(event) => onVarianceNote(event.target.value)}
+            rows={3}
+            maxLength={VARIANCE_NOTE_MAX}
+            aria-invalid={varianceError ? true : undefined}
+            aria-describedby={varianceError ? "budget-variance-hint budget-variance-error" : "budget-variance-hint"}
+            className="mt-2"
+          />
+          {varianceError ? (
+            <p id="budget-variance-error" className="mt-1.5 text-sm font-semibold text-bad">
+              {varianceError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

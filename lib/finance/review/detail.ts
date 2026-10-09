@@ -1,4 +1,5 @@
 import type { Tx } from "@/lib/db";
+import type { Certification } from "@/lib/rules/certify";
 import type { Answers, BudgetLine, FormDefinition } from "@/lib/rules/types";
 import { finishRow } from "./derive";
 import type { OpenFlag, ReportRow } from "./types";
@@ -29,6 +30,7 @@ export type SubmissionDetail = {
   flags: FlagRecord[];
   audit: AuditRecord[];
   revisions: RevisionRecord[];
+  certification: Certification | null;
 };
 
 const ISO = (column: string) => `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
@@ -104,6 +106,10 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
        FROM submission_revision r JOIN app_user u ON u.id = r.actor WHERE r.submission_id = $1 ORDER BY r.revision, r.created_at`,
       [id]
     );
+  const certified = await tx.one<{ certification: Certification | null }>(
+    "SELECT snapshot -> 'certification' AS certification FROM submission_revision WHERE submission_id = $1 ORDER BY revision DESC, id DESC LIMIT 1",
+    [id]
+  );
   const contact = await tx.one<{ full_name: string; email: string }>("SELECT full_name, email FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name LIMIT 1", [base.org_id]);
 
   const answers: Answers = {};
@@ -148,6 +154,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     attachments: attachmentRows.map((a) => ({ id: a.id, filename: a.filename, bytes: Number(a.bytes), mime: a.mime, createdAt: a.created_at, uploadedBy: a.uploaded_by })),
     flags: flagRows.map((f) => ({ id: f.id, kind: f.kind, source: f.source, note: f.note, status: f.status, createdAt: f.created_at, createdBy: f.created_by, resolvedAt: f.resolved_at, resolvedBy: f.resolved_by })),
     audit: auditRows.map((e) => ({ id: Number(e.id), at: e.at, actor: e.actor, action: e.action, note: e.note, before: e.before, after: e.after, aiActionId: e.ai_action_id })),
+    certification: certified?.certification ?? null,
     revisions: revisionRows.map((r) => ({ id: Number(r.id), revision: r.revision, kind: r.kind, actor: r.actor, reason: r.reason, createdAt: r.created_at, sha256: r.sha256 })),
   };
 }

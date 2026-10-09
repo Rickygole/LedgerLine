@@ -8,8 +8,8 @@ import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
 import type { AttachmentRow, AuditRecord, FlagRecord, RevisionRecord, SubmissionDetail } from "@/lib/finance/review/detail";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
-import { budgetTotals, isVisible } from "@/lib/rules/validate";
-import { balanceCopy } from "@/components/report/balance";
+import { isVisible } from "@/lib/rules/validate";
+import { BudgetTable } from "@/components/report/budget-table";
 import { formatCurrency } from "@/lib/rules/money";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
 
@@ -117,64 +117,39 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
           </Card>
         );
       })}
+      {detail.certification ? (
+        <Card id="review-certification" className="scroll-mt-4">
+          <CardHeader title="Certification" description={detail.certification.statement} />
+          <CardBody>
+            <dl className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3">
+              {[
+                ["Certified by", detail.certification.name],
+                ["Title", detail.certification.title],
+                ["Certified on", `${formatDateTime(detail.certification.certifiedAt)} ET`],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">{label}</dt>
+                  <dd className="mt-1 text-sm text-ink">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </CardBody>
+        </Card>
+      ) : null}
     </div>
   );
 }
 
 export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
-  const totals = budgetTotals(row.budget);
-  const balance = balanceCopy(totals.total, row.award);
   return (
     <Card>
-      <CardHeader title="Budget" description="Personnel services (PS) and other than personnel services (OTPS) lines as reported." />
-      <Table>
-        <THead>
-          <tr>
-            <TH align="right">Line</TH>
-            <TH>Category</TH>
-            <TH>Description</TH>
-            <TH align="right">Amount</TH>
-          </tr>
-        </THead>
-        <tbody>
-          {row.budget.length === 0 ? (
-            <EmptyRow colSpan={4}>No budget lines have been entered.</EmptyRow>
-          ) : (
-            row.budget.map((line) => (
-              <TR key={line.rowId}>
-                <TD align="right">{line.position}</TD>
-                <TD className="whitespace-nowrap">{line.category}</TD>
-                <TD>{line.description || <span className="text-muted">No description</span>}</TD>
-                <TD align="right">{formatCurrency(line.amount)}</TD>
-              </TR>
-            ))
-          )}
-        </tbody>
-        <tfoot className="border-t border-line bg-surface/50 text-sm">
-          <tr>
-            <td colSpan={3} className="px-4 py-2 text-right font-semibold">Personnel services (PS) subtotal</td>
-            <td className="num px-4 py-2 text-right">{formatCurrency(totals.ps)}</td>
-          </tr>
-          <tr>
-            <td colSpan={3} className="px-4 py-2 text-right font-semibold">Other than personnel services (OTPS) subtotal</td>
-            <td className="num px-4 py-2 text-right">{formatCurrency(totals.otps)}</td>
-          </tr>
-          <tr>
-            <td colSpan={3} className="px-4 py-2 text-right font-semibold">Total reported</td>
-            <td className="num px-4 py-2 text-right font-bold">{formatCurrency(totals.total)}</td>
-          </tr>
-          <tr>
-            <td colSpan={3} className="px-4 py-2 text-right font-semibold">Award</td>
-            <td className="num px-4 py-2 text-right">{formatCurrency(row.award)}</td>
-          </tr>
-        </tfoot>
-      </Table>
+      <CardHeader title="Budget" description="Personnel services (PS) and other than personnel services (OTPS) lines as reported, with actual spent and variance." />
       <CardBody>
         {row.budget.length === 0 ? (
           <p className="text-sm text-muted">No budget has been entered yet.</p>
         ) : (
-          <p className={`num inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset ${balance.tone === "ok" ? "bg-ok-bg text-ok ring-ok/25" : balance.tone === "warn" ? "bg-warn-bg text-warn ring-warn/30" : "bg-bad-bg text-bad ring-bad/25"}`}>{balance.text}</p>
+          <BudgetTable lines={row.budget} award={row.award} answers={row.answers} totalLabel="Total reported" />
         )}
       </CardBody>
     </Card>

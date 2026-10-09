@@ -13,6 +13,7 @@ import type { PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult 
 import { buildSnapshot } from "@/lib/snapshot";
 import { buildPath, checkUpload, putFile } from "@/lib/storage";
 import type { Answers } from "@/lib/rules/types";
+import { CERTIFICATION_STATEMENT, certificationIssues, certificationNote, type Certification } from "@/lib/rules/certify";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { blockingIssues, isVisible } from "@/lib/rules/validate";
 
@@ -201,7 +202,11 @@ export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } |
   }
 }
 
-const submitSchema = z.object({ submissionId: z.uuid(), expectedLock: z.number().int().min(0) });
+const submitSchema = z.object({
+  submissionId: z.uuid(),
+  expectedLock: z.number().int().min(0),
+  certification: z.object({ accepted: z.boolean(), name: z.string().max(400), title: z.string().max(400) }).optional(),
+});
 
 export async function submitReport(raw: unknown): Promise<SubmitResult> {
   const parsed = submitSchema.safeParse(raw);
@@ -252,10 +257,17 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
           period: { startsOn: header.startsOn, endsOn: header.endsOn },
         })
       );
-      if (issues.length > 0) return { status: "blocked", issues };
+      const certificationProblems = certificationIssues(parsed.data.certification);
+      if (issues.length > 0 || certificationProblems.length > 0) return { status: "blocked", issues: [...issues, ...certificationProblems] };
+      const certification: Certification = {
+        statement: CERTIFICATION_STATEMENT,
+        name: (parsed.data.certification?.name ?? "").trim(),
+        title: (parsed.data.certification?.title ?? "").trim(),
+        certifiedAt: new Date().toISOString(),
+      };
 
       const attachments = files.map((file) => ({ path: file.path, filename: file.filename, bytes: Number(file.bytes), mime: file.mime }));
-      const snapshot = buildSnapshot({ formVersionId: report.formVersionId, answers, budget, attachments });
+      const snapshot = buildSnapshot({ formVersionId: report.formVersionId, answers, budget, attachments, certification });
       const body = plainTextReport({
         title: header.initiativeName,
         referenceNo: header.referenceNo,
@@ -265,8 +277,9 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
         awardAmount: header.awardAmount,
         definition,
         answers,
-        budget: snapshot.budget as { position: number; category: "PS" | "OTPS"; description: string; amount: number }[],
+        budget: snapshot.budget as { position: number; category: "PS" | "OTPS"; description: string; amount: number; actual?: number }[],
         attachments,
+        certification,
       });
       const outbox = {
         to: user.email,
@@ -274,10 +287,11 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
         subject: `Report received: ${header.initiativeName}, ${header.periodLabel}`,
         body,
       };
-      await tx.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, $4::jsonb, NULL)", [
+      await tx.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, $4, $5::jsonb, NULL)", [
         header.id,
         parsed.data.expectedLock,
         JSON.stringify(snapshot),
+        certificationNote(certification),
         JSON.stringify(outbox),
       ]);
       return "done";

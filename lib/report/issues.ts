@@ -55,6 +55,9 @@ export function issuesBySection(definition: FormDefinition, issues: Issue[]): Re
 
 export function fieldTargetId(field: string): string {
   if (field === VARIANCE_NOTE_KEY) return "budget-variance-note";
+  if (field === "certification") return "certification-box";
+  if (field === "certifier_name") return "certifier-name";
+  if (field === "certifier_title") return "certifier-title";
   if (field === "budget" || field.startsWith("budget.")) return "budget-grid";
   return `q-${field}`;
 }

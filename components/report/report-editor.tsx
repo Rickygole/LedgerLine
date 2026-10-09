@@ -6,12 +6,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { submitReport } from "@/app/portal/reports/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { FieldError, Hint, Input, Label } from "@/components/ui/field";
 import { formatTime } from "@/lib/dates";
 import { amountIssues, linesFromRows, rowsFromLines, type BudgetRow } from "@/lib/report/budget-rows";
 import { fieldTargetId, issuesBySection, reportIssues } from "@/lib/report/issues";
 import type { AttachmentItem, EditorPayload } from "@/lib/report/types";
 import { useAutosave } from "@/lib/report/use-autosave";
 import type { AnswerValue, Answers, Issue } from "@/lib/rules/types";
+import { CERTIFICATION_STATEMENT, certificationIssues } from "@/lib/rules/certify";
+import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { blockingIssues, isVisible } from "@/lib/rules/validate";
 import { Attachments } from "./attachments";
 import { BudgetGrid } from "./budget-grid";
@@ -39,6 +42,9 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
   const [resume, setResume] = useState<string | null>(null);
   const [resumeDismissed, setResumeDismissed] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(payload.hasProgress ? header.updatedAt : null);
+  const [certified, setCertified] = useState(false);
+  const [certName, setCertName] = useState(payload.currentUserName);
+  const [certTitle, setCertTitle] = useState(payload.currentUserTitle || String(payload.answers.contact_title ?? ""));
   const summaryRef = useRef<HTMLDivElement>(null);
   const [focusTick, setFocusTick] = useState(0);
 
@@ -87,10 +93,23 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
 
   const lines = useMemo(() => linesFromRows(rows), [rows]);
   const issues = useMemo(
-    () => [...reportIssues({ definition, answers, budget: lines, awardAmount: header.awardAmount, orgEin: header.ein }), ...amountIssues(rows)],
-    [definition, answers, lines, rows, header.awardAmount, header.ein]
+    () => [
+      ...reportIssues({
+        definition,
+        answers,
+        budget: lines,
+        awardAmount: header.awardAmount,
+        orgEin: header.ein,
+        orgName: header.orgName,
+        period: { startsOn: header.startsOn, endsOn: header.endsOn },
+      }),
+      ...amountIssues(rows),
+      ...certificationIssues({ accepted: certified, name: certName, title: certTitle }),
+    ],
+    [definition, answers, lines, rows, header.awardAmount, header.ein, header.orgName, header.startsOn, header.endsOn, certified, certName, certTitle]
   );
   const blocking = useMemo(() => blockingIssues(issues), [issues]);
+  const warnings = useMemo(() => issues.filter((issue) => issue.severity === "warn"), [issues]);
   const bySection = useMemo(() => issuesBySection(definition, blocking), [definition, blocking]);
 
   const remember = useCallback(
@@ -184,7 +203,7 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
         setMessage("Your latest changes could not be saved, so the report was not submitted. Keep this tab open and try again.");
         return;
       }
-      const result = await submitReport({ submissionId: header.id, expectedLock: lockRef.current });
+      const result = await submitReport({ submissionId: header.id, expectedLock: lockRef.current, certification: { accepted: certified, name: certName, title: certTitle } });
       if (result.status === "blocked") {
         setServerIssues(result.issues);
         showProblems();
@@ -290,6 +309,9 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
                       maxLines={definition.budget.maxLines}
                       rowErrors={rowErrors}
                       gridError={summaryOpen ? blocking.find((issue) => issue.field === "budget" && issue.message.startsWith("Add at least"))?.message : undefined}
+                      varianceNote={String(answers[VARIANCE_NOTE_KEY] ?? "")}
+                      onVarianceNote={(value) => changeAnswer(VARIANCE_NOTE_KEY, value)}
+                      varianceError={summaryOpen ? blocking.find((issue) => issue.field === VARIANCE_NOTE_KEY)?.message : undefined}
                     />
                   </>
                 ) : (
@@ -361,6 +383,51 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
                   </ul>
                 </div>
               )}
+
+              {warnings.length > 0 ? (
+                <div className="rounded-md border border-warn/30 bg-warn-bg px-4 py-3">
+                  <p className="flex items-start gap-2 text-sm font-semibold text-warn">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    Worth checking before you submit. These do not stop you from submitting.
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-9 text-sm text-ink marker:text-warn">
+                    {warnings.map((issue, index) => (
+                      <li key={`${issue.field}-${index}`}>{issue.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <fieldset className="rounded-md border border-line px-4 py-4">
+                <legend className="px-1 text-sm font-semibold text-ink">Certification</legend>
+                <div className="flex items-start gap-3">
+                  <input
+                    id="certification-box"
+                    type="checkbox"
+                    checked={certified}
+                    onChange={(event) => setCertified(event.target.checked)}
+                    aria-invalid={summaryOpen && !certified ? true : undefined}
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-line-strong text-navy-800 focus:ring-2 focus:ring-navy-600"
+                  />
+                  <label htmlFor="certification-box" className="text-sm font-semibold text-ink">
+                    {CERTIFICATION_STATEMENT}
+                  </label>
+                </div>
+                <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certification")?.message : undefined}</FieldError>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="certifier-name">Certifier name</Label>
+                    <Input id="certifier-name" value={certName} maxLength={120} onChange={(event) => setCertName(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_name") ? true : undefined} autoComplete="name" />
+                    <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_name")?.message : undefined}</FieldError>
+                  </div>
+                  <div>
+                    <Label htmlFor="certifier-title">Certifier title</Label>
+                    <Input id="certifier-title" value={certTitle} maxLength={120} onChange={(event) => setCertTitle(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_title") ? true : undefined} autoComplete="organization-title" />
+                    <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_title")?.message : undefined}</FieldError>
+                  </div>
+                </div>
+                <Hint>The name, title and time are stored with this submission and shown to Council Finance.</Hint>
+              </fieldset>
 
               <p className="text-sm text-muted">
                 After you submit, the report is locked. You can change it again only if Council Finance asks for an update. We will email a copy to you.
