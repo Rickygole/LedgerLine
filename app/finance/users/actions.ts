@@ -1,13 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { appOrigin } from "@/lib/origin";
 import { pgCode, withClaims } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
 import { isUuid } from "@/lib/finance/admin/params";
 import { STAFF_ROLES } from "@/lib/finance/admin/users";
 
 export type UserActionState = { ok?: string; error?: string } | undefined;
+
+export type CreateUserState = { ok?: string; error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
 
 type Target = { id: string; full_name: string; role: string; active: boolean };
 
@@ -64,16 +68,61 @@ export async function sendPasswordReset(_prev: UserActionState, formData: FormDa
   const admin = await requireUser(["finance_admin"]);
   const userId = String(formData.get("userId") ?? "");
   if (!isUuid(userId)) return { error: "That user could not be found." };
+  const origin = await appOrigin();
   try {
     return await withClaims(admin.id, async (tx) => {
       const target = await loadTarget(tx, userId);
-      await tx.query(`SELECT app.queue_password_reset($1)`, [userId]);
+      await tx.query(`SELECT app.queue_password_reset($1, $2)`, [userId, origin]);
       return { ok: `Reset message for ${target.full_name} added to the outbox.` };
     });
   } catch (error) {
-    if (pgCode(error) === "23514") return { error: "That user could not be found." };
+    if (pgCode(error) === "23514") return { error: "That user could not be found or is inactive. Activate the account first." };
     return { error: plainError(error) };
   } finally {
     revalidatePath("/finance/outbox");
   }
+}
+
+const createSchema = z
+  .object({
+    fullName: z.string().trim().min(1, "Enter the person's full name.").max(120, "Use 120 characters or fewer."),
+    email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254, "Use 254 characters or fewer."),
+    title: z.string().trim().max(120, "Use 120 characters or fewer."),
+    role: z.enum(["finance_viewer", "finance_analyst", "finance_admin", "cbo_submitter"], { message: "Choose a role." }),
+    orgId: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.role === "cbo_submitter" && !isUuid(value.orgId)) ctx.addIssue({ code: "custom", path: ["orgId"], message: "Choose the organization this person reports for." });
+  });
+
+export async function createUser(_prev: CreateUserState, formData: FormData): Promise<CreateUserState> {
+  const admin = await requireUser(["finance_admin"]);
+  const values = {
+    fullName: String(formData.get("fullName") ?? "").slice(0, 200),
+    email: String(formData.get("email") ?? "").slice(0, 300),
+    title: String(formData.get("title") ?? "").slice(0, 200),
+    role: String(formData.get("role") ?? ""),
+    orgId: String(formData.get("orgId") ?? ""),
+  };
+  const parsed = createSchema.safeParse(values);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) fieldErrors[String(issue.path[0])] ??= issue.message;
+    return { fieldErrors, values };
+  }
+  const origin = await appOrigin();
+  const data = parsed.data;
+  try {
+    await withClaims(admin.id, (tx) =>
+      tx.query(`SELECT app.create_user($1, $2, $3, $4, $5, $6)`, [data.email, data.fullName, data.title || null, data.role, data.role === "cbo_submitter" ? data.orgId : null, origin])
+    );
+  } catch (error) {
+    if (pgCode(error) === "23505") return { fieldErrors: { email: "An account with that email address already exists." }, values };
+    if (pgCode(error) === "23503") return { fieldErrors: { orgId: "That organization could not be found." }, values };
+    return { error: plainError(error), values };
+  } finally {
+    revalidatePath("/finance/users");
+    revalidatePath("/finance/outbox");
+  }
+  return { ok: `Account created for ${data.fullName}. A message with a link to set a password was added to the outbox.` };
 }

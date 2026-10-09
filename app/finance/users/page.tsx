@@ -3,13 +3,14 @@ import { Check, X } from "lucide-react";
 import { requireUser, roleLabel } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { Input, Select } from "@/components/ui/field";
 import { monogram } from "@/components/ui/profile-header";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
+import { CreateUserForm } from "@/components/finance/admin/create-user-form";
 import { UserActions } from "@/components/finance/admin/user-actions";
 import { listUsers } from "@/lib/finance/admin/users";
 import { one, pageNumber, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
@@ -26,7 +27,11 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const q = one(params, "q");
   const role = (ROLES as readonly string[]).includes(one(params, "role")) ? one(params, "role") : "";
   const page = pageNumber(params);
-  const { rows, total } = await withClaims(admin.id, (tx) => listUsers(tx, { q, role, page }));
+  const { list, orgs } = await withClaims(admin.id, async (tx) => ({
+    list: await listUsers(tx, { q, role, page }),
+    orgs: await tx.query<{ id: string; name: string; ein: string }>(`SELECT id, legal_name AS name, ein FROM organization ORDER BY legal_name`),
+  }));
+  const { rows, total } = list;
 
   const base = "/finance/users";
   const kept = { q, role };
@@ -34,6 +39,10 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Users" description="Manage who can use LedgerLine. Changes are written to the audit log." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Users" }]} />
+      <Card className="mb-6">
+        <CardHeader title="Add a user" description="Create a Finance account or an account for a funded organization." />
+        <CreateUserForm orgs={orgs} />
+      </Card>
       <Card>
         <FilterBar action={base} clearHref={base}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
