@@ -50,6 +50,12 @@ function row(over: Partial<Omit<ReportRow, "issues" | "bucket" | "daysPastDue" |
     initiativeCode: "CI-004",
     category: "Youth Services",
     award: 90000,
+    fundingSource: "citywide",
+    agency: "DYCD",
+    contractStatus: "registered",
+    contractRegisteredOn: "2025-10-14",
+    contractNumber: "DYCD-26-04218",
+    sponsors: [{ district: 8, name: "Delia Cordero", amount: 90000 }],
     periodId: "FY26-YE",
     dueOn: "2026-09-30",
     submissionId: null,
@@ -76,10 +82,18 @@ describe("dashboard buckets", () => {
     expect(r.flags.map((f) => f.reason)).toEqual(["missing"]);
   });
 
-  it("puts a past due draft that fails required rules in incomplete", () => {
+  it("[US-040] counts a past due draft that fails required rules as missing and flags it incomplete", () => {
     const r = row({ submissionId: "s1", status: "draft", answers: { org_legal_name: "Test Org" } });
-    expect(r.bucket).toBe("incomplete");
-    expect(r.flags.map((f) => f.reason)).toContain("incomplete");
+    expect(r.bucket).toBe("missing");
+    expect(r.flags.map((f) => f.reason)).toEqual(expect.arrayContaining(["missing", "incomplete"]));
+  });
+
+  it("[US-040] defines missing once: nothing submitted or a draft, past due", () => {
+    expect(row().bucket).toBe("missing");
+    expect(row({ submissionId: "s1", status: "draft" }).bucket).toBe("missing");
+    expect(row({ submissionId: "s1", status: "returned", answers: completeAnswers, budget: budget(90000) }).bucket).toBe("returned");
+    expect(row({ submissionId: "s1", status: "submitted", answers: completeAnswers, budget: budget(90000) }).bucket).toBe("submitted");
+    expect(row({ dueOn: "2026-10-30" }).bucket).toBe("outstanding");
   });
 
   it("keeps not yet due work outstanding", () => {
@@ -137,6 +151,11 @@ describe("flag evidence", () => {
   });
 });
 
+const periods = [
+  { id: "FY26-YE", label: "FY26 Year-End", dueOn: "2026-09-30", fiscalYearId: "FY26" },
+  { id: "FY27-MY", label: "FY27 Mid-Year", dueOn: "2027-01-31", fiscalYearId: "FY27" },
+];
+
 describe("filters", () => {
   const rows = [
     row(),
@@ -147,6 +166,22 @@ describe("filters", () => {
     expect(applyFilters(rows, { q: "harborview" })).toHaveLength(1);
     expect(applyFilters(rows, { q: "1040217" })).toHaveLength(1);
     expect(applyFilters(rows, { q: "00-1109729" })[0].borough).toBe("Brooklyn");
+  });
+
+  it("[US-041] finds a report by reference number, contract number or initiative", () => {
+    const withRef = row({ submissionId: "s9", referenceNo: "LL-26YE-00148", status: "accepted", answers: completeAnswers, budget: budget(90000) });
+    expect(applyFilters([withRef, ...rows], { q: "LL-26YE-00148" })).toHaveLength(1);
+    expect(applyFilters(rows, { q: "dyCD-26-04218" })).toHaveLength(2);
+    expect(applyFilters(rows, { q: "diabetes" })).toHaveLength(1);
+  });
+
+  it("[US-041] filters by sponsoring Council Member, funding source and contract status", () => {
+    const other = row({ orgName: "Larkspur Youth Alliance", sponsors: [{ district: 33, name: "Walter Pennington", amount: 90000 }], fundingSource: "local", contractStatus: "pending", submissionId: "s3", status: "accepted", answers: completeAnswers, budget: budget(90000) });
+    const all = [...rows, other];
+    expect(applyFilters(all, { member: "33" }).map((r) => r.orgName)).toEqual(["Larkspur Youth Alliance"]);
+    expect(applyFilters(all, { member: "8" })).toHaveLength(2);
+    expect(applyFilters(all, { funding: "local" })).toHaveLength(1);
+    expect(applyFilters(all, { contract: "pending" })).toHaveLength(1);
   });
 
   it("combines filters", () => {
@@ -185,7 +220,7 @@ describe("pagination and parameters", () => {
   });
 
   it("parses filters with a safe period and rebuilds the query", () => {
-    const filters = parseFilters({ period: "BOGUS", q: " mott ", page: "3", borough: ["Bronx", "Queens"] }, ["FY26-YE", "FY27-MY"]);
+    const filters = parseFilters({ period: "BOGUS", q: " mott ", page: "3", borough: ["Bronx", "Queens"] }, periods);
     expect(filters).toMatchObject({ period: "FY26-YE", q: "mott", page: 3, borough: "Bronx" });
     expect(filtersToParams(filters).toString()).toBe("q=mott&borough=Bronx&period=FY26-YE");
     expect(filtersToParams(filters, { page: true }).get("page")).toBe("3");

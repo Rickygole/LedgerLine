@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
   const result = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const filters = parseFilters(query, periods.map((p) => p.id));
+    const filters = parseFilters(query, periods);
     const period = periods.find((p) => p.id === filters.period);
     if (!period) return null;
     const all = await loadReportRows(tx, period);

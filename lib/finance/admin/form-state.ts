@@ -1,3 +1,3 @@
 export type FormState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
 
-export const AGENCIES = ["DYCD", "DCLA", "DFTA", "DOE", "DOHMH", "DPR", "HRA", "SBS"] as const;
+export const AGENCIES = ["ACS", "DCLA", "DCWP", "DFTA", "DHS", "DOE", "DOHMH", "DOP", "DPR", "DYCD", "HPD", "HRA", "MOCJ", "MOIA", "SBS"] as const;

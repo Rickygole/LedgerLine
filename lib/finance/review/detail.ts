@@ -1,7 +1,7 @@
 import type { Tx } from "@/lib/db";
 import type { Answers, BudgetLine, FormDefinition } from "@/lib/rules/types";
 import { finishRow } from "./derive";
-import type { OpenFlag, ReportRow } from "./types";
+import type { OpenFlag, ReportRow, Sponsor } from "./types";
 
 export type AttachmentRow = { id: string; filename: string; bytes: number; mime: string; createdAt: string; uploadedBy: string | null };
 
@@ -48,6 +48,12 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     code: string;
     category: string;
     award: number;
+    funding_source: string;
+    agency: string | null;
+    contract_status: string;
+    contract_registered_on: string | null;
+    contract_number: string | null;
+    sponsors: Sponsor[] | null;
     period_id: string;
     period_label: string;
     due_on: string;
@@ -62,7 +68,10 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     definition: FormDefinition;
   }>(
     `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, o.council_district, o.org_type, i.id AS initiative_id, i.name AS initiative_name, i.code, i.category,
-            a.award_amount::float8 AS award, p.id AS period_id, p.label AS period_label, p.due_on::text AS due_on,
+            a.award_amount::float8 AS award, a.funding_source, a.sponsoring_agency AS agency, a.contract_status, a.contract_registered_on::text AS contract_registered_on, a.contract_number,
+            (SELECT jsonb_agg(jsonb_build_object('district', sp.district, 'name', cm.full_name, 'amount', sp.amount::float8) ORDER BY sp.amount DESC, sp.district)
+               FROM assignment_sponsor sp JOIN council_member cm ON cm.district = sp.district WHERE sp.assignment_id = a.id) AS sponsors,
+            p.id AS period_id, p.label AS period_label, p.due_on::text AS due_on,
             s.reference_no, s.status, s.revision, s.lock_version, ${ISO("s.submitted_at")} AS submitted_at, ${ISO("s.updated_at")} AS updated_at,
             s.form_version_id, u.full_name AS submitted_by_name, f.definition
      FROM submission s
@@ -124,6 +133,12 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     initiativeCode: base.code,
     category: base.category,
     award: base.award,
+    fundingSource: base.funding_source,
+    agency: base.agency,
+    contractStatus: base.contract_status,
+    contractRegisteredOn: base.contract_registered_on,
+    contractNumber: base.contract_number,
+    sponsors: base.sponsors ?? [],
     periodId: base.period_id,
     dueOn: base.due_on,
     submissionId: id,

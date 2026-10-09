@@ -105,10 +105,10 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
                     </TD>
                     <TD>
                       <Label htmlFor={`agency-${index}`} className="sr-only">
-                        Sponsoring agency for {org.name}
+                        Administering agency for {org.name}
                       </Label>
                       <Select id={`agency-${index}`} name="agency" value={row.agency} className="w-40" onChange={(e) => setRows((all) => all.map((r, i) => (i === index ? { ...r, agency: e.target.value } : r)))}>
-                        <option value="">Not recorded</option>
+                        <option value="">Initiative default</option>
                         {AGENCIES.map((a) => (
                           <option key={a} value={a}>
                             {a}

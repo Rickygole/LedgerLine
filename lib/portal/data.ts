@@ -51,10 +51,11 @@ export async function loadObligations(tx: Tx, orgId: string): Promise<Obligation
             s.id AS submission_id, s.reference_no, s.status, s.revision,
             COALESCE(eu.full_name, su.full_name) AS edited_by,
             COALESCE(s.updated_at, s.submitted_at) AS edited_at
-     FROM assignment a
+     FROM obligation ob
+     JOIN assignment a ON a.id = ob.assignment_id
      JOIN initiative i ON i.id = a.initiative_id
-     CROSS JOIN reporting_period p
-     LEFT JOIN submission s ON s.assignment_id = a.id AND s.period_id = p.id
+     JOIN reporting_period p ON p.id = ob.period_id
+     LEFT JOIN submission s ON s.id = ob.submission_id
      LEFT JOIN app_user eu ON eu.id = s.updated_by
      LEFT JOIN app_user su ON su.id = COALESCE(s.started_by, s.submitted_by)
      WHERE a.org_id = $1

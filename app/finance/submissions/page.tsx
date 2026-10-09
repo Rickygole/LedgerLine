@@ -26,7 +26,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
 
   const { periods, filters, rows, categories } = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const filters = parseFilters(raw, periods.map((p) => p.id));
+    const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
     const options = await loadFilterOptions(tx);
