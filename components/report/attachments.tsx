@@ -7,7 +7,7 @@ import { prepareUpload, recordBlobUpload, removeAttachment, uploadLocalAttachmen
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { AttachmentItem, UploadActionResult } from "@/lib/report/types";
-import { ACCEPT_ATTRIBUTE, clientCheckUpload, formatBytes } from "@/lib/report/upload-rules";
+import { ACCEPT_ATTRIBUTE, MAX_UPLOAD_BYTES, clientCheckUpload, formatBytes } from "@/lib/report/upload-rules";
 
 type Pending = { key: string; name: string; bytes: number; state: "uploading" | "rejected"; reason?: string };
 
@@ -89,7 +89,7 @@ export function Attachments({
           patch(key, { state: "rejected", reason: "Signed out. Sign in to upload." });
           onSignedOut();
         } else {
-          patch(key, { state: "rejected", reason: "The file could not be uploaded. Check your connection and try again." });
+          patch(key, { state: "rejected", reason: `The file could not be uploaded. Files can be up to ${formatBytes(MAX_UPLOAD_BYTES)} each. Check the size of this file and your connection, then try again.` });
         }
       }
     }
