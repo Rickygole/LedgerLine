@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -60,7 +63,7 @@ jobs:
           name: evidence
           path: |
             reports
-            test-results
+            !reports/auth
             app/trust/evidence.json
       - name: Deploy the tested build
         if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
