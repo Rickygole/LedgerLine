@@ -1,29 +1,37 @@
 {
-  "generatedAt": "2026-10-09T06:00:38.353Z",
-  "commit": "43de0b326b3679997451d80980f5788501cb5810",
+  "generatedAt": "2026-10-09T16:59:49.871Z",
+  "commit": "8458eafd9df3190f84c727041c090801acf3311e",
+  "origin": "local",
+  "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 133,
-    "passed": 133,
+    "tests": 208,
+    "passed": 208,
     "failed": 0,
     "skipped": 0
   },
+  "suites": {
+    "unit": 101,
+    "sql": 54,
+    "eval": 29,
+    "e2e": 24
+  },
   "summary": {
     "verified": {
-      "stories": 18,
-      "rules": 8
+      "stories": 50,
+      "rules": 20
     },
-    "not_verified": {
+    "failing": {
       "stories": 0,
       "rules": 0
     },
     "demonstrated": {
-      "stories": 36,
-      "rules": 14
+      "stories": 5,
+      "rules": 2
     },
-    "talk_track": {
-      "stories": 12,
+    "planned": {
+      "stories": 11,
       "rules": 7
     }
   },
@@ -33,50 +41,96 @@
       "area": "Configuration",
       "summary": "Finance can add a new initiative without rebuilding the system",
       "route": "/finance/initiatives/new",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "an administrator creates a new initiative without a code change",
+          "file": "tests/e2e/03-priya.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-002",
       "area": "Configuration",
       "summary": "Finance can attach required reports to an initiative",
       "route": "/finance/initiatives/new",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "the initiative is funded for an organization and given a report form",
+          "file": "tests/e2e/03-priya.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-003",
       "area": "Configuration",
       "summary": "Questions are maintained centrally, not rebuilt per form",
-      "route": "/finance/forms",
+      "route": "/finance/initiatives",
       "state": "demonstrated",
       "reason": null,
-      "talk": null,
+      "note": "Standard questions come from one shared library in the application. Each form version stores its own copy, so a published form never changes underneath a report.",
       "tests": []
     },
     {
       "id": "US-004",
       "area": "Configuration",
       "summary": "Standard questions are shared and initiative questions are specific",
-      "route": "/finance/forms",
-      "state": "demonstrated",
+      "route": "/finance/initiatives",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "forms mix shared standard questions with initiative-specific ones marks library questions as standard and adds initiative questions beside them",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "forms mix shared standard questions with initiative-specific ones gives two initiatives the same standard questions",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "an initiative-specific question is added next to the shared standard questions and the form is published",
+          "file": "tests/e2e/03-priya.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-005",
       "area": "Configuration",
       "summary": "Field types cover performance, financial, budget and narrative data",
-      "route": "/finance/forms",
-      "state": "demonstrated",
+      "route": "/finance/initiatives",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "field types cover counts, money, percentages, dates, contacts, choices and narrative checks counts, money, percentages, dates, contacts, choices and narrative length",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "field types cover counts, money, percentages, dates, contacts, choices and narrative includes performance counts, a budget section and narrative questions in the standard form",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "US-006",
@@ -85,7 +139,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "required fields enforces a branched question only when it is shown",
@@ -100,10 +154,29 @@
       "area": "Configuration",
       "summary": "A question can contain a table to complete",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "a question can contain a table to complete accepts a table within its row limit",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can contain a table to complete blocks a table with more rows than allowed",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can contain a table to complete requires the table when it is required and empty",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "US-008",
@@ -112,7 +185,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "types and lengths rejects a value outside the dropdown list",
@@ -126,13 +199,13 @@
       "id": "US-009",
       "area": "Annual rollover",
       "summary": "Copy the prior fiscal year's structure into a new year",
-      "route": null,
+      "route": "/finance/rollover",
       "state": "verified",
       "reason": null,
-      "talk": "Form versions are copied as drafts today; a year-level copy wizard is the next build step.",
+      "note": "The fiscal year rollover copies forms and assignments into the new year. Finance administrators run it.",
       "tests": [
         {
-          "title": "rollover copies forms and assignments creates the new year, its reporting periods and carried initiatives",
+          "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -162,19 +235,26 @@
       "area": "Annual rollover",
       "summary": "Questions and layouts carry forward automatically",
       "route": "/finance/initiatives",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-011",
       "area": "Annual rollover",
       "summary": "Rename, combine or retire initiatives and reports",
-      "route": null,
+      "route": "/finance/rollover",
       "state": "verified",
       "reason": null,
-      "talk": "Initiative status supports retirement; rename and combine with lineage links are designed but not built in this proof of concept.",
+      "note": "Rollover can rename or retire an initiative, and combine several initiatives into one with lineage links.",
       "tests": [
         {
           "title": "combine merges assignments and records lineage sums awards per organization and takes the form from the first predecessor",
@@ -194,10 +274,10 @@
       "id": "US-012",
       "area": "Annual rollover",
       "summary": "History stays linked when initiatives change",
-      "route": null,
+      "route": "/finance/rollover/lineage",
       "state": "verified",
       "reason": null,
-      "talk": "Submissions pin the form version they were created on, so history is never rewritten.",
+      "note": "Lineage links connect predecessor and successor initiatives. Each submission keeps the form version it was created on.",
       "tests": [
         {
           "title": "lineage links predecessors lets finance read lineage and keeps writes with the rollover function",
@@ -212,10 +292,29 @@
       "area": "Access",
       "summary": "Each person has their own account",
       "route": "/login",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "finance administers its own users, each person has an account lets an administrator change a role and deactivate a user, and nobody else",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance administers its own users, each person has an account refuses two accounts with the same email and finds a deactivated user no more",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a submitter signs in through the passcode gate with a personal account",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-014",
@@ -224,7 +323,7 @@
       "route": "/portal",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "organizations see only their own reports returns nothing at all without a signed-in identity",
@@ -255,6 +354,12 @@
           "file": "tests/sql/access.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "a submitter cannot open another organization's report by its address",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -265,7 +370,7 @@
       "route": "/portal/history",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "organizations see only their own reports shows Maria a report her colleague submitted",
@@ -280,80 +385,202 @@
       "area": "Submission",
       "summary": "Start a required report",
       "route": "/portal",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "an organization can start a report it owes creates a draft for its own assignment and cannot create one for another organization",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a submitter starts the report the organization owes from the portal",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-017",
       "area": "Submission",
       "summary": "Save partway and return later",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "answers save automatically and are still there after reload",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-018",
       "area": "Submission",
       "summary": "Work in progress saves automatically",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "answers save automatically and are still there after reload",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-019",
       "area": "Submission",
       "summary": "Submit a completed report",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "a submitter submits a completed report moves a draft to submitted, stores the snapshot with its hash and writes the audit event",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a submitter submits a completed report refuses a second submit of the same report",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a submission is locked and an emailed copy with the content is queued",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-020",
       "area": "Submission",
       "summary": "The submitter receives an email copy of what was submitted",
       "route": "/portal/messages",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "submitting queues an email with the submitted content writes the outbox message in the same step as the status change",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "submitting queues an email with the submitted content queues nothing when the submit is refused",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a submission is locked and an emailed copy with the content is queued",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-021",
       "area": "Submission",
       "summary": "Print or save a submitted report as PDF",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "the submitted copy prints without the site chrome and saves as a PDF",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-022",
       "area": "Documents",
       "summary": "Upload several supporting documents",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "several supporting documents can be attached to one report stores each file against the report and stops at twenty files",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "several supporting documents can be attached to one report refuses new files after the report is submitted",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "several supporting documents of the allowed types attach to the report",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-023",
       "area": "Documents",
       "summary": "Excel, Word, CSV and PDF files are accepted",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "Excel, Word, CSV and PDF files are accepted accepts each of the four types in any letter case",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Excel, Word, CSV and PDF files are accepted refuses other types in plain words",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Excel, Word, CSV and PDF files are accepted refuses a file whose content does not match its extension",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Excel, Word, CSV and PDF files are accepted maps each extension to its content type",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "several supporting documents of the allowed types attach to the report",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-024",
@@ -362,7 +589,7 @@
       "route": "/portal/reports",
       "state": "demonstrated",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": []
     },
     {
@@ -372,7 +599,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "amount parsing reads plain, dollar and comma formatted values",
@@ -443,7 +670,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "totals adds in cents so floating point never drifts",
@@ -463,10 +690,10 @@
       "id": "US-027",
       "area": "Validation",
       "summary": "Finance sets fields that must add up to a required value",
-      "route": "/finance/forms",
+      "route": "/finance/initiatives",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "budget must equal the award blocks when over the award and says by how much",
@@ -501,7 +728,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "budget must equal the award blocks when over the award and says by how much",
@@ -526,6 +753,12 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "an unbalanced budget is refused with the amount, then submits once fixed",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -536,7 +769,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "types and lengths rejects a malformed EIN and phone with plain messages",
@@ -577,14 +810,8 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
-        {
-          "title": "client upload checks rejects other file types and oversize files in words",
-          "file": "tests/unit/report-budget-rows.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
         {
           "title": "types and lengths rejects a malformed EIN and phone with plain messages",
           "file": "tests/unit/validate.test.ts",
@@ -612,7 +839,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "required fields blocks every missing required field",
@@ -625,6 +852,12 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "submitting with required answers missing lists each one",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -633,50 +866,115 @@
       "area": "Validation",
       "summary": "Unbalanced budgets and other errors are caught before submission",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "an unbalanced budget is refused with the amount, then submits once fixed",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-033",
       "area": "Validation",
       "summary": "EIN and organization details are checked against the master list",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "report EIN check accepts the organization's own EIN with or without the dash",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report EIN check flags a well-formed EIN that is not the organization's",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report EIN check does not add a second EIN issue for a malformed value",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "US-034",
       "area": "Validation",
       "summary": "Organization details fill in automatically",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "organization details fill in where possible fills the legal name and EIN from the master list when the report has none",
+          "file": "tests/unit/report-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "organization details fill in where possible treats a blank answer as missing and keeps anything the organization already typed",
+          "file": "tests/unit/report-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "US-035",
       "area": "Validation",
       "summary": "Error messages say exactly what to fix",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "error messages say exactly what to fix names the field, the problem and the amount to change",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "an unbalanced budget is refused with the amount, then submits once fixed",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-036",
       "area": "Administration",
       "summary": "Finance administers its own users",
       "route": "/finance/users",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "finance administers its own users, each person has an account lets an administrator change a role and deactivate a user, and nobody else",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance administers its own users, each person has an account refuses two accounts with the same email and finds a deactivated user no more",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-037",
@@ -685,7 +983,7 @@
       "route": "/finance/users",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "view-only finance users cannot write lets a viewer read but not flag a submission",
@@ -702,7 +1000,7 @@
       "route": "/finance/users",
       "state": "demonstrated",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": []
     },
     {
@@ -710,90 +1008,285 @@
       "area": "Oversight",
       "summary": "One central dashboard of submissions",
       "route": "/finance",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "the dashboard loads and the submissions list filters down to one organization",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-040",
       "area": "Oversight",
       "summary": "Outstanding, missing and incomplete reports are identified",
       "route": "/finance",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "dashboard buckets puts a past due assignment with no submission in missing",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "dashboard buckets puts a past due draft that fails required rules in incomplete",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "dashboard buckets keeps not yet due work outstanding",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "dashboard buckets counts every bucket and sums to the number of rows",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "US-041",
       "area": "Oversight",
       "summary": "Submissions filter across many fields",
       "route": "/finance/submissions",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "filters matches organization name or EIN",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters combines filters",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters matches initiative by name, code or id",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters filters by flag reason and any",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters can skip a filter when counting alternatives",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the dashboard loads and the submissions list filters down to one organization",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-042",
       "area": "Oversight",
       "summary": "A flagged items view gathers problems for review",
       "route": "/finance/flagged",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "flag evidence shows the total against the award for an unbalanced draft",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "flag evidence does not flag a draft with no budget lines as unbalanced",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "flag evidence flags zero and low outcomes on submitted reports",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "flag evidence ignores participants served when branching hides that question",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "flag evidence adds open manual flags with their note",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "an analyst flags a submission and it appears in the flagged items view",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-043",
       "area": "Review",
       "summary": "Finance can flag a submission",
       "route": "/finance/submissions",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "an analyst flags a submission and it appears in the flagged items view",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-044",
       "area": "Review",
       "summary": "Finance can request updates and the organization resubmits",
       "route": "/finance/submissions",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "finance requests an update and the organization resubmits requires a note, returns the report, takes a second revision and then accepts",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance requests an update and the organization resubmits keeps both submitted revisions after a resubmission",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance requests an update and the organization resubmits does not let a view-only user or an organization user ask for an update",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance requests an update and the organization resubmits refuses to accept a report that was never submitted",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance requests an update and the organization resubmits refuses a change made from a stale copy of the report",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an analyst requests an update with a note, the organization resubmits, and the analyst accepts",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-045",
       "area": "Review",
       "summary": "Authorized staff can correct submitted data with an audit record",
       "route": "/finance/submissions",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "authorized staff correct submitted data with an audit record needs a reason, adds a correction revision and records the old and new value",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "authorized staff correct submitted data with an audit record is refused for a view-only user and for the reporting organization",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a correction after acceptance needs a reason and leaves an audit record",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-046",
       "area": "Data",
       "summary": "Export submitted data to Excel",
       "route": "/finance/submissions",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "workbook round trips through xlsx and carries the export note",
+          "file": "tests/unit/finance-export.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "submitted data downloads as Excel and as CSV for the filtered list, for finance staff only",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-047",
       "area": "Data",
       "summary": "Export submitted data to CSV",
       "route": "/finance/submissions",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "workbook builds a CSV of the Submissions sheet only",
+          "file": "tests/unit/finance-export.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "submitted data downloads as Excel and as CSV for the filtered list, for finance staff only",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-048",
@@ -802,7 +1295,7 @@
       "route": "/finance/submissions",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "saved queries are private to their owner shows a saved query only to the person who saved it",
@@ -815,6 +1308,24 @@
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "finance builds queries from selected criteria returns the same number of reports as an independent count for each criterion",
+          "file": "tests/sql/queries.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance builds queries from selected criteria narrows the result when criteria are combined",
+          "file": "tests/sql/queries.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "finance builds queries from selected criteria drops unknown values and keeps the criteria in the link to the results",
+          "file": "tests/sql/queries.test.ts",
+          "status": "passed",
+          "suite": "sql"
         }
       ]
     },
@@ -823,10 +1334,17 @@
       "area": "Data",
       "summary": "Generate charts",
       "route": "/finance",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "the dashboard draws its charts from the current reports",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-050",
@@ -835,7 +1353,7 @@
       "route": "/finance",
       "state": "demonstrated",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": []
     },
     {
@@ -843,19 +1361,32 @@
       "area": "Data",
       "summary": "Dashboard visualizations",
       "route": "/finance",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "chart series builds borough and category summaries",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the dashboard draws its charts from the current reports",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-052",
       "area": "Notifications",
       "summary": "Automated reminder emails to organizations",
-      "route": null,
+      "route": "/finance/reminders",
       "state": "verified",
       "reason": null,
-      "talk": "Every email is written to an outbox table today; scheduled reminders reuse it with a daily job.",
+      "note": "Reminder rules queue one email per organization per rule per day and skip reports already submitted.",
       "tests": [
         {
           "title": "reminders queue once per org per rule per day and skip submitted reports emails each owing organization once and a second run adds nothing",
@@ -900,9 +1431,9 @@
       "area": "Hosting",
       "summary": "Hosted outside Council-owned servers",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Vendor-hosted cloud. Production target is Azure Government; see the hosting slide.",
+      "note": "Delivery commitment confirmed when the production environment is built. The proposed target is Azure Government.",
       "tests": []
     },
     {
@@ -910,9 +1441,9 @@
       "area": "Hosting",
       "summary": "Cloud hosting meets FedRAMP or NIST 800-53",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Controls map to NIST 800-53 families: access control in row level security, audit in append-only tables, input validation on the server.",
+      "note": "Confirmed in the security review before go-live. Application controls in place: row-level security, append-only audit tables, server-side validation.",
       "tests": []
     },
     {
@@ -920,20 +1451,27 @@
       "area": "Data ownership",
       "summary": "The Council owns all system data",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Full Excel and CSV export is the exit path; no proprietary data formats.",
+      "note": "Contractual commitment. Full Excel and CSV export is available to Finance staff (see US-046 and US-047).",
       "tests": []
     },
     {
       "id": "US-056",
       "area": "Retention",
       "summary": "Submitted data is kept permanently",
-      "route": null,
-      "state": "talk_track",
+      "route": "/finance/platform",
+      "state": "verified",
       "reason": null,
-      "talk": "The application has no delete path for submissions, revisions or audit history.",
-      "tests": []
+      "note": "No application role can delete submissions, submitted revisions or audit events.",
+      "tests": [
+        {
+          "title": "submitted data is kept and cannot be removed or edited by the organization denies deleting a submission, an answer or a budget line once the report is submitted",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-057",
@@ -942,7 +1480,7 @@
       "route": "/finance/audit",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "audit history is append-only denies update and delete on audit events for the app role",
@@ -961,6 +1499,30 @@
           "file": "tests/sql/access.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "what the append-only triggers do rejects update, delete and truncate of the audit trail and revisions for the table owner while the triggers are enabled",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "what the append-only triggers do does not let the application role switch the triggers off",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "what the append-only triggers do is a control on the table owner too, not a guarantee against one: the owner can disable a trigger",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a correction after acceptance needs a reason and leaves an audit record",
+          "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -969,9 +1531,9 @@
       "area": "Security",
       "summary": "The Council is told about any breach",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Breach notification and remediation reporting are contractual and procedural.",
+      "note": "Procedural commitment: the incident response plan and notification terms are agreed in the contract.",
       "tests": []
     },
     {
@@ -979,9 +1541,9 @@
       "area": "Scale",
       "summary": "No limit on submitting users",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Accounts are rows, not seats.",
+      "note": "Accounts are database records; the application sets no limit on the number of submitting users.",
       "tests": []
     },
     {
@@ -991,7 +1553,7 @@
       "route": "/finance/users",
       "state": "demonstrated",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": []
     },
     {
@@ -999,9 +1561,9 @@
       "area": "Support",
       "summary": "Vendor help with account issues",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Support model.",
+      "note": "Support model described on the Platform page. Operational commitment.",
       "tests": []
     },
     {
@@ -1009,9 +1571,9 @@
       "area": "Support",
       "summary": "Post-launch support, monitoring and maintenance",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Support model.",
+      "note": "Support model described on the Platform page. Operational commitment.",
       "tests": []
     },
     {
@@ -1019,9 +1581,9 @@
       "area": "Support",
       "summary": "Support requests answered quickly, preferably within 24 hours",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Support model.",
+      "note": "Support model described on the Platform page. Operational commitment.",
       "tests": []
     },
     {
@@ -1029,9 +1591,9 @@
       "area": "Maintenance",
       "summary": "Annual review of reporting structure with Finance",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Configuration, not code: annual changes are form drafts.",
+      "note": "Annual changes are made as form drafts and rollover, not code changes. The review itself is a scheduled engagement with Finance.",
       "tests": []
     },
     {
@@ -1039,9 +1601,9 @@
       "area": "Delivery",
       "summary": "Formal testing period before go-live",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Delivery timeline to February 1, 2027 includes UAT.",
+      "note": "Testing period is part of the delivery timeline on the Platform page.",
       "tests": []
     },
     {
@@ -1049,9 +1611,9 @@
       "area": "Delivery",
       "summary": "Formal training period before go-live",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Delivery timeline includes Finance training.",
+      "note": "Training period is part of the delivery timeline on the Platform page.",
       "tests": []
     },
     {
@@ -1061,7 +1623,7 @@
       "route": "/finance/initiatives",
       "state": "demonstrated",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": []
     },
     {
@@ -1069,60 +1631,114 @@
       "area": "Rules",
       "summary": "Each initiative reports at least twice a year",
       "route": "/finance",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": "Each fiscal year has a mid-year and a year-end reporting period.",
+      "tests": [
+        {
+          "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-003",
       "area": "Rules",
       "summary": "Reports combine performance, financial and narrative content",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "a report combines performance, financial and narrative content has a performance section, a narrative section and a budget section in that order",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "BR-004",
       "area": "Rules",
       "summary": "Forms mix common and initiative-specific questions",
-      "route": "/finance/forms",
-      "state": "demonstrated",
+      "route": "/finance/initiatives",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "forms mix shared standard questions with initiative-specific ones marks library questions as standard and adds initiative questions beside them",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "forms mix shared standard questions with initiative-specific ones gives two initiatives the same standard questions",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "BR-005",
       "area": "Rules",
       "summary": "An initiative can fund one or more than 100 organizations",
       "route": "/finance/initiatives",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "an initiative can fund one organization or more than one hundred accepts 101 organizations on a single initiative and lets finance read all of them",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-006",
       "area": "Rules",
       "summary": "One report per initiative, even for multi-initiative organizations",
       "route": "/portal",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "one report per initiative and period refuses a second report for the same assignment and period",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "one report per initiative and period gives an organization with several initiatives a separate report for each",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-007",
       "area": "Rules",
       "summary": "Several people at one organization may submit",
       "route": "/portal/history",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "several people at one organization may submit lets a colleague submit a report that Maria started and records who did it",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-008",
@@ -1131,8 +1747,20 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
+        {
+          "title": "a budget can have up to 100 lines accepts exactly 100 lines that add up to the award",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a budget can have up to 100 lines blocks the 101st line and says what the limit is",
+          "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "budget paste from Excel handles a full 100-line paste",
           "file": "tests/unit/paste.test.ts",
@@ -1146,10 +1774,17 @@
       "area": "Rules",
       "summary": "The EIN determines which reports an organization owes",
       "route": "/portal",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "an organization can start a report it owes creates a draft for its own assignment and cannot create one for another organization",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-010",
@@ -1158,7 +1793,7 @@
       "route": "/portal",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "organizations see only their own reports returns nothing at all without a signed-in identity",
@@ -1189,6 +1824,12 @@
           "file": "tests/sql/access.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "a submitter cannot open another organization's report by its address",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -1197,40 +1838,116 @@
       "area": "Rules",
       "summary": "Sign-in is per person, never a shared login",
       "route": "/login",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "a submitter signs in through the passcode gate with a personal account",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-012",
       "area": "Rules",
       "summary": "Uploads are limited to 25 MB per file",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "uploads are limited to 25 MB per file states the limit as 25 megabytes in both the server and the browser",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "uploads are limited to 25 MB per file accepts a file of exactly 25 MB and refuses one byte more",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "uploads are limited to 25 MB per file refuses a 31 MB file on the server and names its size",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "uploads are limited to 25 MB per file gives the browser the same answer as the server for every size",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "uploads are limited to 25 MB per file refuses an empty file",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the browser refuses a file over 25 MB before sending it and says why",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-013",
       "area": "Rules",
       "summary": "Work can be paused and resumed",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "work can be paused and resumed reopens the section that was edited last",
+          "file": "tests/unit/report-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "work can be paused and resumed has nothing to resume before the first save",
+          "file": "tests/unit/report-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "BR-014",
       "area": "Rules",
       "summary": "Submission triggers an email with the submitted content",
       "route": "/portal/messages",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "submitting queues an email with the submitted content writes the outbox message in the same step as the status change",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "submitting queues an email with the submitted content queues nothing when the submit is refused",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a submission is locked and an emailed copy with the content is queued",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-015",
@@ -1239,10 +1956,10 @@
       "route": "/finance/initiatives",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
-          "title": "rollover copies forms and assignments creates the new year, its reporting periods and carried initiatives",
+          "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -1271,10 +1988,10 @@
       "id": "BR-016",
       "area": "Rules",
       "summary": "Renamed or combined initiatives keep their history",
-      "route": null,
+      "route": "/finance/rollover/lineage",
       "state": "verified",
       "reason": null,
-      "talk": "Version pinning keeps history today; lineage links are designed.",
+      "note": "Lineage links and pinned form versions keep history when initiatives are renamed or combined.",
       "tests": [
         {
           "title": "lineage links predecessors lets finance read lineage and keeps writes with the rollover function",
@@ -1291,7 +2008,7 @@
       "route": "/finance/users",
       "state": "demonstrated",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": []
     },
     {
@@ -1299,9 +2016,9 @@
       "area": "Rules",
       "summary": "Unlimited submitting users",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Accounts are rows, not seats.",
+      "note": "Accounts are database records; the application sets no limit on the number of submitting users.",
       "tests": []
     },
     {
@@ -1311,7 +2028,7 @@
       "route": "/finance/audit",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "audit history is append-only denies update and delete on audit events for the app role",
@@ -1330,6 +2047,30 @@
           "file": "tests/sql/access.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "submitted data is kept and cannot be removed or edited by the organization denies deleting a submission, an answer or a budget line once the report is submitted",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "what the append-only triggers do rejects update, delete and truncate of the audit trail and revisions for the table owner while the triggers are enabled",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "what the append-only triggers do does not let the application role switch the triggers off",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "what the append-only triggers do is a control on the table owner too, not a guarantee against one: the owner can disable a trigger",
+          "file": "tests/sql/retention.test.ts",
+          "status": "passed",
+          "suite": "sql"
         }
       ]
     },
@@ -1338,9 +2079,9 @@
       "area": "Rules",
       "summary": "The Council owns the data",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Full export is the exit path.",
+      "note": "Contractual commitment. Full export is available to Finance staff.",
       "tests": []
     },
     {
@@ -1350,7 +2091,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "required fields blocks every missing required field",
@@ -1363,6 +2104,12 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "submitting with required answers missing lists each one",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -1373,7 +2120,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "status can only change through the workflow function denies a direct status update even for the reporting organization",
@@ -1422,6 +2169,12 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "an unbalanced budget is refused with the amount, then submits once fixed",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -1432,7 +2185,7 @@
       "route": "/portal/reports",
       "state": "verified",
       "reason": null,
-      "talk": null,
+      "note": null,
       "tests": [
         {
           "title": "report EIN check accepts the organization's own EIN with or without the dash",
@@ -1477,19 +2230,32 @@
       "area": "Rules",
       "summary": "Organization details fill in where possible",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "talk": null,
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "organization details fill in where possible fills the legal name and EIN from the master list when the report has none",
+          "file": "tests/unit/report-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "organization details fill in where possible treats a blank answer as missing and keeps anything the organization already typed",
+          "file": "tests/unit/report-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "BR-025",
       "area": "Rules",
       "summary": "Breaches are reported with a remediation plan",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Contractual and procedural.",
+      "note": "Procedural commitment agreed in the contract.",
       "tests": []
     },
     {
@@ -1497,9 +2263,9 @@
       "area": "Rules",
       "summary": "Hosted in a compliant cloud, not on Council servers",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "See the hosting slide.",
+      "note": "Delivery commitment confirmed when the production environment is built.",
       "tests": []
     },
     {
@@ -1507,9 +2273,9 @@
       "area": "Rules",
       "summary": "Target go-live February 1, 2027",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Delivery timeline.",
+      "note": "Target date in the delivery timeline on the Platform page.",
       "tests": []
     },
     {
@@ -1517,9 +2283,9 @@
       "area": "Rules",
       "summary": "Annual structure review with Finance",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Configuration, not code.",
+      "note": "Scheduled engagement with Finance. Structure changes are configuration, not code.",
       "tests": []
     },
     {
@@ -1527,9 +2293,9 @@
       "area": "Rules",
       "summary": "Fast post-launch support response",
       "route": null,
-      "state": "talk_track",
+      "state": "planned",
       "reason": null,
-      "talk": "Support model.",
+      "note": "Support model described on the Platform page. Operational commitment.",
       "tests": []
     }
   ]

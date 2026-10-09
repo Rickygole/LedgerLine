@@ -7,7 +7,7 @@ import type { Answers } from "@/lib/rules/types";
 const definition = buildDefinition("Test form", []);
 const base: Answers = { org_legal_name: "Mott Haven Youth Futures, Inc.", org_ein: "00-1040217" };
 
-describe("[BR-023] report EIN check", () => {
+describe("[BR-023][US-033] report EIN check", () => {
   it("accepts the organization's own EIN with or without the dash", () => {
     expect(einMismatch("00-1040217", "00-1040217")).toBe(false);
     expect(einMismatch("001040217", "00-1040217")).toBe(false);

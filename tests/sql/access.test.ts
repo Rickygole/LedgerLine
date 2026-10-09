@@ -93,7 +93,7 @@ describe("[BR-022] status can only change through the workflow function", () => 
     const code = await asUser(app, tomas, () =>
       errorCode(async () => {
         const draft = (
-          await owner.query(`SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id WHERE a.org_id = $1 AND s.status = 'draft' LIMIT 1`, [mariaOrg])
+          await owner.query(`SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id WHERE a.org_id <> (SELECT org_id FROM app_user WHERE id = $1) AND s.status = 'draft' LIMIT 1`, [tomas])
         ).rows[0].id;
         await app.query("SELECT * FROM app.transition_submission($1, 'submit', NULL, '{}'::jsonb, NULL, NULL, NULL)", [draft]);
       })
