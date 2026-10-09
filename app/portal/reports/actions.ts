@@ -8,7 +8,7 @@ import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
 import { reportIssues } from "@/lib/report/issues";
 import { writeDraft } from "@/lib/report/write";
-import { attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, signPath } from "@/lib/report/attachments";
+import { attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, removeAttachmentRow, signPath } from "@/lib/report/attachments";
 import type { PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
 import { buildSnapshot } from "@/lib/snapshot";
 import { buildPath, checkUpload, putFile } from "@/lib/storage";
@@ -187,14 +187,7 @@ export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } |
   const user = await getCurrentUser().catch(() => null);
   if (!user) return { status: "signed_out" };
   try {
-    const removed = await withClaims(user.id, async (tx) => {
-      await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [parsed.data.submissionId]);
-      const rows = await tx.query<{ filename: string }>("DELETE FROM attachment WHERE id = $1 AND submission_id = $2 RETURNING filename", [parsed.data.attachmentId, parsed.data.submissionId]);
-      if (rows[0]) {
-        await tx.query("SELECT app.write_audit('submission', $1, 'attachment_removed', $2, NULL, NULL, NULL)", [parsed.data.submissionId, rows[0].filename]);
-      }
-      return rows.length;
-    });
+    const removed = await withClaims(user.id, (tx) => removeAttachmentRow(tx, parsed.data.submissionId, parsed.data.attachmentId));
     if (removed === 0) return { status: "error", message: "That file is already gone or the report is no longer open for editing." };
     return { status: "ok" };
   } catch {
@@ -232,7 +225,7 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
       const stored = await loadAnswers(tx, header.id);
       const budget = await loadBudget(tx, header.id);
       const files = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>(
-        "SELECT path, filename, bytes, mime FROM attachment WHERE submission_id = $1 ORDER BY created_at, id",
+        "SELECT path, filename, bytes, mime FROM attachment WHERE submission_id = $1 AND removed_at IS NULL ORDER BY created_at, id",
         [header.id]
       );
 

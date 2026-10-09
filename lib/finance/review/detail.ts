@@ -19,7 +19,9 @@ export type AuditRecord = {
   aiActionId: string | null;
 };
 
-export type RevisionRecord = { id: number; revision: number; kind: string; actor: string; reason: string | null; createdAt: string; sha256: string };
+export type RevisionFile = { path: string; filename: string; bytes: number };
+
+export type RevisionRecord = { id: number; revision: number; kind: string; actor: string; reason: string | null; createdAt: string; sha256: string; files: RevisionFile[] };
 
 export type SubmissionDetail = {
   row: ReportRow;
@@ -31,6 +33,7 @@ export type SubmissionDetail = {
   audit: AuditRecord[];
   revisions: RevisionRecord[];
   certification: Certification | null;
+  fileIds: Record<string, string>;
 };
 
 const ISO = (column: string) => `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
@@ -92,7 +95,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     );
   const attachmentRows = await tx.query<{ id: string; filename: string; bytes: string; mime: string; created_at: string; uploaded_by: string | null }>(
       `SELECT t.id, t.filename, t.bytes::text AS bytes, t.mime, ${ISO("t.created_at")} AS created_at, u.full_name AS uploaded_by
-       FROM attachment t LEFT JOIN app_user u ON u.id = t.uploaded_by WHERE t.submission_id = $1 ORDER BY t.created_at`,
+       FROM attachment t LEFT JOIN app_user u ON u.id = t.uploaded_by WHERE t.submission_id = $1 AND t.removed_at IS NULL ORDER BY t.created_at`,
       [id]
     );
   const auditRows = await tx.query<{ id: string; at: string; actor: string | null; action: string; note: string | null; before: Record<string, unknown> | null; after: Record<string, unknown> | null; ai_action_id: string | null }>(
@@ -101,11 +104,12 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
        WHERE e.entity = 'submission' AND e.entity_id = $1 ORDER BY e.at, e.id`,
       [id]
     );
-  const revisionRows = await tx.query<{ id: string; revision: number; kind: string; actor: string; reason: string | null; created_at: string; sha256: string }>(
-      `SELECT r.id::text AS id, r.revision, r.kind, u.full_name AS actor, r.reason, ${ISO("r.created_at")} AS created_at, r.sha256
+  const revisionRows = await tx.query<{ id: string; revision: number; kind: string; actor: string; reason: string | null; created_at: string; sha256: string; files: RevisionFile[] | null }>(
+      `SELECT r.id::text AS id, r.revision, r.kind, u.full_name AS actor, r.reason, ${ISO("r.created_at")} AS created_at, r.sha256, r.snapshot -> 'attachments' AS files
        FROM submission_revision r JOIN app_user u ON u.id = r.actor WHERE r.submission_id = $1 ORDER BY r.revision, r.created_at`,
       [id]
     );
+  const allFiles = await tx.query<{ id: string; path: string }>("SELECT id, path FROM attachment WHERE submission_id = $1", [id]);
   const certified = await tx.one<{ certification: Certification | null }>(
     "SELECT snapshot -> 'certification' AS certification FROM submission_revision WHERE submission_id = $1 ORDER BY revision DESC, id DESC LIMIT 1",
     [id]
@@ -155,6 +159,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     flags: flagRows.map((f) => ({ id: f.id, kind: f.kind, source: f.source, note: f.note, status: f.status, createdAt: f.created_at, createdBy: f.created_by, resolvedAt: f.resolved_at, resolvedBy: f.resolved_by })),
     audit: auditRows.map((e) => ({ id: Number(e.id), at: e.at, actor: e.actor, action: e.action, note: e.note, before: e.before, after: e.after, aiActionId: e.ai_action_id })),
     certification: certified?.certification ?? null,
-    revisions: revisionRows.map((r) => ({ id: Number(r.id), revision: r.revision, kind: r.kind, actor: r.actor, reason: r.reason, createdAt: r.created_at, sha256: r.sha256 })),
+    fileIds: Object.fromEntries(allFiles.map((f) => [f.path, f.id])),
+    revisions: revisionRows.map((r) => ({ id: Number(r.id), revision: r.revision, kind: r.kind, actor: r.actor, reason: r.reason, createdAt: r.created_at, sha256: r.sha256, files: r.files ?? [] })),
   };
 }

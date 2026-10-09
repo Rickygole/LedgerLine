@@ -114,7 +114,7 @@ export async function loadAttachments(tx: Tx, submissionId: string): Promise<Att
   const rows = await tx.query<{ id: string; filename: string; bytes: string; created_at: string; full_name: string | null }>(
     `SELECT t.id, t.filename, t.bytes, t.created_at, u.full_name
      FROM attachment t LEFT JOIN app_user u ON u.id = t.uploaded_by
-     WHERE t.submission_id = $1 ORDER BY t.created_at, t.id`,
+     WHERE t.submission_id = $1 AND t.removed_at IS NULL ORDER BY t.created_at, t.id`,
     [submissionId]
   );
   return rows.map((row) => ({

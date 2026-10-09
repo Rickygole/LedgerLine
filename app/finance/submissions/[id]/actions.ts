@@ -224,7 +224,7 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
       if (issues.length > 0) return issues[0].message;
       const identity = identityProblem(key, value, { legalName: row.orgName, ein: row.ein });
       if (identity) return identity;
-      const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>("SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1", [id]);
+      const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>("SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1 AND removed_at IS NULL", [id]);
       const snapshot = buildSnapshot({
         formVersionId: row.formVersionId!,
         answers: { ...visibleAnswers(row.definition!, answers), ...(answers[VARIANCE_NOTE_KEY] ? { [VARIANCE_NOTE_KEY]: answers[VARIANCE_NOTE_KEY] } : {}) },

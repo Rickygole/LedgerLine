@@ -107,7 +107,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           {tab === "attachments" ? <AttachmentsTab submissionId={id} attachments={detail.attachments} /> : null}
           {tab === "flags" ? <FlagsTab detail={detail} canReview={canReview} /> : null}
           {tab === "audit" ? <AuditTab audit={detail.audit} labels={labels} /> : null}
-          {tab === "revisions" ? <RevisionsTab revisions={detail.revisions} /> : null}
+          {tab === "revisions" ? <RevisionsTab revisions={detail.revisions} submissionId={id} fileIds={detail.fileIds} /> : null}
         </div>
         <aside className="order-1 space-y-4 lg:sticky lg:top-4 lg:order-2 lg:col-span-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:pb-1" aria-label="Review actions">
           {canReview ? (

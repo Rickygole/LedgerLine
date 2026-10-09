@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
 import { loadEditorPayload, loadReport } from "@/lib/report/data";
 import { loadFileIds, loadLatestRevision, loadReturnNote } from "@/lib/report/revision";
+import { formatBytes } from "@/lib/report/upload-rules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +30,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     if (editable) {
       const payload = await loadEditorPayload(tx, report, user.fullName, user.title ?? "");
       const note = report.header.status === "returned" ? await loadReturnNote(tx, id) : null;
-      return { kind: "edit" as const, report, payload, note };
+      const sent = report.header.status === "returned" ? await loadLatestRevision(tx, id) : null;
+      const sentIds = sent ? await loadFileIds(tx, id) : {};
+      return { kind: "edit" as const, report, payload, note, sent, sentIds };
     }
     const revision = await loadLatestRevision(tx, id);
     const files = await loadFileIds(tx, id);
@@ -65,6 +68,29 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <p className="mt-2 text-xs text-muted">
             {data.note.by ? `${data.note.by}, Council Finance` : "Council Finance"}, {formatDateTime(data.note.at)} ET. Update the report below, then submit it again.
           </p>
+        </section>
+      ) : null}
+      {data.sent && data.sent.snapshot.attachments.length > 0 ? (
+        <section aria-labelledby="sent-files" className="mb-6 rounded-lg border border-line bg-white px-5 py-4 shadow-card">
+          <h2 id="sent-files" className="text-[15px] font-semibold text-ink">
+            Files sent with revision {data.sent.revision}
+          </h2>
+          <p className="mt-1 text-sm text-muted">Council Finance keeps these files even if you remove them from the working copy below.</p>
+          <ul className="mt-3 divide-y divide-line text-sm">
+            {data.sent.snapshot.attachments.map((file) => (
+              <li key={file.path} className="flex flex-wrap items-center justify-between gap-3 py-2">
+                <span className="font-semibold text-ink">{file.filename}</span>
+                <span className="flex items-center gap-4 text-muted">
+                  <span className="num">{formatBytes(file.bytes)}</span>
+                  {data.sentIds[file.path] ? (
+                    <a href={`/portal/reports/${id}/files/${data.sentIds[file.path]}`} className="font-semibold text-navy-800 hover:underline" aria-label={`Download ${file.filename}`}>
+                      Download
+                    </a>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
       <ReportEditor payload={data.payload} />

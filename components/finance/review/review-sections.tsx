@@ -271,7 +271,7 @@ export function AuditTab({ audit, labels }: { audit: AuditRecord[]; labels: Reco
   );
 }
 
-export function RevisionsTab({ revisions }: { revisions: RevisionRecord[] }) {
+export function RevisionsTab({ revisions, submissionId, fileIds }: { revisions: RevisionRecord[]; submissionId: string; fileIds: Record<string, string> }) {
   return (
     <Card>
       <CardHeader title="Revisions" description="A frozen copy of the report is kept each time it is submitted or corrected." />
@@ -282,13 +282,14 @@ export function RevisionsTab({ revisions }: { revisions: RevisionRecord[] }) {
             <TH>Kind</TH>
             <TH>By</TH>
             <TH>Reason</TH>
+            <TH>Files</TH>
             <TH>When</TH>
             <TH>Fingerprint</TH>
           </tr>
         </THead>
         <tbody>
           {revisions.length === 0 ? (
-            <EmptyRow colSpan={6}>No revisions yet. The first is created when the report is submitted.</EmptyRow>
+            <EmptyRow colSpan={7}>No revisions yet. The first is created when the report is submitted.</EmptyRow>
           ) : (
             revisions.map((r) => (
               <TR key={r.id}>
@@ -296,6 +297,27 @@ export function RevisionsTab({ revisions }: { revisions: RevisionRecord[] }) {
                 <TD>{r.kind === "submit" ? "Submitted" : "Correction"}</TD>
                 <TD>{r.actor}</TD>
                 <TD className="text-muted">{r.reason ?? "None"}</TD>
+                <TD>
+                  {r.files.length === 0 ? (
+                    <span className="text-muted">None</span>
+                  ) : (
+                    <ul className="space-y-1">
+                      {r.files.map((file) => (
+                        <li key={file.path} className="flex items-center gap-1.5">
+                          {fileIds[file.path] ? (
+                            <a href={`/finance/submissions/${submissionId}/attachments/${fileIds[file.path]}`} className="inline-flex items-center gap-1.5 font-semibold text-navy-700 hover:underline">
+                              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                              {file.filename}
+                            </a>
+                          ) : (
+                            <span>{file.filename}</span>
+                          )}
+                          <span className="num text-xs text-muted">{formatBytes(file.bytes)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </TD>
                 <TD className="whitespace-nowrap text-muted">{formatDateTime(r.createdAt)}</TD>
                 <TD>
                   <code className="num rounded bg-surface px-1.5 py-0.5 text-xs" title={r.sha256}>
