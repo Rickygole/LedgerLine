@@ -120,21 +120,26 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
   submittedId = page.url().split("/").slice(-2)[0];
 });
 
-test("[US-019][US-020][BR-014] a submission is locked and an emailed copy with the content is queued", async ({ page }) => {
+test("[US-019][US-020][BR-014] a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed", async ({ page }) => {
   expect(submittedId).toMatch(/^[0-9a-f-]{36}$/);
   const [sub] = await ownerQuery<{ status: string; revision: number }>("SELECT status, revision FROM submission WHERE id = $1", [submittedId]);
   expect(sub).toEqual({ status: "submitted", revision: 1 });
-  const [mail] = await ownerQuery<{ to_email: string; body_text: string; template: string }>(
-    "SELECT to_email, body_text, template FROM outbox WHERE submission_id = $1",
+  const [mail] = await ownerQuery<{ to_email: string; body_text: string; template: string; status: string }>(
+    "SELECT to_email, body_text, template, status FROM outbox WHERE submission_id = $1",
     [submittedId]
   );
   expect(mail.to_email).toBe(PEOPLE.maria);
   expect(mail.template).toBe("submission_confirmation");
+  expect(mail.status).toBe("recorded");
   expect(mail.body_text).toContain("Mentor stipends");
   expect(mail.body_text).toContain("Program supplies");
   await page.goto(`/portal/reports/${submittedId}`);
   await expect(page.getByRole("button", { name: "Submit report" })).toHaveCount(0);
+  await page.goto(`/portal/reports/${submittedId}/submitted`);
+  await expect(page.getByText(/A copy of this report is in\s+Messages/)).toBeVisible();
+  await expect(page.getByText(/was emailed to/)).toHaveCount(0);
   await page.goto("/portal/messages");
+  await expect(page.getByText("Email delivery is not turned on in this environment. Each message is recorded here.")).toBeVisible();
   await expect(page.getByText(/Report received/).first()).toBeVisible();
 });
 
