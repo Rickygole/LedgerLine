@@ -22,7 +22,7 @@ const sample = (over: Partial<ExportSubmission> = {}): ExportSubmission => ({
 
 const meta = { periodLabel: "FY26 Year-End", filters: ["borough = Bronx"], generatedAt: new Date("2026-10-14T12:00:00Z"), numericKeys: new Set(["participants_actual"]), rowCount: 1 };
 
-describe("[US-055] formula injection guard", () => {
+describe("formula injection guard", () => {
   it("prefixes text that starts with a formula character", () => {
     expect(guardFormula("=SUM(A1)")).toBe("'=SUM(A1)");
     expect(guardFormula("+1")).toBe("'+1");
@@ -37,7 +37,7 @@ describe("[US-055] formula injection guard", () => {
   });
 });
 
-describe("[US-055] workbook", () => {
+describe("workbook", () => {
   const book = buildWorkbook([sample()], meta);
 
   it("has the three sheets in order", () => {

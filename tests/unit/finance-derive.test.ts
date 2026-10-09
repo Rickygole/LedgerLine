@@ -66,7 +66,7 @@ function row(over: Partial<Omit<ReportRow, "issues" | "bucket" | "daysPastDue" |
   });
 }
 
-describe("[BR-014] dashboard buckets", () => {
+describe("dashboard buckets", () => {
   it("puts a past due assignment with no submission in missing", () => {
     const r = row();
     expect(r.bucket).toBe("missing");
@@ -96,7 +96,7 @@ describe("[BR-014] dashboard buckets", () => {
   });
 });
 
-describe("[BR-015] flag evidence", () => {
+describe("flag evidence", () => {
   it("shows the total against the award for an unbalanced draft", () => {
     const r = row({ submissionId: "s1", status: "draft", answers: completeAnswers, budget: budget(91750) });
     const flag = r.flags.find((f) => f.reason === "unbalanced");
@@ -123,7 +123,7 @@ describe("[BR-015] flag evidence", () => {
   });
 });
 
-describe("[US-012] filters", () => {
+describe("filters", () => {
   const rows = [
     row(),
     row({ orgName: "Harborview Youth Alliance", ein: "00-1109729", borough: "Brooklyn", category: "Health", initiativeId: "22222222-2222-2222-2222-222222222222", initiativeName: "Diabetes Prevention (sample)", initiativeCode: "CI-050", submissionId: "s2", status: "accepted", answers: completeAnswers, budget: budget(90000) }),
