@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { buildCsp, cspHeaderName } from "@/lib/csp";
 import { GATE_COOKIE, SESSION_COOKIE, verifyGate, verifySession } from "@/lib/session";
 
-const OPEN_PATHS = ["/gate", "/robots.txt", "/favicon.ico"];
+const OPEN_PATHS = ["/gate", "/robots.txt", "/favicon.ico", "/icon.svg", "/apple-icon.png"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Accessibility" };
 
 export default function AccessibilityPage() {
   return (
-    <InfoPage title="Accessibility" updated="October 9, 2026" intro={<p>LedgerLine should work for everyone who files or reviews a report, including people who use a keyboard, a screen reader, screen magnification or voice control.</p>}>
+    <InfoPage title="Accessibility" updated="October 2026" intro={<p>LedgerLine should work for everyone who files or reviews a report, including people who use a keyboard, a screen reader, screen magnification or voice control.</p>}>
       <h2 id="target">Our target</h2>
       <p>We design and build LedgerLine to meet the Web Content Accessibility Guidelines (WCAG) 2.1 at level AA. This applies to the sign-in pages, the reporting portal used by funded organizations and the Finance workspace.</p>
       <p>In practice this means:</p>

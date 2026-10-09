@@ -8,7 +8,7 @@ export default function HelpPage() {
   return (
     <InfoPage
       title="Help"
-      updated="October 9, 2026"
+      updated="October 2026"
       intro={
         <>
           <p>Answers to common questions about signing in and filing reports, and who to contact when you need more help.</p>
@@ -30,7 +30,7 @@ export default function HelpPage() {
     >
       <h2 id="sign-in">Problems signing in</h2>
       <h3>I forgot my password</h3>
-      <p>Ask your LedgerLine administrator or Council Finance to send you a password reset link. The link goes to your work email, works once and stops working 30 minutes after it is sent. Your new password must be at least 12 characters and cannot be your email address.</p>
+      <p>Ask a Finance administrator for a password reset link. The link is issued for the work email on your account, works once and stops working 30 minutes after it is issued. Your new password must be at least 12 characters and cannot be your email address.</p>
       <h3>My email and password are not accepted</h3>
       <ul>
         <li>Use the work email address your account was set up with.</li>

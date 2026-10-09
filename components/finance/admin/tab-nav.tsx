@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 export function TabNav({ base, tabs, current, label, attached = false }: { base: string; tabs: { key: string; label: string; count?: number }[]; current: string; label: string; attached?: boolean }) {
   return (
-    <nav aria-label={label} className={cn("flex gap-1 overflow-x-auto [scrollbar-width:none] [mask-image:linear-gradient(to_right,black_calc(100%-2rem),transparent)] md:[mask-image:none]", attached ? "-mb-px" : "mb-4 border-b border-line")}>
+    <nav aria-label={label} className={cn("flex gap-1 overflow-x-auto [scrollbar-width:none]", attached ? "-mb-px" : "mb-4 border-b border-line")}>
       {tabs.map((tab) => {
         const active = tab.key === current;
         return (

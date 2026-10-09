@@ -6,7 +6,7 @@ export type Pill = { key: string; label: string; count: number; href: string; ac
 export function FilterPills({ label, pills }: { label: string; pills: Pill[] }) {
   return (
     <nav aria-label={label} className="relative mb-3">
-      <ul className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [mask-image:linear-gradient(to_right,black_90%,transparent)] sm:flex-wrap sm:overflow-visible sm:[mask-image:none]">
+      <ul className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
         {pills.map((pill) => (
           <li key={pill.key} className="shrink-0">
             <Link
