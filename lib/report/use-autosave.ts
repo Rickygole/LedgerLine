@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveDraft } from "@/app/portal/reports/actions";
+import { newRowId } from "./budget-rows";
 import type { SaveInput, SaveResult } from "./types";
 
 export type SaveState =
@@ -26,7 +27,7 @@ async function sessionAlive(): Promise<boolean> {
   }
 }
 
-export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "expectedLock" | "submissionId">, submissionId: string) {
+export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "expectedLock" | "submissionId" | "saveId">, submissionId: string) {
   const [state, setState] = useState<SaveState>({ kind: "idle" });
   const lockRef = useRef(initialLock);
   const dirty = useRef(false);
@@ -36,6 +37,7 @@ export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "e
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retry = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attempts = useRef(0);
+  const saveId = useRef(newRowId());
   const buildRef = useRef(build);
 
   useEffect(() => {
@@ -51,12 +53,13 @@ export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "e
         setState({ kind: "saving" });
         let result: SaveResult;
         try {
-          result = await saveDraft({ submissionId, expectedLock: lockRef.current, ...buildRef.current() });
+          result = await saveDraft({ submissionId, expectedLock: lockRef.current, saveId: saveId.current, ...buildRef.current() });
         } catch {
           result = (await sessionAlive()) ? { status: "error", message: "network" } : { status: "signed_out" };
         }
         if (result.status === "saved") {
           lockRef.current = result.lockVersion;
+          saveId.current = newRowId();
           attempts.current = 0;
           outcome = "saved";
           setState({ kind: "saved", at: result.savedAt });

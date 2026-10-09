@@ -22,6 +22,7 @@ const answerValue = z.union([z.string().max(30000), z.number(), z.boolean(), z.n
 const saveSchema = z.object({
   submissionId: z.uuid(),
   expectedLock: z.number().int().min(0),
+  saveId: z.uuid(),
   answers: z.record(z.string(), answerValue),
   budget: z
     .array(
@@ -47,10 +48,10 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
   try {
     return await withClaims(user.id, async (tx): Promise<SaveResult> => {
       const touched = await tx.one<{ lock_version: number; updated_at: string }>(
-        `UPDATE submission SET lock_version = lock_version + 1, updated_at = now(), updated_by = app.uid()
-         WHERE id = $1 AND lock_version = $2 AND status IN ('draft', 'returned')
+        `UPDATE submission SET lock_version = lock_version + 1, updated_at = now(), updated_by = app.uid(), last_save_id = $3
+         WHERE id = $1 AND status IN ('draft', 'returned') AND (lock_version = $2 OR (last_save_id = $3 AND lock_version = $2 + 1))
          RETURNING lock_version, updated_at`,
-        [input.submissionId, input.expectedLock]
+        [input.submissionId, input.expectedLock, input.saveId]
       );
       if (!touched) {
         const current = await tx.one<{ status: string; updated_at: string; full_name: string | null }>(

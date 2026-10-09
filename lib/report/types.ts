@@ -45,6 +45,7 @@ export type EditorPayload = {
 export type SaveInput = {
   submissionId: string;
   expectedLock: number;
+  saveId: string;
   answers: Answers;
   budget: BudgetLine[];
 };
