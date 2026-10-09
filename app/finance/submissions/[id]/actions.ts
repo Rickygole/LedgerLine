@@ -192,6 +192,7 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
   if (!reason) return failed("Enter a reason. Every correction is recorded with its reason.");
   try {
     const problem = await withClaims(user.id, async (tx) => {
+      await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [id]);
       const detail = await loadSubmissionDetail(tx, id);
       if (!detail || !detail.row.definition) return "That report could not be found.";
       const { row } = detail;
