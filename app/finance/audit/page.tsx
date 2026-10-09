@@ -11,7 +11,7 @@ import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { AuditSentence } from "@/components/finance/admin/audit-line";
-import { actionLabel, auditFilterOptions, listAudit } from "@/lib/finance/admin/audit";
+import { actionLabel, auditFilterOptions, entityLabel, listAudit } from "@/lib/finance/admin/audit";
 import { one, pageNumber, PAGE_SIZE, type SearchParams, isoDate } from "@/lib/finance/admin/params";
 
 export const runtime = "nodejs";
@@ -62,7 +62,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
               <option value="">All entities</option>
               {data.options.entities.map((e) => (
                 <option key={e} value={e}>
-                  {actionLabel(e)}
+                  {entityLabel(e)}
                 </option>
               ))}
             </Select>
@@ -121,7 +121,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                       </TD>
                       <TD className="align-top">{row.org_name ?? <span className="text-muted">Not applicable</span>}</TD>
                       <TD className="align-top">
-                        <Badge>{actionLabel(row.entity)}</Badge>
+                        <Badge>{entityLabel(row.entity)}</Badge>
                       </TD>
                     </TR>
                   </Fragment>
