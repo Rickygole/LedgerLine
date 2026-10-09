@@ -11,7 +11,7 @@ function phrase(kind: LineageLink["kind"]): string {
 function Item({ link }: { link: LineageLink }) {
   if (!link.other_id) return null;
   return (
-    <Link href={`/finance/initiatives/${link.other_id}`} className="font-semibold text-navy-800 hover:underline">
+    <Link href={`/finance/initiatives/${link.other_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
       {link.other_name} <span className="font-normal text-muted">({link.other_code}, {link.other_year})</span>
     </Link>
   );

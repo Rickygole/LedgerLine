@@ -75,11 +75,11 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
       <nav aria-label="Jump to a section" className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
         <span className="mr-1 text-muted">Jump to</span>
         {sections.map((section) => (
-          <a key={section.key} href={`#review-${section.key}`} className="rounded-md px-2 py-1 font-medium text-navy-700 hover:bg-navy-50 hover:underline">
+          <a key={section.key} href={`#review-${section.key}`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
             {section.title}
           </a>
         ))}
-        <Link href={`/finance/submissions/${row.submissionId}?tab=budget`} className="rounded-md px-2 py-1 font-medium text-navy-700 hover:bg-navy-50 hover:underline">
+        <Link href={`/finance/submissions/${row.submissionId}?tab=budget`} className="rounded-md px-2 py-1 font-medium text-link underline underline-offset-2 hover:bg-navy-50 hover:text-link-hover">
           Budget
         </Link>
       </nav>
@@ -191,7 +191,7 @@ export function AttachmentsTab({ submissionId, attachments }: { submissionId: st
                   {a.uploadedBy ? ` by ${a.uploadedBy}` : ""}
                 </TD>
                 <TD className="text-right">
-                  <a href={`/finance/submissions/${submissionId}/attachments/${a.id}`} className="inline-flex items-center gap-1.5 font-semibold text-navy-700 hover:underline">
+                  <a href={`/finance/submissions/${submissionId}/attachments/${a.id}`} className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     <Download className="h-4 w-4" aria-hidden="true" />
                     Download
                   </a>
@@ -305,7 +305,7 @@ export function RevisionsTab({ revisions, submissionId, fileIds }: { revisions: 
                       {r.files.map((file) => (
                         <li key={file.path} className="flex items-center gap-1.5">
                           {fileIds[file.path] ? (
-                            <a href={`/finance/submissions/${submissionId}/attachments/${fileIds[file.path]}`} className="inline-flex items-center gap-1.5 font-semibold text-navy-700 hover:underline">
+                            <a href={`/finance/submissions/${submissionId}/attachments/${fileIds[file.path]}`} className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                               <Download className="h-3.5 w-3.5" aria-hidden="true" />
                               {file.filename}
                             </a>

@@ -85,7 +85,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
               funded.map((f) => (
                 <TR key={f.assignment_id}>
                   <TD>
-                    <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-navy-700 hover:underline">
+                    <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {f.legal_name}
                     </Link>
                   </TD>
@@ -147,7 +147,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                   <TD>{f.published_by_name ?? <span className="text-muted">Not published</span>}</TD>
                   <TD>{f.published_at ? formatDateTime(f.published_at) : <span className="text-muted">Not published</span>}</TD>
                   <TD>
-                    <Link href={`/finance/forms/${f.id}`} className="font-semibold text-navy-700 hover:underline">
+                    <Link href={`/finance/forms/${f.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {f.status === "draft" ? "Edit" : "View"}
                       <span className="sr-only"> version {f.version}</span>
                     </Link>

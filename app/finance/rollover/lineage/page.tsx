@@ -81,7 +81,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
               data.rows.map((row) => (
                 <TR key={row.id}>
                   <TD>
-                    <Link href={`/finance/initiatives/${row.predecessor_id}`} className="font-semibold text-navy-800 hover:underline">
+                    <Link href={`/finance/initiatives/${row.predecessor_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {row.predecessor_name}
                     </Link>
                     <div className="text-xs text-muted">
@@ -96,7 +96,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
                   <TD>
                     {row.successor_id ? (
                       <>
-                        <Link href={`/finance/initiatives/${row.successor_id}`} className="font-semibold text-navy-800 hover:underline">
+                        <Link href={`/finance/initiatives/${row.successor_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                           {row.successor_name}
                         </Link>
                         <div className="text-xs text-muted">

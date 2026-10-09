@@ -212,7 +212,7 @@ export default async function PlatformPage() {
             </p>
             {user.role === "finance_admin" ? (
               <div>
-                <Link href="/finance/users" className="text-sm font-semibold text-navy-800 hover:underline">Manage users and roles</Link>
+                <Link href="/finance/users" className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">Manage users and roles</Link>
               </div>
             ) : null}
           </CardBody>

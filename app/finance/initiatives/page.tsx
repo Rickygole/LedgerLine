@@ -92,7 +92,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               Funding by category <span className="font-normal text-muted">(total and number of initiatives)</span>
             </h2>
             {data.category ? (
-              <Link href={buildHref(base, { q, status, agency: data.agency, period: data.period.id })} className="text-sm font-semibold text-navy-700 hover:underline">
+              <Link href={buildHref(base, { q, status, agency: data.agency, period: data.period.id })} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                 Show all categories
               </Link>
             ) : (
@@ -194,7 +194,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                 <TR key={row.id}>
                   <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{row.code}</TD>
                   <TD>
-                    <Link href={`${base}/${row.id}`} className="font-semibold text-navy-700 hover:underline">
+                    <Link href={`${base}/${row.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {row.name}
                     </Link>
                     {row.status === "retired" ? <span className="ml-2"><Badge>Retired</Badge></span> : null}

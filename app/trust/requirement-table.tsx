@@ -94,7 +94,7 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
                   <ul className="space-y-1">
                     {row.tests.slice(0, 4).map((test) => (
                       <li key={`${test.file}-${test.title}`} className="text-xs">
-                        <a className="text-navy-700 hover:underline" href={`https://github.com/${repository}/blob/${commit}/${test.file}`}>
+                        <a className="text-link underline underline-offset-2 hover:text-link-hover" href={`https://github.com/${repository}/blob/${commit}/${test.file}`}>
                           {test.title}
                         </a>
                         <span className="ml-1 text-muted">({test.suite})</span>

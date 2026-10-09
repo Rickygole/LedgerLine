@@ -92,7 +92,7 @@ export default async function NewInitiativePage({ searchParams }: { searchParams
                     </li>
                   ))}
                 </ul>
-                <Link href={`/finance/initiatives/new?step=3&initiative=${data.initiative.id}`} className="mt-3 inline-block font-semibold text-navy-800 hover:underline">
+                <Link href={`/finance/initiatives/new?step=3&initiative=${data.initiative.id}`} className="mt-3 inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   Continue to the report form
                 </Link>
               </div>

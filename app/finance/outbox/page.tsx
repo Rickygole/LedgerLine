@@ -86,7 +86,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
               data.rows.map((m) => (
                 <TR key={m.id}>
                   <TD className="max-w-md">
-                    <Link href={`${base}/${m.id}`} className="font-semibold text-navy-700 hover:underline">
+                    <Link href={`${base}/${m.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {m.subject}
                     </Link>
                   </TD>

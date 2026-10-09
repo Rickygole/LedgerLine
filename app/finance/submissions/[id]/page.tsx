@@ -67,7 +67,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         crumbs={[{ label: "Submissions", href: "/finance/submissions" }, { label: row.referenceNo ?? "Report" }]}
         subtitle={
           <>
-            <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
+            <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
               {row.orgName}
             </Link>
             <span className="text-muted">, {row.borough}</span>
@@ -124,7 +124,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
             <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
               <h2 className="text-[15px] font-semibold text-ink">Audit timeline</h2>
               {detail.audit.length > recent.length ? (
-                <Link href={`/finance/submissions/${id}?tab=audit`} className="text-sm font-semibold text-navy-700 hover:underline">
+                <Link href={`/finance/submissions/${id}?tab=audit`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   All {detail.audit.length}
                 </Link>
               ) : null}

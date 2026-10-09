@@ -127,7 +127,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                     <TR key={rule.id}>
                       <TD className="whitespace-nowrap">{describeOffset(rule.offset_days)}</TD>
                       <TD className="whitespace-nowrap">
-                        <Link href={`${base}&date=${fires}`} className="font-semibold text-navy-700 hover:underline">
+                        <Link href={`${base}&date=${fires}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                           {formatDate(fires)}
                         </Link>
                       </TD>
@@ -181,11 +181,11 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                   {targets.map((t) => (
                     <TR key={`${t.rule_id}-${t.org_id}`} className="align-top">
                       <TD>
-                        <Link href={`/finance/organizations/${t.org_id}`} className="font-semibold text-navy-800 hover:underline">
+                        <Link href={`/finance/organizations/${t.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                           {t.org_name}
                         </Link>
                         <details className="mt-1">
-                          <summary className="cursor-pointer text-xs font-medium text-navy-700 hover:underline">Show message</summary>
+                          <summary className="cursor-pointer text-xs font-medium text-link underline underline-offset-2 hover:text-link-hover">Show message</summary>
                           <div className="mt-2 max-w-xl rounded-md border border-line bg-surface p-3 text-sm">
                             <p className="font-semibold">{t.subject}</p>
                             <p className="mt-2 whitespace-pre-wrap">{t.body}</p>

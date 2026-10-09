@@ -152,7 +152,7 @@ export function SubmittedCopy({
                   <span className="flex items-center gap-4 text-muted">
                     <span className="num">{formatBytes(file.bytes)}</span>
                     {files[file.path] ? (
-                      <a href={`/portal/reports/${submissionId}/files/${files[file.path]}`} className="no-print inline-flex items-center gap-1.5 font-semibold text-navy-800 hover:underline" aria-label={`Download ${file.filename}`}>
+                      <a href={`/portal/reports/${submissionId}/files/${files[file.path]}`} className="no-print inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover" aria-label={`Download ${file.filename}`}>
                         <Download className="h-4 w-4" aria-hidden="true" />
                         Download
                       </a>

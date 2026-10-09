@@ -109,7 +109,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
               rows.map((row) => (
                 <TR key={row.id}>
                   <TD>
-                    <Link href={`${base}/${row.id}`} className="font-semibold text-navy-700 hover:underline">
+                    <Link href={`${base}/${row.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {row.legal_name}
                     </Link>
                   </TD>

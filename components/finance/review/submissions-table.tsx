@@ -43,7 +43,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
         {rows.length === 0 ? (
           <EmptyRow colSpan={8}>
             No reports match these filters.{" "}
-            <Link href={emptyHref} className="font-semibold text-navy-700 hover:underline">
+            <Link href={emptyHref} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
               Clear filters
             </Link>
           </EmptyRow>
@@ -52,7 +52,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
             <TR key={row.assignmentId} className={row.bucket === "missing" ? "bg-bad-bg/40" : undefined}>
               <TD className="whitespace-nowrap">
                 {row.submissionId ? (
-                  <Link href={`/finance/submissions/${row.submissionId}`} className="num font-mono text-[13px] font-semibold text-navy-700 hover:underline">
+                  <Link href={`/finance/submissions/${row.submissionId}`} className="num font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     {row.referenceNo}
                   </Link>
                 ) : (
@@ -61,14 +61,14 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 {row.updatedAt ? <span className="block text-xs text-muted">Updated {formatDate(row.updatedAt)}</span> : null}
               </TD>
               <TD className="min-w-48">
-                <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
+                <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   {row.orgName}
                 </Link>
                 <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
                 <span className="block text-xs text-muted">{row.borough}</span>
               </TD>
               <TD className="min-w-40">
-                <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-navy-700 hover:underline">
+                <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-link underline underline-offset-2 hover:text-link-hover">
                   {row.initiativeName}
                 </Link>
                 <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>

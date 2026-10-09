@@ -138,7 +138,7 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
           {notable.length > 0 ? <FormTable rows={notable} to={to} groupNames={groupNames} grouped={grouped} /> : <p className="border-t border-line px-5 py-4 text-sm text-muted">Every form is copied unchanged. Nothing here needs a closer look.</p>}
           {formRows.length > notable.length ? (
             <details className="group border-t border-line">
-              <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-navy-700 hover:underline [&::-webkit-details-marker]:hidden">
+              <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover [&::-webkit-details-marker]:hidden">
                 <span className="group-open:hidden">Show all {formRows.length} forms</span>
                 <span className="hidden group-open:inline">Hide the full list</span>
               </summary>

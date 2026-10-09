@@ -66,7 +66,7 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
         </CardBody>
       </Card>
       <Card>
-        <CardHeader title={`${to} reporting periods`} description="Reminder rules for these periods can be set up next." actions={<Link href="/finance/reminders" className="text-sm font-semibold text-navy-800 hover:underline">Open reminders</Link>} />
+        <CardHeader title={`${to} reporting periods`} description="Reminder rules for these periods can be set up next." actions={<Link href="/finance/reminders" className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">Open reminders</Link>} />
         <Table>
           <THead>
             <tr>

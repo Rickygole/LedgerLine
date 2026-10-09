@@ -160,7 +160,7 @@ export function FilterBar({
           <Search className="h-4 w-4" aria-hidden="true" />
           Apply filters
         </Button>
-        <Link href={clearHref} className="text-sm font-semibold text-navy-700 hover:underline">
+        <Link href={clearHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
           Clear filters
         </Link>
       </div>

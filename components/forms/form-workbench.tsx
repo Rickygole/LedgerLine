@@ -387,7 +387,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
       )}
 
       <p className="mt-6 text-sm text-muted">
-        <Link href={`/finance/initiatives/${initiativeId}`} className="text-navy-800 hover:underline">
+        <Link href={`/finance/initiatives/${initiativeId}`} className="text-link underline underline-offset-2 hover:text-link-hover">
           Back to {initiativeName}
         </Link>
       </p>

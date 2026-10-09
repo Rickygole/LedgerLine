@@ -114,7 +114,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                           <ButtonLink href={resultsHref(p)} variant="secondary" size="sm">
                             <Play className="h-3.5 w-3.5" aria-hidden="true" /> Run
                           </ButtonLink>
-                          <Link href={`/finance/queries?${new URLSearchParams(p as Record<string, string>).toString()}`} className="text-sm font-semibold text-navy-800 hover:underline">
+                          <Link href={`/finance/queries?${new URLSearchParams(p as Record<string, string>).toString()}`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                             Edit
                           </Link>
                           <form action={deleteQuery}>

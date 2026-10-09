@@ -52,7 +52,7 @@ export function NeedsAttention({ items, overdue, overdueHref }: { items: Attenti
             {overdue.map((row) => (
               <li key={row.assignmentId} className="flex items-start justify-between gap-3 px-5 py-2">
                 <span className="min-w-0">
-                  <Link href={`/finance/organizations/${row.orgId}`} className="block truncate text-sm font-semibold text-navy-700 hover:underline">
+                  <Link href={`/finance/organizations/${row.orgId}`} className="block truncate text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     {row.orgName}
                   </Link>
                   <span className="block truncate text-xs text-muted">{row.initiativeName}</span>
@@ -62,7 +62,7 @@ export function NeedsAttention({ items, overdue, overdueHref }: { items: Attenti
             ))}
           </ol>
           <div className="border-t border-line px-5 py-3">
-            <Link href={overdueHref} className="text-sm font-semibold text-navy-700 hover:underline">
+            <Link href={overdueHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
               See every missing report
             </Link>
           </div>

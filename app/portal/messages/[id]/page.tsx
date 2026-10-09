@@ -61,7 +61,7 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
         </CardBody>
       </Card>
       <p className="mt-4 text-sm">
-        <Link href="/portal/messages" className="text-navy-800 hover:underline">
+        <Link href="/portal/messages" className="text-link underline underline-offset-2 hover:text-link-hover">
           Back to all messages
         </Link>
       </p>
