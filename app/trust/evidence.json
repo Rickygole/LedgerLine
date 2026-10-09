@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-10-09T16:59:49.871Z",
-  "commit": "8458eafd9df3190f84c727041c090801acf3311e",
+  "generatedAt": "2026-10-09T19:19:44.782Z",
+  "commit": "b590d8352e62c0ef0126c1e4ee15dc30748fcd6b",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 208,
-    "passed": 208,
+    "tests": 321,
+    "passed": 321,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 101,
-    "sql": 54,
+    "unit": 174,
+    "sql": 87,
     "eval": 29,
-    "e2e": 24
+    "e2e": 31
   },
   "summary": {
     "verified": {
-      "stories": 50,
+      "stories": 52,
       "rules": 20
     },
     "failing": {
@@ -27,7 +27,7 @@
       "rules": 0
     },
     "demonstrated": {
-      "stories": 5,
+      "stories": 3,
       "rules": 2
     },
     "planned": {
@@ -45,6 +45,30 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "award fields inherits the administering agency from the initiative",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "award fields requires a registration date for registered contracts and a contract number",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "award fields carries funding source and sponsors through a rollover",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "initiative names are unique within a fiscal year rejects a second initiative with the same name in the same year and allows it in another",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "an administrator creates a new initiative without a code change",
           "file": "tests/e2e/03-priya.spec.ts",
@@ -205,6 +229,24 @@
       "note": "The fiscal year rollover copies forms and assignments into the new year. Finance administrators run it.",
       "tests": [
         {
+          "title": "award fields inherits the administering agency from the initiative",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "award fields requires a registration date for registered contracts and a contract number",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "award fields carries funding source and sponsors through a rollover",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
@@ -296,6 +338,24 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "sessions can be revoked rejects a session after sign out and keeps other sessions",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "sessions can be revoked rejects every older session once the password changes",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "sessions can be revoked rejects a session for a deactivated account",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "finance administers its own users, each person has an account lets an administrator change a role and deactivate a user, and nobody else",
           "file": "tests/sql/workflow.test.ts",
@@ -398,6 +458,12 @@
         {
           "title": "a submitter starts the report the organization owes from the portal",
           "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "starting a report is a POST from a button and opens the new draft",
+          "file": "tests/e2e/05-access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -575,6 +641,24 @@
           "suite": "unit"
         },
         {
+          "title": "legacy Word and Excel files accepts .doc and .xls by name",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "legacy Word and Excel files still rejects other types",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "legacy file content checks is applied by contentLooksValid",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "several supporting documents of the allowed types attach to the report",
           "file": "tests/e2e/01-maria.spec.ts",
           "status": "passed",
@@ -587,10 +671,29 @@
       "area": "Documents",
       "summary": "Files up to 25 MB are accepted",
       "route": "/portal/reports",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
       "note": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "[D19] opening the start page does not create a draft has an assignment and period with no report yet",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "[D19] opening the start page does not create a draft looks up a report without writing anything",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "[D19] opening the start page does not create a draft creates the draft and writes a start audit event only when started",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-025",
@@ -772,6 +875,90 @@
       "note": null,
       "tests": [
         {
+          "title": "[D5] integer counts rejects negatives",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] integer counts accepts the bounds 0 and 10,000,000 and rejects one more",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] integer counts rejects values that would lose precision",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] currency amounts accepts up to 999,999,999.99 and rejects more",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] currency amounts rejects negatives and a third decimal place",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] currency amounts checks budget amounts in cents",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] percentages accepts 0 to 100 and rejects values outside it or with long fractions",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] submit re-validates bounds blocks a negative table cell",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] submit re-validates bounds blocks a negative budget line even when the total balances",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] submit re-validates bounds blocks a negative actual spent value",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] submit re-validates bounds states the line limit with the count",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[LL-ACTUAL] actual spent text keeps a blank actual as null and a typed one as a number",
+          "file": "tests/unit/report-budget-rows.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[LL-ACTUAL] actual spent text flags a third decimal place on either amount",
+          "file": "tests/unit/report-budget-rows.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[LL-ACTUAL] actual spent text caps an absurd amount so the save still goes through and submit blocks it",
+          "file": "tests/unit/report-budget-rows.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "types and lengths rejects a malformed EIN and phone with plain messages",
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
@@ -940,6 +1127,18 @@
       "note": null,
       "tests": [
         {
+          "title": "free-text limits are enforced in SQL rejects an oversized audit note and flag note",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "free-text limits are enforced in SQL rejects an oversized correction reason",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "error messages say exactly what to fix names the field, the problem and the amount to change",
           "file": "tests/unit/form-rules.test.ts",
           "status": "passed",
@@ -962,6 +1161,30 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "creating users lets an admin add a Finance user who cannot sign in until the password is set",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "creating users lets an admin add an organization submitter tied to an organization",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "creating users refuses analysts, viewers and organization users",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "creating users refuses duplicate emails, mismatched organizations, bad roles and bad emails",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "finance administers its own users, each person has an account lets an administrator change a role and deactivate a user, and nobody else",
           "file": "tests/sql/workflow.test.ts",
@@ -998,10 +1221,89 @@
       "area": "Administration",
       "summary": "Finance can trigger password resets",
       "route": "/finance/users",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
       "note": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "password reset tokens emails a link, stores only a hash, and sets the password once",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password reset tokens rejects an expired token",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password reset tokens makes the token last 30 minutes",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password reset tokens invalidates an earlier link when a newer one is issued",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password reset tokens refuses a hash that is not bcrypt and an unknown token",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password reset tokens lets only a finance admin send a reset",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password reset tokens does not let app_server read password hashes or tokens directly",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "new password rules requires at least 12 characters",
+          "file": "tests/unit/password.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "new password rules rejects the email address as the password in any case",
+          "file": "tests/unit/password.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "new password rules requires the confirmation to match",
+          "file": "tests/unit/password.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "new password rules rejects passwords longer than bcrypt can use",
+          "file": "tests/unit/password.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "reset token format accepts 64 hex characters only",
+          "file": "tests/unit/password.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "reset token format hashes to a stable sha256 hex digest",
+          "file": "tests/unit/password.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
     },
     {
       "id": "US-039",
@@ -1030,13 +1332,61 @@
       "note": null,
       "tests": [
         {
+          "title": "obligations follow the initiative fiscal year never pairs an initiative with a period from another fiscal year",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year gives an initiative created in FY27 only FY27 periods in the organization's portal list",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year keeps a new FY27 initiative out of FY26 Year-End reminders",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year does not change FY26 or FY27 obligations when a later year is rolled over",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year lets the same organization see FY26 and FY27 reports side by side without cross-year rows",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "dashboard buckets puts a past due assignment with no submission in missing",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "dashboard buckets puts a past due draft that fails required rules in incomplete",
+          "title": "dashboard buckets counts a past due draft that fails required rules as missing and flags it incomplete",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "dashboard buckets counts a past due draft that fails required rules as missing and flags it incomplete",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "dashboard buckets defines missing once: nothing submitted or a draft, past due",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "dashboard buckets defines missing once: nothing submitted or a draft, past due",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1066,6 +1416,30 @@
       "tests": [
         {
           "title": "filters matches organization name or EIN",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters finds a report by reference number, contract number or initiative",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters finds a report by reference number, contract number or initiative",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters filters by sponsoring Council Member, funding source and contract status",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters filters by sponsoring Council Member, funding source and contract status",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1251,6 +1625,12 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "workbook carries the award fields: funding source, Council Member, agency and contract",
+          "file": "tests/unit/finance-export.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "workbook round trips through xlsx and carries the export note",
           "file": "tests/unit/finance-export.test.ts",
@@ -1466,6 +1846,12 @@
       "note": "No application role can delete submissions, submitted revisions or audit events.",
       "tests": [
         {
+          "title": "files sent with a submitted revision stay available keeps the file row after the organization removes it from a returned report",
+          "file": "tests/sql/attachment-history.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "submitted data is kept and cannot be removed or edited by the organization denies deleting a submission, an answer or a budget line once the report is submitted",
           "file": "tests/sql/retention.test.ts",
           "status": "passed",
@@ -1635,6 +2021,48 @@
       "reason": null,
       "note": "Each fiscal year has a mid-year and a year-end reporting period.",
       "tests": [
+        {
+          "title": "obligations follow the initiative fiscal year never pairs an initiative with a period from another fiscal year",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year gives an initiative created in FY27 only FY27 periods in the organization's portal list",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year keeps a new FY27 initiative out of FY26 Year-End reminders",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year does not change FY26 or FY27 obligations when a later year is rolled over",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "obligations follow the initiative fiscal year lets the same organization see FY26 and FY27 reports side by side without cross-year rows",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Mid-Year and Year-End cover the fiscal year starts Year-End on the first day of the fiscal year and Mid-Year ends on December 31",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Mid-Year and Year-End cover the fiscal year creates cumulative Year-End periods when a year is rolled over",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
           "file": "tests/sql/lifecycle.test.ts",
@@ -1826,8 +2254,20 @@
           "suite": "sql"
         },
         {
+          "title": "password reset tokens does not let app_server read password hashes or tokens directly",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "a submitter cannot open another organization's report by its address",
           "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "pages are served with an enforced content security policy and no violations",
+          "file": "tests/e2e/05-access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1845,6 +2285,30 @@
         {
           "title": "a submitter signs in through the passcode gate with a personal account",
           "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a finance viewer signs in with the issued password and reaches the finance workspace",
+          "file": "tests/e2e/05-access.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "finance staff see the sidebar in labelled groups and submitters see their own links",
+          "file": "tests/e2e/05-access.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "signing out revokes the session so a copied cookie stops working",
+          "file": "tests/e2e/05-access.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "the ninth sign-in attempt for one email within 15 minutes is refused with a wait notice",
+          "file": "tests/e2e/05-access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1886,6 +2350,30 @@
         {
           "title": "uploads are limited to 25 MB per file refuses an empty file",
           "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit keeps the 25 MB cap and accepts a file exactly at it",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit accepts files between 10 and 25 MB",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit never says a file over the limit equals the limit",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit shows sizes with one decimal",
+          "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
@@ -2049,6 +2537,12 @@
           "suite": "sql"
         },
         {
+          "title": "files sent with a submitted revision stay available keeps the file row after the organization removes it from a returned report",
+          "file": "tests/sql/attachment-history.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "submitted data is kept and cannot be removed or edited by the organization denies deleting a submission, an answer or a budget line once the report is submitted",
           "file": "tests/sql/retention.test.ts",
           "status": "passed",
@@ -2093,6 +2587,30 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "required field messages read as plain instructions asks yes or no questions without folding them into a sentence",
+          "file": "tests/unit/required-message.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "required field messages read as plain instructions uses a verb that fits the field type",
+          "file": "tests/unit/required-message.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "required field messages read as plain instructions keeps proper nouns and acronyms intact",
+          "file": "tests/unit/required-message.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "required field messages read as plain instructions never ends with a question mark followed by a period",
+          "file": "tests/unit/required-message.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "required fields blocks every missing required field",
           "file": "tests/unit/validate.test.ts",
@@ -2141,8 +2659,44 @@
           "suite": "sql"
         },
         {
+          "title": "[D5] submit re-validates bounds blocks a negative table cell",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] submit re-validates bounds blocks a negative budget line even when the total balances",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] submit re-validates bounds blocks a negative actual spent value",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "[D5] submit re-validates bounds states the line limit with the count",
+          "file": "tests/unit/numeric-bounds.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "report budget issues blocks an unbalanced budget and files it under the budget section",
           "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "approved budget must still equal the award stays blocking when actual spent is entered and the approved total is short",
+          "file": "tests/unit/spend-variance.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "approved budget must still equal the award does not depend on actual spent when the approved total balances",
+          "file": "tests/unit/spend-variance.test.ts",
           "status": "passed",
           "suite": "unit"
         },
@@ -2169,6 +2723,12 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "actual spent shows a variance per line and a submitter must explain a large unspent balance",
+          "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         },
         {
           "title": "an unbalanced budget is refused with the amount, then submits once fixed",
@@ -2201,6 +2761,30 @@
         },
         {
           "title": "report EIN check does not add a second EIN issue for a malformed value",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "legal name and EIN are checked against the master list blocks a legal name that is not the master list name",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "legal name and EIN are checked against the master list ignores case, spacing and punctuation differences in the legal name",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "legal name and EIN are checked against the master list accepts the master list values",
+          "file": "tests/unit/report-issues.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "legal name and EIN are checked against the master list refuses a correction that sets a non-master EIN or name",
           "file": "tests/unit/report-issues.test.ts",
           "status": "passed",
           "suite": "unit"
