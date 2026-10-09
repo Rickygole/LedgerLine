@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { amountProblem, emptyRow, formatAmountText, isBlankRow, linesFromRows, newRowId, type BudgetRow } from "@/lib/report/budget-rows";
-import { formatCurrency, parseAmount, toCents } from "@/lib/rules/money";
+import { formatCurrency, parseAmount } from "@/lib/rules/money";
+import { balanceCopy } from "./balance";
 import { parseBudgetPaste } from "@/lib/rules/paste";
 import { budgetTotals } from "@/lib/rules/validate";
 
@@ -16,13 +17,6 @@ const cell =
   "block h-10 w-full rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-600 min-[720px]:rounded-none min-[720px]:border-0 min-[720px]:bg-transparent min-[720px]:hover:bg-navy-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
 
 type Toast = { tone: "ok" | "warn"; text: string };
-
-export function balanceCopy(total: number, award: number): { tone: "ok" | "warn" | "bad"; text: string } {
-  const diff = toCents(total) - toCents(award);
-  if (diff === 0) return { tone: "ok", text: `Balanced to award ${formatCurrency(award)}` };
-  if (diff < 0) return { tone: "warn", text: `${formatCurrency(-diff / 100)} under award` };
-  return { tone: "bad", text: `${formatCurrency(diff / 100)} over award` };
-}
 
 export function BudgetGrid({
   rows,

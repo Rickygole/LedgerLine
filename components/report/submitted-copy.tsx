@@ -5,7 +5,8 @@ import { formatDateTime } from "@/lib/dates";
 import { displayScalar, tableRows } from "@/lib/report/format";
 import { formatBytes } from "@/lib/report/upload-rules";
 import { formatCurrency } from "@/lib/rules/money";
-import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
+import { budgetTotals, isVisible } from "@/lib/rules/validate";
+import { balanceCopy } from "./balance";
 import type { FormDefinition } from "@/lib/rules/types";
 import type { Snapshot } from "@/lib/snapshot";
 import { PrintButton } from "./print-button";
@@ -36,7 +37,7 @@ export function SubmittedCopy({
   const { snapshot } = revision;
   const budget = snapshot.budget.map((line) => ({ ...line, rowId: String(line.position) }));
   const totals = budgetTotals(budget);
-  const balance = balanceMessage(totals.total, awardAmount);
+  const balance = balanceCopy(totals.total, awardAmount);
 
   return (
     <div className="space-y-6">
@@ -116,7 +117,7 @@ export function SubmittedCopy({
                     </tfoot>
                   </Table>
                 </div>
-                <p className="text-sm text-muted">{balance.message}</p>
+                <p className="num text-sm font-semibold text-ink">{balance.text}</p>
               </div>
             ) : (
               <dl className="space-y-5">
