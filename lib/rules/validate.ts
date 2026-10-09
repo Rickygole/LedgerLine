@@ -19,6 +19,14 @@ function isBlank(value: AnswerValue | undefined): boolean {
   return false;
 }
 
+export function isBlankRow(row: Record<string, string | number | null> | null | undefined, columns: Array<{ key: string }>): boolean {
+  if (!row) return true;
+  return columns.every((column) => {
+    const cell = row[column.key];
+    return cell === null || cell === undefined || String(cell).trim() === "";
+  });
+}
+
 export function isVisible(question: Question, answers: Answers): boolean {
   if (!question.visibleWhen) return true;
   const current = answers[question.visibleWhen.key];
@@ -93,7 +101,8 @@ function checkType(question: Question, value: AnswerValue): string | null {
 function questionIssues(question: Question, answers: Answers): Issue[] {
   const issues: Issue[] = [];
   const value = answers[question.key];
-  if (isBlank(value)) {
+  const tableAnswered = question.type === "table" && Array.isArray(value) && value.some((row) => !isBlankRow(row, question.columns ?? []));
+  if (isBlank(value) || (question.type === "table" && !tableAnswered)) {
     if (question.required) {
       issues.push({ field: question.key, ruleId: RULES.required, severity: "block", message: requiredMessage(question) });
     }
@@ -105,8 +114,22 @@ function questionIssues(question: Question, answers: Answers): Issue[] {
     if (question.maxRows && rows.length > question.maxRows) {
       issues.push({ field: question.key, ruleId: RULES.length, severity: "block", message: `${question.label} can have at most ${question.maxRows} rows.` });
     }
+    const columns = question.columns ?? [];
     rows.forEach((row, index) => {
-      for (const column of question.columns ?? []) {
+      if (isBlankRow(row, columns)) return;
+      const missing = columns.filter((column) => {
+        const cell = row[column.key];
+        return cell === null || cell === undefined || String(cell).trim() === "";
+      });
+      if (missing.length > 0) {
+        issues.push({
+          field: question.key,
+          ruleId: RULES.required,
+          severity: "block",
+          message: `${question.label}, row ${index + 1}: fill in ${missing.map((column) => column.label).join(" and ")}, or remove the row.`,
+        });
+      }
+      for (const column of columns) {
         if (column.type === "text") continue;
         const cell = row[column.key];
         if (cell === null || cell === undefined || String(cell).trim() === "") continue;

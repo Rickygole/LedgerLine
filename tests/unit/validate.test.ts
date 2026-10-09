@@ -134,3 +134,62 @@ describe("visibleAnswers", () => {
     expect(visibleAnswers(definition, { ...good, served_youth: "Yes", youth_count: "40" })).toEqual({ ...good, served_youth: "Yes", youth_count: "40" });
   });
 });
+
+describe("[BR-021][US-031] a required table needs a filled row", () => {
+  const tableForm: FormDefinition = {
+    title: "Table report",
+    budget: { enabled: false, mustEqualAward: false, maxLines: 10 },
+    sections: [
+      {
+        key: "youth",
+        title: "Youth",
+        kind: "questions",
+        questions: [
+          {
+            key: "ages",
+            label: "Participants under 18 by age group",
+            type: "table",
+            required: true,
+            scope: "initiative",
+            columns: [
+              { key: "age_group", label: "Age group", type: "text" },
+              { key: "count", label: "Participants", type: "integer" },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+  const run = (rows: Array<Record<string, string | number | null>> | undefined) =>
+    validateSubmission({ definition: tableForm, answers: rows === undefined ? {} : { ages: rows }, budget: [], awardAmount: 0 });
+
+  it("blocks a table with no rows", () => {
+    expect(run([])[0]?.message).toBe("Fill in the participants under 18 by age group table.");
+  });
+
+  it("blocks a table whose only row is empty", () => {
+    const issues = run([{ age_group: "", count: "" }]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toBe("Fill in the participants under 18 by age group table.");
+  });
+
+  it("blocks a table of several empty rows", () => {
+    expect(run([{ age_group: " ", count: null }, { age_group: "", count: "" }])).toHaveLength(1);
+  });
+
+  it("blocks a half filled row and names the missing cell", () => {
+    const issues = run([{ age_group: "5 to 9", count: "" }]);
+    expect(issues[0].message).toBe("Participants under 18 by age group, row 1: fill in Participants, or remove the row.");
+  });
+
+  it("ignores empty rows next to a complete row", () => {
+    expect(run([{ age_group: "5 to 9", count: "12" }, { age_group: "", count: "" }])).toEqual([]);
+  });
+
+  it("flags a half filled row even when the table is optional", () => {
+    const optional: FormDefinition = { ...tableForm, sections: [{ ...tableForm.sections[0], questions: [{ ...tableForm.sections[0].questions[0], required: false }] }] };
+    const issues = validateSubmission({ definition: optional, answers: { ages: [{ age_group: "x", count: "" }] }, budget: [], awardAmount: 0 });
+    expect(issues).toHaveLength(1);
+    expect(validateSubmission({ definition: optional, answers: { ages: [{ age_group: "", count: "" }] }, budget: [], awardAmount: 0 })).toEqual([]);
+  });
+});
