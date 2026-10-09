@@ -141,14 +141,14 @@ describe("[US-016][BR-009] an organization can start a report it owes", () => {
   it("creates a draft for its own assignment and cannot create one for another organization", async () => {
     const own = (
       await owner.query(
-        `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
+        `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
          WHERE a.org_id = $1 AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY') LIMIT 1`,
         [mariaOrg]
       )
     ).rows[0];
     const other = (
       await owner.query(
-        `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
+        `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
          WHERE a.org_id <> $1 LIMIT 1`,
         [mariaOrg]
       )

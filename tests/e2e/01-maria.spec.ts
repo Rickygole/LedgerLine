@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authFile, fillRequiredAnswers, openOverdueDraft, PEOPLE, setBudget, signIn } from "./support/app";
+import { authFile, fillRequiredAnswers, openOverdueDraft, PEOPLE, setBudget, signIn, SAVED_LABEL } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -54,7 +54,7 @@ test("[US-017][US-018] answers save automatically and are still there after relo
   await fillRequiredAnswers(page);
   await page.locator("#q-participants_target").fill("120");
   await page.locator("#q-sites_count").fill("3");
-  await expect(page.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
   await page.reload();
   await expect(page.locator("#q-participants_target")).toHaveValue("120");
   await expect(page.locator("#q-sites_count")).toHaveValue("3");
@@ -113,7 +113,7 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
   await page.getByLabel("Line 2 Approved budget").fill("25000");
   await page.getByLabel("Line 2 Approved budget").blur();
   await expect(page.getByText(/Balanced|equals the award/).first()).toBeVisible();
-  await expect(page.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Submit report" }).click();
   await page.waitForURL(/\/submitted$/);
   await expect(page.getByRole("heading", { name: "Report received" })).toBeVisible();

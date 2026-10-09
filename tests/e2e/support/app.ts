@@ -10,6 +10,8 @@ export const PEOPLE = {
   grace: "grace.chen@finance.example.gov",
 };
 
+export const SAVED_LABEL = /^Saved (\d{1,2}:\d{2} [AP]M|[A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M)/;
+
 export const AUTH_DIR = "reports/auth";
 
 export function authFile(who: keyof typeof PEOPLE): string {
@@ -93,7 +95,7 @@ export async function submitOverdueDraft(page: Page): Promise<string> {
     { category: "PS", description: "Mentor stipends", amount: "60000" },
     { category: "OTPS", description: "Program supplies", amount: "25000" },
   ]);
-  await expect(page.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Submit report" }).click();
   await page.waitForURL(/\/submitted$/);
   return id;

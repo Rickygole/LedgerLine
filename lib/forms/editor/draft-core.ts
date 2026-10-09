@@ -271,7 +271,7 @@ function columnType(label: string): ProposedColumn["type"] {
   const text = label.toLowerCase();
   if (/\bpercent(age)?\b|%/.test(text)) return "percent";
   if (/\b(amount|cost|dollars?|\$|funds?|revenue|spent|budget)\b/.test(text)) return "currency";
-  if (/\b(number|count|total|how many|sessions?|hours|participants?|clients|people|attendees|enrolled|served|trained|held|completed|seniors|youth|students|visits|meals)\b/.test(text)) return "integer";
+  if (/\b(number|count|total|how many|sessions?|hours|participants?|clients|people|attendees|enrolled|served|trained|held|completed|seniors|youth|students|visits|meals|made|loans?|events|workshops|referrals|meetings|classes)\b/.test(text)) return "integer";
   return "text";
 }
 
