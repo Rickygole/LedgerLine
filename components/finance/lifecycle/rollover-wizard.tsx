@@ -355,7 +355,7 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
           </CardBody>
         </Card>
       ) : null}
-      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-3 shadow-lg">
         <Link href={`/finance/rollover?from=${from}&to=${to}`} className={buttonClass("secondary", "md")}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
         </Link>

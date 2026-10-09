@@ -271,7 +271,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
               })}
             </ul>
 
-            <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-line bg-white/95 px-5 py-3 backdrop-blur">
+            <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-line bg-white px-5 py-3">
               <p className="text-sm text-muted" aria-live="polite">
                 {left > 0 ? `${left} still to review. ` : "Everything is reviewed. "}
                 <span className="num">{kept.length}</span> accepted.

@@ -126,7 +126,7 @@ export function BudgetGrid({
 
   return (
     <div id="budget-grid" tabIndex={-1} onPaste={onPaste} className="rounded-lg border border-line bg-white focus:outline-none">
-      <div className="sticky top-[3.75rem] z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-lg border-b border-line bg-white/95 px-3 py-2.5 backdrop-blur sm:px-4">
+      <div className="sticky top-[3.75rem] z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-lg border-b border-line bg-white px-3 py-2.5 sm:px-4">
         <div className="flex flex-wrap gap-2">
           <Button ref={addButton} variant="secondary" size="sm" onClick={addRow} disabled={atLimit}>
             <Plus className="h-4 w-4" aria-hidden="true" />

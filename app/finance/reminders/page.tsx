@@ -204,7 +204,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                 </tbody>
               </Table>
               {canEdit ? (
-                <CardBody className="sticky bottom-0 z-10 rounded-b-xl border-t border-line bg-white/95 backdrop-blur">
+                <CardBody className="sticky bottom-0 z-10 rounded-b-xl border-t border-line bg-white">
                   <SendNowForm period={period.id} date={date} today={today} count={targets.length} fresh={fresh} />
                 </CardBody>
               ) : null}
