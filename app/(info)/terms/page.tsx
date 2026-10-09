@@ -23,7 +23,7 @@ export default function TermsPage() {
         <li>When you submit a report you certify that it is accurate and complete. Check the answers and budget before you submit.</li>
         <li>A submitted report is kept as a permanent record. It cannot be deleted. If Finance asks for changes, you update and resubmit it, and both versions are kept.</li>
         <li>Finance may correct an answer during review. Every correction is saved as a new revision with the reason and the name of the person who made it.</li>
-        <li>Upload only documents that support the report. Files must be PDF, Word, Excel or CSV and no larger than 25 MB each, with no more than 20 files on one report.</li>
+        <li>Upload only documents that support the report. Files must be PDF, Word (.docx), Excel (.xlsx) or CSV, must not contain macros, and be no larger than 25 MB each, with no more than 20 files on one report.</li>
       </ul>
 
       <h2 id="acceptable-use">Acceptable use</h2>

@@ -123,7 +123,7 @@ export function Attachments({
       >
         <Paperclip className="mx-auto h-6 w-6 text-muted" aria-hidden="true" />
         <p className="mt-2 text-sm text-ink">Drag files here or choose them from your computer.</p>
-        <p className="mt-1 text-sm text-muted">PDF, Word, Excel or CSV. Up to 25 MB each.</p>
+        <p className="mt-1 text-sm text-muted">PDF, Word (.docx), Excel (.xlsx) or CSV. No macros. Up to 25 MB each.</p>
         <input ref={input} id="attachment-input" type="file" multiple accept={ACCEPT_ATTRIBUTE} className="sr-only" onChange={(event) => event.target.files && void handleFiles(event.target.files)} />
         <label
           htmlFor="attachment-input"

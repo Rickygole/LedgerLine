@@ -1,6 +1,6 @@
 import "server-only";
 import type { Tx } from "@/lib/db";
-import { callStructured, logAiAction, type AiMode } from "@/lib/ai/model";
+import { aiEnabled, callStructured, logAiAction, type AiMode } from "@/lib/ai/model";
 import { REPLAYS } from "@/lib/ai/replays";
 import {
   JSON_SCHEMA,
@@ -60,9 +60,10 @@ export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; p
   let model: string | null = null;
   let usage: { tokensIn?: number; tokensOut?: number; costUsd?: number; latencyMs?: number } = {};
 
+  const switchOn = await aiEnabled(tx);
   let live: Awaited<ReturnType<typeof callStructured>> = null;
   try {
-    live = await callStructured({
+    if (switchOn) live = await callStructured({
       feature: "form_draft",
       system: SYSTEM_PROMPT,
       user: `Template text:\n${quotedData(paragraphs)}`,
@@ -87,7 +88,7 @@ export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; p
   }
 
   if (mode !== "live") {
-    const replay = REPLAYS[inputSha256];
+    const replay = switchOn ? REPLAYS[inputSha256] : undefined;
     if (replay) {
       mode = "replay";
       proposals = replay.output.questions;
