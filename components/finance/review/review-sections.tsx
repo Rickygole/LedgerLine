@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { Download, Sparkles } from "lucide-react";
+import { Download } from "lucide-react";
+import { AuditTimeline } from "@/components/finance/review/audit-timeline";
 import { FlagResolve } from "@/components/finance/review/flag-resolve";
-import { Badge, FlagBadge } from "@/components/ui/status-badge";
+import { FlagBadge } from "@/components/ui/status-badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
-import { actionInWords, statusInWords } from "@/lib/finance/review/audit-words";
 import type { AttachmentRow, AuditRecord, FlagRecord, RevisionRecord, SubmissionDetail } from "@/lib/finance/review/detail";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
-import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
+import { budgetTotals, isVisible } from "@/lib/rules/validate";
+import { balanceCopy } from "@/components/report/balance";
 import { formatCurrency } from "@/lib/rules/money";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
 
@@ -50,31 +51,72 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
   return String(value);
 }
 
+type Correction = { by: string; original: AnswerValue | undefined; at: string };
+
+function correctionsFrom(detail: SubmissionDetail): Record<string, Correction> {
+  const map: Record<string, Correction> = {};
+  for (const event of detail.audit) {
+    if (event.action !== "correction") continue;
+    const key = String(event.after?.question_key ?? "");
+    if (!key) continue;
+    const original = map[key]?.original ?? (event.before?.value as AnswerValue | undefined);
+    map[key] = { by: event.actor ?? "Finance", original, at: event.at };
+  }
+  return map;
+}
+
 export function ReportTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
   const definition = row.definition as FormDefinition;
+  const sections = definition.sections.filter((section) => section.kind === "questions");
+  const corrections = correctionsFrom(detail);
   return (
     <div className="space-y-5">
-      {definition.sections
-        .filter((section) => section.kind === "questions")
-        .map((section) => {
-          const questions = section.questions.filter((q) => isVisible(q, row.answers));
-          return (
-            <Card key={section.key}>
-              <CardHeader title={section.title} description={section.description} />
-              <CardBody>
-                <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-                  {questions.map((q) => (
+      <nav aria-label="Jump to a section" className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
+        <span className="mr-1 text-muted">Jump to</span>
+        {sections.map((section) => (
+          <a key={section.key} href={`#review-${section.key}`} className="rounded-md px-2 py-1 font-medium text-navy-700 hover:bg-navy-50 hover:underline">
+            {section.title}
+          </a>
+        ))}
+        <Link href={`/finance/submissions/${row.submissionId}?tab=budget`} className="rounded-md px-2 py-1 font-medium text-navy-700 hover:bg-navy-50 hover:underline">
+          Budget
+        </Link>
+      </nav>
+      {sections.map((section) => {
+        const questions = section.questions.filter((q) => isVisible(q, row.answers));
+        return (
+          <Card key={section.key} id={`review-${section.key}`} className="scroll-mt-4">
+            <CardHeader title={section.title} description={section.description} />
+            <CardBody>
+              <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+                {questions.map((q) => {
+                  const fix = corrections[q.key];
+                  return (
                     <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "md:col-span-2" : ""}>
-                      <dt className="text-xs font-semibold uppercase tracking-wide text-muted">{q.label}</dt>
-                      <dd className="mt-1 text-sm text-ink">{formatValue(q, row.answers[q.key])}</dd>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">{q.label}</dt>
+                      <dd className="mt-1 text-sm text-ink">
+                        {formatValue(q, row.answers[q.key])}
+                        {fix ? (
+                          <span className="mt-1.5 block text-xs text-muted">
+                            <span className="font-semibold text-ink">Corrected by {fix.by}</span>
+                            {fix.original !== undefined && fix.original !== null && fix.original !== "" ? (
+                              <>
+                                {". Was "}
+                                <del>{String(fix.original)}</del>
+                              </>
+                            ) : ". Was blank"}
+                          </span>
+                        ) : null}
+                      </dd>
                     </div>
-                  ))}
-                </dl>
-              </CardBody>
-            </Card>
-          );
-        })}
+                  );
+                })}
+              </dl>
+            </CardBody>
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -82,7 +124,7 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
 export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
   const totals = budgetTotals(row.budget);
-  const balance = balanceMessage(totals.total, row.award);
+  const balance = balanceCopy(totals.total, row.award);
   return (
     <Card>
       <CardHeader title="Budget" description="Personnel services (PS) and other than personnel services (OTPS) lines as reported." />
@@ -102,7 +144,7 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
             row.budget.map((line) => (
               <TR key={line.rowId}>
                 <TD align="right">{line.position}</TD>
-                <TD>{line.category}</TD>
+                <TD className="whitespace-nowrap">{line.category}</TD>
                 <TD>{line.description || <span className="text-muted">No description</span>}</TD>
                 <TD align="right">{formatCurrency(line.amount)}</TD>
               </TR>
@@ -129,9 +171,11 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
         </tfoot>
       </Table>
       <CardBody>
-        <p role="status" className={balance.balanced ? "text-sm font-semibold text-ok" : "text-sm font-semibold text-bad"}>
-          {row.budget.length === 0 ? "No budget has been entered yet." : balance.message}
-        </p>
+        {row.budget.length === 0 ? (
+          <p className="text-sm text-muted">No budget has been entered yet.</p>
+        ) : (
+          <p className={`num inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset ${balance.tone === "ok" ? "bg-ok-bg text-ok ring-ok/25" : balance.tone === "warn" ? "bg-warn-bg text-warn ring-warn/30" : "bg-bad-bg text-bad ring-bad/25"}`}>{balance.text}</p>
+        )}
       </CardBody>
     </Card>
   );
@@ -244,46 +288,10 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
 export function AuditTab({ audit, labels }: { audit: AuditRecord[]; labels: Record<string, string> }) {
   return (
     <Card>
-      <CardHeader title="Audit timeline" description="Every recorded action on this report, oldest first." />
-      {audit.length === 0 ? (
-        <p className="px-5 py-8 text-sm text-muted">No actions have been recorded.</p>
-      ) : (
-        <ol className="divide-y divide-line">
-          {audit.map((event) => {
-            const beforeStatus = statusInWords(event.before?.status);
-            const afterStatus = statusInWords(event.after?.status);
-            const isCorrection = event.action === "correction";
-            const key = isCorrection ? String(event.after?.question_key ?? "") : "";
-            return (
-              <li key={event.id} className="px-5 py-4 text-sm">
-                <p className="flex flex-wrap items-center gap-2 text-ink">
-                  <span className="font-semibold">{event.actor ?? "System"}</span>
-                  <span>{actionInWords(event.action)}</span>
-                  {event.aiActionId ? (
-                    <Badge tone="info" icon={Sparkles}>
-                      AI drafted, sent by {event.actor ?? "a reviewer"}
-                    </Badge>
-                  ) : null}
-                  <time dateTime={event.at} className="text-muted">
-                    {formatDateTime(event.at)}
-                  </time>
-                </p>
-                {beforeStatus && afterStatus && beforeStatus !== afterStatus ? (
-                  <p className="mt-1 text-muted">
-                    Status changed from <span className="font-semibold text-ink">{beforeStatus}</span> to <span className="font-semibold text-ink">{afterStatus}</span>
-                  </p>
-                ) : null}
-                {isCorrection ? (
-                  <p className="mt-1 text-muted">
-                    {labels[key] ?? key}: <del className="text-bad">{String(event.before?.value ?? "blank")}</del> <ins className="font-semibold text-ok no-underline">{String(event.after?.value ?? "blank")}</ins>
-                  </p>
-                ) : null}
-                {event.note ? <p className="mt-1.5 whitespace-pre-wrap rounded-md bg-surface px-3 py-2 text-ink">{event.note}</p> : null}
-              </li>
-            );
-          })}
-        </ol>
-      )}
+      <CardHeader title="Audit timeline" description="Every recorded action on this report, oldest first. Entries cannot be changed or deleted." />
+      <CardBody className="py-5">
+        {audit.length === 0 ? <p className="py-8 text-center text-sm text-muted">No actions have been recorded.</p> : <AuditTimeline events={audit} labels={labels} />}
+      </CardBody>
     </Card>
   );
 }
@@ -338,18 +346,21 @@ export function TabNav({ id, current, counts }: { id: string; current: string; c
     ["revisions", "Revisions"],
   ];
   return (
-    <nav aria-label="Report sections" className="mb-4 flex gap-1 overflow-x-auto border-b border-line">
-      {tabs.map(([key, label]) => (
-        <Link
-          key={key}
-          href={`/finance/submissions/${id}?tab=${key}`}
-          aria-current={current === key ? "page" : undefined}
-          className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium ${current === key ? "border-navy-800 text-navy-900" : "border-transparent text-muted hover:text-ink"}`}
-        >
-          {label}
-          {counts[key] !== undefined ? <span className="num ml-1.5 rounded-full bg-surface px-1.5 text-xs">{counts[key]}</span> : null}
-        </Link>
-      ))}
+    <nav aria-label="Report sections" className="-mb-px flex gap-1 overflow-x-auto">
+      {tabs.map(([key, label]) => {
+        const active = current === key;
+        return (
+          <Link
+            key={key}
+            href={`/finance/submissions/${id}?tab=${key}`}
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors ${active ? "border-navy-800 font-semibold text-navy-900" : "border-transparent text-muted hover:border-line-strong hover:text-ink"}`}
+          >
+            {label}
+            {counts[key] !== undefined ? <span className={`num rounded-full px-1.5 text-xs font-semibold ${active ? "bg-navy-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
