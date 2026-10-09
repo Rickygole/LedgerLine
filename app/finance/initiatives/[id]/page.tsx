@@ -89,7 +89,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             ) : (
               funded.map((f) => (
                 <TR key={f.assignment_id}>
-                  <TD className="min-w-[14rem]">
+                  <TD className="min-w-[12rem]">
                     <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {f.legal_name}
                     </Link>
