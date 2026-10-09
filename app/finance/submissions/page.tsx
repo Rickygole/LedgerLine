@@ -86,7 +86,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         <Pagination page={paged.page} pages={paged.pages} from={paged.from} to={paged.to} total={paged.total} hrefFor={(p) => hrefWith(base, filters, { page: p }, { page: true })} />
       </Card>
       <p className="mt-3 text-xs text-muted">
-        <span className="num">{matched.length}</span> {matched.length === 1 ? "row matches" : "rows match"}. Exports include the {withSubmission} {withSubmission === 1 ? "report" : "reports"} in these results that have been started. Synthetic demo data.
+        <span className="num">{matched.length}</span> {matched.length === 1 ? "row matches" : "rows match"}. Exports include the {withSubmission} {withSubmission === 1 ? "report" : "reports"} in these results that have been started.
       </p>
     </>
   );

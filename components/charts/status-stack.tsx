@@ -61,6 +61,7 @@ export function StatusStackChart({ title, description, dimension, data, periodLa
       title={title}
       description={description}
       className={className}
+      source={`Source: LedgerLine reporting data, ${periodLabel}`}
       table={
         <table className="w-full min-w-[36rem] text-left text-sm">
           <caption className="sr-only">

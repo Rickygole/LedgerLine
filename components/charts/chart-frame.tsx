@@ -41,7 +41,7 @@ export function ChartLegend({ totals, className }: { totals: Record<Bucket, numb
   );
 }
 
-export function ChartFrame({ title, description, children, table, className }: { title: string; description: string; children: React.ReactNode; table: React.ReactNode; className?: string }) {
+export function ChartFrame({ title, description, children, table, source, className }: { title: string; description: string; children: React.ReactNode; table: React.ReactNode; source: string; className?: string }) {
   return (
     <figure className={cn("flex min-w-0 flex-col rounded-xl border border-line bg-white shadow-card", className)}>
       <div className="border-b border-line px-5 py-4">
@@ -57,7 +57,7 @@ export function ChartFrame({ title, description, children, table, className }: {
         </summary>
         <div className="mt-3 overflow-x-auto rounded-md border border-line">{table}</div>
       </details>
-      <figcaption className="px-5 pb-4 pt-3 text-xs text-muted">Synthetic demo data. Not NYC Council records.</figcaption>
+      <figcaption className="px-5 pb-4 pt-3 text-xs text-muted">{source}</figcaption>
     </figure>
   );
 }
