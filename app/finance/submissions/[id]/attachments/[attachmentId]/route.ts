@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { FINANCE_ROLES, getCurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
+import { contentDisposition } from "@/lib/report/upload-rules";
 import { getFile } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -22,11 +23,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   try {
     const body = await getFile(attachment.path);
-    const safeName = attachment.filename.replace(/[^\w.\- ]+/g, "_");
     return new NextResponse(new Uint8Array(body), {
       headers: {
         "Content-Type": attachment.mime,
-        "Content-Disposition": `attachment; filename="${safeName}"`,
+        "Content-Disposition": contentDisposition(attachment.filename),
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
       },

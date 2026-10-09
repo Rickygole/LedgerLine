@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
+import { contentDisposition } from "@/lib/report/upload-rules";
 import { getFile } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function safeName(name: string): string {
-  return name.replace(/["\\\r\n]/g, "_");
-}
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string; attachmentId: string }> }) {
   const { id, attachmentId } = await params;
@@ -30,7 +27,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       headers: {
         "content-type": row.mime,
         "content-length": String(body.length),
-        "content-disposition": `attachment; filename="${safeName(row.filename)}"`,
+        "content-disposition": contentDisposition(row.filename),
         "cache-control": "private, no-store",
       },
     });
