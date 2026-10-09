@@ -1,4 +1,5 @@
 import { amountBoundsProblem, numericProblem } from "./bounds";
+import { personNameProblem } from "./person-name";
 import { formatCurrency, sumAmounts, toCents } from "./money";
 import type { AnswerValue, Answers, BudgetLine, FormDefinition, Issue, Question, ValidationInput } from "./types";
 
@@ -152,6 +153,13 @@ function questionIssues(question: Question, answers: Answers): Issue[] {
   }
 
   const text = String(value);
+  if (question.key === "contact_name") {
+    const problem = personNameProblem(text, "contact name");
+    if (problem) {
+      issues.push({ field: question.key, ruleId: RULES.type, severity: "block", message: problem });
+      return issues;
+    }
+  }
   if (question.maxLength && text.length > question.maxLength) {
     issues.push({ field: question.key, ruleId: RULES.length, severity: "block", message: `${question.label} must be ${question.maxLength} characters or fewer (now ${text.length}).` });
   }
