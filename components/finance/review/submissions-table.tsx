@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { DueBadge, FlagBadge, StateBadge } from "@/components/ui/status-badge";
+import { FlagBadge, StateBadge } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
-import { formatDateTime } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
@@ -9,7 +9,11 @@ import type { ReportRow } from "@/lib/finance/review/types";
 
 function dueCell(row: ReportRow) {
   if (row.status === null || row.status === "draft" || row.status === "returned") {
-    return row.daysPastDue > -14 ? <DueBadge daysPastDue={row.daysPastDue} /> : <span className="text-muted">Due in {Math.abs(row.daysPastDue)} days</span>;
+    const days = Math.abs(row.daysPastDue);
+    const unit = days === 1 ? "day" : "days";
+    if (row.daysPastDue > 0) return <span className="font-semibold text-bad">{days} {unit} past due</span>;
+    if (row.daysPastDue === 0) return <span className="font-semibold text-warn">Due today</span>;
+    return <span className={row.daysPastDue > -14 ? "font-semibold text-warn" : "text-muted"}>Due in {days} {unit}</span>;
   }
   if (row.submittedAt && row.daysPastDue > 0) {
     const late = Math.round((Date.parse(row.submittedAt) - Date.parse(`${row.dueOn}T23:59:59-04:00`)) / 86_400_000);
@@ -30,14 +34,13 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
           <TH>Borough</TH>
           <TH align="right">Award</TH>
           <TH>State</TH>
-          <TH>Timing</TH>
           <TH>Flags</TH>
-          <TH>Last activity</TH>
+          <TH>Updated</TH>
         </tr>
       </THead>
       <tbody>
         {rows.length === 0 ? (
-          <EmptyRow colSpan={10}>
+          <EmptyRow colSpan={9}>
             No reports match these filters.{" "}
             <Link href={emptyHref} className="font-semibold text-navy-700 hover:underline">
               Clear filters
@@ -45,40 +48,40 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
           </EmptyRow>
         ) : (
           rows.map((row) => (
-            <TR key={row.assignmentId}>
+            <TR key={row.assignmentId} className={row.bucket === "missing" ? "bg-bad-bg/40" : undefined}>
               <TD className="whitespace-nowrap">
                 {row.submissionId ? (
-                  <Link href={`/finance/submissions/${row.submissionId}`} className="num font-semibold text-navy-700 hover:underline">
+                  <Link href={`/finance/submissions/${row.submissionId}`} className="num font-mono text-[13px] font-semibold text-navy-700 hover:underline">
                     {row.referenceNo}
                   </Link>
                 ) : (
-                  <span className="text-muted">Not started</span>
+                  <span className="text-[13px] text-muted">Not started</span>
                 )}
               </TD>
               <TD className="min-w-48">
-                <Link href={`/finance/organizations/${row.orgId}`} className="font-medium text-ink hover:text-navy-700 hover:underline">
+                <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
                   {row.orgName}
                 </Link>
               </TD>
-              <TD className="num whitespace-nowrap">{row.ein}</TD>
+              <TD className="num whitespace-nowrap font-mono text-[13px] text-muted">{row.ein}</TD>
               <TD className="min-w-48">
                 <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-navy-700 hover:underline">
                   {row.initiativeName}
                 </Link>
                 <span className="block text-xs text-muted">{row.category}</span>
               </TD>
-              <TD>{row.borough}</TD>
+              <TD className="whitespace-nowrap">{row.borough}</TD>
               <TD align="right">{formatCurrency(row.award)}</TD>
-              <TD>
+              <TD className="whitespace-nowrap">
                 <StateBadge state={reportState(row.status, row.dueOn)} />
+                <span className="mt-1 block text-xs">{dueCell(row)}</span>
               </TD>
-              <TD className="whitespace-nowrap">{dueCell(row)}</TD>
               <TD>
                 <div className="flex flex-wrap gap-1">
                   {row.flags.length === 0 ? <span className="text-muted">None</span> : row.flags.map((flag) => <FlagBadge key={flag.reason} label={FLAG_LABEL[flag.reason]} />)}
                 </div>
               </TD>
-              <TD className="whitespace-nowrap text-muted">{row.updatedAt ? formatDateTime(row.updatedAt) : "No activity"}</TD>
+              <TD className="whitespace-nowrap text-muted">{row.updatedAt ? formatDate(row.updatedAt) : "None"}</TD>
             </TR>
           ))
         )}
