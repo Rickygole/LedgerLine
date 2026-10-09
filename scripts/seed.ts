@@ -159,10 +159,20 @@ async function reset(client: Client, scene: string) {
   await client.query("INSERT INTO demo_reset (scene) VALUES ($1)", [scene]);
 }
 
+function isLocalDatabase(url: string): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  try {
+    return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export async function seed(client: Client, options: { lateDraft: "empty" | "half" } = { lateDraft: "half" }) {
-  const password = process.env.PERSONA_PASSWORD ?? "ledgerline-demo";
-  if (!process.env.PERSONA_PASSWORD && !String(process.env.DB_OWNER_URL ?? "").includes("localhost")) {
-    throw new Error("Set PERSONA_PASSWORD before seeding a hosted database");
+  const fallbackPassword = "ledgerline-demo";
+  const password = process.env.PERSONA_PASSWORD ?? fallbackPassword;
+  if (password === fallbackPassword && !isLocalDatabase(String(process.env.DB_OWNER_URL ?? ""))) {
+    throw new Error("Set PERSONA_PASSWORD to something other than the default before seeding a hosted database");
   }
   const hash = await bcrypt.hash(password, 10);
 
