@@ -5,11 +5,10 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isoDate, isUuid } from "@/lib/finance/admin/params";
+import { todayInNewYork } from "@/lib/dates";
 
 export type ReminderState = { ok?: string; error?: string; fieldErrors?: Record<string, string> } | undefined;
-
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function saveRule(_prev: ReminderState, formData: FormData): Promise<ReminderState> {
   const admin = await requireUser(["finance_admin"]);
@@ -90,7 +89,8 @@ export async function sendNow(_prev: ReminderState, formData: FormData): Promise
   const admin = await requireUser(["finance_admin"]);
   const period = String(formData.get("period") ?? "");
   const date = String(formData.get("date") ?? "");
-  if (!DATE.test(date)) return { error: "Choose a valid date." };
+  if (!isoDate(date)) return { error: "Choose a real calendar date." };
+  if (date !== todayInNewYork()) return { error: "Reminders can only be sent for today. Past due notices for another date would reach organizations with the wrong timing." };
   try {
     const queued = await withClaims(admin.id, async (tx) => (await tx.one<{ n: number }>("SELECT app.queue_reminders($1, $2::date) AS n", [period, date]))?.n ?? 0);
     revalidatePath("/finance/outbox");

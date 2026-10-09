@@ -101,18 +101,19 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
   );
 }
 
-export function SendNowForm({ period, date, count, fresh }: { period: string; date: string; count: number; fresh: number }) {
+export function SendNowForm({ period, date, today, count, fresh }: { period: string; date: string; today: string; count: number; fresh: number }) {
+  const isToday = date === today;
   const [state, action, pending] = useActionState<ReminderState, FormData>(sendNow, undefined);
   return (
     <form action={action} className="flex flex-wrap items-center gap-3">
       <input type="hidden" name="period" value={period} />
       <input type="hidden" name="date" value={date} />
-      <Button type="submit" disabled={pending || fresh === 0}>
+      <Button type="submit" disabled={pending || fresh === 0 || !isToday}>
         <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Sending" : "Send now"}
       </Button>
       <span className="text-sm text-muted">
         <Mail className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-        {fresh} of {count} will be added to the outbox
+        {isToday ? `${fresh} of ${count} will be added to the outbox` : "Send now works for today only. This is a preview of another date."}
       </span>
       <Status state={state} />
     </form>
