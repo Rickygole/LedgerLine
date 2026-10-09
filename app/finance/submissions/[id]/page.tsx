@@ -54,7 +54,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     }
   }
 
-  const openFlagCount = detail.flags.filter((f) => f.status === "open").length;
+  const flagCount = row.flags.length;
   const late = row.status === "draft" || row.status === "returned" ? row.daysPastDue : 0;
 
   const state = <StateBadge state={reportState(row.status, row.dueOn)} />;
@@ -83,7 +83,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           <span key="rev" className="num whitespace-nowrap">Revision {row.revision}</span>,
           <span key="period" className="whitespace-nowrap">{detail.periodLabel}</span>,
         ]}
-        tabs={<TabNav id={id} current={tab} counts={{ attachments: detail.attachments.length, flags: openFlagCount, audit: detail.audit.length, revisions: detail.revisions.length }} />}
+        tabs={<TabNav id={id} current={tab} counts={{ attachments: detail.attachments.length, flags: flagCount, audit: detail.audit.length, revisions: detail.revisions.length }} />}
       >
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-5 py-4 text-sm sm:px-6 md:grid-cols-4">
           {[

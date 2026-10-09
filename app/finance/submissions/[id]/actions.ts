@@ -158,10 +158,15 @@ export async function addFlagAction(_prev: ActionResult | undefined, formData: F
   if (!note) return failed("Add a note that says why this report is flagged.");
   if (note.length > 1000) return failed("Shorten the note to 1,000 characters or fewer.");
   try {
-    await withClaims(user.id, async (tx) => {
+    const refused = await withClaims(user.id, async (tx) => {
+      const current = await tx.one<{ status: string }>("SELECT status FROM submission WHERE id = $1", [id]);
+      if (!current) return "That report could not be found.";
+      if (current.status === "draft") return "This report has not been submitted yet, so it cannot be flagged.";
       const flag = await tx.one<{ id: string }>("INSERT INTO flag (submission_id, kind, source, note, created_by) VALUES ($1, 'manual', 'user', $2, app.uid()) RETURNING id", [id, note]);
       await tx.query("SELECT app.write_audit('submission', $1, 'flag_add', $2, NULL, $3::jsonb, NULL)", [id, note, JSON.stringify({ flag_id: flag?.id, kind: "manual" })]);
+      return null;
     });
+    if (refused) return failed(refused);
   } catch (error) {
     return failed(plainError(error));
   }

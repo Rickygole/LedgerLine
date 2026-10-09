@@ -77,7 +77,8 @@ export function RequestUpdate({ submissionId, lockVersion, concerns }: { submiss
   }
 
   const aiOff = draft !== null && draft.aiActionId === null;
-  const source = draft ? (draft.mode === "live" ? "Live model" : aiOff ? "Template. The AI switch is off" : "Rule-based fallback") : "";
+  const template = draft !== null && draft.mode !== "live";
+  const source = draft ? (draft.mode === "live" ? "Live model" : aiOff ? "Template. The AI switch is off" : "Template from the report rules. No model was used") : "";
 
   return (
     <div className="space-y-4 rounded-lg border border-line bg-surface/60 p-3">
@@ -108,7 +109,7 @@ export function RequestUpdate({ submissionId, lockVersion, concerns }: { submiss
       {draft ? (
         <section aria-label="Suggested note" className="rounded-lg border border-dashed border-[#c9b8ef] bg-white p-3">
           <div className="flex flex-wrap items-center gap-2">
-            {aiOff ? <Badge>Template</Badge> : <AiDraftBadge />}
+            {template ? <Badge>Template</Badge> : <AiDraftBadge />}
             <span className="text-xs text-muted">{source}</span>
           </div>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink">{draft.text}</p>
@@ -156,7 +157,7 @@ export function RequestUpdate({ submissionId, lockVersion, concerns }: { submiss
           aria-describedby={["return-note-hint", error ? "return-note-error" : null].filter(Boolean).join(" ")}
           aria-invalid={error && !isStale(error) ? true : undefined}
         />
-        {usedDraft ? <p className="mt-1 text-xs text-muted">Started from the AI draft. Your name is recorded as the sender.</p> : null}
+        {usedDraft ? <p className="mt-1 text-xs text-muted">{template ? "Started from the template." : "Started from the AI draft."} Your name is recorded as the sender.</p> : null}
         {error && isStale(error) ? <StaleNotice /> : <FieldError id="return-note-error">{error}</FieldError>}
       </div>
 

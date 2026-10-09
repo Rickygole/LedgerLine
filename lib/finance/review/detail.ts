@@ -17,6 +17,7 @@ export type AuditRecord = {
   before: Record<string, unknown> | null;
   after: Record<string, unknown> | null;
   aiActionId: string | null;
+  aiMode: string | null;
 };
 
 export type RevisionFile = { path: string; filename: string; bytes: number };
@@ -98,9 +99,9 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
        FROM attachment t LEFT JOIN app_user u ON u.id = t.uploaded_by WHERE t.submission_id = $1 AND t.removed_at IS NULL ORDER BY t.created_at`,
       [id]
     );
-  const auditRows = await tx.query<{ id: string; at: string; actor: string | null; action: string; note: string | null; before: Record<string, unknown> | null; after: Record<string, unknown> | null; ai_action_id: string | null }>(
-      `SELECT e.id::text AS id, ${ISO("e.at")} AS at, u.full_name AS actor, e.action, e.note, e.before, e.after, e.ai_action_id
-       FROM audit_event e LEFT JOIN app_user u ON u.id = e.actor_id
+  const auditRows = await tx.query<{ id: string; at: string; actor: string | null; action: string; note: string | null; before: Record<string, unknown> | null; after: Record<string, unknown> | null; ai_action_id: string | null; ai_mode: string | null }>(
+      `SELECT e.id::text AS id, ${ISO("e.at")} AS at, u.full_name AS actor, e.action, e.note, e.before, e.after, e.ai_action_id, ai.mode AS ai_mode
+       FROM audit_event e LEFT JOIN app_user u ON u.id = e.actor_id LEFT JOIN ai_action ai ON ai.id = e.ai_action_id
        WHERE e.entity = 'submission' AND e.entity_id = $1 ORDER BY e.at, e.id`,
       [id]
     );
@@ -157,7 +158,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     primaryContact: contact ? { name: contact.full_name, email: contact.email } : null,
     attachments: attachmentRows.map((a) => ({ id: a.id, filename: a.filename, bytes: Number(a.bytes), mime: a.mime, createdAt: a.created_at, uploadedBy: a.uploaded_by })),
     flags: flagRows.map((f) => ({ id: f.id, kind: f.kind, source: f.source, note: f.note, status: f.status, createdAt: f.created_at, createdBy: f.created_by, resolvedAt: f.resolved_at, resolvedBy: f.resolved_by })),
-    audit: auditRows.map((e) => ({ id: Number(e.id), at: e.at, actor: e.actor, action: e.action, note: e.note, before: e.before, after: e.after, aiActionId: e.ai_action_id })),
+    audit: auditRows.map((e) => ({ id: Number(e.id), at: e.at, actor: e.actor, action: e.action, note: e.note, before: e.before, after: e.after, aiActionId: e.ai_action_id, aiMode: e.ai_mode })),
     certification: certified?.certification ?? null,
     fileIds: Object.fromEntries(allFiles.map((f) => [f.path, f.id])),
     revisions: revisionRows.map((r) => ({ id: Number(r.id), revision: r.revision, kind: r.kind, actor: r.actor, reason: r.reason, createdAt: r.created_at, sha256: r.sha256, files: r.files ?? [] })),

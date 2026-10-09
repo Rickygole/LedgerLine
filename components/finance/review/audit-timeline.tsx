@@ -1,4 +1,4 @@
-import { AiDraftBadge } from "@/components/ui/status-badge";
+import { AiDraftBadge, Badge } from "@/components/ui/status-badge";
 import { formatDateTime } from "@/lib/dates";
 import { actionInWords, statusInWords } from "@/lib/finance/review/audit-words";
 import type { AuditRecord } from "@/lib/finance/review/detail";
@@ -33,7 +33,9 @@ export function AuditTimeline({ events, labels, compact = false }: { events: Aud
             </p>
             <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
               <time dateTime={event.at}>{formatDateTime(event.at)}</time>
-              {event.aiActionId ? <AiDraftBadge label={`AI draft, sent by ${event.actor ?? "a reviewer"}`} /> : null}
+              {event.aiActionId ? (
+                event.aiMode === "fallback" ? <Badge>{`Template, sent by ${event.actor ?? "a reviewer"}`}</Badge> : <AiDraftBadge label={`AI draft, sent by ${event.actor ?? "a reviewer"}`} />
+              ) : null}
             </p>
             {beforeStatus && afterStatus && beforeStatus !== afterStatus && !compact ? (
               <p className="mt-1 text-sm text-muted">

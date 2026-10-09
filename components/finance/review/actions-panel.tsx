@@ -182,15 +182,17 @@ export function ActionsPanel({
           </p>
         )}
         <p className="text-xs text-muted">Every action is recorded in the audit timeline under your name.</p>
-        <details className="group border-t border-line pt-3">
-          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-            <Flag className="h-4 w-4 text-muted" aria-hidden="true" />
-            Add a manual flag
-          </summary>
-          <div className="mt-3">
-            <FlagForm submissionId={submissionId} />
-          </div>
-        </details>
+        {status !== "draft" ? (
+          <details className="group border-t border-line pt-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+              <Flag className="h-4 w-4 text-muted" aria-hidden="true" />
+              Add a manual flag
+            </summary>
+            <div className="mt-3">
+              <FlagForm submissionId={submissionId} />
+            </div>
+          </details>
+        ) : null}
         {correctable ? (
           <details className="group border-t border-line pt-3">
             <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">

@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
 import { formatCurrency, parseAmount } from "@/lib/rules/money";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
@@ -107,4 +107,13 @@ export function plainTextReport(input: SummaryInput): string {
   lines.push("");
   lines.push("We will email you if Finance needs changes.");
   return lines.join("\n");
+}
+
+function dayKey(value: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
+}
+
+export function savedAtLabel(value: string, now: Date = new Date()): string {
+  const when = new Date(value);
+  return dayKey(when) === dayKey(now) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
 }
