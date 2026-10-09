@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import {
   BellRing,
@@ -17,6 +17,8 @@ import {
   LayoutDashboard,
   Mail,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   RefreshCw,
   ScrollText,
   Send,
@@ -27,6 +29,7 @@ import {
 import { cn } from "@/lib/cn";
 import type { Role } from "@/lib/auth";
 import { Logo } from "./logo";
+import { NAV_COOKIE } from "./nav-cookie";
 
 type Icon = ComponentType<{ className?: string }>;
 type NavItem = { href: string; label: string; icon: Icon; match: (path: string) => boolean; roles?: Role[] };
@@ -89,13 +92,14 @@ function groupsFor(role: Role): NavGroup[] {
     .filter((group) => group.items.length > 0);
 }
 
-function NavList({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
+function NavList({ role, onNavigate, compact = false }: { role: Role; onNavigate?: () => void; compact?: boolean }) {
   const pathname = usePathname();
   return (
-    <div className="space-y-6">
+    <div className={compact ? "space-y-3" : "space-y-6"}>
       {groupsFor(role).map((group, index) => (
         <div key={group.label ?? index}>
-          {group.label ? <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">{group.label}</p> : null}
+          {group.label && !compact ? <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">{group.label}</p> : null}
+          {group.label && compact && index > 0 ? <hr className="mx-2 mb-3 border-line" /> : null}
           <ul className="space-y-0.5">
             {group.items.map((item) => {
               const active = item.match(pathname);
@@ -105,15 +109,17 @@ function NavList({ role, onNavigate }: { role: Role; onNavigate?: () => void }) 
                   <Link
                     href={item.href}
                     onClick={onNavigate}
+                    title={compact ? item.label : undefined}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group/nav relative flex h-9 items-center gap-2.5 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                      "group/nav relative flex h-9 items-center gap-2.5 rounded-md text-sm font-medium transition-colors duration-150",
+                      compact ? "justify-center px-0" : "px-3",
                       active ? "bg-navy-50 font-semibold text-navy-900" : "text-ink/80 hover:bg-surface hover:text-ink"
                     )}
                   >
                     <span aria-hidden="true" className={cn("absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-navy-700 transition-opacity duration-150", active ? "opacity-100" : "opacity-0")} />
                     <Icon className={cn("h-4 w-4 shrink-0 transition-colors", active ? "text-navy-700" : "text-muted group-hover/nav:text-ink")} />
-                    <span className="truncate">{item.label}</span>
+                    <span className={compact ? "sr-only" : "truncate"}>{item.label}</span>
                   </Link>
                 </li>
               );
@@ -125,11 +131,34 @@ function NavList({ role, onNavigate }: { role: Role; onNavigate?: () => void }) 
   );
 }
 
-export function SideNav({ role }: { role: Role }) {
+export function SideNav({ role, initialCollapsed = false }: { role: Role; initialCollapsed?: boolean }) {
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const toggle = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    document.cookie = `${NAV_COOKIE}=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
+  };
+  const Toggle = collapsed ? PanelLeftOpen : PanelLeftClose;
   return (
-    <nav aria-label="Main" className="px-3 py-6">
-      <NavList role={role} />
-    </nav>
+    <aside className={cn("no-print hidden shrink-0 border-r border-line bg-white lg:block", collapsed ? "w-16" : "w-56")}>
+      <div className="sticky top-0 flex max-h-dvh flex-col">
+        <nav aria-label="Main" className={cn("flex-1 overflow-y-auto py-6", collapsed ? "px-2" : "px-3")}>
+          <NavList role={role} compact={collapsed} />
+        </nav>
+        <div className={cn("border-t border-line py-3", collapsed ? "px-2" : "px-3")}>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={!collapsed}
+            title={collapsed ? "Expand menu" : undefined}
+            className={cn("flex h-9 w-full items-center gap-2.5 rounded-md text-sm font-medium text-muted transition-colors duration-150 hover:bg-surface hover:text-ink", collapsed ? "justify-center" : "px-3")}
+          >
+            <Toggle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className={collapsed ? "sr-only" : undefined}>{collapsed ? "Expand menu" : "Collapse menu"}</span>
+          </button>
+        </div>
+      </div>
+    </aside>
   );
 }
 

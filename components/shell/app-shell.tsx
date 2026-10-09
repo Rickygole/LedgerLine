@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { roleLabel, type CurrentUser } from "@/lib/auth";
 import { Logo } from "./logo";
+import { NAV_COOKIE } from "./nav-cookie";
 import { NavDrawer, SideNav, TopTabs } from "./nav-links";
 import { NavProgress } from "./nav-progress";
 import { SiteFooter } from "./site-footer";
@@ -15,10 +17,11 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function AppShell({ user, children }: { user: CurrentUser; children: React.ReactNode }) {
+export async function AppShell({ user, children }: { user: CurrentUser; children: React.ReactNode }) {
   const isCbo = user.role === "cbo_submitter";
   const subtitle = isCbo ? "Program reporting portal" : "Finance workspace";
   const home = isCbo ? "/portal" : "/finance";
+  const collapsed = !isCbo && (await cookies()).get(NAV_COOKIE)?.value === "collapsed";
 
   const header = (
     <header className="no-print on-dark relative z-30 bg-navy-900 text-white">
@@ -65,13 +68,9 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
       {skip}
       {header}
       <div className="flex flex-1">
-        <aside className="no-print hidden w-60 shrink-0 border-r border-line bg-white lg:block">
-          <div className="sticky top-0 max-h-dvh overflow-y-auto">
-            <SideNav role={user.role} />
-          </div>
-        </aside>
+        <SideNav role={user.role} initialCollapsed={collapsed} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1360px] flex-1 px-4 py-6 focus:outline-none sm:px-6 sm:py-8 xl:px-8">
+          <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1360px] flex-1 px-4 py-6 focus:outline-none sm:px-6 sm:py-8">
             {children}
           </main>
           <SiteFooter />
