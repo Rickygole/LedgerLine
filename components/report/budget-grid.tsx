@@ -138,17 +138,21 @@ export function BudgetGrid({
           </Button>
         </div>
         <div aria-live="polite" aria-atomic="true" className="ml-auto">
-          <p
-            className={cn(
-              "num inline-flex items-center gap-1.5 rounded-sm px-3 py-1 text-sm font-semibold ring-1 ring-inset",
-              balance.tone === "ok" && "bg-ok-bg text-ok ring-ok/25",
-              balance.tone === "warn" && "bg-warn-bg text-warn ring-warn/30",
-              balance.tone === "bad" && "bg-bad-bg text-bad ring-bad/25"
-            )}
-          >
-            <BalanceIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            {balance.text}
-          </p>
+          {rows.length === 0 ? (
+            <p className="num text-sm text-muted">Budget lines must add up to your award of {formatCurrency(award)}.</p>
+          ) : (
+            <p
+              className={cn(
+                "num inline-flex items-center gap-1.5 rounded-sm px-3 py-1 text-sm font-semibold ring-1 ring-inset",
+                balance.tone === "ok" && "bg-ok-bg text-ok ring-ok/25",
+                balance.tone === "warn" && "bg-warn-bg text-warn ring-warn/30",
+                balance.tone === "bad" && "bg-bad-bg text-bad ring-bad/25"
+              )}
+            >
+              <BalanceIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {balance.text}
+            </p>
+          )}
         </div>
       </div>
 
