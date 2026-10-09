@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { REVIEW_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { draftReturnNote } from "@/lib/ai/return-note";
@@ -16,6 +17,10 @@ export type ActionResult = { ok: boolean; message: string };
 export type DraftResult =
   | { ok: true; text: string; mode: "live" | "fallback"; aiActionId: string | null; ruleIds: string[]; dropped: number }
   | { ok: false; message: string };
+
+const lockField = z.string().regex(/^\d{1,9}$/).transform(Number);
+
+const updateSchema = z.object({ submissionId: z.guid(), lockVersion: z.number().int().min(0), text: z.string(), aiActionId: z.guid().nullable() });
 
 const done = (message: string): ActionResult => ({ ok: true, message });
 const failed = (message: string): ActionResult => ({ ok: false, message });
@@ -39,10 +44,10 @@ export async function transitionAction(_prev: ActionResult | undefined, formData
   const user = await requireUser(REVIEW_ROLES);
   const id = String(formData.get("submissionId") ?? "");
   const action = String(formData.get("action") ?? "");
-  const lock = Number(formData.get("lockVersion"));
-  if (!["start_review", "accept"].includes(action) || !Number.isInteger(lock)) return failed("That action is not available.");
+  const lock = lockField.safeParse(formData.get("lockVersion"));
+  if (!["start_review", "accept"].includes(action) || !lock.success) return failed("That action is not available.");
   try {
-    await withClaims(user.id, (tx) => tx.query("SELECT * FROM app.transition_submission($1, $2, $3, NULL, NULL, NULL, NULL)", [id, action, lock]));
+    await withClaims(user.id, (tx) => tx.query("SELECT * FROM app.transition_submission($1, $2, $3, NULL, NULL, NULL, NULL)", [id, action, lock.data]));
   } catch (error) {
     return failed(plainError(error));
   }
@@ -73,8 +78,11 @@ export async function draftNoteAction(submissionId: string, concernIds: string[]
   }
 }
 
-export async function sendUpdateAction(input: { submissionId: string; lockVersion: number; text: string; aiActionId: string | null }): Promise<ActionResult> {
+export async function sendUpdateAction(raw: { submissionId: string; lockVersion: number; text: string; aiActionId: string | null }): Promise<ActionResult> {
   const user = await requireUser(REVIEW_ROLES);
+  const parsed = updateSchema.safeParse(raw);
+  if (!parsed.success) return failed("That action is not available.");
+  const input = parsed.data;
   const note = input.text.trim();
   if (!note) return failed("Write a note before sending. The organization needs to know what to change.");
   if (containsRuleId(note)) return failed("Remove rule ids such as BR-022 from the note. Organizations should only see plain language.");
