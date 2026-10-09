@@ -80,7 +80,7 @@ export function SubmittedCopy({
                     const rows = question.type === "table" ? tableRows(question, value) : [];
                     return (
                       <div key={question.key} className="max-w-3xl">
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted">{question.label}</dt>
+                        <dt className="text-[13px] font-semibold text-muted">{question.label}</dt>
                         <dd className="mt-1 text-sm text-ink">
                           {question.type === "table" ? (
                             rows.length === 0 ? (

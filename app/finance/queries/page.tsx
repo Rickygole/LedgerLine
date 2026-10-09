@@ -55,7 +55,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
           <Card className="border-l-[3px] border-l-navy-600 lg:sticky lg:top-4 lg:col-span-4">
             <CardBody className="space-y-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Matching reports</p>
+                <p className="text-[13px] font-semibold text-muted">Matching reports</p>
                 <p className="num mt-1 text-[28px] font-bold leading-8 text-ink" aria-live="polite" data-testid="match-count">
                   {count ?? "None"}
                 </p>

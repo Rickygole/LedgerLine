@@ -20,7 +20,7 @@ export function FilterBar({ action, clearHref, children }: { action: string; cle
 export function FilterField({ label, htmlFor, className, children }: { label: string; htmlFor: string; className?: string; children: React.ReactNode }) {
   return (
     <div className={className}>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-muted">
+      <label htmlFor={htmlFor} className="mb-1.5 block text-[13px] font-semibold text-muted">
         {label}
       </label>
       {children}

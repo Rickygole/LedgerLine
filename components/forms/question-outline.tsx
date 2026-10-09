@@ -47,7 +47,7 @@ export function QuestionOutline({
 
   return (
     <nav aria-label="Form outline" className="rounded-xl border border-line bg-white shadow-card">
-      <p className="border-b border-line px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">Outline</p>
+      <p className="border-b border-line px-4 py-3 text-[13px] font-semibold text-muted">Outline</p>
       <ul className="p-2">
         {definition.sections.map((section) => {
           const key = section.kind === "budget" ? budgetKey : section.key;

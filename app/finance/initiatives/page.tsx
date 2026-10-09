@@ -77,7 +77,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             { label: "Missing reports", value: totals.missing, hint: `${data.period.label}, nothing submitted and past due`, bad: totals.missing > 0 },
           ].map((tile) => (
             <div key={tile.label} className="min-w-0 bg-white px-4 py-4 sm:px-5">
-              <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted">
+              <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-muted">
                 {tile.bad ? <AlertTriangle className="h-3.5 w-3.5 text-bad" aria-hidden="true" /> : null}
                 {tile.label}
               </dt>

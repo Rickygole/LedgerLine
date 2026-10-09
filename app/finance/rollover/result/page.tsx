@@ -58,7 +58,7 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
           <dl className="mt-4 grid gap-4 sm:grid-cols-4 lg:grid-cols-7">
             {tiles.map(([label, value]) => (
               <div key={label}>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</dt>
+                <dt className="text-[13px] font-semibold text-muted">{label}</dt>
                 <dd className="num mt-1 text-xl font-bold">{value}</dd>
               </div>
             ))}

@@ -56,7 +56,7 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
           />
         </CardBody>
         <CardBody className="border-t border-line">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Message text</p>
+          <p className="mb-2 text-[13px] font-semibold text-muted">Message text</p>
           <pre className="whitespace-pre-wrap break-words rounded-md border border-line bg-surface p-4 font-mono text-sm leading-6 text-ink">{row.body_text}</pre>
         </CardBody>
       </Card>

@@ -377,7 +377,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           </div>
 
           <aside aria-label="Live preview" className="hidden self-start xl:sticky xl:top-4 xl:block xl:max-h-[calc(100dvh-2rem)] xl:overflow-y-auto">
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+            <p className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-muted">
               <Eye className="h-3.5 w-3.5" aria-hidden="true" />
               Live preview, as organizations see it
             </p>

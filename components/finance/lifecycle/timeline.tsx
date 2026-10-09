@@ -16,7 +16,7 @@ export function Timeline({ items }: { items: Milestone[] }) {
             {item.goal ? <Flag className="h-3.5 w-3.5" /> : index + 1}
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">{item.when}</p>
+            <p className="text-[13px] font-semibold text-muted">{item.when}</p>
             <p className={cn("text-sm font-semibold", item.goal ? "text-navy-900" : "text-ink")}>{item.title}</p>
             <p className="mt-0.5 text-sm text-muted">{item.detail}</p>
           </div>

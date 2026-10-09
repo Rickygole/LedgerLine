@@ -136,7 +136,7 @@ export function Attachments({
       {removeError ? <p role="alert" className="mt-3 text-sm font-semibold text-bad">{removeError}</p> : null}
 
       <div className="mt-4 rounded-md border border-line" aria-live="polite">
-        <div className="flex h-10 items-center justify-between border-b border-line bg-surface px-4 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+        <div className="flex h-10 items-center justify-between border-b border-line bg-surface px-4 text-[13px] font-semibold text-muted">
           <span>Files</span>
           <span className="num normal-case tracking-normal">{attachments.length} attached</span>
         </div>

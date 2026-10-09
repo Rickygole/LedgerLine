@@ -93,7 +93,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
             ["Submitted", row.submittedAt ? formatDateTime(row.submittedAt) : "Not submitted"],
           ].map(([label, value]) => (
             <div key={String(label)} className="min-w-0">
-              <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">{label}</dt>
+              <dt className="text-[13px] font-semibold text-muted">{label}</dt>
               <dd className="mt-1 truncate text-ink">{value}</dd>
             </div>
           ))}

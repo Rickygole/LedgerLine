@@ -171,7 +171,7 @@ export default async function TraceabilityPage() {
           const counts = data.summary[item.state];
           return (
             <div key={item.state} className="rounded-xl border border-line bg-white px-4 py-4 shadow-card">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              <p className="flex items-center gap-2 text-[13px] font-semibold text-muted">
                 <Icon className={`h-4 w-4 ${item.tone}`} aria-hidden="true" />
                 {item.label}
               </p>

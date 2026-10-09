@@ -31,7 +31,7 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardBody>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">Message body</h2>
+            <h2 className="text-[13px] font-semibold text-muted">Message body</h2>
             <pre className="mt-3 whitespace-pre-wrap break-words rounded-md bg-surface/70 p-4 font-mono text-[13px] leading-relaxed text-ink">{message.body_text}</pre>
           </CardBody>
         </Card>

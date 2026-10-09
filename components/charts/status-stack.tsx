@@ -68,7 +68,7 @@ export function StatusStackChart({ title, description, dimension, data, periodLa
             {title}, {periodLabel}. Counts of reports.
           </caption>
           <thead className="bg-surface">
-            <tr className="text-[11px] uppercase tracking-[0.06em] text-muted">
+            <tr className="text-[13px] text-muted">
               <th scope="col" className="whitespace-nowrap px-3 py-2 font-semibold">{dimension}</th>
               {used.map((b) => (
                 <th key={b} scope="col" className="whitespace-nowrap px-3 py-2 text-right font-semibold">{BUCKET_LABEL[b]}</th>

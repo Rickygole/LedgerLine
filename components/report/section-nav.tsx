@@ -9,7 +9,7 @@ export function SectionNav({ sections, active, onJump }: { sections: NavSection[
   const done = sections.filter((section) => section.state === "complete").length;
   return (
     <nav aria-label="Report sections" className="no-print">
-      <p className="num mb-2 hidden text-xs font-semibold uppercase tracking-[0.06em] text-muted lg:block">
+      <p className="num mb-2 hidden text-[13px] font-semibold text-muted lg:block">
         {done} of {sections.length} sections complete
       </p>
       <div className="mb-3 hidden h-1.5 overflow-hidden rounded-full bg-line lg:block" aria-hidden="true">

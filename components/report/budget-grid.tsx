@@ -203,7 +203,7 @@ export function BudgetGrid({
 
       {gridError ? <p className="border-b border-line px-4 py-2.5 text-sm font-semibold text-bad">{gridError}</p> : null}
 
-      <div className={cn("hidden h-10 border-b border-line bg-surface min-[720px]:items-center text-[11px] font-semibold uppercase tracking-[0.06em] text-muted", COLS)}>
+      <div className={cn("hidden h-10 border-b border-line bg-surface min-[720px]:items-center text-[13px] font-semibold text-muted", COLS)}>
         <span className="px-3 text-right">#</span>
         <span className="px-3">Category</span>
         <span className="px-3">Description</span>

@@ -84,7 +84,7 @@ export function BudgetTable({ lines, award, answers, totalLabel = "Approved budg
       {lines.length > 0 ? <p className="num text-sm font-semibold text-ink">{balance.text}</p> : null}
       {typeof note === "string" && note.trim() !== "" ? (
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Variance explanation</p>
+          <p className="text-[13px] font-semibold text-muted">Variance explanation</p>
           <p className="mt-1 whitespace-pre-wrap text-sm text-ink">{note.trim()}</p>
         </div>
       ) : null}

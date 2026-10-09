@@ -252,13 +252,13 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
         />
         <div className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-3">
           <div className="min-w-64 flex-1">
-            <label htmlFor="plan-search" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">
+            <label htmlFor="plan-search" className="mb-1 block text-[13px] font-semibold text-muted">
               Search
             </label>
             <Input id="plan-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Code, name or category" />
           </div>
           <div>
-            <label htmlFor="plan-filter" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">
+            <label htmlFor="plan-filter" className="mb-1 block text-[13px] font-semibold text-muted">
               Show action
             </label>
             <Select id="plan-filter" value={filter} onChange={(e) => setFilter(e.target.value)}>
@@ -377,7 +377,7 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
 function Summary({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</dt>
+      <dt className="text-[13px] font-semibold text-muted">{label}</dt>
       <dd className="num mt-1 text-xl font-bold text-ink">{value}</dd>
     </div>
   );

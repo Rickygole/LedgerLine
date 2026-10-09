@@ -52,11 +52,11 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <p className="max-w-[72ch] text-sm leading-relaxed text-ink">{initiative.description}</p>
           <dl className="grid grid-cols-2 gap-4 lg:border-l lg:border-line lg:pl-6">
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Total funding</dt>
+              <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
               <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding))}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Organizations</dt>
+              <dt className="text-[13px] font-semibold text-muted">Organizations</dt>
               <dd className="num mt-1 text-lg font-bold text-ink">{funded.length}</dd>
             </div>
           </dl>

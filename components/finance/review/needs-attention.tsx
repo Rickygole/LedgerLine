@@ -47,7 +47,7 @@ export function NeedsAttention({ items, overdue, overdueHref }: { items: Attenti
       )}
       {overdue.length > 0 ? (
         <div className="mt-auto border-t border-line">
-          <p className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">Longest overdue</p>
+          <p className="px-5 pb-1 pt-3 text-[13px] font-semibold text-muted">Longest overdue</p>
           <ol className="pb-2">
             {overdue.map((row) => (
               <li key={row.assignmentId} className="flex items-start justify-between gap-3 px-5 py-2">
