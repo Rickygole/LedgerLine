@@ -41,7 +41,8 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
      FROM assignment a
      JOIN organization o ON o.id = a.org_id
      JOIN initiative i ON i.id = a.initiative_id AND i.status = 'active'
-     LEFT JOIN submission s ON s.assignment_id = a.id AND s.period_id = $1`,
+     LEFT JOIN submission s ON s.assignment_id = a.id AND s.period_id = $1
+     WHERE s.id IS NOT NULL OR EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published')`,
     [period.id]
   );
   const submissionIds = base.map((r) => r.submission_id).filter((id): id is string => id !== null);
