@@ -23,8 +23,8 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const EXPLAIN: Record<FlagReason, string> = {
   unbalanced: "Draft or returned reports whose budget total does not equal the award.",
-  incomplete: "Past-due drafts or returned reports that still fail required rules.",
-  missing: "Past the due date with no report submitted.",
+  incomplete: "Past due drafts or returned reports that still fail required rules. These reports are also counted as Missing or Update requested.",
+  missing: "Past the due date with nothing submitted, or only a draft saved.",
   validation: "Submitted reports that fail one or more validation rules.",
   zero_outcomes: "Submitted reports that served no participants.",
   low_outcomes: "Submitted reports that served fewer than 40 percent of the target.",
@@ -37,7 +37,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
 
   const { periods, filters, rows, categories } = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const filters = parseFilters(raw, periods.map((p) => p.id));
+    const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
     const options = await loadFilterOptions(tx);
