@@ -173,7 +173,7 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
             <CardBody>
               <p className="mb-5 rounded-lg border border-l-4 border-line border-l-navy-800 bg-surface/60 px-4 py-3 text-[15px] text-ink">
                 <span className="num font-semibold">{newInitiatives}</span> {newInitiatives === 1 ? "initiative" : "initiatives"}, {grouped.size > 0 ? "up to " : ""}
-                <span className="num font-semibold">{assignments}</span> {assignments === 1 ? "assignment" : "assignments"} and <span className="num font-semibold">{formsCopied}</span> {formsCopied === 1 ? "form" : "forms"} will be copied to {to}.
+                <span className="num font-semibold">{assignments}</span> {assignments === 1 ? "award" : "awards"} and <span className="num font-semibold">{formsCopied}</span> {formsCopied === 1 ? "form" : "forms"} will be copied to {to}.
               </p>
               <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <Summary label="Carried forward" value={counts.carry} />

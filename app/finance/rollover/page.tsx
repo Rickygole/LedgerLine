@@ -76,7 +76,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <Stat label="Initiatives" value={summary.initiatives} icon={Layers} hint={`Active in ${from}`} />
                 <Stat label="Organizations" value={summary.organizations} icon={Users} hint="With at least one award" />
-                <Stat label="Assignments" value={summary.assignments} icon={CalendarRange} hint="Organization and initiative pairs" />
+                <Stat label="Awards" value={summary.assignments} icon={CalendarRange} hint="One per organization and initiative" />
                 <Stat label="Funding" value={formatCompactCurrency(summary.totalFunding)} icon={Landmark} hint={formatCurrency(summary.totalFunding)} />
               </div>
               {targetSummary && targetSummary.initiatives > 0 ? (
