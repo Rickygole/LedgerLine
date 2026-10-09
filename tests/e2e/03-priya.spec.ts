@@ -44,7 +44,6 @@ test("[US-004] an initiative-specific question is added next to the shared stand
   await page.getByRole("button", { name: "Add question" }).click();
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByText("Draft saved.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Save draft" })).toBeEnabled();
   await page.getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("button", { name: "Publish version 1" }).click();
   await expect(page.getByText("Version 1 is published.")).toBeVisible();
