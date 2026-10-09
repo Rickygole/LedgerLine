@@ -48,7 +48,7 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
             <label className="sr-only" htmlFor="trust-q">Search requirements</label>
             <Input id="trust-q" placeholder="Search ID or text" value={q} onChange={(e) => setQ(e.target.value)} className="h-9 w-48" />
             <label className="sr-only" htmlFor="trust-kind">Type</label>
-            <Select id="trust-kind" value={kind} onChange={(e) => setKind(e.target.value)} className="h-9 w-36">
+            <Select id="trust-kind" value={kind} onChange={(e) => setKind(e.target.value)} className="h-9 w-48">
               <option value="">Stories and rules</option>
               <option value="US">User stories</option>
               <option value="BR">Business rules</option>
