@@ -190,6 +190,66 @@ details[open] > .menu-panel {
   }
 }
 
+@media (max-width: 767.98px) {
+  .table-stack table {
+    min-width: 0;
+  }
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack td {
+    display: block;
+  }
+  .table-stack tbody tr {
+    padding: 0.875rem 1rem;
+  }
+  .table-stack tbody td {
+    padding: 0.125rem 0;
+    text-align: left;
+    white-space: normal;
+  }
+  .table-stack tbody td[colspan] {
+    padding: 3rem 0;
+  }
+  .table-stack td[data-label] {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .table-stack td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+  .table-stack td[data-label] > * {
+    text-align: right;
+  }
+  .table-stack td[data-primary] {
+    padding-bottom: 0.375rem;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .table-stack td[data-action] {
+    padding-top: 0.75rem;
+  }
+  .table-stack td[data-action] > a,
+  .table-stack td[data-action] > button {
+    width: 100%;
+  }
+  .table-stack td:empty {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
