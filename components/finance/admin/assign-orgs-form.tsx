@@ -39,7 +39,7 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
             <li key={o.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
               <span>
                 <span className="font-semibold">{o.name}</span>
-                <span className="ml-2 font-mono text-xs text-muted">{o.ein}</span>
+                <span className="ml-2 whitespace-nowrap font-mono text-[13px] text-muted">{o.ein}</span>
                 <span className="ml-2 text-muted">{o.borough}</span>
               </span>
               <Button
@@ -84,7 +84,7 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
                     <TD>
                       <input type="hidden" name="orgId" value={row.orgId} />
                       <span className="font-semibold">{org.name}</span>
-                      <div className="font-mono text-xs text-muted">{org.ein}</div>
+                      <div className="whitespace-nowrap font-mono text-[13px] text-muted">{org.ein}</div>
                     </TD>
                     <TD>
                       <Label htmlFor={`amount-${index}`} className="sr-only">

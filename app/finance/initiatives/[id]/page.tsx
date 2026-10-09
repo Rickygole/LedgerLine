@@ -84,7 +84,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                       {f.legal_name}
                     </Link>
                   </TD>
-                  <TD className="font-mono text-xs">{f.ein}</TD>
+                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{f.ein}</TD>
                   <TD>{f.borough}</TD>
                   <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
                   <TD>{f.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
