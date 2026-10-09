@@ -4,7 +4,7 @@ vi.mock("server-only", () => ({}));
 
 const MB = 1024 * 1024;
 
-describe("[BR-012] uploads are limited to 25 MB per file", () => {
+describe("[BR-012][US-024] uploads are limited to 25 MB per file", () => {
   it("states the limit as 25 megabytes in both the server and the browser", async () => {
     const server = await import("@/lib/storage");
     const browser = await import("@/lib/report/upload-rules");

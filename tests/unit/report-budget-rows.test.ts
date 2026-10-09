@@ -24,7 +24,7 @@ describe("client upload checks", () => {
   });
 });
 
-describe("[US-029][LL-ACTUAL] actual spent text", () => {
+describe("[US-029] actual spent text", () => {
   it("keeps a blank actual as null and a typed one as a number", () => {
     const rows = [
       { rowId: "a", category: "PS" as const, description: "Staff", amountText: "1,000.00", actualText: "" },

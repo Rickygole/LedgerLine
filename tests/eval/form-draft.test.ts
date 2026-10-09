@@ -33,7 +33,7 @@ function score(expected: Label[], proposed: ProposedField[]) {
 
 const INJECTED = "food-pantry-report-injected.docx";
 
-describe("[AI-1] form draft evaluation", () => {
+describe("[US-003] form draft evaluation", () => {
   it("has labels for three templates", () => {
     expect(files).toHaveLength(3);
   });

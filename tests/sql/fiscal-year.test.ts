@@ -134,7 +134,7 @@ describe("[BR-002] Mid-Year and Year-End cover the fiscal year", () => {
   });
 });
 
-describe("[US-001][US-009] award fields", () => {
+describe("award fields", () => {
   it("inherits the administering agency from the initiative", async () => {
     const agency = await asUser(app, priya, async () => {
       const init = await addFy27Initiative("Neighborhood Reading Hours");
@@ -155,7 +155,7 @@ describe("[US-001][US-009] award fields", () => {
     expect(code).toBe("23514");
   });
 
-  it("carries funding source and sponsors through a rollover", async () => {
+  it("[US-009][US-010] carries funding source and sponsors through a rollover", async () => {
     const result = await asUser(app, priya, async () => {
       await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)");
       return (

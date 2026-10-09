@@ -32,7 +32,7 @@ async function tryInsert(submission: string): Promise<string | null> {
   }
 }
 
-describe("[D18] manual flags", () => {
+describe("[US-043] manual flags", () => {
   it("are refused on a report that has not been submitted", async () => {
     expect(await tryInsert(draftId)).toBe("42501");
   });
