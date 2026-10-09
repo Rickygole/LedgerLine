@@ -6,13 +6,13 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-[background-color,border-color,color,box-shadow] active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 rounded font-bold disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 whitespace-nowrap";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-navy-800 text-white shadow-sm ring-1 ring-inset ring-navy-900/40 hover:bg-navy-900",
-  secondary: "border border-line-strong/70 bg-white text-ink shadow-sm hover:border-line-strong hover:bg-surface",
-  ghost: "text-navy-800 hover:bg-navy-50",
-  danger: "bg-bad text-white hover:bg-[#912018] shadow-sm",
+  primary: "bg-action text-white hover:bg-action-hover active:bg-action-active",
+  secondary: "bg-white text-action shadow-[inset_0_0_0_2px_var(--color-action)] hover:text-action-hover hover:shadow-[inset_0_0_0_2px_var(--color-action-hover)] active:text-action-active",
+  ghost: "text-link underline underline-offset-2 hover:text-link-hover",
+  danger: "bg-bad text-white hover:bg-[#912018] active:bg-[#6f1811]",
 };
 
 const sizes: Record<Size, string> = {

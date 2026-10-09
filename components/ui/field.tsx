@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/cn";
 
 const control =
-  "block w-full rounded-md border border-line bg-white px-3 py-2 text-base text-ink sm:text-sm shadow-sm placeholder:text-muted/70 focus:border-navy-600 focus:outline-none focus:ring-2 focus:ring-navy-600/20 disabled:bg-surface disabled:text-muted aria-[invalid=true]:border-bad aria-[invalid=true]:ring-bad/20";
+  "block w-full rounded-sm border border-field bg-white px-3 py-2 text-base text-ink sm:text-sm placeholder:text-muted disabled:border-line-strong disabled:bg-surface disabled:text-muted aria-[invalid=true]:border-2 aria-[invalid=true]:border-bad";
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...props }, ref) {
   return <input ref={ref} className={cn(control, "h-10", className)} {...props} />;
@@ -22,7 +22,7 @@ export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<H
 
 export function Label({ htmlFor, children, required, className }: { htmlFor?: string; children: React.ReactNode; required?: boolean; className?: string }) {
   return (
-    <label htmlFor={htmlFor} className={cn("mb-1.5 block text-sm font-semibold text-ink", className)}>
+    <label htmlFor={htmlFor} className={cn("mb-1 block text-sm font-semibold text-ink", className)}>
       {children}
       {required ? <span className="ml-1 font-normal text-muted">(required)</span> : null}
     </label>
