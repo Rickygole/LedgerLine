@@ -52,6 +52,7 @@ export async function insertAttachment(
   tx: Tx,
   input: { submissionId: string; pathname: string; filename: string; bytes: number; mime: string }
 ): Promise<AttachmentItem> {
+  await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [input.submissionId]);
   const row = await tx.one<{ id: string; created_at: string; full_name: string | null }>(
     `WITH inserted AS (
        INSERT INTO attachment (submission_id, path, filename, bytes, mime, uploaded_by)

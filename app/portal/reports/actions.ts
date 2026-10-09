@@ -165,6 +165,7 @@ export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } |
   if (!user) return { status: "signed_out" };
   try {
     const removed = await withClaims(user.id, async (tx) => {
+      await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [parsed.data.submissionId]);
       const rows = await tx.query<{ filename: string }>("DELETE FROM attachment WHERE id = $1 AND submission_id = $2 RETURNING filename", [parsed.data.attachmentId, parsed.data.submissionId]);
       if (rows[0]) {
         await tx.query("SELECT app.write_audit('submission', $1, 'attachment_removed', $2, NULL, NULL, NULL)", [parsed.data.submissionId, rows[0].filename]);
@@ -189,6 +190,7 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
   let outcome: SubmitResult | "done";
   try {
     outcome = await withClaims(user.id, async (tx): Promise<SubmitResult | "done"> => {
+      await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [parsed.data.submissionId]);
       const report = await loadReport(tx, parsed.data.submissionId);
       if (!report) return { status: "error", message: "This report could not be found." };
       const { header, definition } = report;
