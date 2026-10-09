@@ -86,7 +86,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                   </span>
                 </div>
               </TD>
-              <TD className="min-w-40" stackHidden>
+              <TD className="min-w-36" stackHidden>
                 <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-link hover:underline">
                   {row.initiativeName}
                 </Link>
