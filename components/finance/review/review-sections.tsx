@@ -11,18 +11,8 @@ import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
 import { formatCount, formatCurrency } from "@/lib/rules/money";
+import { cellText } from "@/lib/report/format";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
-
-function cellText(type: string, raw: unknown): string {
-  const text = String(raw ?? "").trim();
-  if (text === "" || type === "text") return text;
-  if (type === "currency") {
-    const amount = Number(text.replace(/[$,]/g, ""));
-    return Number.isFinite(amount) ? formatCurrency(amount) : text;
-  }
-  if (type === "percent") return text.endsWith("%") ? text : `${text}%`;
-  return formatCount(text);
-}
 
 function formatValue(question: Question, value: AnswerValue | undefined): React.ReactNode {
   if (value === null || value === undefined || value === "") return <span className="text-muted">Not answered</span>;

@@ -23,10 +23,23 @@ export function displayScalar(question: Question, value: AnswerValue | undefined
   return text;
 }
 
+export function cellText(type: string, raw: unknown): string {
+  const text = String(raw ?? "").trim();
+  if (text === "" || type === "text") return text;
+  if (type === "currency") {
+    const amount = parseAmount(text);
+    return amount === null ? text : formatCurrency(amount);
+  }
+  if (type === "percent") return text.endsWith("%") ? text : `${text}%`;
+  return formatCount(text);
+}
+
 export function tableRows(question: Question, value: AnswerValue | undefined): string[][] {
   if (!Array.isArray(value)) return [];
   const columns = question.columns ?? [];
-  return value.map((row) => columns.map((column) => String(row[column.key] ?? "")));
+  return value
+    .map((row) => columns.map((column) => cellText(column.type, row[column.key])))
+    .filter((cells) => cells.some((cell) => cell !== ""));
 }
 
 export type SummaryInput = {
@@ -81,7 +94,7 @@ export function plainTextReport(input: SummaryInput): string {
       if (question.type === "table") {
         lines.push(`${question.label}:`);
         const rows = tableRows(question, value);
-        if (rows.length === 0) lines.push("  (none)");
+        if (rows.length === 0) lines.push("  No rows entered.");
         const headers = (question.columns ?? []).map((column) => column.label);
         rows.forEach((row, index) => lines.push(`  ${index + 1}. ${row.map((cell, i) => `${headers[i]}: ${cell || "(blank)"}`).join("; ")}`));
         continue;
