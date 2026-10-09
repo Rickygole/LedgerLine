@@ -17,8 +17,11 @@ const ROLES = [
 export default function AboutPage() {
   return (
     <div className="flex min-h-screen flex-col bg-surface">
+      <a href="#main" className="skip-link">
+        Skip to main content
+      </a>
       <SyntheticBanner />
-      <header className="border-b border-line bg-navy-900">
+      <header className="on-dark border-b border-line bg-navy-900">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo subtitle="Initiative Reporting System" />
           <ButtonLink href="/login" variant="secondary" size="sm">
@@ -26,8 +29,8 @@ export default function AboutPage() {
           </ButtonLink>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 sm:px-6">
-        <h1 className="text-3xl font-bold tracking-tight text-ink">About this proof of concept</h1>
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 focus:outline-none sm:px-6">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">About this proof of concept</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-muted">
           LedgerLine is a working prototype of a system where organizations funded through New York City Council initiatives report on how they used their money, and where Council Finance reviews those reports in one place.
         </p>
@@ -79,8 +82,8 @@ export default function AboutPage() {
 
           <Card>
             <CardBody className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-muted">Prepared for Estrada Consulting by Ricky Gole.</p>
-              <div className="flex gap-2">
+              <p className="text-sm text-muted">Sign in with one of the demonstration accounts to try it.</p>
+              <div className="flex flex-wrap gap-2">
                 <ButtonLink href="/trust" variant="secondary">
                   Requirements evidence
                 </ButtonLink>

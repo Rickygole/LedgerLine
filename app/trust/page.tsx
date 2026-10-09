@@ -40,8 +40,11 @@ export default function TrustPage() {
   const commitUrl = `https://github.com/${data.repository}/commit/${data.commit}`;
   return (
     <div className="flex min-h-screen flex-col">
+      <a href="#main" className="skip-link">
+        Skip to main content
+      </a>
       <SyntheticBanner />
-      <header className="bg-navy-900">
+      <header className="on-dark bg-navy-900">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6">
           <Link href="/" className="rounded-md">
             <Logo subtitle="Requirements evidence" />
@@ -51,7 +54,7 @@ export default function TrustPage() {
           </Link>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-8 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-8 focus:outline-none sm:px-6">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-ink">Requirements evidence</h1>
