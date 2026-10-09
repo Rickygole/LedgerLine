@@ -47,7 +47,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
   );
   if (!form) notFound();
   const editable = user.role === "finance_admin" && form.status === "draft";
-  const tone = form.status === "published" ? "ok" : form.status === "draft" ? "warn" : "neutral";
+  const tone = form.status === "published" ? "ok" : form.status === "draft" ? "info" : "neutral";
   const icon = form.status === "published" ? CheckCircle2 : form.status === "draft" ? CircleDashed : History;
   const statusLabel = { draft: "Draft", published: "Published", superseded: "Superseded" }[form.status];
 

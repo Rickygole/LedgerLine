@@ -89,7 +89,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
                     </div>
                   </TD>
                   <TD>
-                    <Badge tone={row.kind === "retired" ? "warn" : row.kind === "carried" ? "neutral" : "info"} icon={row.kind === "retired" ? undefined : ArrowRight}>
+                    <Badge tone={row.kind === "retired" || row.kind === "carried" ? "neutral" : "info"} icon={row.kind === "retired" ? undefined : ArrowRight}>
                       {KIND_LABEL[row.kind]}
                     </Badge>
                   </TD>

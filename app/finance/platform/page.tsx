@@ -76,7 +76,7 @@ function Ids({ ids }: { ids: string[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {ids.map((id) => (
-        <Badge key={id} tone="info">
+        <Badge key={id}>
           {id}
         </Badge>
       ))}
@@ -95,7 +95,7 @@ export default async function PlatformPage() {
         title="Platform and delivery"
         description="How LedgerLine addresses the hosting, security, data, support and delivery requirements. Sections describe the proposed approach. Figures marked as live come from this running system."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Platform and delivery" }]}
-        meta={<Badge tone="warn">Proposed approach, not a contract term</Badge>}
+        meta={<Badge tone="info">Proposed approach, not a contract term</Badge>}
         actions={
           user.role === "finance_admin" ? (
             <ButtonLink href="/trust" variant="ghost" size="sm">

@@ -58,7 +58,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
         subtitle={org.dba_name ? `Doing business as ${org.dba_name}` : undefined}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations", href: "/finance/organizations" }, { label: org.legal_name }]}
         meta={[
-          <Badge key="type" tone="info">
+          <Badge key="type">
             {orgTypeLabel(org.org_type)}
           </Badge>,
           <span key="ein" className="whitespace-nowrap font-mono text-[13px]">
@@ -253,7 +253,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{c.full_name}</span>
                     {c.is_primary ? (
-                      <Badge tone="ok" icon={Star}>
+                      <Badge tone="info" icon={Star}>
                         Primary
                       </Badge>
                     ) : null}

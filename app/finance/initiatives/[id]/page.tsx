@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
@@ -21,7 +22,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Initiative" };
 
-const FORM_TONE = { published: "ok", draft: "warn", superseded: "neutral" } as const;
+const FORM_TONE = { published: "ok", draft: "info", superseded: "neutral" } as const;
 const SOURCE_LABEL: Record<string, string> = { seed: "Imported", manual: "Manual", ai_draft: "AI draft", rule_draft: "Rule draft" };
 
 export default async function InitiativeDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -45,8 +46,8 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: initiative.code }]}
         meta={[
           <span key="code" className="whitespace-nowrap font-mono text-[13px]">{initiative.code}</span>,
-          <Badge key="category" tone="info">{initiative.category}</Badge>,
-          <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
+          <Badge key="category">{initiative.category}</Badge>,
+          <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"} icon={initiative.status === "active" ? CheckCircle2 : undefined}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
           <span key="fy" className="whitespace-nowrap">{initiative.fiscal_year_id}</span>,
           <span key="agency" className="whitespace-nowrap">{initiative.administering_agency ? `Administered by ${initiative.administering_agency}` : "No administering agency"}</span>,
           ...lineageMeta(lineage),

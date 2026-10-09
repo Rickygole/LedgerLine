@@ -61,7 +61,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         subtitle={org.dbaName ? `Doing business as ${org.dbaName}` : undefined}
         crumbs={[{ label: "Portal", href: "/portal" }, { label: "Organization profile" }]}
         meta={[
-          <Badge key="type" tone="info">
+          <Badge key="type">
             {orgTypeLabel(org.orgType)}
           </Badge>,
           <span key="ein" className="whitespace-nowrap font-mono text-[13px]">
@@ -190,7 +190,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                         <p className="flex items-center gap-2 font-medium text-ink">
                           {c.full_name}
                           {c.is_primary ? (
-                            <Badge tone="ok" icon={Star}>
+                            <Badge tone="info" icon={Star}>
                               Primary
                             </Badge>
                           ) : null}

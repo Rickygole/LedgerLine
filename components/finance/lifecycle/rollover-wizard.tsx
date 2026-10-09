@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, FileText, Play } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, FileText, Play } from "lucide-react";
 import { runRollover, type RolloverState } from "@/app/finance/rollover/actions";
 import { formatCurrency } from "@/lib/rules/money";
 import type { PlanAction, RolloverInitiative } from "@/lib/lifecycle/rollover";
@@ -413,7 +413,7 @@ function FormTable({ rows, to, groupNames, grouped }: { rows: FormRow[]; to: str
                   Version <span className="num">{form.version}</span>
                 </span>
               ) : (
-                <Badge tone="warn">No published form</Badge>
+                <Badge tone="warn" icon={AlertTriangle}>No published form</Badge>
               )}
             </TD>
             <TD align="right">{form ? form.questions : <span className="text-muted">0</span>}</TD>
