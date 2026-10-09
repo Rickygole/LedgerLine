@@ -24,6 +24,14 @@ export function isVisible(question: Question, answers: Answers): boolean {
   return String(current ?? "") === question.visibleWhen.equals;
 }
 
+export function visibleAnswers(definition: FormDefinition, answers: Answers): Answers {
+  const visible: Answers = {};
+  for (const question of definition.sections.flatMap((section) => section.questions)) {
+    if (question.key in answers && isVisible(question, answers)) visible[question.key] = answers[question.key];
+  }
+  return visible;
+}
+
 export function wordCount(text: string): number {
   const trimmed = text.trim();
   return trimmed === "" ? 0 : trimmed.split(/\s+/).length;

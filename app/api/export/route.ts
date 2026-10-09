@@ -6,7 +6,7 @@ import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { applyFilters, sortRows } from "@/lib/finance/review/derive";
 import { buildWorkbook, exportFilename, submissionsToCsv, workbookToBuffer, type ExportSubmission } from "@/lib/finance/review/export";
 import { FLAG_LABEL, filtersToParams, parseFilters, STATUS_OPTIONS } from "@/lib/finance/review/filters";
-import { budgetTotals } from "@/lib/rules/validate";
+import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 
 export const runtime = "nodejs";
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     award: row.award,
     submittedAt: row.submittedAt,
     budgetTotal: budgetTotals(row.budget).total,
-    answers: row.answers,
+    answers: row.definition ? visibleAnswers(row.definition, row.answers) : {},
     budget: row.budget.map(({ position, category, description, amount }) => ({ position, category, description, amount })),
   }));
 

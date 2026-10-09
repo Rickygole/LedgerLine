@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balanceMessage, blockingIssues, validateSubmission } from "@/lib/rules/validate";
+import { balanceMessage, blockingIssues, validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 import type { BudgetLine, FormDefinition } from "@/lib/rules/types";
 
 const definition: FormDefinition = {
@@ -125,5 +125,12 @@ describe("[US-029] typed answers must hold a real value", () => {
   it("still accepts ordinary values", () => {
     expect(fields({ spent: "$1,250.00", share: "45%", held_on: "2024-02-29" })).toEqual([]);
     expect(fields({ spent: "1250", share: "12.5", held_on: "2025-12-31" })).toEqual([]);
+  });
+});
+
+describe("visibleAnswers", () => {
+  it("drops answers hidden by branching", () => {
+    expect(visibleAnswers(definition, { ...good, youth_count: "40" })).toEqual(good);
+    expect(visibleAnswers(definition, { ...good, served_youth: "Yes", youth_count: "40" })).toEqual({ ...good, served_youth: "Yes", youth_count: "40" });
   });
 });
