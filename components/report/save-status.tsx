@@ -17,7 +17,7 @@ export function SaveStatus({ state, lastSavedAt }: { state: SaveState; lastSaved
     text = `Saved ${formatTime(state.at)}`;
     tone = "text-ok";
   } else if (state.kind === "retrying") {
-    text = "Couldn't save, retrying. Keep this tab open.";
+    text = state.message ?? "Couldn't save, retrying. Keep this tab open.";
     tone = "text-warn";
     icon = <WifiOff className="h-4 w-4" aria-hidden="true" />;
   } else if (state.kind === "signed_out") {

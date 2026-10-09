@@ -9,7 +9,7 @@ export type SaveState =
   | { kind: "idle" }
   | { kind: "saving" }
   | { kind: "saved"; at: string }
-  | { kind: "retrying" }
+  | { kind: "retrying"; message?: string }
   | { kind: "signed_out" }
   | { kind: "stale"; by: string | null; at: string }
   | { kind: "locked"; message: string };
@@ -82,7 +82,7 @@ export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "e
         const delay = result.status === "signed_out" ? 8000 : Math.min(4000 * attempts.current, 30000);
         if (retry.current) clearTimeout(retry.current);
         retry.current = setTimeout(() => void drain(), delay);
-        setState(result.status === "signed_out" ? { kind: "signed_out" } : { kind: "retrying" });
+        setState(result.status === "signed_out" ? { kind: "signed_out" } : { kind: "retrying", message: result.status === "error" && result.message !== "network" ? result.message : undefined });
         return result.status === "signed_out" ? "signed_out" : "retrying";
       }
       return outcome;
