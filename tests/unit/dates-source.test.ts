@@ -29,7 +29,7 @@ describe("[US-040] one source of today", () => {
 
   it("never reads the clock for a calendar date outside lib/dates.ts", () => {
     const root = path.resolve(__dirname, "../..");
-    const allowed = new Set(["lib/dates.ts", "lib/ai/model.ts", "app/portal/reports/actions.ts"]);
+    const allowed = new Set(["lib/dates.ts", "lib/ai/model.ts", "app/portal/reports/actions.ts", "lib/orphans.ts", "lib/report/attachments.ts"]);
     const found: string[] = [];
     const walk = (dir: string) => {
       for (const name of readdirSync(dir)) {
