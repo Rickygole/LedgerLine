@@ -13,7 +13,7 @@
     "e2e": "playwright test",
     "break": "tsx --conditions=react-server scripts/break.ts",
     "test:rule": "tsx scripts/test-rule.ts",
-    "evidence": "vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json; tsx scripts/trust.ts",
+    "evidence": "vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json; playwright test; tsx scripts/trust.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:role": "tsx scripts/role-password.ts",
     "db:seed": "tsx scripts/seed.ts fresh"

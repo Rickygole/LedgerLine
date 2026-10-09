@@ -46,16 +46,21 @@ jobs:
       - run: npx tsc --noEmit
       - name: Unit, SQL and eval tests
         run: npx vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json
+      - run: pnpm build
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+      - name: End to end tests
+        run: npx playwright test
       - name: Requirements evidence
         if: always()
         run: npx tsx scripts/trust.ts
-      - run: pnpm build
       - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: evidence
           path: |
             reports
+            test-results
             app/trust/evidence.json
       - name: Deploy the tested build
         if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
