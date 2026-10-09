@@ -15,7 +15,7 @@ export function Table({ children, className, stack = false }: { children: React.
 
 export function THead({ children }: { children: React.ReactNode }) {
   return (
-    <thead className="sticky top-0 z-10 bg-surface text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted shadow-[inset_0_-1px_0_var(--color-line)]">
+    <thead className="sticky top-0 z-10 bg-surface text-left text-[13px] font-bold text-ink shadow-[inset_0_-2px_0_var(--color-line-strong)]">
       {children}
     </thead>
   );
@@ -23,14 +23,14 @@ export function THead({ children }: { children: React.ReactNode }) {
 
 export function TH({ children, className, align = "left" }: { children?: React.ReactNode; className?: string; align?: "left" | "right" }) {
   return (
-    <th scope="col" className={cn("whitespace-nowrap px-4 py-2.5 font-semibold", align === "right" && "text-right", className)}>
+    <th scope="col" className={cn("whitespace-nowrap px-4 py-2.5 font-bold", align === "right" && "text-right", className)}>
       {children}
     </th>
   );
 }
 
 export function TR({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <tr className={cn("border-b border-line/80 bg-white transition-colors last:border-0 hover:bg-navy-50/60", className)}>{children}</tr>;
+  return <tr className={cn("border-b border-line bg-white last:border-0 hover:bg-navy-50/60", className)}>{children}</tr>;
 }
 
 export function TD({ children, className, align = "left", label, primary, action }: { children?: React.ReactNode; className?: string; align?: "left" | "right"; label?: string; primary?: boolean; action?: boolean }) {
@@ -46,9 +46,7 @@ export function EmptyRow({ colSpan, children }: { colSpan: number; children: Rea
     <tr>
       <td colSpan={colSpan} className="px-4 py-12 text-center">
         <div className="mx-auto flex max-w-md flex-col items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-50 text-navy-600 ring-1 ring-navy-100" aria-hidden="true">
-            <Inbox className="h-5 w-5" />
-          </span>
+          <Inbox className="h-6 w-6 text-muted" aria-hidden="true" />
           <div className="text-sm text-muted">{children}</div>
         </div>
       </td>

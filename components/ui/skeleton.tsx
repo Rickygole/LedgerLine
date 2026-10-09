@@ -32,7 +32,7 @@ export function TilesSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="rounded-xl border border-l-[3px] border-line bg-white px-4 py-4 shadow-card sm:px-5">
+        <div key={i} className="rounded border border-l-4 border-line bg-white px-4 py-4 sm:px-5">
           <Bone className="w-20" />
           <Bone className="mt-4 h-6 w-16" />
           <Bone className="mt-3 w-28" />
@@ -46,7 +46,7 @@ const widths = ["w-[70%]", "w-[55%]", "w-[80%]", "w-[60%]", "w-[75%]", "w-[50%]"
 
 export function TableSkeleton({ rows = 6, columns = 5 }: { rows?: number; columns?: number }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-white shadow-card">
+    <div className="overflow-hidden rounded border border-line bg-white">
       <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
         <Bone className="h-4 w-40" />
         <Bone className="hidden h-8 w-24 rounded-md sm:block" />
@@ -71,7 +71,7 @@ export function TableSkeleton({ rows = 6, columns = 5 }: { rows?: number; column
 
 export function CardSkeleton({ lines = 4, className }: { lines?: number; className?: string }) {
   return (
-    <div className={cn("rounded-xl border border-line bg-white p-5 shadow-card", className)}>
+    <div className={cn("rounded border border-line bg-white p-5", className)}>
       <Bone className="h-4 w-36" />
       <div className="mt-5 space-y-3">
         {Array.from({ length: lines }, (_, i) => (
