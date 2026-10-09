@@ -57,6 +57,25 @@ test("[US-017][US-018] answers save automatically and are still there after relo
   await expect(page.locator("#q-sites_count")).toHaveValue("3");
 });
 
+test("[US-022][US-023] several supporting documents of the allowed types attach to the report", async ({ page }) => {
+  const id = await openOverdueDraft(page);
+  await page.locator("#attachment-input").setInputFiles([
+    { name: "roster.csv", mimeType: "text/csv", buffer: Buffer.from("name,sessions\nA,4\nB,6\n") },
+    { name: "invoice.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\nInvoice 1042\n") },
+  ]);
+  await expect(page.getByText("2 attached")).toBeVisible();
+  const files = await ownerQuery<{ filename: string }>("SELECT filename FROM attachment WHERE submission_id = $1 ORDER BY filename", [id]);
+  expect(files.map((f) => f.filename)).toEqual(["invoice.pdf", "roster.csv"]);
+  await page.locator("#attachment-input").setInputFiles({ name: "setup.exe", mimeType: "application/octet-stream", buffer: Buffer.from("MZ") });
+  await expect(page.getByText("Use PDF, Word, Excel or CSV.")).toBeVisible();
+});
+
+test("[BR-012] the browser refuses a file over 25 MB before sending it and says why", async ({ page }) => {
+  await openOverdueDraft(page);
+  await page.locator("#attachment-input").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]) });
+  await expect(page.getByText("26 MB. The limit is 25 MB.")).toBeVisible();
+});
+
 test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the amount, then submits once fixed", async ({ page }) => {
   await openOverdueDraft(page);
   await fillRequiredAnswers(page);
