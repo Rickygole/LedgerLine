@@ -30,7 +30,7 @@ export function UserMenu({ name, initials, email, roleText, orgText }: { name: s
   return (
     <details ref={ref} className="group relative">
       <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-md py-1 pl-1 pr-2 text-left hover:bg-white/10 [&::-webkit-details-marker]:hidden" aria-label={`Account menu for ${name}`}>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-600 text-xs font-bold tracking-wide text-white ring-2 ring-white/20" aria-hidden="true">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-700 text-xs font-bold tracking-wide text-white" aria-hidden="true">
           {initials}
         </span>
         <span className="hidden min-w-0 sm:block">
