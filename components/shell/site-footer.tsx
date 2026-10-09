@@ -9,7 +9,7 @@ export function SiteFooter({ className }: { className?: string }) {
           <LogoMark className="h-4 w-4 shrink-0 opacity-70" />
           <span>&copy; 2026 LedgerLine. Initiative reporting for Council-funded programs.</span>
         </span>
-        <span className="text-muted">Need help? Contact Council Finance, Initiative Reporting.</span>
+        <span className="text-muted">Need help? Contact your LedgerLine administrator.</span>
       </div>
     </footer>
   );

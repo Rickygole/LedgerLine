@@ -12,7 +12,7 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
           <div aria-hidden="true" className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_at_top_left,black_30%,transparent_75%)]" />
           <div aria-hidden="true" className="absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-navy-600/25 blur-3xl" />
           <div className="relative">
-            <Logo subtitle="Initiative Reporting System" />
+            <Logo subtitle="Council-funded program reporting" />
           </div>
           <div className="relative max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-navy-300">Council initiative reporting</p>
@@ -24,7 +24,7 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
         <main id="main" tabIndex={-1} className="flex min-w-0 items-center justify-center bg-surface px-4 py-10 focus:outline-none sm:px-8 lg:bg-white lg:py-16">
           <div className="w-full max-w-md">
             <div className="mb-8 lg:hidden">
-              <Logo tone="light" subtitle="Initiative Reporting System" />
+              <Logo tone="light" subtitle="Council-funded program reporting" />
             </div>
             {children}
           </div>
