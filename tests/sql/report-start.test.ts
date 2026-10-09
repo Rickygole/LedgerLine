@@ -40,7 +40,7 @@ async function countSubmissions(): Promise<number> {
   return (await owner.query("SELECT count(*)::int AS n FROM submission WHERE assignment_id = $1 AND period_id = $2", [target!.assignment, target!.period])).rows[0].n;
 }
 
-describe("[US-023] opening the start page does not create a draft", () => {
+describe("[US-016] opening the start page does not create a draft", () => {
   it("has an assignment and period with no report yet", () => {
     expect(target).not.toBeNull();
   });
@@ -74,7 +74,7 @@ describe("[US-023] opening the start page does not create a draft", () => {
   });
 });
 
-describe("[BR-002][US-040] a report is only started for a period the initiative owes", () => {
+describe("[BR-009][US-016] a report is only started for a period the initiative owes", () => {
   let crossAssignment: string | null = null;
   let crossPeriod: string | null = null;
 
