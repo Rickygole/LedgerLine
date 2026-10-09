@@ -26,7 +26,7 @@ const sample = (over: Partial<ExportSubmission> = {}): ExportSubmission => ({
   ...over,
 });
 
-const meta = { periodLabel: "FY26 Year-End", filters: ["borough = Bronx"], generatedAt: new Date("2026-10-14T12:00:00Z"), numericKeys: new Set(["participants_actual"]), rowCount: 1 };
+const meta = { periodLabel: "FY26 Year-End", filters: ["borough = Bronx"], generatedOn: "2026-10-14", numericKeys: new Set(["participants_actual"]), rowCount: 1 };
 
 describe("formula injection guard", () => {
   it("prefixes text that starts with a formula character", () => {

@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
+import { formatDate, formatDateTime, formatTime, isToday, todayInNewYork } from "@/lib/dates";
 import { formatCurrency, parseAmount } from "@/lib/rules/money";
 import { balanceMessage, budgetTotals, isBlankRow, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
@@ -111,11 +111,7 @@ export function plainTextReport(input: SummaryInput): string {
   return lines.join("\n");
 }
 
-function dayKey(value: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
-}
-
-export function savedAtLabel(value: string, now: Date = new Date()): string {
+export function savedAtLabel(value: string, today: string = todayInNewYork()): string {
   const when = new Date(value);
-  return dayKey(when) === dayKey(now) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
+  return isToday(when, today) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
 }

@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 import { savedAtLabel } from "@/lib/report/format";
 import type { SaveState } from "@/lib/report/use-autosave";
 
-export function SaveStatus({ state, lastSavedAt }: { state: SaveState; lastSavedAt: string | null }) {
+export function SaveStatus({ state, lastSavedAt, today }: { state: SaveState; lastSavedAt: string | null; today: string }) {
   let text = "Changes save automatically.";
   let tone = "text-muted";
   let icon = <CheckCircle2 className="h-4 w-4" aria-hidden="true" />;
@@ -14,7 +14,7 @@ export function SaveStatus({ state, lastSavedAt }: { state: SaveState; lastSaved
     text = "Saving…";
     icon = <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />;
   } else if (state.kind === "saved") {
-    text = `Saved ${savedAtLabel(state.at)}`;
+    text = `Saved ${savedAtLabel(state.at, today)}`;
     tone = "text-ok";
   } else if (state.kind === "retrying") {
     text = state.message ?? "Couldn't save, retrying. Keep this tab open.";
@@ -29,7 +29,7 @@ export function SaveStatus({ state, lastSavedAt }: { state: SaveState; lastSaved
     tone = "text-bad";
     icon = <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
   } else if (lastSavedAt) {
-    text = `Last saved ${savedAtLabel(lastSavedAt)}`;
+    text = `Last saved ${savedAtLabel(lastSavedAt, today)}`;
   }
 
   return (

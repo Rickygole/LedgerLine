@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
   const query = Object.fromEntries(request.nextUrl.searchParams.entries());
   const format = query.format === "csv" ? "csv" : "xlsx";
-  const generatedAt = new Date();
+  const generatedOn = todayInNewYork();
 
   const result = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
   const book = buildWorkbook(submissions, {
     periodLabel: `${result.period.label} (${result.period.id}), due ${result.period.dueOn}`,
     filters: result.filterLines,
-    generatedAt,
+    generatedOn,
     numericKeys,
     rowCount: submissions.length,
   });

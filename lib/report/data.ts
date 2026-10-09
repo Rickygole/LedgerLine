@@ -1,4 +1,5 @@
 import "server-only";
+import { todayInNewYork } from "@/lib/dates";
 import type { Tx } from "@/lib/db";
 import { usingBlob } from "@/lib/storage";
 import type { Answers, AnswerValue, BudgetLine, FormDefinition } from "@/lib/rules/types";
@@ -162,6 +163,7 @@ export async function loadEditorPayload(tx: Tx, report: LoadedReport, currentUse
     attachments,
     storage: usingBlob() ? "blob" : "local",
     resumeSection: resumeSectionFor(report.definition, updatedAt),
+    today: todayInNewYork(),
     hasProgress: Object.keys(updatedAt).some((key) => key !== "org_legal_name" && key !== "org_ein") || budget.length > 0,
     currentUserName,
     currentUserTitle,

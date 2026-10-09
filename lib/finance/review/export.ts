@@ -53,7 +53,7 @@ export type ExportSubmission = {
 export type ExportMeta = {
   periodLabel: string;
   filters: string[];
-  generatedAt: Date;
+  generatedOn: string;
   numericKeys: Set<string>;
   rowCount: number;
 };
@@ -199,7 +199,7 @@ export function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
     ["Reporting period", meta.periodLabel],
     ["Filters applied", meta.filters.length > 0 ? meta.filters.join("; ") : "None"],
     ["Submission rows", String(meta.rowCount)],
-    ["Generated at", meta.generatedAt.toISOString()],
+    ["Generated on", meta.generatedOn],
     ["Notes", "EIN values are stored as text. Text that begins with = + - or @ has a leading apostrophe added so spreadsheets do not run it as a formula."],
   ];
   const sheet: XLSX.WorkSheet = {};
