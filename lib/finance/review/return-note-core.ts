@@ -106,9 +106,8 @@ export function fallbackSentence(concern: Concern): string {
     case "BR-023":
       return "Please check the EIN and enter all nine digits.";
     case "OC-001":
-      return concern.detail ? `Please confirm the participant counts: you reported ${concern.detail}.` : "Please confirm the participant counts.";
     case "OC-002":
-      return concern.detail ? `Please confirm the participant counts: you reported ${concern.detail}.` : "Please confirm the participant counts.";
+      return concern.detail ? `Please check the number of participants served: you reported ${concern.detail}.` : "Please check the number of participants served.";
     case "PR-001":
       return "Please attach supporting documentation for personnel lines.";
     case "PR-002":

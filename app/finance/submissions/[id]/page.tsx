@@ -72,7 +72,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         meta={
           <>
             <StateBadge state={reportState(row.status, row.dueOn)} />
-            <DueBadge daysPastDue={late} />
+            {row.status === "draft" || row.status === "returned" ? <DueBadge daysPastDue={late} /> : null}
             <Badge>{row.referenceNo}</Badge>
             <Badge>Revision {row.revision}</Badge>
             <Badge>{detail.periodLabel}</Badge>
