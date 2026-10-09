@@ -22,7 +22,17 @@ export function AwardPeriods({ periods }: { periods: PeriodCell[] | null }) {
 
 const CONTRACT_TONE: Record<string, Tone> = { registered: "ok", pending: "warn", awaiting: "neutral" };
 
-export function ContractCell({ status, number, registeredOn }: { status: string; number: string | null; registeredOn: string | null }) {
+export function ContractCell({ status, number, registeredOn, quiet = false }: { status: string; number: string | null; registeredOn: string | null; quiet?: boolean }) {
+  if (quiet && status === "registered") {
+    return (
+      <div className="whitespace-nowrap text-xs text-muted">
+        <span className="sr-only">Registered. </span>
+        {number ? <div className="font-mono">{number}</div> : null}
+        {registeredOn ? <div>{formatDate(registeredOn)}</div> : null}
+        {!number && !registeredOn ? <div>Registered</div> : null}
+      </div>
+    );
+  }
   return (
     <div className="whitespace-nowrap">
       <Badge tone={CONTRACT_TONE[status] ?? "neutral"}>{contractLabel(status)}</Badge>
