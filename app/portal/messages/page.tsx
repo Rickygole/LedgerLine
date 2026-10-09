@@ -1,0 +1,83 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Mail } from "lucide-react";
+import { Card, CardHeader } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { Badge } from "@/components/ui/status-badge";
+import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
+import { requireUser } from "@/lib/auth";
+import { withClaims } from "@/lib/db";
+import { formatDateTime } from "@/lib/dates";
+import { templateLabel } from "@/lib/portal/messages";
+
+export const metadata: Metadata = { title: "Messages" };
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+type Row = { id: string; subject: string; template: string; to_email: string; created_at: string; status: string; submission_id: string | null; reference_no: string | null };
+
+export default async function MessagesPage() {
+  const user = await requireUser(["cbo_submitter"]);
+  const rows = await withClaims(user.id, (tx) =>
+    tx.query<Row>(
+      `SELECT o.id, o.subject, o.template, o.to_email, o.created_at, o.status, o.submission_id, s.reference_no
+       FROM outbox o LEFT JOIN submission s ON s.id = o.submission_id
+       WHERE o.org_id = $1
+       ORDER BY o.created_at DESC`,
+      [user.orgId]
+    )
+  );
+  return (
+    <>
+      <PageHeader
+        title="Messages"
+        description="Emails the system has sent to your organization, such as submission confirmations. In this demo no real email leaves the system, so each message is shown here."
+        crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages" }]}
+      />
+      <Card>
+        <CardHeader title="Sent messages" description={`${rows.length} ${rows.length === 1 ? "message" : "messages"}, newest first.`} />
+        <Table>
+          <THead>
+            <tr>
+              <TH>Subject</TH>
+              <TH>Type</TH>
+              <TH>Sent to</TH>
+              <TH>Sent</TH>
+              <TH>Related report</TH>
+            </tr>
+          </THead>
+          <tbody>
+            {rows.length === 0 ? (
+              <EmptyRow colSpan={5}>No messages yet. A confirmation email appears here after you submit a report.</EmptyRow>
+            ) : (
+              rows.map((r) => (
+                <TR key={r.id}>
+                  <TD>
+                    <Link href={`/portal/messages/${r.id}`} className="flex items-center gap-2 font-medium text-navy-800 hover:underline">
+                      <Mail className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                      {r.subject}
+                    </Link>
+                  </TD>
+                  <TD>
+                    <Badge tone="neutral">{templateLabel(r.template)}</Badge>
+                  </TD>
+                  <TD>{r.to_email}</TD>
+                  <TD className="whitespace-nowrap">{formatDateTime(r.created_at)}</TD>
+                  <TD>
+                    {r.submission_id ? (
+                      <Link href={`/portal/reports/${r.submission_id}`} className="font-mono text-navy-800 hover:underline">
+                        {r.reference_no}
+                      </Link>
+                    ) : (
+                      <span className="text-muted">None</span>
+                    )}
+                  </TD>
+                </TR>
+              ))
+            )}
+          </tbody>
+        </Table>
+      </Card>
+    </>
+  );
+}
