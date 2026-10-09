@@ -35,9 +35,9 @@ export function TR({ children, className }: { children: React.ReactNode; classNa
   return <tr className={cn("border-b border-line bg-white last:border-0 hover:bg-navy-50/60", className)}>{children}</tr>;
 }
 
-export function TD({ children, className, align = "left", label, primary, action }: { children?: React.ReactNode; className?: string; align?: "left" | "right"; label?: string; primary?: boolean; action?: boolean }) {
+export function TD({ children, className, align = "left", label, primary, action, stackHidden }: { children?: React.ReactNode; className?: string; align?: "left" | "right"; label?: string; primary?: boolean; action?: boolean; stackHidden?: boolean }) {
   return (
-    <td data-label={label} data-primary={primary ? "" : undefined} data-action={action ? "" : undefined} className={cn("px-4 py-3 align-middle text-ink", align === "right" && "num whitespace-nowrap text-right", className)}>
+    <td data-label={label} data-primary={primary ? "" : undefined} data-action={action ? "" : undefined} data-stack-hidden={stackHidden ? "" : undefined} className={cn("px-4 py-3 align-middle text-ink", align === "right" && "num whitespace-nowrap text-right", className)}>
       {children}
     </td>
   );

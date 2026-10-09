@@ -202,7 +202,8 @@ dialog.nav-drawer::backdrop {
   .table-stack td[data-action] > button {
     width: 100%;
   }
-  .table-stack td:empty {
+  .table-stack td:empty,
+  .table-stack td[data-stack-hidden] {
     display: none;
   }
 }
