@@ -3,14 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
-export function ScrollArea({ className, children }: { className?: string; children: React.ReactNode }) {
+export function ScrollArea({ className, label = "Scrollable table", children }: { className?: string; label?: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(false);
+  const [scrollable, setScrollable] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const update = () => setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 4);
+    const update = () => {
+      setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 4);
+      setScrollable(el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1);
+    };
     update();
     el.addEventListener("scroll", update, { passive: true });
     const observer = new ResizeObserver(update);
@@ -23,7 +27,7 @@ export function ScrollArea({ className, children }: { className?: string; childr
 
   return (
     <div className="relative min-w-0 last:overflow-hidden last:rounded-b">
-      <div ref={ref} className={cn("relative overflow-x-auto overscroll-x-contain", className)}>
+      <div ref={ref} tabIndex={scrollable ? 0 : undefined} role={scrollable ? "region" : undefined} aria-label={scrollable ? label : undefined} className={cn("relative overflow-x-auto overscroll-x-contain", className)}>
         {children}
       </div>
       <span
