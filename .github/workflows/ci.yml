@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ledgerline
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_OWNER_URL: postgres://postgres:postgres@localhost:5432/ledgerline
+      APP_SERVER_PASSWORD: ci_app_server_password_for_tests_only
+      APP_DATABASE_URL: postgres://app_server:ci_app_server_password_for_tests_only@localhost:5432/ledgerline
+      AUTH_SECRET: ci-auth-secret-ci-auth-secret-ci-auth-secret
+      GATE_COOKIE_SECRET: ci-gate-secret-ci-gate-secret-ci-gate-secret
+      GATE_PASSCODE: ci-passcode
+      DEMO_TODAY: "2026-10-14"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: pnpm db:role
+      - run: pnpm db:seed
+      - run: pnpm lint
+      - run: npx tsc --noEmit
+      - name: Unit, SQL and eval tests
+        run: npx vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json
+      - name: Requirements evidence
+        if: always()
+        run: npx tsx scripts/trust.ts
+      - run: pnpm build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence
+          path: |
+            reports
+            app/trust/evidence.json
