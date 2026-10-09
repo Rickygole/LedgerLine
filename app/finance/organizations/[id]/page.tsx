@@ -140,7 +140,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 </div>
               </CardBody>
             </Card>
-            <Card className="self-start lg:row-span-2">
+            <Card className="self-start">
               <CardHeader title="Contact" />
               <ul className="space-y-3 px-5 py-4 text-sm">
                 <li className="flex gap-2.5">
@@ -174,19 +174,19 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 )}
               </div>
             </Card>
-            <Card className="lg:col-span-2">
-              <CardHeader
-                title="Awards"
-                description="Active and past awards with report status by period."
-                actions={
-                  <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-                    Open awards tab
-                  </Link>
-                }
-              />
-              <AwardsTable awards={awards} />
-            </Card>
           </div>
+          <Card className="mt-6">
+            <CardHeader
+              title="Awards"
+              description="Active and past awards with report status by period."
+              actions={
+                <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                  Open awards tab
+                </Link>
+              }
+            />
+            <AwardsTable awards={awards} />
+          </Card>
         </>
       ) : null}
 
@@ -355,7 +355,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
 
 function AwardsTable({ awards }: { awards: OrgAward[] }) {
   return (
-    <Table>
+    <Table density="compact">
       <THead>
         <tr>
           <TH>Initiative</TH>
@@ -369,11 +369,11 @@ function AwardsTable({ awards }: { awards: OrgAward[] }) {
       </THead>
       <tbody>
         {awards.length === 0 ? (
-          <EmptyRow colSpan={8}>This organization has no awards yet.</EmptyRow>
+          <EmptyRow colSpan={7}>This organization has no awards yet.</EmptyRow>
         ) : (
           awards.map((a) => (
             <TR key={a.assignment_id}>
-              <TD>
+              <TD className="min-w-[14rem]">
                 <Link href={`/finance/initiatives/${a.initiative_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   {a.name}
                 </Link>
