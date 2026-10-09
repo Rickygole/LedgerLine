@@ -12,7 +12,7 @@ import { allowed, clientKey, TOO_MANY } from "@/lib/throttle";
 import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession, verifySessionClaims } from "@/lib/session";
 
 const loginSchema = z.object({
-  email: z.string().trim().email("Enter a valid email address."),
+  email: z.string().trim().min(1, "Enter your work email.").email("Enter a work email address in the right format, like name@example.org."),
   password: z.string().min(1, "Enter your password."),
 });
 
