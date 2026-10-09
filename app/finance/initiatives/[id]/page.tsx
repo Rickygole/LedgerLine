@@ -7,7 +7,8 @@ import { formatDateTime } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
-import { InitiativeLineage } from "@/components/finance/lifecycle/lineage-note";
+import { lineageMeta } from "@/components/finance/lifecycle/lineage-note";
+import { lineageFor } from "@/lib/lifecycle/rollover";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
@@ -27,15 +28,18 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
   const user = await requireUser(FINANCE_ROLES);
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const data = await withClaims(user.id, (tx) => loadInitiative(tx, id));
+  const data = await withClaims(user.id, async (tx) => {
+    const loaded = await loadInitiative(tx, id);
+    if (!loaded) return null;
+    return { ...loaded, lineage: await lineageFor(tx, id) };
+  });
   if (!data) notFound();
-  const { initiative, funded, forms } = data;
+  const { initiative, funded, forms, lineage } = data;
   const hasDraft = forms.some((f) => f.status === "draft");
   const hasSource = forms.some((f) => f.status !== "draft");
 
   return (
     <>
-      <InitiativeLineage initiativeId={id} />
       <ProfileHeader
         title={initiative.name}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: initiative.code }]}
@@ -45,6 +49,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
           <span key="fy" className="whitespace-nowrap">{initiative.fiscal_year_id}</span>,
           <span key="agency" className="whitespace-nowrap">{initiative.administering_agency ? `Administered by ${initiative.administering_agency}` : "No administering agency"}</span>,
+          ...lineageMeta(lineage),
         ]}
         actions={<PrintButton label="Print" />}
       >
