@@ -152,7 +152,7 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
                           <p className="text-xs text-muted">{formatDateTime(o.editedAt)}</p>
                         </>
                       ) : (
-                        <span className="text-muted">Not started</span>
+                        <span className="text-muted">None</span>
                       )}
                     </TD>
                     <TD className="text-right">
