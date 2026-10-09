@@ -13,6 +13,7 @@ import type { PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult 
 import { buildSnapshot } from "@/lib/snapshot";
 import { buildPath, checkUpload, putFile } from "@/lib/storage";
 import type { Answers } from "@/lib/rules/types";
+import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { blockingIssues, isVisible } from "@/lib/rules/validate";
 
 const cell = z.union([z.string().max(2000), z.number(), z.null()]);
@@ -32,9 +33,10 @@ const saveSchema = z.object({
         category: z.enum(["PS", "OTPS"]),
         description: z.string().max(500),
         amount: z.number().min(-1e11).max(1e11),
+        actual: z.number().min(-1e11).max(1e11).nullable().optional(),
       })
     )
-    .max(100),
+    .max(500),
 });
 
 export async function saveDraft(raw: unknown): Promise<SaveResult> {
@@ -47,6 +49,11 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
 
   try {
     return await withClaims(user.id, async (tx): Promise<SaveResult> => {
+      const form = await loadReport(tx, input.submissionId);
+      if (form && input.budget.length > form.definition.budget.maxLines) {
+        const over = input.budget.length - form.definition.budget.maxLines;
+        return { status: "error", message: `A budget can have at most ${form.definition.budget.maxLines} lines. This one has ${input.budget.length}. Remove ${over} ${over === 1 ? "line" : "lines"} and your changes will save.` };
+      }
       const touched = await tx.one<{ lock_version: number; updated_at: string }>(
         `UPDATE submission SET lock_version = lock_version + 1, updated_at = now(), updated_by = app.uid(), last_save_id = $3
          WHERE id = $1 AND status IN ('draft', 'returned') AND (lock_version = $2 OR (last_save_id = $3 AND lock_version = $2 + 1))
@@ -66,9 +73,8 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
       }
       const report = await loadReport(tx, input.submissionId);
       if (!report) return { status: "error", message: "This report could not be found." };
-      const allowedKeys = new Set(report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)));
-      const maxLines = report.definition.budget.maxLines;
-      await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget.slice(0, maxLines), allowedKeys });
+      const allowedKeys = new Set([...report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)), VARIANCE_NOTE_KEY]);
+      await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget, allowedKeys });
       return { status: "saved", lockVersion: touched.lock_version, savedAt: new Date(touched.updated_at).toISOString() };
     });
   } catch (error) {
@@ -233,8 +239,19 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
           if (value !== undefined) answers[question.key] = value;
         }
       }
+      if (definition.budget.enabled && stored.answers[VARIANCE_NOTE_KEY] !== undefined) answers[VARIANCE_NOTE_KEY] = stored.answers[VARIANCE_NOTE_KEY];
 
-      const issues = blockingIssues(reportIssues({ definition, answers: stored.answers, budget, awardAmount: header.awardAmount, orgEin: header.ein }));
+      const issues = blockingIssues(
+        reportIssues({
+          definition,
+          answers: stored.answers,
+          budget,
+          awardAmount: header.awardAmount,
+          orgEin: header.ein,
+          orgName: header.orgName,
+          period: { startsOn: header.startsOn, endsOn: header.endsOn },
+        })
+      );
       if (issues.length > 0) return { status: "blocked", issues };
 
       const attachments = files.map((file) => ({ path: file.path, filename: file.filename, bytes: Number(file.bytes), mime: file.mime }));

@@ -10,6 +10,7 @@ import { loadSubmissionDetail } from "@/lib/finance/review/detail";
 import { plainError, STALE_MESSAGE } from "@/lib/finance/review/errors";
 import { buildConcerns, containsRuleId, lineDiff, PRESET_CONCERNS, type Concern } from "@/lib/finance/review/return-note-core";
 import { buildSnapshot } from "@/lib/snapshot";
+import { identityProblem } from "@/lib/rules/identity";
 import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 
 export type ActionResult = { ok: boolean; message: string };
@@ -220,6 +221,8 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
       const answers = { ...row.answers, [key]: value };
       const issues = validateSubmission({ definition: row.definition!, answers, budget: row.budget, awardAmount: row.award }).filter((i) => i.field === key && i.severity === "block");
       if (issues.length > 0) return issues[0].message;
+      const identity = identityProblem(key, value, { legalName: row.orgName, ein: row.ein });
+      if (identity) return identity;
       const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>("SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1", [id]);
       const snapshot = buildSnapshot({
         formVersionId: row.formVersionId!,
