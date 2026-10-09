@@ -37,12 +37,11 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
           <TH align="right">Award</TH>
           <TH>State</TH>
           <TH>Flags</TH>
-          <TH>Updated</TH>
         </tr>
       </THead>
       <tbody>
         {rows.length === 0 ? (
-          <EmptyRow colSpan={9}>
+          <EmptyRow colSpan={8}>
             No reports match these filters.{" "}
             <Link href={emptyHref} className="font-semibold text-navy-700 hover:underline">
               Clear filters
@@ -59,6 +58,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 ) : (
                   <span className="text-[13px] text-muted">Not started</span>
                 )}
+                {row.updatedAt ? <span className="block text-xs text-muted">Updated {formatDate(row.updatedAt)}</span> : null}
               </TD>
               <TD className="min-w-48">
                 <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
@@ -67,13 +67,13 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
                 <span className="block text-xs text-muted">{row.borough}</span>
               </TD>
-              <TD className="min-w-48">
+              <TD className="min-w-40">
                 <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-navy-700 hover:underline">
                   {row.initiativeName}
                 </Link>
                 <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>
               </TD>
-              <TD className="min-w-36">
+              <TD className="min-w-28">
                 <span title={row.sponsors.map((s) => s.name).join(", ")}>{sponsorShort(row.sponsors)}</span>
                 <span className="block text-xs text-muted">{fundingLabel(row.fundingSource)}</span>
               </TD>
@@ -90,7 +90,6 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                   {row.flags.length === 0 ? <span className="text-muted">None</span> : row.flags.map((flag) => <FlagBadge key={flag.reason} label={FLAG_LABEL[flag.reason]} />)}
                 </div>
               </TD>
-              <TD className="whitespace-nowrap text-muted">{row.updatedAt ? formatDate(row.updatedAt) : "None"}</TD>
             </TR>
           ))
         )}
