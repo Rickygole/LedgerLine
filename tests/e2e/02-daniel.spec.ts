@@ -1,6 +1,6 @@
 import { expect, test, type Browser } from "@playwright/test";
 import * as XLSX from "xlsx";
-import { authFile, PEOPLE, submitOverdueDraft } from "./support/app";
+import { authFile, certify, PEOPLE, submitOverdueDraft } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -42,12 +42,12 @@ test.beforeAll(async ({ browser }) => {
 test("[US-039][US-041] the dashboard loads and the submissions list filters down to one organization", async ({ page }) => {
   await page.goto("/finance");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await page.goto("/finance/submissions?q=00-1040217&period=FY26-YE");
+  await page.goto("/finance/submissions?q=13-4027118&period=FY26-YE");
   const link = page.getByRole("link", { name: referenceNo });
   await expect(link).toBeVisible();
   const rows = page.locator("tbody tr");
   expect(await rows.count()).toBeGreaterThan(0);
-  for (const text of await rows.allInnerTexts()) expect(text).toContain("00-1040217");
+  for (const text of await rows.allInnerTexts()) expect(text).toContain("13-4027118");
   await link.click();
   await expect(page).toHaveURL(new RegExp(`/finance/submissions/${submissionId}$`));
 });
@@ -70,7 +70,7 @@ test("[US-044] an analyst requests an update with a note, the organization resub
   await expect(page.getByText(/Write a note before sending/)).toBeVisible();
   await page.getByLabel("Note to the organization").fill(NOTE);
   await page.getByRole("button", { name: "Send to organization" }).click();
-  await expect(page.getByText("Waiting on the organization to update and resubmit.")).toBeVisible();
+  await expect(page.getByText("Update request sent. The organization will see the note above its report.")).toBeVisible();
 
   const [row] = await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]);
   expect(row.status).toBe("returned");
@@ -80,13 +80,18 @@ test("[US-044] an analyst requests an update with a note, the organization resub
     await expect(maria.getByText(NOTE)).toBeVisible();
     await maria.locator("#q-contact_title").fill("Executive Director");
     await expect(maria.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
+    await certify(maria);
     await maria.getByRole("button", { name: "Submit report" }).click();
     await maria.waitForURL(/\/submitted$/);
   });
 
   await page.goto(`/finance/submissions/${submissionId}`);
   await page.getByRole("button", { name: "Accept report" }).click();
-  await expect(page.getByText(/accepted/i).first()).toBeVisible();
+  await expect
+    .poll(async () => (await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]))[0].status)
+    .toBe("accepted");
+  await page.reload();
+  await expect(page.getByText("This report is accepted.")).toBeVisible();
   const [after] = await ownerQuery<{ status: string; revision: number }>("SELECT status, revision FROM submission WHERE id = $1", [submissionId]);
   expect(after).toEqual({ status: "accepted", revision: 2 });
 });
@@ -111,16 +116,16 @@ test("[US-045][US-057] a correction after acceptance needs a reason and leaves a
 });
 
 test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filtered list, for finance staff only", async ({ page, browser }) => {
-  const csv = await page.request.get("/api/export?q=00-1040217&period=FY26-YE&format=csv");
+  const csv = await page.request.get("/api/export?q=13-4027118&period=FY26-YE&format=csv");
   expect(csv.status()).toBe(200);
   expect(csv.headers()["content-type"]).toContain("text/csv");
   expect(csv.headers()["content-disposition"]).toContain("attachment");
   const lines = (await csv.text()).trim().split("\n");
   expect(lines[0]).toContain("reference_no");
   expect(lines.length).toBeGreaterThan(1);
-  for (const line of lines.slice(1)) expect(line).toContain("00-1040217");
+  for (const line of lines.slice(1)) expect(line).toContain("13-4027118");
 
-  const xlsx = await page.request.get("/api/export?q=00-1040217&period=FY26-YE");
+  const xlsx = await page.request.get("/api/export?q=13-4027118&period=FY26-YE");
   expect(xlsx.status()).toBe(200);
   expect(xlsx.headers()["content-type"]).toContain("spreadsheetml");
   const book = XLSX.read(await xlsx.body(), { type: "buffer" });
