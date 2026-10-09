@@ -94,18 +94,18 @@ const DESCRIPTION_STYLES = [
 ];
 
 export const CITYWIDE_INITIATIVES: InitiativeSpec[] = [
-  { name: "Cultural Access Fund", category: "Arts and Culture", kind: "named", awards: [28, 40], amount: [8000, 60000], open: true, description: "Operating grants that keep neighborhood arts and cultural groups open to the public." },
-  { name: "Neighborhood Food Resilience Grants", category: "Food Security", kind: "named", awards: [22, 30], amount: [12000, 75000], open: true, description: "Capacity grants for pantries, community kitchens and food buying clubs across all five boroughs." },
-  { name: "Senior Center Enhancement Program", category: "Older Adults", kind: "named", awards: [18, 24], amount: [15000, 90000], open: true, description: "Equipment, programming and staffing support for senior centers and older adult clubs." },
-  { name: "Youth Opportunity Citywide Grants", category: "Youth Services", kind: "named", awards: [20, 28], amount: [20000, 100000], open: true, description: "Flexible grants for organizations that serve young people in school, out of school and in transition." },
-  { name: "Immigrant Navigation Network", category: "Immigrant Services", kind: "named", awards: [15, 20], amount: [15000, 90000], open: true, description: "Language access, benefits screening and referral support for recent arrivals, delivered through neighborhood partners." },
-  { name: "Community Health Access Partnership", category: "Health", kind: "named", awards: [16, 22], amount: [20000, 110000], open: true, description: "Health education, screening and enrollment help delivered by trusted community organizations." },
+  { name: "Cultural Access Fund", category: "Arts and Culture", kind: "named", awards: [8, 12], amount: [8000, 60000], open: true, description: "Operating grants that keep neighborhood arts and cultural groups open to the public." },
+  { name: "Neighborhood Food Resilience Grants", category: "Food Security", kind: "named", awards: [7, 10], amount: [12000, 75000], open: true, description: "Capacity grants for pantries, community kitchens and food buying clubs across all five boroughs." },
+  { name: "Senior Center Enhancement Program", category: "Older Adults", kind: "named", awards: [5, 8], amount: [15000, 90000], open: true, description: "Equipment, programming and staffing support for senior centers and older adult clubs." },
+  { name: "Youth Opportunity Citywide Grants", category: "Youth Services", kind: "named", awards: [6, 9], amount: [20000, 100000], open: true, description: "Flexible grants for organizations that serve young people in school, out of school and in transition." },
+  { name: "Immigrant Navigation Network", category: "Immigrant Services", kind: "named", awards: [5, 7], amount: [15000, 90000], open: true, description: "Language access, benefits screening and referral support for recent arrivals, delivered through neighborhood partners." },
+  { name: "Community Health Access Partnership", category: "Health", kind: "named", awards: [5, 8], amount: [20000, 110000], open: true, description: "Health education, screening and enrollment help delivered by trusted community organizations." },
 ];
 
 export function smallAwardCount(roll: number): [number, number] {
-  if (roll < 0.52) return [1, 1];
-  if (roll < 0.78) return [2, 2];
-  if (roll < 0.91) return [3, 3];
+  if (roll < 0.6) return [1, 1];
+  if (roll < 0.86) return [2, 2];
+  if (roll < 0.96) return [3, 3];
   return [4, 4];
 }
 

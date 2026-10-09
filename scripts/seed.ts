@@ -520,7 +520,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     name: `Local ${category} Discretionary Fund`,
     category,
     kind: "local" as const,
-    awards: [4, 10] as [number, number],
+    awards: [2, 3] as [number, number],
     amount: [8000, 90000] as [number, number],
     description: `Discretionary awards that individual Council Members designate to neighborhood ${category.toLowerCase()} programs in their districts.`,
   });
@@ -606,10 +606,18 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     return [{ district: homeDistrict, amount }];
   };
 
+  const load = new Map<string, number>();
+  const loadKey = (org: OrgRow, fy: string) => `${org.id}:${fy}`;
+  const largeOrgs = new Set(shuffle(orgs.filter((o) => o.id !== maria.id && o.categories.length > 1)).slice(0, 7).map((o) => o.id));
+  const capFor = (org: OrgRow) => (largeOrgs.has(org.id) ? 12 : 6);
+  const loadOf = (org: OrgRow, fy: string) => load.get(loadKey(org, fy)) ?? 0;
+  const pressure = (org: OrgRow, fy: string) => loadOf(org, fy) / capFor(org);
+
   const assign = (initiative: SeedInitiative, org: OrgRow, amount: number, forcedSource?: AssignmentRow["funding_source"]) => {
     const key = `${initiative.id}:${org.id}`;
     if (pairs.has(key)) return null;
     pairs.add(key);
+    load.set(loadKey(org, initiative.fiscalYear), loadOf(org, initiative.fiscalYear) + 1);
     const source: AssignmentRow["funding_source"] = forcedSource ?? (initiative.kind === "local" ? "local" : weighted({ citywide: 70, speaker: 15, delegation: 15 }));
     const row: AssignmentRow = { id: randomUUID(), initiative_id: initiative.id, org_id: org.id, award_amount: amount, sponsoring_agency: initiative.agency, funding_source: source, ...contractFor(initiative.fiscalYear, initiative.agency) };
     assignments.push(row);
@@ -618,24 +626,48 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     return row;
   };
 
+  const byPressure = (list: OrgRow[], fy: string) => [...list].sort((a, b) => pressure(a, fy) - pressure(b, fy));
+
   const poolFor = (initiative: SeedInitiative) => {
-    const own = shuffle(orgs.filter((o) => o.id !== maria.id && o.categories.includes(initiative.category)));
+    const fy = initiative.fiscalYear;
+    const free = (o: OrgRow) => !pairs.has(`${initiative.id}:${o.id}`) && loadOf(o, fy) < capFor(o);
+    const own = byPressure(shuffle(orgs.filter((o) => o.id !== maria.id && o.categories.includes(initiative.category) && free(o))), fy);
     if (!initiative.open) return own;
-    return [...own, ...shuffle(orgs.filter((o) => o.id !== maria.id && o.org_type === "cbo" && !o.categories.includes(initiative.category)))];
+    return [...own, ...byPressure(shuffle(orgs.filter((o) => o.id !== maria.id && o.org_type === "cbo" && !o.categories.includes(initiative.category) && free(o))), fy)];
+  };
+
+  const fillAwards = (initiative: SeedInitiative, count: number) => {
+    const pool = poolFor(initiative).slice(0, count);
+    for (const org of pool) assign(initiative, org, award(initiative.kind, initiative.amount));
+  };
+
+  const ensureAwarded = (list: SeedInitiative[]) => {
+    for (const initiative of list) {
+      if (assignments.some((a) => a.initiative_id === initiative.id)) continue;
+      const fallback = byPressure(shuffle(orgs.filter((o) => o.id !== maria.id && o.categories.includes(initiative.category))), initiative.fiscalYear)[0];
+      assign(initiative, fallback, award(initiative.kind, initiative.amount));
+    }
+  };
+
+  const raiseToMinimum = (list: SeedInitiative[], fy: string, minimum: number) => {
+    for (const org of orgs) {
+      if (org.id === maria.id) continue;
+      while (loadOf(org, fy) < minimum) {
+        const options = list
+          .filter((i) => org.categories.includes(i.category) && !pairs.has(`${i.id}:${org.id}`))
+          .sort((a, b) => assignments.filter((x) => x.initiative_id === a.id).length - assignments.filter((x) => x.initiative_id === b.id).length);
+        if (options.length === 0) break;
+        assign(options[0], org, award(options[0].kind, options[0].amount));
+      }
+    }
   };
 
   assign(late, maria, 85000, "citywide");
   assign(accepted, maria, 62500, "citywide");
-  for (const initiative of fy26) {
-    const pool = poolFor(initiative);
-    const count = Math.min(pool.length, between(initiative.awards[0], initiative.awards[1]));
-    for (const org of pool.slice(0, count)) assign(initiative, org, award(initiative.kind, initiative.amount));
-  }
-  const funded = new Set(assignments.map((a) => a.org_id));
-  for (const org of orgs.filter((o) => !funded.has(o.id))) {
-    const local = fy26.find((i) => i.kind === "local" && i.category === org.categories[0])!;
-    assign(local, org, award("local", local.amount));
-  }
+  const smallFirst = [...fy26].sort((a, b) => Number(a.kind === "local" || a.open) - Number(b.kind === "local" || b.open));
+  for (const initiative of smallFirst) fillAwards(initiative, between(initiative.awards[0], initiative.awards[1]));
+  ensureAwarded(fy26);
+  raiseToMinimum(fy26, "FY26", 3);
 
   const fy26Assignments = assignments.filter((a) => assignmentSeed.get(a.id)!.fiscalYear === "FY26");
   for (const prior of fy26Assignments) {
@@ -648,17 +680,12 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     const factor = isMaria ? 1 : pick([1, 1, 1.04, 1.1, 0.95, 0.9, 1.15]);
     assign(next, org, Math.max(5000, roundTo(prior.award_amount * factor, 500)), prior.funding_source);
   }
-  for (const next of fy27New) {
-    const pool = poolFor(next);
-    const count = Math.min(pool.length, between(next.awards[0], next.awards[1]));
-    for (const org of pool.slice(0, count)) assign(next, org, award(next.kind, next.amount));
-  }
+  for (const next of fy27New) fillAwards(next, between(next.awards[0], next.awards[1]));
   for (const next of fy27.filter((i) => !fy27New.includes(i))) {
-    if (chance(next.open ? 0 : 0.35)) {
-      const pool = poolFor(next).filter((o) => !pairs.has(`${next.id}:${o.id}`));
-      if (pool.length > 0) assign(next, pool[0], award(next.kind, next.amount));
-    }
+    if (chance(next.open ? 0 : 0.25)) fillAwards(next, 1);
   }
+  ensureAwarded(fy27);
+  raiseToMinimum(fy27, "FY27", 3);
 
   await insertRows(client, "assignment", assignments, ["id", "initiative_id", "org_id", "award_amount", "sponsoring_agency", "funding_source", "contract_status", "contract_registered_on", "contract_number"]);
   await insertRows(client, "assignment_sponsor", sponsorRows, ["assignment_id", "district", "amount"]);

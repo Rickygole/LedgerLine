@@ -83,13 +83,13 @@ export type NamedInitiative = {
 };
 
 export const NAMED_INITIATIVES: NamedInitiative[] = [
-  { name: "Mentor Match Network", category: "Youth Services", awards: [8, 11], amount: [60000, 140000], description: "Pairs young people ages 11 to 19 with trained adult mentors and tracks match length, school attendance and goal completion." },
-  { name: "Afterschool Studio Program", category: "Youth Services", awards: [9, 12], amount: [45000, 160000], description: "Funds weekday and Saturday studio programming in art, media and science for middle school students." },
+  { name: "Mentor Match Network", category: "Youth Services", awards: [6, 8], amount: [60000, 140000], description: "Pairs young people ages 11 to 19 with trained adult mentors and tracks match length, school attendance and goal completion." },
+  { name: "Afterschool Studio Program", category: "Youth Services", awards: [7, 9], amount: [45000, 160000], description: "Funds weekday and Saturday studio programming in art, media and science for middle school students." },
   { name: "Summer Launch Stipends", category: "Youth Services", awards: [5, 8], amount: [70000, 220000], description: "Pays stipends to teenagers in summer work placements run by community organizations." },
   { name: "Elder Neighbors Connect", category: "Older Adults", awards: [6, 8], amount: [50000, 180000], description: "Home visits, phone check-ins and group activities for older adults who live alone." },
   { name: "Aging Well Wellness Circles", category: "Older Adults", awards: [5, 7], amount: [40000, 120000], description: "Fitness, falls prevention and nutrition classes held at senior centers and housing developments." },
   { name: "Golden Table Meals Supplement", category: "Older Adults", awards: [4, 6], amount: [60000, 210000], description: "Adds weekend and holiday meals to existing senior meal programs." },
-  { name: "Adult Learning Bridge", category: "Education", awards: [22, 26], amount: [30000, 95000], description: "English, reading and high school equivalency classes for adults, with childcare during sessions." },
+  { name: "Adult Learning Bridge", category: "Education", awards: [10, 12], amount: [30000, 95000], description: "English, reading and high school equivalency classes for adults, with childcare during sessions." },
   { name: "Family Reading Partnerships", category: "Education", awards: [6, 9], amount: [35000, 110000], description: "Early literacy workshops and book distribution for families with children under 8." },
   { name: "Community Wellness Navigators", category: "Health", awards: [7, 10], amount: [55000, 190000], description: "Trained community health workers connect residents to primary care, insurance and screenings." },
   { name: "Early Family Health Visits", category: "Health", awards: [5, 7], amount: [70000, 240000], description: "Prenatal and postpartum home visits for families in neighborhoods with high infant mortality." },
@@ -98,7 +98,7 @@ export const NAMED_INITIATIVES: NamedInitiative[] = [
   { name: "Home Repair Assistance Network", category: "Housing", awards: [4, 5], amount: [80000, 260000], description: "Minor repairs and safety upgrades for low-income homeowners and small building owners." },
   { name: "Skills to Careers Pathways", category: "Workforce", awards: [6, 8], amount: [90000, 320000], description: "Short-term training in healthcare, building trades and technology with job placement support.", renamedTo: "Skills to Careers Network" },
   { name: "Small Shop Growth Support", category: "Workforce", awards: [4, 6], amount: [45000, 150000], description: "Technical assistance for neighborhood storefront businesses on permits, bookkeeping and marketing." },
-  { name: "Neighborhood Pantry Support", category: "Food Security", awards: [9, 12], amount: [30000, 130000], description: "Operating support for emergency food pantries, including refrigeration and volunteer coordination." },
+  { name: "Neighborhood Pantry Support", category: "Food Security", awards: [7, 9], amount: [30000, 130000], description: "Operating support for emergency food pantries, including refrigeration and volunteer coordination." },
   { name: "Fresh Food Access Program", category: "Food Security", awards: [5, 7], amount: [50000, 170000], description: "Produce boxes, mobile markets and cooking demonstrations in areas with few grocery stores.", renamedTo: "Fresh Food Access Initiative" },
   { name: "New Neighbor Navigation", category: "Immigrant Services", awards: [6, 9], amount: [60000, 200000], description: "Orientation, benefits screening and referrals for recent arrivals." },
   { name: "Language Bridge Services", category: "Immigrant Services", awards: [4, 6], amount: [40000, 120000], description: "Interpretation and document translation for residents with limited English proficiency." },
