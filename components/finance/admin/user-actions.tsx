@@ -36,7 +36,7 @@ export function UserActions({ userId, name, email, role, active, isSelf, isCbo }
       <dialog
         ref={ref}
         aria-labelledby={titleId}
-        className="manage-dialog m-auto w-[min(30rem,calc(100vw-2rem))] max-w-none rounded border border-line bg-white p-0 text-ink"
+        className="manage-dialog m-auto text-left w-[min(30rem,calc(100vw-2rem))] max-w-none rounded border border-line bg-white p-0 text-ink"
         onClick={(event) => {
           if (event.target === event.currentTarget) close();
         }}
