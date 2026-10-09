@@ -60,7 +60,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               </div>
               <div>
                 <Label htmlFor="to">Roll over to</Label>
-                <Hint id="to-hint">Use the form FY28. The year and its two reporting periods are created if they do not exist.</Hint>
+                <Hint id="to-hint">Enter FY and two digits, for example FY28. The year and its two reporting periods are created if they do not exist.</Hint>
                 <Input id="to" name="to" defaultValue={to} pattern="FY[0-9]{2}" maxLength={4} aria-describedby="to-hint" />
               </div>
               <Button type="submit" variant="secondary">
