@@ -5,7 +5,7 @@ const OPEN_PATHS = ["/gate", "/robots.txt", "/favicon.ico"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (OPEN_PATHS.some((p) => pathname === p) || pathname.startsWith("/_next")) {
+  if (OPEN_PATHS.some((p) => pathname === p) || pathname.startsWith("/_next") || pathname.startsWith("/api/cron/")) {
     return withHeaders(NextResponse.next());
   }
 
