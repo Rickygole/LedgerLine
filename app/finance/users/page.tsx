@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { Input, Select } from "@/components/ui/field";
+import { monogram } from "@/components/ui/profile-header";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
@@ -66,15 +67,22 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
               <EmptyRow colSpan={7}>No users match these filters.</EmptyRow>
             ) : (
               rows.map((u) => (
-                <TR key={u.id} className="align-top">
+                <TR key={u.id}>
                   <TD>
-                    <span className="font-semibold">{u.full_name}</span>
-                    {u.title ? <div className="text-xs text-muted">{u.title}</div> : null}
-                    {u.id === admin.id ? <div className="text-xs font-semibold text-navy-700">You</div> : null}
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-100 text-[11px] font-bold text-navy-800" aria-hidden="true">
+                        {monogram(u.full_name)}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-semibold">{u.full_name}</span>
+                        {u.id === admin.id ? <span className="ml-2 rounded-full bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">You</span> : null}
+                        {u.title ? <div className="text-xs text-muted">{u.title}</div> : null}
+                      </div>
+                    </div>
                   </TD>
-                  <TD>{u.email}</TD>
-                  <TD>{roleLabel(u.role)}</TD>
-                  <TD>{u.org_name ?? <span className="text-muted">Council Finance</span>}</TD>
+                  <TD className="text-muted">{u.email}</TD>
+                  <TD className="whitespace-nowrap">{roleLabel(u.role)}</TD>
+                  <TD className="max-w-56">{u.org_name ?? <span className="whitespace-nowrap text-muted">Council Finance</span>}</TD>
                   <TD>
                     {u.can_sign_in ? (
                       <Badge tone="ok" icon={Check}>
