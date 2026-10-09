@@ -103,7 +103,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 <ContractCell status={row.contractStatus} number={row.contractNumber} registeredOn={row.contractRegisteredOn} quiet />
               </TD>
               <TD align="right" label="Award">{formatCurrency(row.award, { cents: false })}</TD>
-              <TD className="whitespace-nowrap" label="State">
+              <TD className="min-w-36" label="State">
                 <div>
                   <StateBadge state={reportState(row.status, row.dueOn)} />
                   <span className="mt-1 block text-xs">{dueCell(row)}</span>
