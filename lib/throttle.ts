@@ -18,3 +18,12 @@ export async function allowedWithin(key: string, minutes: number, limit: number)
   const rows = await anonymous<{ ok: boolean }>("SELECT app.record_attempt($1, $2, $3) AS ok", [key, minutes, limit]);
   return rows[0]?.ok === true;
 }
+
+export async function blocked(key: string, limit: number): Promise<boolean> {
+  const rows = await anonymous<{ blocked: boolean }>("SELECT app.attempts_blocked($1, 15, $2) AS blocked", [key, limit]);
+  return rows[0]?.blocked === true;
+}
+
+export async function clearAttempts(key: string): Promise<void> {
+  await anonymous("SELECT app.clear_attempts($1)", [key]);
+}

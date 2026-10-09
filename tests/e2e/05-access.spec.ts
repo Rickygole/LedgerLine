@@ -71,7 +71,7 @@ test("[BR-011] signing out revokes the session so a copied cookie stops working"
   await context.close();
 });
 
-test("[BR-011] the ninth sign-in attempt for one email within 15 minutes is refused with a wait notice", async ({ browser }) => {
+test("[BR-011] the ninth failed sign-in for one email within 15 minutes is refused with a wait notice", async ({ browser }) => {
   const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
   const page = await context.newPage();
   await page.goto("/gate");
@@ -90,6 +90,16 @@ test("[BR-011] the ninth sign-in attempt for one email within 15 minutes is refu
   await page.getByLabel("Password").fill("wrong-9");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByText("Too many attempts. Wait 15 minutes and try again.")).toBeVisible();
+  await context.close();
+});
+
+test("[BR-011] switching between personas many times never locks anyone out", async ({ browser }) => {
+  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+  const page = await context.newPage();
+  for (let round = 1; round <= 10; round++) {
+    await signIn(page, PEOPLE.grace);
+    await expect(page).toHaveURL(/\/finance/);
+  }
   await context.close();
 });
 

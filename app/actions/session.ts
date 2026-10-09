@@ -8,13 +8,16 @@ import { z } from "zod";
 import { homeFor, type Role } from "@/lib/auth";
 import { anonymous, withClaims } from "@/lib/db";
 import { safeNext } from "@/lib/redirect";
-import { allowed, clientKey, TOO_MANY } from "@/lib/throttle";
+import { allowed, blocked, clearAttempts, clientKey, TOO_MANY } from "@/lib/throttle";
 import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession, verifySessionClaims } from "@/lib/session";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
   password: z.string().min(1, "Enter your password."),
 });
+
+const IP_FAILURE_LIMIT = 30;
+const EMAIL_FAILURE_LIMIT = 8;
 
 const DUMMY_HASH = "$2b$10$ub.I6pzHcfPjvdwuphNjf.D0PorzRHkVo7g34JoMBQE4O5FnPI8TO";
 
@@ -42,11 +45,19 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   }
   const ip = await clientKey();
   const email = parsed.data.email.toLowerCase();
-  if (!(await allowed(`login-ip:${ip}`, 30)) || !(await allowed(`login-email:${email}`, 8))) return { error: TOO_MANY, values };
+  const ipKey = `login-ip:${ip}`;
+  const emailKey = `login-email:${email}`;
+  if ((await blocked(ipKey, IP_FAILURE_LIMIT)) || (await blocked(emailKey, EMAIL_FAILURE_LIMIT))) return { error: TOO_MANY, values };
 
   const account = await lookup(email);
   const valid = await bcrypt.compare(parsed.data.password, account?.password_hash ?? DUMMY_HASH);
-  if (!account || !valid) return { error: "That email and password do not match an account.", values };
+  if (!account || !valid) {
+    const ipOk = await allowed(ipKey, IP_FAILURE_LIMIT);
+    const emailOk = await allowed(emailKey, EMAIL_FAILURE_LIMIT);
+    if (!ipOk || !emailOk) return { error: TOO_MANY, values };
+    return { error: "That email and password do not match an account.", values };
+  }
+  await clearAttempts(emailKey);
 
   const session = await withClaims(account.id, async (tx) => {
     const row = await tx.one<{ role: Role; version: number }>("SELECT role, app.current_session_version() AS version FROM app_user WHERE id = app.uid()");
