@@ -11,6 +11,7 @@
     "test:unit": "vitest run tests/unit",
     "typecheck": "tsc --noEmit",
     "evidence": "vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json; tsx scripts/trust.ts",
+    "eval:live": "vitest run -c vitest.live.config.ts --disableConsoleIntercept",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:role": "tsx scripts/role-password.ts",
     "db:seed": "tsx scripts/seed.ts fresh"
