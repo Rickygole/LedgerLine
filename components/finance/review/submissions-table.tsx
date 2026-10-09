@@ -5,6 +5,8 @@ import { formatDate } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
+import { fundingLabel, sponsorShort } from "@/lib/finance/awards";
+import { ContractCell } from "@/components/finance/admin/award-cells";
 import type { ReportRow } from "@/lib/finance/review/types";
 
 function dueCell(row: ReportRow) {
@@ -29,9 +31,9 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
         <tr>
           <TH>Reference</TH>
           <TH>Organization</TH>
-          <TH>EIN</TH>
           <TH>Initiative</TH>
-          <TH>Borough</TH>
+          <TH>Council Member</TH>
+          <TH>Contract</TH>
           <TH align="right">Award</TH>
           <TH>State</TH>
           <TH>Flags</TH>
@@ -62,15 +64,22 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
                   {row.orgName}
                 </Link>
+                <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
+                <span className="block text-xs text-muted">{row.borough}</span>
               </TD>
-              <TD className="num whitespace-nowrap font-mono text-[13px] text-muted">{row.ein}</TD>
               <TD className="min-w-48">
                 <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-navy-700 hover:underline">
                   {row.initiativeName}
                 </Link>
-                <span className="block text-xs text-muted">{row.category}</span>
+                <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>
               </TD>
-              <TD className="whitespace-nowrap">{row.borough}</TD>
+              <TD className="min-w-36">
+                <span title={row.sponsors.map((s) => s.name).join(", ")}>{sponsorShort(row.sponsors)}</span>
+                <span className="block text-xs text-muted">{fundingLabel(row.fundingSource)}</span>
+              </TD>
+              <TD>
+                <ContractCell status={row.contractStatus} number={row.contractNumber} registeredOn={row.contractRegisteredOn} />
+              </TD>
               <TD align="right">{formatCurrency(row.award)}</TD>
               <TD className="whitespace-nowrap">
                 <StateBadge state={reportState(row.status, row.dueOn)} />

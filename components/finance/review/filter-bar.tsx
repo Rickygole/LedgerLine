@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
+import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
 import { FLAG_LABEL, FLAG_ORDER, BOROUGHS, STATUS_OPTIONS } from "@/lib/finance/review/filters";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { BUCKET_ORDER } from "@/lib/finance/review/derive";
@@ -12,6 +13,8 @@ export function FilterBar({
   filters,
   periods,
   categories,
+  members = [],
+  agencies = [],
   fields,
   clearHref,
 }: {
@@ -19,7 +22,9 @@ export function FilterBar({
   filters: Filters;
   periods: PeriodInfo[];
   categories: string[];
-  fields: ("q" | "initiative" | "category" | "borough" | "period" | "bucket" | "status" | "flag")[];
+  members?: { district: number; name: string }[];
+  agencies?: string[];
+  fields: ("q" | "initiative" | "category" | "borough" | "period" | "bucket" | "status" | "flag" | "member" | "funding" | "contract" | "agency")[];
   clearHref: string;
 }) {
   const has = (f: (typeof fields)[number]) => fields.includes(f);
@@ -28,8 +33,8 @@ export function FilterBar({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {has("q") ? (
           <div>
-            <Label htmlFor="f-q">Organization or EIN</Label>
-            <Input id="f-q" name="q" defaultValue={filters.q} placeholder="Name or 00-1234567" />
+            <Label htmlFor="f-q">Search</Label>
+            <Input id="f-q" name="q" defaultValue={filters.q} placeholder="Reference, EIN, organization, contract" />
           </div>
         ) : null}
         {has("initiative") ? (
@@ -56,6 +61,50 @@ export function FilterBar({
               <option value="">All boroughs</option>
               {BOROUGHS.map((b) => (
                 <option key={b} value={b}>{b}</option>
+              ))}
+            </Select>
+          </div>
+        ) : null}
+        {has("member") ? (
+          <div>
+            <Label htmlFor="f-member">Council Member</Label>
+            <Select id="f-member" name="member" defaultValue={filters.member}>
+              <option value="">All Council Members</option>
+              {members.map((m) => (
+                <option key={m.district} value={m.district}>{m.name} (District {m.district})</option>
+              ))}
+            </Select>
+          </div>
+        ) : null}
+        {has("funding") ? (
+          <div>
+            <Label htmlFor="f-funding">Funding source</Label>
+            <Select id="f-funding" name="funding" defaultValue={filters.funding}>
+              <option value="">All funding sources</option>
+              {FUNDING_SOURCES.map((f) => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </Select>
+          </div>
+        ) : null}
+        {has("contract") ? (
+          <div>
+            <Label htmlFor="f-contract">Contract status</Label>
+            <Select id="f-contract" name="contract" defaultValue={filters.contract}>
+              <option value="">All contract statuses</option>
+              {CONTRACT_STATUSES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </Select>
+          </div>
+        ) : null}
+        {has("agency") ? (
+          <div>
+            <Label htmlFor="f-agency">Administering agency</Label>
+            <Select id="f-agency" name="agency" defaultValue={filters.agency}>
+              <option value="">All agencies</option>
+              {agencies.map((a) => (
+                <option key={a} value={a}>{a}</option>
               ))}
             </Select>
           </div>

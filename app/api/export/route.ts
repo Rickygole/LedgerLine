@@ -3,11 +3,12 @@ import { FINANCE_ROLES, getCurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
-import { applyFilters, sortRows } from "@/lib/finance/review/derive";
+import { applyFilters, isExportable, sortRows } from "@/lib/finance/review/derive";
 import { buildWorkbook, exportFilename, submissionsToCsv, workbookToBuffer, type ExportSubmission } from "@/lib/finance/review/export";
 import { FLAG_LABEL, filtersToParams, parseFilters, STATUS_OPTIONS } from "@/lib/finance/review/filters";
 import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
+import { contractLabel, fundingLabel } from "@/lib/finance/awards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,10 +17,14 @@ const NUMERIC_TYPES = new Set(["integer", "number", "currency", "percent"]);
 
 function describeFilters(filters: ReturnType<typeof parseFilters>): string[] {
   const lines: string[] = [];
-  if (filters.q) lines.push(`organization or EIN contains "${filters.q}"`);
+  if (filters.q) lines.push(`search contains "${filters.q}"`);
   if (filters.initiative) lines.push(`initiative = ${filters.initiative}`);
   if (filters.category) lines.push(`category = ${filters.category}`);
   if (filters.borough) lines.push(`borough = ${filters.borough}`);
+  if (filters.member) lines.push(`Council Member district = ${filters.member}`);
+  if (filters.funding) lines.push(`funding source = ${fundingLabel(filters.funding)}`);
+  if (filters.contract) lines.push(`contract status = ${contractLabel(filters.contract)}`);
+  if (filters.agency) lines.push(`agency = ${filters.agency}`);
   if (filters.bucket) lines.push(`bucket = ${BUCKET_LABEL[filters.bucket as Bucket] ?? filters.bucket}`);
   if (filters.status) lines.push(`status = ${STATUS_OPTIONS.find((s) => s.value === filters.status)?.label ?? filters.status}`);
   if (filters.flag) lines.push(`flag = ${filters.flag === "any" ? "Any flag" : (FLAG_LABEL[filters.flag] ?? filters.flag)}`);
@@ -41,7 +46,7 @@ export async function GET(request: NextRequest) {
     const period = periods.find((p) => p.id === filters.period);
     if (!period) return null;
     const all = await loadReportRows(tx, period);
-    const rows = sortRows(applyFilters(all, filters)).filter((r) => r.submissionId !== null);
+    const rows = sortRows(applyFilters(all, filters)).filter((r) => isExportable(r.status));
     const filterLines = describeFilters(filters);
     const filename = exportFilename(period.id, todayInNewYork(), format);
     await tx.query("SELECT app.write_audit($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7)", [
@@ -78,6 +83,12 @@ export async function GET(request: NextRequest) {
     award: row.award,
     submittedAt: row.submittedAt,
     budgetTotal: budgetTotals(row.budget).total,
+    fundingSource: fundingLabel(row.fundingSource),
+    councilMembers: row.sponsors.map((sponsor) => `${sponsor.name} (District ${sponsor.district})`).join("; "),
+    agency: row.agency ?? "",
+    contractStatus: contractLabel(row.contractStatus),
+    contractNumber: row.contractNumber ?? "",
+    contractRegisteredOn: row.contractRegisteredOn ?? "",
     answers: row.definition ? visibleAnswers(row.definition, row.answers) : {},
     budget: row.budget.map(({ position, category, description, amount }) => ({ position, category, description, amount })),
   }));

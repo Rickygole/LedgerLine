@@ -15,6 +15,12 @@ const sample = (over: Partial<ExportSubmission> = {}): ExportSubmission => ({
   award: 62500,
   submittedAt: "2026-09-18T14:05:00Z",
   budgetTotal: 62500,
+  fundingSource: "Citywide initiative",
+  councilMembers: "Delia Cordero (District 8)",
+  agency: "DYCD",
+  contractStatus: "Registered",
+  contractNumber: "DYCD-26-04218",
+  contractRegisteredOn: "2025-10-14",
   answers: { participants_actual: "120", accomplishments: "=HYPERLINK(\"http://x\")", youth_breakdown: [{ age_group: "Under 10", count: 5 }] },
   budget: [{ position: 1, category: "PS", description: "Coordinator", amount: 40000 }],
   ...over,
@@ -53,6 +59,13 @@ describe("workbook", () => {
     expect(sheet["L2"].t).toBe("n");
   });
 
+  it("[US-046] carries the award fields: funding source, Council Member, agency and contract", () => {
+    const sheet = book.Sheets["Submissions"];
+    expect([sheet["M1"].v, sheet["N1"].v, sheet["O1"].v, sheet["P1"].v, sheet["Q1"].v, sheet["R1"].v]).toEqual(["funding_source", "council_members", "agency", "contract_status", "contract_number", "contract_registered_on"]);
+    expect(sheet["N2"].v).toBe("Delia Cordero (District 8)");
+    expect(sheet["Q2"].v).toBe("DYCD-26-04218");
+  });
+
   it("writes the submitted time as a date serial in New York time", () => {
     const cell = book.Sheets["Submissions"]["K2"];
     expect(cell.t).toBe("n");
@@ -64,11 +77,11 @@ describe("workbook", () => {
     const columns = questionColumns([sample()]);
     expect(columns).toEqual(["accomplishments", "participants_actual", "youth_breakdown"]);
     const sheet = book.Sheets["Submissions"];
-    expect(sheet["M1"].v).toBe("accomplishments");
-    expect(sheet["M2"].v.startsWith("'=")).toBe(true);
-    expect(sheet["N2"].t).toBe("n");
-    expect(sheet["N2"].v).toBe(120);
-    expect(sheet["O2"].v).toBe("Under 10 5");
+    expect(sheet["S1"].v).toBe("accomplishments");
+    expect(sheet["S2"].v.startsWith("'=")).toBe(true);
+    expect(sheet["T2"].t).toBe("n");
+    expect(sheet["T2"].v).toBe(120);
+    expect(sheet["U2"].v).toBe("Under 10 5");
   });
 
   it("round trips through xlsx and carries the export note", () => {

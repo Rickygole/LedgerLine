@@ -35,13 +35,13 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
 
-  const { periods, filters, rows, categories } = await withClaims(user.id, async (tx) => {
+  const { periods, filters, rows, options } = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
     const options = await loadFilterOptions(tx);
-    return { periods, filters, rows, categories: options.categories };
+    return { periods, filters, rows, options };
   });
 
   const base = "/finance/flagged";
@@ -60,7 +60,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
         meta={<span className="num text-sm text-muted">{flaggedRows.length} {flaggedRows.length === 1 ? "report" : "reports"} flagged</span>}
       />
 
-      <FilterBar action={base} filters={filters} periods={periods} categories={categories} fields={["q", "initiative", "category", "borough", "period", "flag"]} clearHref={clearHref} />
+      <FilterBar action={base} filters={filters} periods={periods} categories={options.categories} members={options.members} agencies={options.agencies} fields={["q", "initiative", "category", "borough", "member", "period", "flag"]} clearHref={clearHref} />
 
       <FilterPills
         label="Flag reasons"
