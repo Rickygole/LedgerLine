@@ -48,29 +48,26 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
   const submissionIds = base.map((r) => r.submission_id).filter((id): id is string => id !== null);
   const formIds = [...new Set(base.map((r) => r.form_version_id).filter((id): id is string => id !== null))];
 
-  const [answerRows, budgetRows, formRows, flagRows] = await Promise.all([
-    submissionIds.length
-      ? tx.query<{ submission_id: string; answers: Answers }>(
-          "SELECT submission_id, jsonb_object_agg(question_key, value) AS answers FROM answer WHERE submission_id = ANY($1::uuid[]) GROUP BY submission_id",
-          [submissionIds]
-        )
-      : Promise.resolve([]),
-    submissionIds.length
-      ? tx.query<{ submission_id: string; row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number }>(
-          "SELECT submission_id, row_id, position, category, description, amount::float8 AS amount FROM budget_line WHERE submission_id = ANY($1::uuid[]) ORDER BY position",
-          [submissionIds]
-        )
-      : Promise.resolve([]),
-    formIds.length
-      ? tx.query<{ id: string; definition: FormDefinition }>("SELECT id, definition FROM form_version WHERE id = ANY($1::uuid[])", [formIds])
-      : Promise.resolve([]),
-    submissionIds.length
-      ? tx.query<{ id: string; submission_id: string; kind: string; note: string | null }>(
-          "SELECT id, submission_id, kind, note FROM flag WHERE status = 'open' AND submission_id = ANY($1::uuid[]) ORDER BY created_at",
-          [submissionIds]
-        )
-      : Promise.resolve([]),
-  ]);
+  const answerRows = submissionIds.length
+    ? await tx.query<{ submission_id: string; answers: Answers }>(
+        "SELECT submission_id, jsonb_object_agg(question_key, value) AS answers FROM answer WHERE submission_id = ANY($1::uuid[]) GROUP BY submission_id",
+        [submissionIds]
+      )
+    : [];
+  const budgetRows = submissionIds.length
+    ? await tx.query<{ submission_id: string; row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number }>(
+        "SELECT submission_id, row_id, position, category, description, amount::float8 AS amount FROM budget_line WHERE submission_id = ANY($1::uuid[]) ORDER BY position",
+        [submissionIds]
+      )
+    : [];
+  const formRows = formIds.length ? await tx.query<{ id: string; definition: FormDefinition }>("SELECT id, definition FROM form_version WHERE id = ANY($1::uuid[])", [formIds]) : [];
+  const flagRows = submissionIds.length
+    ? await tx.query<{ id: string; submission_id: string; kind: string; note: string | null }>(
+        "SELECT id, submission_id, kind, note FROM flag WHERE status = 'open' AND submission_id = ANY($1::uuid[]) ORDER BY created_at",
+        [submissionIds]
+      )
+    : [];
+
 
   const answersBySubmission = new Map(answerRows.map((r) => [r.submission_id, r.answers]));
   const budgetBySubmission = new Map<string, BudgetLine[]>();

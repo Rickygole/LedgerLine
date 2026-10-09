@@ -75,36 +75,34 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
   );
   if (!base) return null;
 
-  const [answerRows, budgetRows, flagRows, attachmentRows, auditRows, revisionRows, contact] = await Promise.all([
-    tx.query<{ question_key: string; value: Answers[string] }>("SELECT question_key, value FROM answer WHERE submission_id = $1", [id]),
-    tx.query<{ row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number }>(
+  const answerRows = await tx.query<{ question_key: string; value: Answers[string] }>("SELECT question_key, value FROM answer WHERE submission_id = $1", [id]);
+  const budgetRows = await tx.query<{ row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number }>(
       "SELECT row_id, position, category, description, amount::float8 AS amount FROM budget_line WHERE submission_id = $1 ORDER BY position",
       [id]
-    ),
-    tx.query<{ id: string; kind: string; source: string; note: string | null; status: string; created_at: string; created_by: string | null; resolved_at: string | null; resolved_by: string | null }>(
+    );
+  const flagRows = await tx.query<{ id: string; kind: string; source: string; note: string | null; status: string; created_at: string; created_by: string | null; resolved_at: string | null; resolved_by: string | null }>(
       `SELECT f.id, f.kind, f.source, f.note, f.status, ${ISO("f.created_at")} AS created_at, c.full_name AS created_by, ${ISO("f.resolved_at")} AS resolved_at, r.full_name AS resolved_by
        FROM flag f LEFT JOIN app_user c ON c.id = f.created_by LEFT JOIN app_user r ON r.id = f.resolved_by
        WHERE f.submission_id = $1 ORDER BY f.created_at`,
       [id]
-    ),
-    tx.query<{ id: string; filename: string; bytes: string; mime: string; created_at: string; uploaded_by: string | null }>(
+    );
+  const attachmentRows = await tx.query<{ id: string; filename: string; bytes: string; mime: string; created_at: string; uploaded_by: string | null }>(
       `SELECT t.id, t.filename, t.bytes::text AS bytes, t.mime, ${ISO("t.created_at")} AS created_at, u.full_name AS uploaded_by
        FROM attachment t LEFT JOIN app_user u ON u.id = t.uploaded_by WHERE t.submission_id = $1 ORDER BY t.created_at`,
       [id]
-    ),
-    tx.query<{ id: string; at: string; actor: string | null; action: string; note: string | null; before: Record<string, unknown> | null; after: Record<string, unknown> | null; ai_action_id: string | null }>(
+    );
+  const auditRows = await tx.query<{ id: string; at: string; actor: string | null; action: string; note: string | null; before: Record<string, unknown> | null; after: Record<string, unknown> | null; ai_action_id: string | null }>(
       `SELECT e.id::text AS id, ${ISO("e.at")} AS at, u.full_name AS actor, e.action, e.note, e.before, e.after, e.ai_action_id
        FROM audit_event e LEFT JOIN app_user u ON u.id = e.actor_id
        WHERE e.entity = 'submission' AND e.entity_id = $1 ORDER BY e.at, e.id`,
       [id]
-    ),
-    tx.query<{ id: string; revision: number; kind: string; actor: string; reason: string | null; created_at: string; sha256: string }>(
+    );
+  const revisionRows = await tx.query<{ id: string; revision: number; kind: string; actor: string; reason: string | null; created_at: string; sha256: string }>(
       `SELECT r.id::text AS id, r.revision, r.kind, u.full_name AS actor, r.reason, ${ISO("r.created_at")} AS created_at, r.sha256
        FROM submission_revision r JOIN app_user u ON u.id = r.actor WHERE r.submission_id = $1 ORDER BY r.revision, r.created_at`,
       [id]
-    ),
-    tx.one<{ full_name: string; email: string }>("SELECT full_name, email FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name LIMIT 1", [base.org_id]),
-  ]);
+    );
+  const contact = await tx.one<{ full_name: string; email: string }>("SELECT full_name, email FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name LIMIT 1", [base.org_id]);
 
   const answers: Answers = {};
   for (const a of answerRows) answers[a.question_key] = a.value;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { CheckCircle2, Eye, Flag, Pencil } from "lucide-react";
 import { addFlagAction, correctionAction, transitionAction, type ActionResult } from "@/app/finance/submissions/[id]/actions";
 import { RequestUpdate } from "@/components/finance/review/request-update";
@@ -36,15 +36,37 @@ function TransitionButton({ submissionId, lockVersion, action, label, icon: Icon
   );
 }
 
+function useGuardedAction(run: (fd: FormData) => Promise<ActionResult>) {
+  const [state, setState] = useState<ActionResult | undefined>();
+  const [pending, startTransition] = useTransition();
+  const submit = (fd: FormData, onOk: () => void) => {
+    startTransition(async () => {
+      const result = await run(fd);
+      setState(result);
+      if (result.ok) onOk();
+    });
+  };
+  return { state, pending, submit };
+}
+
 function FlagForm({ submissionId }: { submissionId: string }) {
-  const [state, action, pending] = useActionState(addFlagAction, undefined);
+  const [note, setNote] = useState("");
+  const { state, pending, submit } = useGuardedAction((fd) => addFlagAction(undefined, fd));
   return (
-    <form action={action} className="space-y-2" key={state?.ok ? "added" : "open"}>
-      <input type="hidden" name="submissionId" value={submissionId} />
+    <form
+      className="space-y-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const fd = new FormData();
+        fd.set("submissionId", submissionId);
+        fd.set("note", note);
+        submit(fd, () => setNote(""));
+      }}
+    >
       <Label htmlFor="flag-note" required>
         Flag note
       </Label>
-      <Textarea id="flag-note" name="note" rows={3} required aria-describedby={state && !state.ok ? "flag-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
+      <Textarea id="flag-note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby={state && !state.ok ? "flag-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
       {state && !state.ok ? <FieldError id="flag-error">{state.message}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Flag className="h-4 w-4" aria-hidden="true" />
@@ -56,23 +78,37 @@ function FlagForm({ submissionId }: { submissionId: string }) {
 }
 
 function CorrectionForm({ submissionId, questions }: { submissionId: string; questions: CorrectableQuestion[] }) {
-  const [state, action, pending] = useActionState(correctionAction, undefined);
+  const [question, setQuestion] = useState("");
+  const [value, setValue] = useState("");
+  const [reason, setReason] = useState("");
+  const { state, pending, submit } = useGuardedAction((fd) => correctionAction(undefined, fd));
   return (
-    <form action={action} className="space-y-2" key={state?.ok ? "corrected" : "open"}>
-      <input type="hidden" name="submissionId" value={submissionId} />
+    <form
+      className="space-y-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const fd = new FormData();
+        fd.set("submissionId", submissionId);
+        fd.set("questionKey", question);
+        fd.set("value", value);
+        fd.set("reason", reason);
+        submit(fd, () => {
+          setQuestion("");
+          setValue("");
+          setReason("");
+        });
+      }}
+    >
       <div>
         <Label htmlFor="corr-question" required>
           Question
         </Label>
         <Select
           id="corr-question"
-          name="questionKey"
-          required
-          defaultValue=""
+          value={question}
           onChange={(event) => {
-            const input = document.getElementById("corr-value") as HTMLInputElement | null;
-            const current = questions.find((q) => q.key === event.target.value)?.current ?? "";
-            if (input) input.value = current;
+            setQuestion(event.target.value);
+            setValue(questions.find((q) => q.key === event.target.value)?.current ?? "");
           }}
         >
           <option value="" disabled>
@@ -89,13 +125,13 @@ function CorrectionForm({ submissionId, questions }: { submissionId: string; que
         <Label htmlFor="corr-value" required>
           New value
         </Label>
-        <Input id="corr-value" name="value" />
+        <Input id="corr-value" value={value} onChange={(event) => setValue(event.target.value)} />
       </div>
       <div>
         <Label htmlFor="corr-reason" required>
           Reason
         </Label>
-        <Textarea id="corr-reason" name="reason" rows={2} required aria-describedby={state && !state.ok ? "corr-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
+        <Textarea id="corr-reason" rows={2} value={reason} onChange={(event) => setReason(event.target.value)} aria-describedby={state && !state.ok ? "corr-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
       </div>
       {state && !state.ok ? <FieldError id="corr-error">{state.message}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>

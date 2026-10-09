@@ -197,6 +197,7 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
       const { row } = detail;
       const question = row.definition!.sections.flatMap((s) => s.questions).find((q) => q.key === key);
       if (!question || question.type === "table") return "That question cannot be corrected here.";
+      if (String(row.answers[key] ?? "") === value) return "The new value is the same as the current value. Enter a different value to correct.";
       const answers = { ...row.answers, [key]: value };
       const issues = validateSubmission({ definition: row.definition!, answers, budget: row.budget, awardAmount: row.award }).filter((i) => i.field === key && i.severity === "block");
       if (issues.length > 0) return issues[0].message;
