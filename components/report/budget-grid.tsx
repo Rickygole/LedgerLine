@@ -155,7 +155,7 @@ export function BudgetGrid({
       <p className="flex items-start gap-2 border-b border-line bg-surface/60 px-3 py-2 text-sm text-muted sm:px-4">
         <ClipboardPaste className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
-          Paste rows from Excel. Columns: category, description, amount. <span className="num">{rows.length}</span> of <span className="num">{maxLines}</span> lines used.
+          Category is PS for personal services, such as salaries and fringe, or OTPS for other than personal services, such as supplies, rent and contracts. Paste rows from Excel. Columns: category, description, amount. <span className="num">{rows.length}</span> of <span className="num">{maxLines}</span> lines used.
         </span>
       </p>
 
@@ -253,8 +253,8 @@ export function BudgetGrid({
                     Category
                   </label>
                   <select id={`budget-cat-${row.rowId}`} value={row.category} onChange={(event) => update(row.rowId, { category: event.target.value as "PS" | "OTPS" })} className={cn(cell, "pr-8")}>
-                    <option value="PS">PS</option>
-                    <option value="OTPS">OTPS</option>
+                    <option value="PS" title="Personal services">PS</option>
+                    <option value="OTPS" title="Other than personal services">OTPS</option>
                   </select>
                 </div>
                 <div className="max-[719px]:order-last max-[719px]:col-span-2 min-[720px]:border-r min-[720px]:border-line">
@@ -345,8 +345,8 @@ export function BudgetGrid({
 
       <dl className={cn("border-t border-line bg-surface/60 text-sm", !explainVariance && "rounded-b-lg")}>
         {[
-          ["PS subtotal", totals.ps],
-          ["OTPS subtotal", totals.otps],
+          ["Personal services (PS) subtotal", totals.ps],
+          ["Other than personal services (OTPS) subtotal", totals.otps],
         ].map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4">
             <dt className="text-muted">{label}</dt>

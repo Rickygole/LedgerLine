@@ -74,8 +74,8 @@ export function plainTextReport(input: SummaryInput): string {
         const spent = line.actual === null || line.actual === undefined ? "" : `, actual spent ${formatCurrency(line.actual)}`;
         lines.push(`${line.position}. [${line.category}] ${line.description}: ${formatCurrency(line.amount)}${spent}`);
       }
-      lines.push(`PS subtotal: ${formatCurrency(totals.ps)}`);
-      lines.push(`OTPS subtotal: ${formatCurrency(totals.otps)}`);
+      lines.push(`Personal services (PS) subtotal: ${formatCurrency(totals.ps)}`);
+      lines.push(`Other than personal services (OTPS) subtotal: ${formatCurrency(totals.otps)}`);
       lines.push(`Total: ${formatCurrency(totals.total)}`);
       lines.push(`Award: ${formatCurrency(input.awardAmount)}`);
       lines.push(balanceMessage(totals.total, input.awardAmount).message);

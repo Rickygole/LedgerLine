@@ -136,7 +136,7 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
   return (
     <Card>
-      <CardHeader title="Budget" description="Personnel services (PS) and other than personnel services (OTPS) lines as reported, with actual spent and variance." />
+      <CardHeader title="Budget" description="Personal services (PS) and other than personal services (OTPS) lines as reported, with actual spent and variance." />
       <CardBody>
         {row.budget.length === 0 ? (
           <p className="text-sm text-muted">No budget has been entered yet.</p>
