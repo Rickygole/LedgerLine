@@ -232,7 +232,7 @@ export default async function PlatformPage() {
             <tbody>
               {SUPPORT_TIERS.map((t) => (
                 <TR key={t.tier} className="align-top">
-                  <TD className="font-semibold"><span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-navy-700" aria-hidden="true" />{t.tier}</span></TD>
+                  <TD className="whitespace-nowrap font-semibold"><span className="inline-flex items-center gap-2"><Headset className="h-4 w-4 text-navy-700" aria-hidden="true" />{t.tier}</span></TD>
                   <TD>{t.who}</TD>
                   <TD className="max-w-md text-muted">{t.scope}</TD>
                   <TD>{t.target}</TD>
