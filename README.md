@@ -63,6 +63,10 @@ You need Node 22, pnpm 10 and Docker.
 
 `pnpm test:unit` needs no database. `pnpm test` adds the SQL tests, which run against the real database and check row level security, the state machine and the audit tables, and the AI evals, which run in replay and fallback mode. The SQL tests use `TEST_DB_OWNER_URL` and `TEST_APP_DATABASE_URL` if set, otherwise the normal URLs, so point them at a database you can lose.
 
+## Local model
+
+Both AI features can run on a model served by Ollama on the same machine, with no API key. Set `AI_PROVIDER=ollama`, `AI_MODEL_FORM=qwen3:8b`, `AI_MODEL_NOTE=qwen3:8b` and `AI_TIMEOUT_FACTOR=3`, then run `pnpm eval:live` to score both features against the template set. Without a configured model the app uses recorded runs and the rule based fallback.
+
 ## Deploying
 
 The app is set up for Vercel with a Postgres database such as Neon. Run `pnpm db:migrate`, `pnpm db:role` and `pnpm db:seed` against the hosted database first. Seeding a hosted database requires `PERSONA_PASSWORD`. Environment variables, by name:
@@ -70,7 +74,7 @@ The app is set up for Vercel with a Postgres database such as Neon. Run `pnpm db
 - Required: `DB_OWNER_URL` (migrations only), `APP_DATABASE_URL`, `APP_SERVER_PASSWORD`, `AUTH_SECRET`, `GATE_COOKIE_SECRET`, `GATE_PASSCODE`
 - Storage: `BLOB_READ_WRITE_TOKEN`
 - Reminders cron (`vercel.json`, daily): `CRON_SECRET`
-- Optional AI: `ANTHROPIC_API_KEY`, `AI_MODEL_FORM`, `AI_MODEL_NOTE`, `AI_PRICE_PER_MTOK`
+- Optional AI: `AI_PROVIDER` (`anthropic` or `ollama`), `AI_MODEL_FORM`, `AI_MODEL_NOTE`, `ANTHROPIC_API_KEY`, `OLLAMA_URL`, `AI_TIMEOUT_FACTOR`, `AI_PRICE_PER_MTOK`
 - Optional: `DEMO_TODAY`, `DB_POOL_MAX`
 
 CI (`.github/workflows/ci.yml`) runs migrations, seed, lint, type check, tests, the evidence script and a build against a Postgres service. It deploys only if the repository variable `DEPLOY_ENABLED` is `true`.
