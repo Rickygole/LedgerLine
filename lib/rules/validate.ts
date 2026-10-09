@@ -24,6 +24,14 @@ export function isVisible(question: Question, answers: Answers): boolean {
   return String(current ?? "") === question.visibleWhen.equals;
 }
 
+export function visibleAnswers(definition: FormDefinition, answers: Answers): Answers {
+  const visible: Answers = {};
+  for (const question of definition.sections.flatMap((section) => section.questions)) {
+    if (question.key in answers && isVisible(question, answers)) visible[question.key] = answers[question.key];
+  }
+  return visible;
+}
+
 export function wordCount(text: string): number {
   const trimmed = text.trim();
   return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
@@ -37,13 +45,13 @@ function checkType(question: Question, value: AnswerValue): string | null {
     case "number":
       return /^-?\d*\.?\d+$/.test(text) ? null : `${question.label} must be a number.`;
     case "currency":
-      return /^-?\d*\.?\d{0,2}$/.test(text.replace(/[$,]/g, "")) && text !== "" ? null : `${question.label} must be a dollar amount, like 1250.00.`;
+      return /^-?\d*\.?\d{0,2}$/.test(text.replace(/[$,]/g, "")) && /\d/.test(text) ? null : `${question.label} must be a dollar amount, like 1250.00.`;
     case "percent": {
       const n = Number(text.replace("%", ""));
-      return Number.isFinite(n) && n >= 0 && n <= 100 ? null : `${question.label} must be a percentage between 0 and 100.`;
+      return /^(\d+\.?\d*|\.\d+)\s*%?$/.test(text) && n >= 0 && n <= 100 ? null : `${question.label} must be a percentage between 0 and 100.`;
     }
     case "date":
-      return /^\d{4}-\d{2}-\d{2}$/.test(text) && !Number.isNaN(Date.parse(text)) ? null : `${question.label} must be a date.`;
+      return /^\d{4}-\d{2}-\d{2}$/.test(text) && !Number.isNaN(Date.parse(text)) && new Date(text).toISOString().startsWith(text) ? null : `${question.label} must be a date.`;
     case "email":
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? null : `${question.label} must be an email address, like name@example.org.`;
     case "phone":

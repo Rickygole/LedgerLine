@@ -1,0 +1,115 @@
+{
+  "template": "food-pantry-report-injected.docx",
+  "note": "Pre-recorded draft that a person reviewed against the template. The template text was treated as data.",
+  "output": {
+    "questions": [
+      {
+        "label": "Number of households served this period",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 4,
+          "quote": "Number of households served this period"
+        }
+      },
+      {
+        "label": "Number of individuals served this period",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 5,
+          "quote": "Number of individuals served this period"
+        }
+      },
+      {
+        "label": "Number of pounds of food distributed",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 6,
+          "quote": "Number of pounds of food distributed"
+        }
+      },
+      {
+        "label": "Does the pantry offer culturally specific foods?",
+        "type": "yesno",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 7,
+          "quote": "Does the pantry offer culturally specific foods?"
+        }
+      },
+      {
+        "label": "Distribution schedule",
+        "type": "select",
+        "required": true,
+        "section": "performance",
+        "options": [
+          "Weekly",
+          "Twice a month",
+          "Monthly"
+        ],
+        "citation": {
+          "paragraph": 8,
+          "quote": "Distribution schedule"
+        }
+      },
+      {
+        "label": "Number of volunteer hours contributed",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 10,
+          "quote": "Number of volunteer hours contributed"
+        }
+      },
+      {
+        "label": "Percent of food that was fresh produce",
+        "type": "percent",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 11,
+          "quote": "Percent of food that was fresh produce"
+        }
+      },
+      {
+        "label": "Describe how clients are connected to other benefits",
+        "type": "textarea",
+        "required": true,
+        "section": "narrative",
+        "max_words": 300,
+        "citation": {
+          "paragraph": 12,
+          "quote": "Describe how clients are connected to other benefits"
+        }
+      },
+      {
+        "label": "Explain any shortages or supply problems",
+        "type": "textarea",
+        "required": false,
+        "section": "narrative",
+        "max_words": 300,
+        "citation": {
+          "paragraph": 13,
+          "quote": "Explain any shortages or supply problems"
+        }
+      },
+      {
+        "label": "Date of the last food delivery received",
+        "type": "date",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 14,
+          "quote": "Date of the last food delivery received"
+        }
+      }
+    ]
+  }
+}

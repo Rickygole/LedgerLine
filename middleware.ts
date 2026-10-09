@@ -5,7 +5,7 @@ const OPEN_PATHS = ["/gate", "/robots.txt", "/favicon.ico"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (OPEN_PATHS.some((p) => pathname === p) || pathname.startsWith("/_next")) {
+  if (OPEN_PATHS.some((p) => pathname === p) || pathname.startsWith("/_next") || pathname.startsWith("/api/cron/")) {
     return withHeaders(NextResponse.next());
   }
 
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith("/api")) return withHeaders(new NextResponse("Passcode required", { status: 401 }));
     const url = request.nextUrl.clone();
     url.pathname = "/gate";
-    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname)}`;
+    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(`${pathname}${request.nextUrl.search}`)}`;
     return withHeaders(NextResponse.redirect(url));
   }
 

@@ -11,11 +11,18 @@ const FINANCE_NAV: NavItem[] = [
   { href: "/finance/flagged", label: "Flagged items" },
   { href: "/finance/organizations", label: "Organizations" },
   { href: "/finance/initiatives", label: "Initiatives" },
+  { href: "/finance/queries", label: "Saved queries" },
+  { href: "/finance/reminders", label: "Reminders" },
   { href: "/finance/outbox", label: "Outbox" },
   { href: "/finance/audit", label: "Audit log" },
+  { href: "/finance/rollover/lineage", label: "Lineage" },
+  { href: "/finance/platform", label: "Platform" },
 ];
 
-const ADMIN_NAV: NavItem[] = [{ href: "/finance/users", label: "Users" }];
+const ADMIN_NAV: NavItem[] = [
+  { href: "/finance/rollover", label: "Rollover", exact: true },
+  { href: "/finance/users", label: "Users" },
+];
 
 const PORTAL_NAV: NavItem[] = [
   { href: "/portal", label: "My reports", exact: true },

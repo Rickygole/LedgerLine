@@ -161,6 +161,9 @@ async function reset(client: Client, scene: string) {
 
 export async function seed(client: Client, options: { lateDraft: "empty" | "half" } = { lateDraft: "half" }) {
   const password = process.env.PERSONA_PASSWORD ?? "ledgerline-demo";
+  if (!process.env.PERSONA_PASSWORD && !String(process.env.DB_OWNER_URL ?? "").includes("localhost")) {
+    throw new Error("Set PERSONA_PASSWORD before seeding a hosted database");
+  }
   const hash = await bcrypt.hash(password, 10);
 
   await client.query("INSERT INTO fiscal_year VALUES ('FY26', '2025-07-01', '2026-06-30'), ('FY27', '2026-07-01', '2027-06-30')");
@@ -463,12 +466,16 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
 async function main() {
   const url = process.env.DB_OWNER_URL;
   if (!url) throw new Error("DB_OWNER_URL is not set");
-  const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : { rejectUnauthorized: false } });
+  const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : true });
   await client.connect();
   await client.query("BEGIN");
   try {
     await reset(client, process.argv[2] ?? "fresh");
     const summary = await seed(client);
+    await client.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: summary.ids.priya })]);
+    await client.query("SELECT app.ensure_scheduler()");
+    await client.query("SELECT app.restore_reminder_defaults(id) FROM reporting_period");
+    await client.query("SELECT set_config('request.jwt.claims', '', true)");
     await client.query("COMMIT");
     console.log(`seeded ${summary.orgs} organizations, ${summary.initiatives} initiatives, ${summary.assignments} assignments, ${summary.submissions} submissions`);
   } catch (error) {
