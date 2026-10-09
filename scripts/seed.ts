@@ -472,6 +472,10 @@ async function main() {
   try {
     await reset(client, process.argv[2] ?? "fresh");
     const summary = await seed(client);
+    await client.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: summary.ids.priya })]);
+    await client.query("SELECT app.ensure_scheduler()");
+    await client.query("SELECT app.restore_reminder_defaults(id) FROM reporting_period");
+    await client.query("SELECT set_config('request.jwt.claims', '', true)");
     await client.query("COMMIT");
     console.log(`seeded ${summary.orgs} organizations, ${summary.initiatives} initiatives, ${summary.assignments} assignments, ${summary.submissions} submissions`);
   } catch (error) {
