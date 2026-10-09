@@ -3,7 +3,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Hint, Label } from "@/components/ui/field";
 import type { FormDefinition, Question } from "@/lib/rules/types";
 
-const controlClass = "block w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-muted";
+const controlClass = "block w-full rounded-md border border-line bg-surface px-3 py-2 text-base text-muted sm:text-sm";
 
 function limitText(question: Question): string | null {
   if (question.maxWords) return `Up to ${question.maxWords} words`;

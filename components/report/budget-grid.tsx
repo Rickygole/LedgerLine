@@ -14,7 +14,7 @@ import { budgetTotals } from "@/lib/rules/validate";
 const COLS = "min-[720px]:grid min-[720px]:grid-cols-[3rem_7.5rem_minmax(0,1fr)_11rem_2.75rem] min-[720px]:items-stretch";
 
 const cell =
-  "block h-10 w-full rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-600 min-[720px]:rounded-none min-[720px]:border-0 min-[720px]:bg-transparent min-[720px]:hover:bg-navy-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
+  "block h-10 w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-600 min-[720px]:rounded-none min-[720px]:border-0 min-[720px]:bg-transparent min-[720px]:hover:bg-navy-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
 
 type Toast = { tone: "ok" | "warn"; text: string };
 
@@ -156,7 +156,7 @@ export function BudgetGrid({
             Paste your rows here
           </label>
           <p className="mb-2 text-sm text-muted">Use this box if pasting straight into the table does not work in your browser.</p>
-          <Textarea id="budget-paste-text" value={pasteText} onChange={(event) => setPasteText(event.target.value)} rows={5} className="font-mono text-xs" />
+          <Textarea id="budget-paste-text" value={pasteText} onChange={(event) => setPasteText(event.target.value)} rows={5} className="font-mono text-base sm:text-xs" />
           <div className="mt-3 flex gap-2">
             <Button
               size="sm"
