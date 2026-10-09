@@ -1,6 +1,10 @@
 import type { Tx } from "@/lib/db";
 import { roleLabel, type Role } from "@/lib/auth";
 import { PAGE_SIZE, isUuid } from "./params";
+import { actionVerb } from "@/lib/finance/audit-actions";
+import { describeOffset } from "@/lib/lifecycle/reminders";
+
+export { actionLabel, entityLabel } from "@/lib/finance/audit-actions";
 
 export type AuditRow = {
   id: string;
@@ -59,6 +63,22 @@ export async function listAudit(tx: Tx, filters: { actor: string; entity: string
   return { rows, total: rows[0]?.full_count ?? 0 };
 }
 
+export async function recentActivity(tx: Tx, quiet: string[], limit = 10) {
+  return tx.query<AuditRow & { initiative_name: string | null }>(
+    `SELECT q.*, si.name AS initiative_name FROM (
+       ${SELECT_AUDIT}
+       WHERE e.action <> ALL ($1::text[]) AND (u.email IS NULL OR u.email <> 'system.scheduler@ledgerline.example')
+       ORDER BY e.at DESC, e.id DESC
+       LIMIT ${limit}
+     ) q
+     LEFT JOIN submission s2 ON q.entity = 'submission' AND s2.id::text = q.entity_id
+     LEFT JOIN assignment a2 ON a2.id = s2.assignment_id
+     LEFT JOIN initiative si ON si.id = a2.initiative_id
+     ORDER BY q.at DESC, q.id::bigint DESC`,
+    [quiet]
+  );
+}
+
 export async function orgActivity(tx: Tx, orgId: string, limit = 40) {
   return tx.query<AuditRow>(
     `${SELECT_AUDIT}
@@ -68,15 +88,6 @@ export async function orgActivity(tx: Tx, orgId: string, limit = 40) {
     [orgId]
   );
 }
-
-const ACTION_VERB: Record<string, string> = {
-  submit: "submitted",
-  start_review: "started review of",
-  request_update: "requested an update on",
-  accept: "accepted",
-  reopen: "reopened",
-  correction: "corrected an answer on",
-};
 
 export function auditEntityHref(row: Pick<AuditRow, "entity" | "entity_id">): string | null {
   if (row.entity === "submission") return `/finance/submissions/${row.entity_id}`;
@@ -93,29 +104,41 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
   const after = row.after ?? {};
   const before = row.before ?? {};
   const text = (value: unknown) => (typeof value === "string" ? value : "");
-  if (row.entity === "submission") return { actor, verb: ACTION_VERB[row.action] ?? `recorded ${row.action.replace(/_/g, " ")} on`, subject: label };
-  if (row.entity === "form_version") {
-    const verbs: Record<string, string> = { publish: "published", create_draft: "created a draft of", update: "edited", import: "imported a template into" };
-    return { actor, verb: verbs[row.action] ?? `recorded ${row.action.replace(/_/g, " ")} on`, subject: `form ${label}` };
+  const verb = actionVerb(row.action);
+  switch (row.entity) {
+    case "submission":
+      return { actor, verb, subject: label };
+    case "form_version":
+      return { actor, verb, subject: `form ${label}` };
+    case "initiative":
+      return { actor, verb, subject: `initiative ${label}` };
+    case "organization":
+      return { actor, verb, subject: label };
+    case "assignment":
+      return { actor, verb: "added an award for", subject: `${text(after.org_name) || "an organization"} under ${text(after.initiative_code) || "an initiative"}` };
+    case "app_user":
+      if (row.action === "role_change") return { actor, verb, subject: `${label} from ${roleLabel(text(before.role) as Role)} to ${roleLabel(text(after.role) as Role)}` };
+      if (row.action === "password_set" && row.actor_id && row.actor_id === row.entity_id) return { actor, verb: "set their password", subject: "" };
+      return { actor, verb, subject: label };
+    case "user":
+      return { actor, verb, subject: "" };
+    case "reminder_rule": {
+      const offset = typeof after.offset_days === "number" ? after.offset_days : typeof before.offset_days === "number" ? before.offset_days : null;
+      const period = text(after.period) || text(before.period);
+      const which = offset === null ? "a reminder rule" : `the reminder rule ${describeOffset(offset).toLowerCase()}`;
+      return { actor, verb, subject: period ? `${which} for ${period}` : which };
+    }
+    case "reporting_period":
+      return { actor, verb, subject: row.entity_id };
+    case "fiscal_year":
+      return { actor, verb, subject: row.entity_id };
+    case "export": {
+      const rows = typeof after.rows === "number" ? after.rows : null;
+      return { actor, verb, subject: `${row.entity_id} submissions${rows === null ? "" : ` (${rows.toLocaleString("en-US")} ${rows === 1 ? "row" : "rows"})`}` };
+    }
+    default:
+      return { actor, verb, subject: label };
   }
-  if (row.entity === "initiative") {
-    const verbs: Record<string, string> = { create: "created initiative", update: "updated initiative", funding_recalculated: "recalculated funding for initiative" };
-    return { actor, verb: verbs[row.action] ?? `recorded ${row.action.replace(/_/g, " ")} on initiative`, subject: label };
-  }
-  if (row.entity === "assignment") {
-    return { actor, verb: "assigned", subject: `${text(after.org_name) || "an organization"} to ${text(after.initiative_code) || "an initiative"}` };
-  }
-  if (row.entity === "app_user") {
-    if (row.action === "role_change") return { actor, verb: "changed the role of", subject: `${label} from ${roleLabel(text(before.role) as Role)} to ${roleLabel(text(after.role) as Role)}` };
-    if (row.action === "activate") return { actor, verb: "activated", subject: label };
-    if (row.action === "deactivate") return { actor, verb: "deactivated", subject: label };
-    if (row.action === "user_create") return { actor, verb: "created the account for", subject: label };
-    if (row.action === "password_set") return { actor, verb: "set a password for", subject: label };
-    if (row.action === "password_reset_requested") return { actor, verb: "sent a password reset to", subject: label };
-  }
-  if (row.entity === "user" && row.action === "sign_out") return { actor, verb: "signed out", subject: "" };
-  if (row.entity === "user" && row.action === "sign_in") return { actor, verb: "signed in", subject: "" };
-  return { actor, verb: `recorded ${row.action.replace(/_/g, " ")} on`, subject: `${row.entity.replace(/_/g, " ")} ${label}` };
 }
 
 export async function auditFilterOptions(tx: Tx) {
@@ -125,8 +148,4 @@ export async function auditFilterOptions(tx: Tx) {
   const entities = await tx.query<{ entity: string }>(`SELECT DISTINCT entity FROM audit_event ORDER BY entity`);
   const actions = await tx.query<{ action: string }>(`SELECT DISTINCT action FROM audit_event ORDER BY action`);
   return { actors, entities: entities.map((e) => e.entity), actions: actions.map((a) => a.action) };
-}
-
-export function actionLabel(action: string): string {
-  return action.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
