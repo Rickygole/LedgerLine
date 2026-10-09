@@ -165,13 +165,14 @@ describe("[US-011] combine merges assignments and records lineage", () => {
 describe("[US-012][BR-016] lineage links predecessors", () => {
   it("lets finance read lineage and keeps writes with the rollover function", async () => {
     const [a] = await pickInitiatives(1);
+    const auditBefore = (await owner.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'rollover'")).rows[0].n;
     const result = await asUser(app, priya, async () => {
       await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb)", [plan([{ initiative_id: a.id, action: "carry" }])]);
       const chain = (await app.query(
         `SELECT p.name AS from_name, s.name AS to_name, l.kind FROM initiative_lineage l JOIN initiative p ON p.id = l.predecessor_id JOIN initiative s ON s.id = l.successor_id WHERE l.predecessor_id = $1`,
         [a.id]
       )).rows;
-      const audit = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'rollover'")).rows[0].n;
+      const audit = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'rollover'")).rows[0].n - auditBefore;
       await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
       const seenByAnalyst = (await app.query("SELECT count(*)::int AS n FROM initiative_lineage")).rows[0].n;
       await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: maria })]);
@@ -196,12 +197,10 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
 
   async function owingOrgs(): Promise<string[]> {
     const { rows } = await owner.query(
-      `SELECT DISTINCT a.org_id FROM assignment a
-       JOIN initiative i ON i.id = a.initiative_id AND i.status = 'active'
-       LEFT JOIN submission s ON s.assignment_id = a.id AND s.period_id = 'FY26-YE'
-       WHERE (s.id IS NULL OR s.status IN ('draft', 'returned'))
-         AND EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published')
-         AND EXISTS (SELECT 1 FROM contact c WHERE c.org_id = a.org_id)`
+      `SELECT DISTINCT o.org_id FROM obligation o
+       WHERE o.period_id = 'FY26-YE'
+         AND (o.submission_status IS NULL OR o.submission_status IN ('draft', 'returned'))
+         AND EXISTS (SELECT 1 FROM contact c WHERE c.org_id = o.org_id)`
     );
     return rows.map((r) => r.org_id).sort();
   }

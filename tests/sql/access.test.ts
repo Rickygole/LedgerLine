@@ -63,7 +63,8 @@ describe("[BR-010][US-014] organizations see only their own reports", () => {
   it("refuses a storage path under another organization's EIN", async () => {
     const allowed = await asUser(app, maria, async () => {
       const otherEin = (await owner.query("SELECT ein FROM organization WHERE id <> $1 LIMIT 1", [mariaOrg])).rows[0].ein;
-      const mine = (await app.query("SELECT app.can_access_path($1) AS ok", [`00-1040217/x/file.pdf`])).rows[0].ok;
+      const mineEin = (await owner.query("SELECT ein FROM organization WHERE id = $1", [mariaOrg])).rows[0].ein;
+      const mine = (await app.query("SELECT app.can_access_path($1) AS ok", [`${mineEin}/x/file.pdf`])).rows[0].ok;
       const theirs = (await app.query("SELECT app.can_access_path($1) AS ok", [`${otherEin}/x/file.pdf`])).rows[0].ok;
       return { mine, theirs };
     });

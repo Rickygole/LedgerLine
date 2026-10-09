@@ -7,34 +7,50 @@ import { buildSnapshot } from "../lib/snapshot";
 import type { Answers, BudgetLine, FormDefinition } from "../lib/rules/types";
 import {
   ACCOMPLISHMENTS,
+  AGENCY_BY_CATEGORY,
+  AGENCY_ORGS,
+  BOROUGH_AREA_CODES,
   BOROUGH_DISTRICTS,
-  BOROUGH_ZIPS,
-  BOROUGHS,
+  BOROUGH_PLACES,
+  BOROUGH_WEIGHTS,
+  CATEGORIES,
   CHALLENGES,
-  FIRST_NAMES,
-  INITIATIVE_NAMES,
-  LAST_NAMES,
-  ORG_PREFIXES,
-  ORG_SUFFIXES,
+  COST_PER_PARTICIPANT,
+  COUNCIL_FIRST_NAMES,
+  COUNCIL_LAST_NAMES,
+  FINANCE_FIRST_NAMES,
+  FINANCE_LAST_NAMES,
+  FINANCE_TITLES,
+  NAMED_INITIATIVES,
+  ORG_FIRST_NAMES,
+  ORG_LAST_NAMES,
+  ORG_NOUNS,
+  ORGS_PER_CATEGORY,
   OTPS_LINES,
+  PREFIXES,
   PS_LINES,
   STORIES,
-  STREETS,
   TITLES,
+  type Borough,
+  type Category,
 } from "./seed-data";
 
 export const PERSONAS = {
   maria: { email: "maria.santos@motthavenyouth.example.org", name: "Maria Santos", title: "Program Director" },
   james: { email: "james.okafor@motthavenyouth.example.org", name: "James Okafor", title: "Finance Manager" },
   daniel: { email: "daniel.cho@finance.example.gov", name: "Daniel Cho", title: "Budget Analyst" },
-  priya: { email: "priya.raman@finance.example.gov", name: "Priya Raman", title: "Deputy Director, Initiative Reporting" },
+  priya: { email: "priya.raman@finance.example.gov", name: "Priya Raman", title: "Deputy Director, Council Finance" },
   tomas: { email: "tomas.rivera@harborview.example.org", name: "Tomas Rivera", title: "Executive Director" },
   grace: { email: "grace.chen@finance.example.gov", name: "Grace Chen", title: "Policy Analyst" },
 };
 
-export const MARIA_ORG = { ein: "00-1040217", name: "Mott Haven Youth Futures, Inc." };
-export const LATE_INITIATIVE = "Youth Mentoring Networks";
-export const ACCEPTED_INITIATIVE = "After School Enrichment";
+export const MARIA_ORG = { ein: "13-4027118", name: "Mott Haven Youth Futures, Inc." };
+export const LATE_INITIATIVE = "Mentor Match Network";
+export const ACCEPTED_INITIATIVE = "Afterschool Studio Program";
+
+const TODAY = "2026-10-08";
+const SPEAKER_DISTRICT = 9;
+const EIN_PREFIXES = ["11", "13", "13", "13", "14", "20", "26", "27", "45", "46", "47", "81", "82", "83", "84", "85", "86", "87", "88", "92"];
 
 function rng(seed: number) {
   let a = seed;
@@ -47,33 +63,102 @@ function rng(seed: number) {
   };
 }
 
-const random = rng(20261014);
+const random = rng(20261009);
 const pick = <T>(items: readonly T[]): T => items[Math.floor(random() * items.length)];
 const between = (min: number, max: number) => Math.floor(min + random() * (max - min + 1));
 const roundTo = (value: number, step: number) => Math.round(value / step) * step;
+const chance = (p: number) => random() < p;
 
-function award(): number {
-  const r = random();
-  if (r < 0.55) return roundTo(between(20000, 90000), 500);
-  if (r < 0.88) return roundTo(between(90000, 250000), 1000);
-  return roundTo(between(250000, 750000), 5000);
+function shuffle<T>(items: readonly T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
-function phone(): string {
-  return `${pick(["212", "718", "347", "929", "646"])}-555-${String(between(100, 199)).padStart(4, "0")}`;
+function weighted<T extends string>(weights: Record<T, number>): T {
+  const entries = Object.entries(weights) as [T, number][];
+  let roll = random() * entries.reduce((sum, [, w]) => sum + w, 0);
+  for (const [key, w] of entries) {
+    roll -= w;
+    if (roll <= 0) return key;
+  }
+  return entries[0][0];
 }
 
 function slug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
+function addDays(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+function minDate(a: string, b: string): string {
+  return a < b ? a : b;
+}
+
+function dateBetween(start: string, end: string): string {
+  const a = Date.parse(start);
+  const b = Date.parse(end);
+  return new Date(a + random() * (b - a)).toISOString().slice(0, 10);
+}
+
+function nthSunday(year: number, month: number, n: number): number {
+  const dow = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  return Date.UTC(year, month - 1, 1 + ((7 - dow) % 7) + 7 * (n - 1));
+}
+
+function isoAt(date: string, hour: number, minute: number): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const day = Date.UTC(y, m - 1, d);
+  const offset = day >= nthSunday(y, 3, 2) && day < nthSunday(y, 11, 1) ? "-04:00" : "-05:00";
+  return `${date}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00${offset}`;
+}
+
+function workTime(date: string): string {
+  return isoAt(date, between(9, 17), between(0, 59));
+}
+
+type Names = { first: readonly string[]; last: readonly string[] };
+
+function nameMaker(pool: Names, used: Set<string>) {
+  return () => {
+    for (let attempt = 0; attempt < 500; attempt++) {
+      const name = `${pick(pool.first)} ${pick(pool.last)}`;
+      if (!used.has(name)) {
+        used.add(name);
+        return name;
+      }
+    }
+    throw new Error("name pool exhausted");
+  };
+}
+
+function award(kind: "named" | "local", range: [number, number]): number {
+  const [min, max] = range;
+  const span = kind === "local" ? 0.4 : 1;
+  const raw = min + Math.pow(random(), 1.6) * (max - min) * span;
+  const step = raw < 40000 ? 500 : raw < 150000 ? pick([1000, 2500, 5000]) : pick([5000, 2500, 10000]);
+  return Math.max(5000, roundTo(raw, step));
+}
+
+function phone(borough: Borough): string {
+  return `${pick(BOROUGH_AREA_CODES[borough])}-555-${String(between(100, 199)).padStart(4, "0")}`;
+}
+
 function balancedBudget(total: number): BudgetLine[] {
   const count = between(5, 12);
   const psCount = Math.max(2, Math.floor(count * 0.6));
-  const weights = Array.from({ length: count }, () => 0.5 + random());
+  const weights = Array.from({ length: count }, () => 0.4 + random() * 1.4);
   const weightSum = weights.reduce((a, b) => a + b, 0);
   const totalCents = Math.round(total * 100);
   let remaining = totalCents;
+  const psPool = shuffle(PS_LINES);
+  const otpsPool = shuffle(OTPS_LINES);
   return weights.map((weight, index) => {
     const cents = index === count - 1 ? remaining : roundTo(Math.round((weight / weightSum) * totalCents), 100);
     remaining -= cents;
@@ -82,62 +167,72 @@ function balancedBudget(total: number): BudgetLine[] {
       rowId: randomUUID(),
       position: index + 1,
       category: isPs ? "PS" : "OTPS",
-      description: isPs ? PS_LINES[index % PS_LINES.length] : OTPS_LINES[index % OTPS_LINES.length],
+      description: isPs ? psPool[index % psPool.length] : otpsPool[(index - psCount) % otpsPool.length],
       amount: cents / 100,
     } satisfies BudgetLine;
   });
 }
 
-type OrgRow = { id: string; ein: string; legal_name: string; borough: string; contact: { name: string; title: string; email: string; phone: string } };
-
-function fullAnswers(definition: FormDefinition, org: OrgRow, outcomes: "normal" | "zero" | "low"): Answers {
-  const target = between(40, 400);
-  const actual = outcomes === "zero" ? 0 : outcomes === "low" ? Math.floor(target * 0.3) : Math.floor(target * (0.85 + random() * 0.35));
-  const answers: Answers = {
-    org_legal_name: org.legal_name,
-    org_ein: org.ein,
-    contact_name: org.contact.name,
-    contact_title: org.contact.title,
-    contact_email: org.contact.email,
-    contact_phone: org.contact.phone,
-    participants_target: String(target),
-    participants_actual: String(actual),
-    sites_count: String(between(1, 4)),
-    delivery_model: pick(["In person", "In person", "Hybrid", "Remote"]),
-    served_youth: random() < 0.4 ? "Yes" : "No",
-    accomplishments: pick(ACCOMPLISHMENTS),
-    challenges: pick(CHALLENGES),
-    success_story: random() < 0.6 ? pick(STORIES) : "",
-  };
-  if (answers.served_youth === "Yes") {
-    answers.youth_breakdown = [
-      { age_group: "Under 10", count: between(5, 40) },
-      { age_group: "10 to 13", count: between(10, 60) },
-      { age_group: "14 to 17", count: between(10, 80) },
-    ];
-  }
-  const performance = definition.sections.find((s) => s.key === "performance");
-  for (const question of performance?.questions ?? []) {
-    if (question.scope !== "initiative") continue;
-    answers[question.key] = question.type === "percent" ? String(between(60, 97)) : String(outcomes === "zero" ? 0 : between(20, 900));
-  }
-  return answers;
+function skewedBudget(total: number): BudgetLine[] {
+  const lines = balancedBudget(total);
+  const direction = chance(0.55) ? 1 : -1;
+  const delta = direction * pick([120, 340, 875, 1260, 2300, 4150, 6800, 310.5, 1999.99]);
+  const target = lines[0];
+  target.amount = Math.max(100, Math.round((target.amount + delta) * 100) / 100);
+  return lines;
 }
 
-function partialAnswers(full: Answers): Answers {
-  const keep = ["org_legal_name", "org_ein", "contact_name", "contact_title", "contact_email", "contact_phone", "accomplishments"];
-  return Object.fromEntries(Object.entries(full).filter(([key]) => keep.includes(key)));
-}
+type OrgRow = {
+  id: string;
+  ein: string;
+  legal_name: string;
+  org_type: "cbo" | "agency";
+  borough: Borough;
+  district: number;
+  categories: Category[];
+  domain: string;
+  submitterId: string;
+  contact: { name: string; title: string; email: string; phone: string };
+};
 
-function isoAt(date: string, hour: number, minute: number): string {
-  return `${date}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00-04:00`;
-}
+type SeedInitiative = {
+  id: string;
+  code: string;
+  name: string;
+  category: Category;
+  fiscalYear: "FY26" | "FY27";
+  kind: "named" | "local";
+  formId: string;
+  definition: FormDefinition;
+  agency: string;
+  source?: SeedInitiative;
+  awards: [number, number];
+  amount: [number, number];
+  retired: boolean;
+};
 
-function dateBetween(start: string, end: string): string {
-  const a = Date.parse(start);
-  const b = Date.parse(end);
-  return new Date(a + random() * (b - a)).toISOString().slice(0, 10);
-}
+type AssignmentRow = {
+  id: string;
+  initiative_id: string;
+  org_id: string;
+  award_amount: number;
+  sponsoring_agency: string;
+  funding_source: "local" | "citywide" | "speaker" | "delegation";
+  contract_status: "awaiting" | "pending" | "registered";
+  contract_registered_on: string | null;
+  contract_number: string | null;
+};
+
+type Plan = { annualTarget: number; midActual: number; sites: number; delivery: string; youth: boolean; cost: number };
+
+const PERIODS = {
+  "FY26-MY": { fy: "FY26", kind: "MY", starts: "2025-07-01", ends: "2025-12-31", due: "2026-01-31", label: "FY26 Mid-Year", tag: "26MY", days: 184 },
+  "FY26-YE": { fy: "FY26", kind: "YE", starts: "2025-07-01", ends: "2026-06-30", due: "2026-09-30", label: "FY26 Year-End", tag: "26YE", days: 365 },
+  "FY27-MY": { fy: "FY27", kind: "MY", starts: "2026-07-01", ends: "2026-12-31", due: "2027-01-31", label: "FY27 Mid-Year", tag: "27MY", days: 184 },
+  "FY27-YE": { fy: "FY27", kind: "YE", starts: "2026-07-01", ends: "2027-06-30", due: "2027-09-30", label: "FY27 Year-End", tag: "27YE", days: 365 },
+} as const;
+
+type PeriodId = keyof typeof PERIODS;
 
 async function insertRows(client: Client, table: string, rows: Record<string, unknown>[], columns: string[]) {
   const chunk = 500;
@@ -154,10 +249,25 @@ async function reset(client: Client, scene: string) {
   const guarded = ["audit_event", "submission_revision"];
   for (const table of guarded) await client.query(`ALTER TABLE ${table} DISABLE TRIGGER USER`);
   await client.query(`TRUNCATE audit_event, submission_revision, ai_action, outbox, flag, attachment, budget_line, answer, submission,
-    form_version, question, assignment, reporting_period, initiative, app_user, contact, organization, fiscal_year, app_setting RESTART IDENTITY CASCADE`);
+    form_version, question, assignment_sponsor, assignment, reporting_period, initiative, app_user, contact, organization, council_member, fiscal_year, app_setting RESTART IDENTITY CASCADE`);
   for (const table of guarded) await client.query(`ALTER TABLE ${table} ENABLE TRIGGER USER`);
   await client.query("INSERT INTO demo_reset (scene) VALUES ($1)", [scene]);
 }
+
+const MISSION: Record<Category, string> = {
+  "Youth Services": "mentoring, after-school learning and paid work experience for young people",
+  "Older Adults": "social programs, meals and in-home support for older adults",
+  Education: "adult education, literacy and family learning programs",
+  Health: "health navigation, screenings and preventive care for neighborhood residents",
+  Housing: "tenant counseling, housing stability services and building repair assistance",
+  Workforce: "job training, placement and small business support",
+  "Food Security": "emergency food, fresh produce distribution and nutrition education",
+  "Immigrant Services": "orientation, benefits screening and language access for recent arrivals",
+  "Arts and Culture": "performances, classes and exhibitions that serve local audiences",
+  "Community Safety": "violence prevention, mediation and street outreach",
+  "Legal Services": "free civil legal help in housing, benefits and family matters",
+  "Parks and Environment": "neighborhood greening, stewardship and environmental education",
+};
 
 export async function seed(client: Client, options: { lateDraft: "empty" | "half" } = { lateDraft: "half" }) {
   const password = process.env.PERSONA_PASSWORD ?? "ledgerline-demo";
@@ -167,212 +277,509 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   const hash = await bcrypt.hash(password, 10);
 
   await client.query("INSERT INTO fiscal_year VALUES ('FY26', '2025-07-01', '2026-06-30'), ('FY27', '2026-07-01', '2027-06-30')");
-  await client.query(`INSERT INTO reporting_period VALUES
-    ('FY26-YE', 'FY26', 'FY26 Year-End', '2026-01-01', '2026-06-30', '2026-09-30'),
-    ('FY27-MY', 'FY27', 'FY27 Mid-Year', '2026-07-01', '2026-12-31', '2027-01-31')`);
-  await client.query(`INSERT INTO app_setting VALUES ('ai_enabled', 'true'), ('demo_today', '"2026-10-14"')`);
+  await insertRows(
+    client,
+    "reporting_period",
+    (Object.entries(PERIODS) as [PeriodId, (typeof PERIODS)[PeriodId]][]).map(([id, p]) => ({ id, fiscal_year_id: p.fy, label: p.label, starts_on: p.starts, ends_on: p.ends, due_on: p.due })),
+    ["id", "fiscal_year_id", "label", "starts_on", "ends_on", "due_on"]
+  );
+  await client.query(`INSERT INTO app_setting VALUES ('ai_enabled', 'true')`);
+
+  const usedNames = new Set<string>([PERSONAS.maria.name, PERSONAS.james.name, PERSONAS.daniel.name, PERSONAS.priya.name, PERSONAS.tomas.name, PERSONAS.grace.name]);
+  const orgName = nameMaker({ first: ORG_FIRST_NAMES, last: ORG_LAST_NAMES }, usedNames);
+  const financeName = nameMaker({ first: FINANCE_FIRST_NAMES, last: FINANCE_LAST_NAMES }, usedNames);
+  const councilName = nameMaker({ first: COUNCIL_FIRST_NAMES, last: COUNCIL_LAST_NAMES }, usedNames);
+
+  const councilRows = Array.from({ length: 51 }, (_, i) => ({ district: i + 1, full_name: councilName() }));
+  await insertRows(client, "council_member", councilRows, ["district", "full_name"]);
 
   const orgs: OrgRow[] = [];
   const orgRows: Record<string, unknown>[] = [];
   const contactRows: Record<string, unknown>[] = [];
-  const usedNames = new Set<string>();
-  for (let i = 0; i < 60; i++) {
-    const borough = i === 0 ? "Bronx" : pick(BOROUGHS);
-    let name = i === 0 ? MARIA_ORG.name : `${ORG_PREFIXES[i % ORG_PREFIXES.length]} ${ORG_SUFFIXES[(i * 7) % ORG_SUFFIXES.length]}`;
-    if (usedNames.has(name)) name = `${name} of ${borough}`;
-    usedNames.add(name);
-    if (i === 1) name = "Harborview Youth Alliance";
-    const ein = i === 0 ? MARIA_ORG.ein : `00-${String(1100000 + i * 13729).slice(0, 7)}`;
+  const userRows: Record<string, unknown>[] = [];
+  const usedEins = new Set<string>([MARIA_ORG.ein]);
+  const usedOrgNames = new Set<string>([MARIA_ORG.name, "Harborview Youth Alliance"]);
+  const usedPrefixes = new Set<string>(["Harborview"]);
+  const prefixPool = shuffle(PREFIXES);
+  let prefixIndex = 0;
+  const ids = { maria: randomUUID(), james: randomUUID(), daniel: randomUUID(), priya: randomUUID(), tomas: randomUUID(), grace: randomUUID() };
+
+  const slots: { category: Category; agency?: (typeof AGENCY_ORGS)[number] }[] = [];
+  for (const category of CATEGORIES) {
+    const total = ORGS_PER_CATEGORY[category];
+    const agencyOrgs = AGENCY_ORGS.filter((a) => a.category === category);
+    for (const a of agencyOrgs) slots.push({ category, agency: a });
+    for (let n = 0; n < total - agencyOrgs.length; n++) slots.push({ category });
+  }
+
+  const makeEin = () => {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const ein = `${pick(EIN_PREFIXES)}-${String(between(1000000, 9999999))}`;
+      if (!usedEins.has(ein)) {
+        usedEins.add(ein);
+        return ein;
+      }
+    }
+    throw new Error("ein pool exhausted");
+  };
+
+  let youthIndex = 0;
+  for (const slot of slots) {
+    const isMaria = slot.category === "Youth Services" && youthIndex === 0;
+    const isTomas = slot.category === "Youth Services" && youthIndex === 1;
+    if (slot.category === "Youth Services") youthIndex++;
+
+    let name: string;
+    let borough: Borough;
+    let domain: string;
+    if (isMaria) {
+      name = MARIA_ORG.name;
+      borough = "Bronx";
+      domain = "motthavenyouth.example.org";
+    } else if (isTomas) {
+      name = "Harborview Youth Alliance";
+      borough = "Brooklyn";
+      domain = "harborview.example.org";
+    } else if (slot.agency) {
+      name = slot.agency.name;
+      borough = slot.agency.borough;
+      domain = `${slug(name)}.example.org`;
+    } else {
+      let candidate = "";
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const prefix = prefixPool[prefixIndex++ % prefixPool.length];
+        candidate = `${prefix} ${pick(ORG_NOUNS[slot.category])}`;
+        if (!usedOrgNames.has(candidate) && !usedPrefixes.has(prefix)) {
+          usedPrefixes.add(prefix);
+          break;
+        }
+      }
+      name = chance(0.45) ? `${candidate}, Inc.` : candidate;
+      borough = weighted(BOROUGH_WEIGHTS);
+      domain = `${slug(candidate)}.example.org`;
+    }
+    usedOrgNames.add(name);
+
     const id = randomUUID();
-    const domain = i === 0 ? "motthavenyouth.example.org" : `${slug(name).slice(0, 18)}.example.org`;
-    const first = pick(FIRST_NAMES);
-    const last = pick(LAST_NAMES);
-    const contact = i === 0
-      ? { name: PERSONAS.maria.name, title: PERSONAS.maria.title, email: PERSONAS.maria.email, phone: "718-555-0142" }
-      : { name: `${first} ${last}`, title: pick(TITLES), email: `${first.toLowerCase()}.${last.toLowerCase()}@${domain}`, phone: phone() };
-    const org: OrgRow = { id, ein, legal_name: name, borough, contact };
+    const place = pick(BOROUGH_PLACES[borough]);
+    const district = isMaria ? 8 : pick(BOROUGH_DISTRICTS[borough]);
+    const contactName = isMaria ? PERSONAS.maria.name : isTomas ? PERSONAS.tomas.name : orgName();
+    const [contactFirst, ...contactRest] = contactName.split(" ");
+    const contactEmail = isMaria ? PERSONAS.maria.email : isTomas ? PERSONAS.tomas.email : `${slug(contactFirst)}.${slug(contactRest.join(""))}@${domain}`;
+    const contactTitle = isMaria ? PERSONAS.maria.title : isTomas ? PERSONAS.tomas.title : pick(TITLES);
+    const contactPhone = isMaria ? "718-555-0142" : phone(borough);
+    const categories = [slot.category];
+    if (!slot.agency && chance(0.25)) {
+      const other = pick(CATEGORIES.filter((c) => c !== slot.category));
+      categories.push(other);
+    }
+    const orgType = slot.agency ? "agency" : "cbo";
+    const ein = isMaria ? MARIA_ORG.ein : makeEin();
+    const submitterId = isMaria ? ids.maria : isTomas ? ids.tomas : randomUUID();
+
+    const org: OrgRow = { id, ein, legal_name: name, org_type: orgType, borough, district, categories, domain, submitterId, contact: { name: contactName, title: contactTitle, email: contactEmail, phone: contactPhone } };
     orgs.push(org);
     orgRows.push({
       id,
       ein,
       legal_name: name,
       dba_name: null,
-      org_type: i % 17 === 5 ? "agency" : "cbo",
+      org_type: orgType,
       borough,
-      council_district: i === 0 ? 8 : pick(BOROUGH_DISTRICTS[borough as keyof typeof BOROUGH_DISTRICTS]),
-      address_line: `${between(10, 2900)} ${pick(STREETS)}${random() < 0.4 ? `, Suite ${between(2, 9)}00` : ""}`,
-      city: borough === "Manhattan" ? "New York" : borough,
+      council_district: district,
+      address_line: `${between(10, 2900)} ${pick(place.streets)}${chance(0.4) ? `, Suite ${between(2, 9)}00` : ""}`,
+      city: place.city,
       state: "NY",
-      postal_code: pick(BOROUGH_ZIPS[borough as keyof typeof BOROUGH_ZIPS]),
-      phone: contact.phone,
+      postal_code: place.zip,
+      phone: contactPhone,
       website: `https://www.${domain}`,
-      mission: i === 0
+      mission: isMaria
         ? "Mott Haven Youth Futures connects young people in the South Bronx with mentors, academic support and paid work experience."
-        : `${name} serves ${borough} residents through community programs, case management and partnerships with local schools.`,
-      founded_year: between(1968, 2016),
-      annual_budget: roundTo(between(400000, 9000000), 10000),
+        : `${name} provides ${MISSION[slot.category]} for residents of ${borough === "Manhattan" ? "upper Manhattan and the Lower East Side" : borough}.`,
+      founded_year: orgType === "agency" ? between(1975, 2005) : between(1968, 2018),
+      annual_budget: orgType === "agency" ? roundTo(between(9000000, 48000000), 100000) : roundTo(between(350000, 8500000), 10000),
     });
-    contactRows.push({ id: randomUUID(), org_id: id, full_name: contact.name, title: contact.title, email: contact.email, phone: contact.phone, is_primary: true });
-    if (random() < 0.7) {
-      const f = pick(FIRST_NAMES);
-      const l = pick(LAST_NAMES);
-      contactRows.push({ id: randomUUID(), org_id: id, full_name: `${f} ${l}`, title: pick(TITLES), email: `${f.toLowerCase()}.${l.toLowerCase()}@${domain}`, phone: phone(), is_primary: false });
+    contactRows.push({ id: randomUUID(), org_id: id, full_name: contactName, title: contactTitle, email: contactEmail, phone: contactPhone, is_primary: true });
+    userRows.push({
+      id: submitterId,
+      email: contactEmail,
+      full_name: contactName,
+      title: contactTitle,
+      role: "cbo_submitter",
+      org_id: id,
+      password_hash: isMaria ? hash : null,
+      can_sign_in: isMaria,
+    });
+    if (isMaria) {
+      contactRows.push({ id: randomUUID(), org_id: id, full_name: PERSONAS.james.name, title: PERSONAS.james.title, email: PERSONAS.james.email, phone: "718-555-0157", is_primary: false });
+      userRows.push({ id: ids.james, email: PERSONAS.james.email, full_name: PERSONAS.james.name, title: PERSONAS.james.title, role: "cbo_submitter", org_id: id, password_hash: hash, can_sign_in: true });
+    } else if (chance(0.6)) {
+      const second = orgName();
+      const [f, ...r] = second.split(" ");
+      contactRows.push({ id: randomUUID(), org_id: id, full_name: second, title: pick(TITLES), email: `${slug(f)}.${slug(r.join(""))}@${domain}`, phone: phone(borough), is_primary: false });
     }
-  }
-  if (orgs[0].legal_name === MARIA_ORG.name) {
-    contactRows.push({ id: randomUUID(), org_id: orgs[0].id, full_name: PERSONAS.james.name, title: PERSONAS.james.title, email: PERSONAS.james.email, phone: "718-555-0157", is_primary: false });
   }
   await insertRows(client, "organization", orgRows, ["id", "ein", "legal_name", "dba_name", "org_type", "borough", "council_district", "address_line", "city", "state", "postal_code", "phone", "website", "mission", "founded_year", "annual_budget"]);
   await insertRows(client, "contact", contactRows, ["id", "org_id", "full_name", "title", "email", "phone", "is_primary"]);
 
-  const users: Record<string, unknown>[] = [];
-  const ids: Record<keyof typeof PERSONAS, string> = {
-    maria: randomUUID(), james: randomUUID(), daniel: randomUUID(), priya: randomUUID(), tomas: randomUUID(), grace: randomUUID(),
-  };
-  users.push(
-    { id: ids.maria, email: PERSONAS.maria.email, full_name: PERSONAS.maria.name, title: PERSONAS.maria.title, role: "cbo_submitter", org_id: orgs[0].id, password_hash: hash, can_sign_in: true },
-    { id: ids.james, email: PERSONAS.james.email, full_name: PERSONAS.james.name, title: PERSONAS.james.title, role: "cbo_submitter", org_id: orgs[0].id, password_hash: hash, can_sign_in: true },
-    { id: ids.daniel, email: PERSONAS.daniel.email, full_name: PERSONAS.daniel.name, title: PERSONAS.daniel.title, role: "finance_analyst", org_id: null, password_hash: hash, can_sign_in: true },
-    { id: ids.priya, email: PERSONAS.priya.email, full_name: PERSONAS.priya.name, title: PERSONAS.priya.title, role: "finance_admin", org_id: null, password_hash: hash, can_sign_in: true },
-    { id: ids.tomas, email: PERSONAS.tomas.email, full_name: PERSONAS.tomas.name, title: PERSONAS.tomas.title, role: "cbo_submitter", org_id: orgs[1].id, password_hash: null, can_sign_in: false },
-    { id: ids.grace, email: PERSONAS.grace.email, full_name: PERSONAS.grace.name, title: PERSONAS.grace.title, role: "finance_viewer", org_id: null, password_hash: null, can_sign_in: false }
-  );
-  const orgSubmitter: Record<string, string> = { [orgs[0].id]: ids.maria, [orgs[1].id]: ids.tomas };
-  for (const org of orgs.slice(2)) {
-    const id = randomUUID();
-    orgSubmitter[org.id] = id;
-    users.push({ id, email: org.contact.email, full_name: org.contact.name, title: org.contact.title, role: "cbo_submitter", org_id: org.id, password_hash: null, can_sign_in: false });
-  }
-  const financeRoles = ["finance_viewer", "finance_analyst", "finance_analyst", "finance_analyst", "finance_admin"];
-  const financeIds: string[] = [ids.daniel];
-  for (let i = 0; i < 56; i++) {
-    const f = pick(FIRST_NAMES);
-    const l = pick(LAST_NAMES);
-    const id = randomUUID();
-    const role = financeRoles[i % financeRoles.length];
-    if (role !== "finance_viewer") financeIds.push(id);
-    users.push({
-      id,
-      email: `${f.toLowerCase()}.${l.toLowerCase()}${i}@finance.example.gov`,
-      full_name: `${f} ${l}`,
-      title: role === "finance_admin" ? "Unit Head" : role === "finance_analyst" ? pick(["Budget Analyst", "Senior Budget Analyst", "Financial Analyst"]) : "Policy Analyst",
-      role,
-      org_id: null,
-      password_hash: null,
-      can_sign_in: false,
-    });
-  }
-  await insertRows(client, "app_user", users, ["id", "email", "full_name", "title", "role", "org_id", "password_hash", "can_sign_in"]);
+  const maria = orgs.find((o) => o.legal_name === MARIA_ORG.name)!;
+  const orgById = new Map(orgs.map((o) => [o.id, o]));
 
-  const initiatives: { id: string; name: string; category: string; formId: string; definition: FormDefinition }[] = [];
+  const financeRows: Record<string, unknown>[] = [
+    { id: ids.priya, email: PERSONAS.priya.email, full_name: PERSONAS.priya.name, title: PERSONAS.priya.title, role: "finance_admin", org_id: null, password_hash: hash, can_sign_in: true },
+    { id: ids.daniel, email: PERSONAS.daniel.email, full_name: PERSONAS.daniel.name, title: PERSONAS.daniel.title, role: "finance_analyst", org_id: null, password_hash: hash, can_sign_in: true },
+    { id: ids.grace, email: PERSONAS.grace.email, full_name: PERSONAS.grace.name, title: PERSONAS.grace.title, role: "finance_viewer", org_id: null, password_hash: null, can_sign_in: false },
+  ];
+  const reviewerIds: string[] = [ids.daniel];
+  const staffPlan: ("finance_admin" | "finance_analyst" | "finance_viewer")[] = [
+    "finance_admin",
+    ...Array.from({ length: 8 }, () => "finance_analyst" as const),
+    ...Array.from({ length: 5 }, () => "finance_viewer" as const),
+  ];
+  for (const role of staffPlan) {
+    const full = financeName();
+    const [f, ...r] = full.split(" ");
+    const id = randomUUID();
+    if (role !== "finance_viewer") reviewerIds.push(id);
+    financeRows.push({ id, email: `${slug(f)}.${slug(r.join(""))}@finance.example.gov`, full_name: full, title: pick(FINANCE_TITLES[role]), role, org_id: null, password_hash: null, can_sign_in: false });
+  }
+  reviewerIds.push(ids.priya);
+  await insertRows(client, "app_user", [...userRows, ...financeRows], ["id", "email", "full_name", "title", "role", "org_id", "password_hash", "can_sign_in"]);
+
+  const initiatives: SeedInitiative[] = [];
   const initiativeRows: Record<string, unknown>[] = [];
   const formRows: Record<string, unknown>[] = [];
-  let n = 0;
-  for (const [category, names] of Object.entries(INITIATIVE_NAMES)) {
-    for (const base of names) {
-      n++;
-      const id = randomUUID();
-      const formId = randomUUID();
-      const name = base;
-      const definition = buildDefinition(`${base} report`, CATEGORY_METRICS[category]);
-      initiatives.push({ id, name, category, formId, definition });
-      initiativeRows.push({
-        id,
-        code: `CI-${String(n).padStart(3, "0")}`,
-        name,
-        category,
-        description: `Council funding for ${category.toLowerCase()} programs delivered by community organizations and City agencies. Funded organizations report performance, spending and outcomes twice a year.`,
-        fiscal_year_id: "FY27",
-        total_funding: 0,
-        status: "active",
-        created_by: ids.priya,
-      });
-      formRows.push({
-        id: formId,
-        initiative_id: id,
-        version: 1,
-        status: "published",
-        definition,
-        source: "seed",
-        created_by: ids.priya,
-        published_by: ids.priya,
-        published_at: "2026-06-15T10:00:00-04:00",
-      });
-    }
+  const lineageRows: Record<string, unknown>[] = [];
+  const counters = { FY26: 0, FY27: 0 };
+
+  const addInitiative = (spec: { name: string; category: Category; kind: "named" | "local"; awards: [number, number]; amount: [number, number]; description: string; retired?: boolean }, fiscalYear: "FY26" | "FY27", source?: SeedInitiative) => {
+    const id = randomUUID();
+    const formId = randomUUID();
+    counters[fiscalYear]++;
+    const definition = buildDefinition(`${spec.name} report`, CATEGORY_METRICS[spec.category]);
+    const row: SeedInitiative = {
+      id,
+      code: `CI-${fiscalYear.slice(2)}-${String(counters[fiscalYear]).padStart(3, "0")}`,
+      name: spec.name,
+      category: spec.category,
+      fiscalYear,
+      kind: spec.kind,
+      formId,
+      definition,
+      agency: AGENCY_BY_CATEGORY[spec.category],
+      source,
+      awards: spec.awards,
+      amount: spec.amount,
+      retired: Boolean(spec.retired),
+    };
+    initiatives.push(row);
+    initiativeRows.push({
+      id,
+      code: row.code,
+      name: spec.name,
+      category: spec.category,
+      description: spec.description,
+      fiscal_year_id: fiscalYear,
+      total_funding: 0,
+      status: spec.retired ? "retired" : "active",
+      administering_agency: row.agency,
+      created_by: ids.priya,
+      created_at: fiscalYear === "FY26" ? "2025-06-18T10:00:00-04:00" : "2026-06-22T10:00:00-04:00",
+    });
+    formRows.push({
+      id: formId,
+      initiative_id: id,
+      version: 1,
+      status: "published",
+      definition,
+      source: "manual",
+      created_by: ids.priya,
+      published_by: ids.priya,
+      published_at: fiscalYear === "FY26" ? "2025-06-25T10:00:00-04:00" : "2026-06-29T10:00:00-04:00",
+    });
+    return row;
+  };
+
+  const localSpec = (category: Category) => ({
+    name: `Local ${category} Discretionary Fund`,
+    category,
+    kind: "local" as const,
+    awards: [3, 8] as [number, number],
+    amount: [8000, 90000] as [number, number],
+    description: `Discretionary awards that individual Council Members designate to neighborhood ${category.toLowerCase()} programs in their districts.`,
+  });
+
+  const fy26: SeedInitiative[] = [];
+  for (const named of NAMED_INITIATIVES) fy26.push(addInitiative({ ...named, kind: "named", retired: named.retiredAtRollover }, "FY26"));
+  for (const category of CATEGORIES) fy26.push(addInitiative(localSpec(category), "FY26"));
+
+  const fy27: SeedInitiative[] = [];
+  for (const prior of fy26) {
+    if (prior.retired) continue;
+    const spec = NAMED_INITIATIVES.find((n) => n.name === prior.name);
+    const name = spec?.renamedTo ?? prior.name;
+    const description = (initiativeRows.find((r) => r.id === prior.id)!.description as string);
+    const next = addInitiative({ name, category: prior.category, kind: prior.kind, awards: prior.awards, amount: prior.amount, description }, "FY27", prior);
+    fy27.push(next);
+    lineageRows.push({
+      predecessor_id: prior.id,
+      successor_id: next.id,
+      kind: name === prior.name ? "carried" : "renamed",
+      fiscal_year_id: "FY27",
+      note: name === prior.name ? "Carried forward to FY27" : `Renamed from ${prior.name}`,
+      created_by: ids.priya,
+      created_at: "2026-06-22T10:30:00-04:00",
+    });
   }
-  await insertRows(client, "initiative", initiativeRows, ["id", "code", "name", "category", "description", "fiscal_year_id", "total_funding", "status", "created_by"]);
+  for (const prior of fy26.filter((p) => p.retired)) {
+    lineageRows.push({ predecessor_id: prior.id, successor_id: null, kind: "retired", fiscal_year_id: "FY27", note: "Retired at rollover to FY27", created_by: ids.priya, created_at: "2026-06-22T10:30:00-04:00" });
+  }
+  await insertRows(client, "initiative", initiativeRows, ["id", "code", "name", "category", "description", "fiscal_year_id", "total_funding", "status", "administering_agency", "created_by", "created_at"]);
   await insertRows(client, "form_version", formRows, ["id", "initiative_id", "version", "status", "definition", "source", "created_by", "published_by", "published_at"]);
+  await insertRows(client, "initiative_lineage", lineageRows, ["predecessor_id", "successor_id", "kind", "fiscal_year_id", "note", "created_by", "created_at"]);
 
   const byName = (name: string) => {
-    const found = initiatives.find((i) => i.name === name);
+    const found = fy26.find((i) => i.name === name);
     if (!found) throw new Error(`missing initiative ${name}`);
     return found;
   };
   const late = byName(LATE_INITIATIVE);
   const accepted = byName(ACCEPTED_INITIATIVE);
-  const large = byName("Adult Literacy");
 
-  type AssignmentRow = { id: string; initiative_id: string; org_id: string; award_amount: number };
   const assignments: AssignmentRow[] = [];
+  const sponsorRows: Record<string, unknown>[] = [];
+  const assignmentSeed = new Map<string, SeedInitiative>();
   const pairs = new Set<string>();
-  const assign = (initiativeId: string, orgId: string, amount: number) => {
-    const key = `${initiativeId}:${orgId}`;
-    if (pairs.has(key)) return;
-    pairs.add(key);
-    assignments.push({ id: randomUUID(), initiative_id: initiativeId, org_id: orgId, award_amount: amount });
+  const usedContracts = new Set<string>();
+
+  const contractFor = (fy: "FY26" | "FY27", agency: string) => {
+    const roll = random();
+    const mix = fy === "FY26" ? { registered: 0.93, pending: 0.98 } : { registered: 0.52, pending: 0.8 };
+    const status = roll < mix.registered ? "registered" : roll < mix.pending ? "pending" : "awaiting";
+    let number: string | null = null;
+    if (status !== "awaiting") {
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const candidate = `${agency}-${fy.slice(2)}-${String(between(1000, 99999)).padStart(5, "0")}`;
+        if (!usedContracts.has(candidate)) {
+          usedContracts.add(candidate);
+          number = candidate;
+          break;
+        }
+      }
+    }
+    const registeredOn = status === "registered" ? (fy === "FY26" ? dateBetween("2025-08-04", "2026-03-20") : dateBetween("2026-07-14", "2026-10-02")) : null;
+    return { contract_status: status as AssignmentRow["contract_status"], contract_registered_on: registeredOn, contract_number: number };
   };
-  assign(late.id, orgs[0].id, 85000);
-  assign(accepted.id, orgs[0].id, 62500);
-  for (let i = 2; i < 42; i++) assign(large.id, orgs[i].id, roundTo(between(15000, 60000), 500));
-  for (const initiative of initiatives) {
-    if (initiative.id === large.id) continue;
-    const count = initiative.id === late.id || initiative.id === accepted.id ? 1 : random() < 0.72 ? 1 : 2;
-    for (let c = 0; c < count; c++) assign(initiative.id, orgs[between(1, orgs.length - 1)].id, award());
+
+  const sponsorsFor = (org: OrgRow, source: AssignmentRow["funding_source"], amount: number) => {
+    const homeDistrict = chance(0.75) ? org.district : pick(BOROUGH_DISTRICTS[org.borough]);
+    if (source === "speaker") return [{ district: SPEAKER_DISTRICT, amount }];
+    if (source === "delegation") {
+      const districts = shuffle(BOROUGH_DISTRICTS[org.borough]).slice(0, between(2, Math.min(4, BOROUGH_DISTRICTS[org.borough].length)));
+      const cents = Math.round(amount * 100);
+      const each = Math.floor(cents / districts.length);
+      return districts.map((district, index) => ({ district, amount: (index === 0 ? cents - each * (districts.length - 1) : each) / 100 }));
+    }
+    return [{ district: homeDistrict, amount }];
+  };
+
+  const assign = (initiative: SeedInitiative, org: OrgRow, amount: number, forcedSource?: AssignmentRow["funding_source"]) => {
+    const key = `${initiative.id}:${org.id}`;
+    if (pairs.has(key)) return null;
+    pairs.add(key);
+    const source: AssignmentRow["funding_source"] = forcedSource ?? (initiative.kind === "local" ? "local" : weighted({ citywide: 70, speaker: 15, delegation: 15 }));
+    const row: AssignmentRow = { id: randomUUID(), initiative_id: initiative.id, org_id: org.id, award_amount: amount, sponsoring_agency: initiative.agency, funding_source: source, ...contractFor(initiative.fiscalYear, initiative.agency) };
+    assignments.push(row);
+    assignmentSeed.set(row.id, initiative);
+    for (const s of sponsorsFor(org, source, amount)) sponsorRows.push({ assignment_id: row.id, district: s.district, amount: s.amount });
+    return row;
+  };
+
+  const poolFor = (initiative: SeedInitiative) => shuffle(orgs.filter((o) => o.id !== maria.id && o.categories.includes(initiative.category)));
+
+  assign(late, maria, 85000, "citywide");
+  assign(accepted, maria, 62500, "citywide");
+  for (const initiative of fy26) {
+    const pool = poolFor(initiative);
+    const count = Math.min(pool.length, between(initiative.awards[0], initiative.awards[1]));
+    for (const org of pool.slice(0, count)) assign(initiative, org, award(initiative.kind, initiative.amount));
   }
-  await insertRows(client, "assignment", assignments.map((a) => ({ ...a, sponsoring_agency: pick(["DYCD", "DFTA", "DOHMH", "HRA", "SBS", "DCLA", "DOE", "DPR"]) })), ["id", "initiative_id", "org_id", "award_amount", "sponsoring_agency"]);
+  const funded = new Set(assignments.map((a) => a.org_id));
+  for (const org of orgs.filter((o) => !funded.has(o.id))) {
+    const local = fy26.find((i) => i.kind === "local" && i.category === org.categories[0])!;
+    assign(local, org, award("local", local.amount));
+  }
+
+  const fy26Assignments = assignments.filter((a) => assignmentSeed.get(a.id)!.fiscalYear === "FY26");
+  for (const prior of fy26Assignments) {
+    const priorInitiative = assignmentSeed.get(prior.id)!;
+    const next = fy27.find((i) => i.source?.id === priorInitiative.id);
+    if (!next) continue;
+    const org = orgById.get(prior.org_id)!;
+    const isMaria = org.id === maria.id;
+    if (!isMaria && chance(0.06)) continue;
+    const factor = isMaria ? 1 : pick([1, 1, 1.04, 1.1, 0.95, 0.9, 1.15]);
+    assign(next, org, Math.max(5000, roundTo(prior.award_amount * factor, 500)), prior.funding_source);
+  }
+  for (const next of fy27) {
+    if (chance(0.35)) {
+      const pool = poolFor(next).filter((o) => !pairs.has(`${next.id}:${o.id}`));
+      if (pool.length > 0) assign(next, pool[0], award(next.kind, next.amount));
+    }
+  }
+
+  await insertRows(client, "assignment", assignments, ["id", "initiative_id", "org_id", "award_amount", "sponsoring_agency", "funding_source", "contract_status", "contract_registered_on", "contract_number"]);
+  await insertRows(client, "assignment_sponsor", sponsorRows, ["assignment_id", "district", "amount"]);
   await client.query("UPDATE initiative i SET total_funding = coalesce((SELECT sum(award_amount) FROM assignment a WHERE a.initiative_id = i.id), 0)");
 
-  const initiativeById = new Map(initiatives.map((i) => [i.id, i]));
-  const orgById = new Map(orgs.map((o) => [o.id, o]));
+  const plans = new Map<string, Plan>();
+  const planFor = (a: AssignmentRow): Plan => {
+    const found = plans.get(a.id);
+    if (found) return found;
+    const initiative = assignmentSeed.get(a.id)!;
+    const [lo, hi] = COST_PER_PARTICIPANT[initiative.category];
+    const cost = lo + random() * (hi - lo);
+    const annualTarget = Math.max(24, Math.round(a.award_amount / cost));
+    const plan: Plan = {
+      annualTarget,
+      midActual: Math.max(1, Math.round(annualTarget * 0.5 * (0.7 + random() * 0.4))),
+      sites: annualTarget > 600 ? between(2, 5) : between(1, 3),
+      delivery: pick(["In person", "In person", "In person", "Hybrid", "Remote"]),
+      youth: initiative.category === "Youth Services" || (initiative.category === "Education" && chance(0.5)) || (initiative.category === "Health" && chance(0.3)) || chance(0.08),
+      cost,
+    };
+    plans.set(a.id, plan);
+    return plan;
+  };
+
+  const metricValue = (key: string, actual: number, scale: number, days: number): string => {
+    const n = (min: number, max: number) => String(Math.max(0, Math.round(between(min * 100, max * 100) / 100)));
+    switch (key) {
+      case "youth_program_hours": return n(Math.max(10, actual * 6), Math.max(20, actual * 28));
+      case "youth_completion_rate": return String(between(58, 96));
+      case "meals_delivered": return n(actual * 14 * scale, actual * 60 * scale);
+      case "wellness_checks": return n(actual * 2 * scale, actual * 9 * scale);
+      case "students_tutored": return n(actual * 0.55, actual * 0.95);
+      case "literacy_gain_rate": return String(between(48, 88));
+      case "screenings_completed": return n(actual * 0.6, actual * 0.95);
+      case "referrals_made": return n(actual * 0.1, actual * 0.4);
+      case "households_assisted": return n(actual * 0.5, actual * 0.95);
+      case "evictions_prevented": return n(actual * 0.1, actual * 0.4);
+      case "job_placements": return n(actual * 0.2, actual * 0.55);
+      case "credentials_earned": return n(actual * 0.3, actual * 0.75);
+      case "pounds_distributed": return n(actual * 28 * scale, actual * 70 * scale);
+      case "pantry_days": return String(between(Math.round(days * 0.2), Math.round(days * 0.7)));
+      case "legal_consultations": return n(actual * 0.6, actual * 1.1);
+      case "language_access_hours": return n(60 * scale, 520 * scale);
+      case "public_events": return n(5 * scale, 38 * scale);
+      case "event_attendance": return n(actual * 0.9, actual * 1.4);
+      case "mediations_held": return n(12 * scale, 110 * scale);
+      case "outreach_contacts": return n(actual * 1.2, actual * 4);
+      case "cases_opened": return n(actual * 0.5, actual * 0.95);
+      case "cases_resolved": return n(actual * 0.3, actual * 0.8);
+      case "volunteer_hours": return n(actual * 2.5, actual * 8);
+      case "trees_planted": return n(12 * scale, 260 * scale);
+      default: return String(between(5, 200));
+    }
+  };
+
+  const fullAnswers = (a: AssignmentRow, periodId: PeriodId, quality: "normal" | "zero" | "low"): Answers => {
+    const initiative = assignmentSeed.get(a.id)!;
+    const org = orgById.get(a.org_id)!;
+    const plan = planFor(a);
+    const period = PERIODS[periodId];
+    const scale = period.kind === "MY" ? 0.5 : 1;
+    const target = period.kind === "MY" ? Math.round(plan.annualTarget * 0.5) : plan.annualTarget;
+    let actual: number;
+    if (quality === "zero") actual = 0;
+    else if (quality === "low") actual = Math.max(1, Math.floor(target * (0.15 + random() * 0.2)));
+    else if (period.kind === "MY") actual = Math.max(1, Math.round(target * (0.82 + random() * 0.3)));
+    else actual = Math.max(plan.midActual + 1, Math.round(target * (0.88 + random() * 0.24)));
+    const answers: Answers = {
+      org_legal_name: org.legal_name,
+      org_ein: org.ein,
+      contact_name: org.contact.name,
+      contact_title: org.contact.title,
+      contact_email: org.contact.email,
+      contact_phone: org.contact.phone,
+      participants_target: String(target),
+      participants_actual: String(actual),
+      sites_count: String(plan.sites),
+      delivery_model: plan.delivery,
+      served_youth: plan.youth ? "Yes" : "No",
+      accomplishments: pick(ACCOMPLISHMENTS[initiative.category]).replace("{actual}", String(actual)).replace("{hours}", String(between(14, 60))),
+      challenges: chance(0.7) ? pick(CHALLENGES) : "",
+      success_story: chance(0.55) ? pick(STORIES[initiative.category]) : "",
+    };
+    if (plan.youth) {
+      const under18 = Math.max(3, Math.round(actual * (0.35 + random() * 0.5)));
+      const a1 = Math.round(under18 * 0.25);
+      const a2 = Math.round(under18 * 0.35);
+      answers.youth_breakdown = [
+        { age_group: "Under 10", count: a1 },
+        { age_group: "10 to 13", count: a2 },
+        { age_group: "14 to 17", count: Math.max(0, under18 - a1 - a2) },
+      ];
+    }
+    const performance = initiative.definition.sections.find((s) => s.key === "performance");
+    for (const question of performance?.questions ?? []) {
+      if (question.scope !== "initiative") continue;
+      answers[question.key] = quality === "zero" && question.type !== "percent" ? "0" : metricValue(question.key, actual, scale, period.days);
+    }
+    return answers;
+  };
+
+  const partialAnswers = (full: Answers): Answers => {
+    const keys = Object.keys(full);
+    const keep = new Set(["org_legal_name", "org_ein"]);
+    const share = 0.25 + random() * 0.65;
+    for (const key of keys) if (random() < share) keep.add(key);
+    return Object.fromEntries(Object.entries(full).filter(([key]) => keep.has(key)));
+  };
+
   const submissions: Record<string, unknown>[] = [];
   const answerRows: Record<string, unknown>[] = [];
   const budgetRows: Record<string, unknown>[] = [];
   const revisionRows: Record<string, unknown>[] = [];
   const auditRows: Record<string, unknown>[] = [];
   const outboxRows: Record<string, unknown>[] = [];
-  let ref = 0;
+  const flagRows: Record<string, unknown>[] = [];
+  const refCounters: Record<string, number> = {};
 
   const addAnswers = (submissionId: string, answers: Answers, by: string, at: string) => {
-    for (const [key, value] of Object.entries(answers)) {
-      answerRows.push({ submission_id: submissionId, question_key: key, value, updated_by: by, updated_at: at });
-    }
+    for (const [key, value] of Object.entries(answers)) answerRows.push({ submission_id: submissionId, question_key: key, value, updated_by: by, updated_at: at });
   };
   const addBudget = (submissionId: string, lines: BudgetLine[]) => {
-    for (const line of lines) {
-      budgetRows.push({ submission_id: submissionId, row_id: line.rowId, position: line.position, category: line.category, description: line.description, amount: line.amount });
-    }
+    for (const line of lines) budgetRows.push({ submission_id: submissionId, row_id: line.rowId, position: line.position, category: line.category, description: line.description, amount: line.amount });
   };
+
+  type Status = "draft" | "submitted" | "under_review" | "returned" | "accepted";
 
   const createSubmission = (opts: {
     assignment: AssignmentRow;
-    period: "FY26-YE" | "FY27-MY";
-    status: "draft" | "submitted" | "under_review" | "returned" | "accepted";
-    outcomes?: "normal" | "zero" | "low";
+    period: PeriodId;
+    status: Status;
+    quality?: "normal" | "zero" | "low";
     submittedBy?: string;
     submittedOn?: string;
     unbalanced?: boolean;
     draftAnswers?: Answers;
+    editedOn?: string;
   }) => {
-    const initiative = initiativeById.get(opts.assignment.initiative_id)!;
+    const initiative = assignmentSeed.get(opts.assignment.id)!;
     const org = orgById.get(opts.assignment.org_id)!;
+    const period = PERIODS[opts.period];
     const id = randomUUID();
-    ref++;
-    const submitter = opts.submittedBy ?? orgSubmitter[org.id];
-    const full = fullAnswers(initiative.definition, org, opts.outcomes ?? "normal");
-    const startedAt = isoAt(opts.period === "FY26-YE" ? dateBetween("2026-07-01", "2026-08-20") : dateBetween("2026-09-01", "2026-10-10"), between(9, 17), between(0, 59));
+    refCounters[opts.period] = (refCounters[opts.period] ?? 0) + 1;
+    const submitter = opts.submittedBy ?? org.submitterId;
+    const full = fullAnswers(opts.assignment, opts.period, opts.quality ?? "normal");
+    const startFrom = period.kind === "MY" ? (period.fy === "FY26" ? "2026-01-02" : "2026-10-01") : "2026-07-20";
+    const startTo = period.kind === "MY" ? (period.fy === "FY26" ? "2026-01-25" : TODAY) : "2026-09-20";
+    const startedOn = dateBetween(startFrom, startTo);
+    const startedAt = workTime(startedOn);
     const base = {
       id,
-      reference_no: `LL-${opts.period === "FY26-YE" ? "26YE" : "27MY"}-${String(ref).padStart(5, "0")}`,
+      reference_no: `LL-${period.tag}-${String(refCounters[opts.period]).padStart(5, "0")}`,
       assignment_id: opts.assignment.id,
       period_id: opts.period,
       form_version_id: initiative.formId,
@@ -381,19 +788,17 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     };
     if (opts.status === "draft") {
       const answers = opts.draftAnswers ?? partialAnswers(full);
-      addAnswers(id, answers, submitter, startedAt);
-      if (opts.unbalanced) {
-        const lines = balancedBudget(opts.assignment.award_amount);
-        lines[0].amount = Math.round((lines[0].amount + 1750) * 100) / 100;
-        addBudget(id, lines);
-      }
-      submissions.push({ ...base, status: "draft", revision: 0, lock_version: between(1, 9), submitted_by: null, submitted_at: null, updated_by: submitter, updated_at: startedAt });
+      const editedAt = workTime(opts.editedOn ?? minDate(TODAY, addDays(startedOn, between(0, 20))));
+      addAnswers(id, answers, submitter, editedAt);
+      if (opts.unbalanced) addBudget(id, skewedBudget(opts.assignment.award_amount));
+      else if (chance(0.3)) addBudget(id, balancedBudget(opts.assignment.award_amount).slice(0, between(2, 4)));
+      submissions.push({ ...base, status: "draft", revision: 0, lock_version: between(1, 9), submitted_by: null, submitted_at: null, updated_by: submitter, updated_at: editedAt });
       return id;
     }
     const lines = balancedBudget(opts.assignment.award_amount);
     addAnswers(id, full, submitter, startedAt);
     addBudget(id, lines);
-    const submittedDate = opts.submittedOn ?? dateBetween("2026-08-01", "2026-09-29");
+    const submittedDate = opts.submittedOn ?? dateBetween(period.kind === "MY" ? "2026-01-06" : "2026-07-24", period.kind === "MY" ? "2026-01-30" : "2026-09-29");
     const submittedAt = isoAt(submittedDate, between(9, 18), between(0, 59));
     const snapshot = buildSnapshot({ formVersionId: initiative.formId, answers: full, budget: lines, attachments: [] });
     revisionRows.push({ submission_id: id, revision: 1, kind: "submit", snapshot, sha256: "", actor: submitter, reason: null, created_at: submittedAt });
@@ -401,7 +806,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     outboxRows.push({
       to_email: org.contact.email,
       template: "submission_confirmation",
-      subject: `Report received: ${initiative.name}, ${opts.period === "FY26-YE" ? "FY26 Year-End" : "FY27 Mid-Year"}`,
+      subject: `Report received: ${initiative.name}, ${period.label}`,
       body_text: `We received your report ${base.reference_no} for ${initiative.name}.`,
       submission_id: id,
       org_id: org.id,
@@ -409,43 +814,100 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       created_by: submitter,
       created_at: submittedAt,
     });
-    const reviewer = pick(financeIds);
-    const later = (days: number) => isoAt(new Date(Date.parse(submittedDate) + days * 86400000).toISOString().slice(0, 10), between(9, 17), between(0, 59));
+    const reviewer = pick(reviewerIds);
+    const later = (days: number) => workTime(minDate(TODAY, addDays(submittedDate, days)));
+    let updatedAt = submittedAt;
     if (opts.status !== "submitted") {
-      auditRows.push({ at: later(2), actor_id: reviewer, entity: "submission", entity_id: id, action: "start_review", note: null, before: { status: "submitted", revision: 1 }, after: { status: "under_review", revision: 1 } });
+      updatedAt = later(between(1, 4));
+      auditRows.push({ at: updatedAt, actor_id: reviewer, entity: "submission", entity_id: id, action: "start_review", note: null, before: { status: "submitted", revision: 1 }, after: { status: "under_review", revision: 1 } });
     }
     if (opts.status === "accepted") {
-      auditRows.push({ at: later(5), actor_id: reviewer, entity: "submission", entity_id: id, action: "accept", note: null, before: { status: "under_review", revision: 1 }, after: { status: "accepted", revision: 1 } });
+      updatedAt = later(between(5, 21));
+      auditRows.push({ at: updatedAt, actor_id: reviewer, entity: "submission", entity_id: id, action: "accept", note: null, before: { status: "under_review", revision: 1 }, after: { status: "accepted", revision: 1 } });
     }
     if (opts.status === "returned") {
-      auditRows.push({ at: later(4), actor_id: reviewer, entity: "submission", entity_id: id, action: "request_update", note: "Please attach the signed timesheets for the Program Coordinator line and confirm the participant count.", before: { status: "under_review", revision: 1 }, after: { status: "returned", revision: 1 } });
+      updatedAt = later(between(5, 10));
+      auditRows.push({
+        at: updatedAt,
+        actor_id: reviewer,
+        entity: "submission",
+        entity_id: id,
+        action: "request_update",
+        note: pick([
+          "Please attach the payroll register for the Program Coordinator line and confirm the participant count.",
+          "The budget narrative does not match the supplies line. Please explain the difference and resubmit.",
+          "Sites served are listed as 3 but only two addresses appear in the narrative. Please confirm.",
+        ]),
+        before: { status: "under_review", revision: 1 },
+        after: { status: "returned", revision: 1 },
+      });
     }
-    submissions.push({ ...base, status: opts.status, revision: 1, lock_version: between(3, 12), submitted_by: submitter, submitted_at: submittedAt, updated_by: submitter, updated_at: submittedAt });
+    if (opts.status !== "returned" && chance(0.04)) {
+      flagRows.push({
+        submission_id: id,
+        kind: "manual",
+        source: "user",
+        note: pick(["Verify site count with agency monitor.", "Expense ratio differs from prior year, ask for a short explanation.", "Check attendance sign-in sheets at next site visit."]),
+        status: "open",
+        created_by: reviewer,
+        created_at: updatedAt,
+      });
+    }
+    submissions.push({ ...base, status: opts.status, revision: 1, lock_version: between(3, 12), submitted_by: submitter, submitted_at: submittedAt, updated_by: submitter, updated_at: updatedAt });
     return id;
   };
 
-  const lateAssignment = assignments.find((a) => a.initiative_id === late.id)!;
-  const acceptedAssignment = assignments.find((a) => a.initiative_id === accepted.id)!;
+  const lateAssignment = assignments.find((a) => a.initiative_id === late.id && a.org_id === maria.id)!;
+  const acceptedAssignment = assignments.find((a) => a.initiative_id === accepted.id && a.org_id === maria.id)!;
+
+  createSubmission({ assignment: acceptedAssignment, period: "FY26-MY", status: "accepted", submittedBy: ids.james, submittedOn: "2026-01-21" });
+  createSubmission({ assignment: lateAssignment, period: "FY26-MY", status: "accepted", submittedBy: ids.maria, submittedOn: "2026-01-27" });
   createSubmission({ assignment: acceptedAssignment, period: "FY26-YE", status: "accepted", submittedBy: ids.james, submittedOn: "2026-09-18" });
   if (options.lateDraft === "half") {
-    const org = orgById.get(orgs[0].id)!;
-    const full = fullAnswers(late.definition, org, "normal");
+    const full = fullAnswers(lateAssignment, "FY26-YE", "normal");
     const half: Answers = {};
-    for (const key of ["org_legal_name", "org_ein", "contact_name", "contact_title", "contact_email", "contact_phone", "accomplishments", "challenges"]) half[key] = full[key];
-    createSubmission({ assignment: lateAssignment, period: "FY26-YE", status: "draft", submittedBy: ids.maria, draftAnswers: half });
+    for (const key of ["org_legal_name", "org_ein", "contact_name", "contact_title", "contact_email", "contact_phone", "participants_target", "accomplishments", "challenges"]) half[key] = full[key];
+    createSubmission({ assignment: lateAssignment, period: "FY26-YE", status: "draft", submittedBy: ids.maria, draftAnswers: half, editedOn: "2026-09-22" });
+  }
+  for (const next of assignments.filter((a) => a.org_id === maria.id && assignmentSeed.get(a.id)!.fiscalYear === "FY27")) {
+    if (chance(0.5)) createSubmission({ assignment: next, period: "FY27-MY", status: "draft", submittedBy: ids.maria });
   }
 
   for (const assignment of assignments) {
-    if (assignment.org_id === orgs[0].id) continue;
-    const r = random();
-    if (r < 0.7) createSubmission({ assignment, period: "FY26-YE", status: "accepted", outcomes: random() < 0.03 ? "low" : "normal" });
-    else if (r < 0.77) createSubmission({ assignment, period: "FY26-YE", status: "submitted", outcomes: random() < 0.25 ? "zero" : random() < 0.3 ? "low" : "normal" });
-    else if (r < 0.81) createSubmission({ assignment, period: "FY26-YE", status: "under_review" });
-    else if (r < 0.83) createSubmission({ assignment, period: "FY26-YE", status: "returned" });
-    else if (r < 0.9) createSubmission({ assignment, period: "FY26-YE", status: "draft", unbalanced: random() < 0.6 });
-    if (random() < 0.12) createSubmission({ assignment, period: "FY27-MY", status: "draft" });
+    if (assignment.org_id === maria.id) continue;
+    const fy = assignmentSeed.get(assignment.id)!.fiscalYear;
+    if (fy === "FY27") {
+      if (chance(0.08)) createSubmission({ assignment, period: "FY27-MY", status: "draft" });
+      continue;
+    }
+    const mid = random();
+    if (mid < 0.91) createSubmission({ assignment, period: "FY26-MY", status: "accepted", quality: chance(0.03) ? "low" : "normal", submittedOn: chance(0.1) ? dateBetween("2026-02-01", "2026-02-20") : undefined });
+    else if (mid < 0.93) createSubmission({ assignment, period: "FY26-MY", status: "returned" });
+    else if (mid < 0.95) createSubmission({ assignment, period: "FY26-MY", status: "under_review" });
+    else if (mid < 0.97) createSubmission({ assignment, period: "FY26-MY", status: "submitted" });
+    else if (mid < 0.98) createSubmission({ assignment, period: "FY26-MY", status: "draft" });
+
+    const year = random();
+    const lateSubmitDate = chance(0.1) ? dateBetween("2026-10-01", TODAY) : undefined;
+    if (year < 0.58) createSubmission({ assignment, period: "FY26-YE", status: "accepted", quality: chance(0.04) ? "low" : "normal", submittedOn: lateSubmitDate && lateSubmitDate <= "2026-10-03" ? lateSubmitDate : undefined });
+    else if (year < 0.67) createSubmission({ assignment, period: "FY26-YE", status: "submitted", quality: chance(0.25) ? "zero" : chance(0.3) ? "low" : "normal", submittedOn: dateBetween("2026-09-24", TODAY) });
+    else if (year < 0.73) createSubmission({ assignment, period: "FY26-YE", status: "under_review", submittedOn: dateBetween("2026-09-15", "2026-10-04") });
+    else if (year < 0.76) createSubmission({ assignment, period: "FY26-YE", status: "returned", submittedOn: dateBetween("2026-08-20", "2026-09-28") });
+    else if (year < 0.87) createSubmission({ assignment, period: "FY26-YE", status: "draft", unbalanced: chance(0.5) });
   }
 
+  auditRows.push({
+    at: "2026-06-22T10:30:00-04:00",
+    actor_id: ids.priya,
+    entity: "fiscal_year",
+    entity_id: "FY27",
+    action: "rollover",
+    note: "Rolled over from FY26",
+    before: null,
+    after: { from: "FY26", to: "FY27", created: fy27.length, retired: fy26.filter((p) => p.retired).length },
+  });
+
+  auditRows.sort((a, b) => String(a.at).localeCompare(String(b.at)));
   await insertRows(client, "submission", submissions, ["id", "reference_no", "assignment_id", "period_id", "form_version_id", "status", "revision", "lock_version", "started_by", "submitted_by", "submitted_at", "updated_by", "updated_at", "created_at"]);
   await insertRows(client, "answer", answerRows, ["submission_id", "question_key", "value", "updated_by", "updated_at"]);
   await insertRows(client, "budget_line", budgetRows, ["submission_id", "row_id", "position", "category", "description", "amount"]);
@@ -459,8 +921,16 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   }
   await insertRows(client, "audit_event", auditRows, ["at", "actor_id", "entity", "entity_id", "action", "note", "before", "after"]);
   await insertRows(client, "outbox", outboxRows, ["to_email", "template", "subject", "body_text", "submission_id", "org_id", "status", "created_by", "created_at"]);
+  await insertRows(client, "flag", flagRows, ["submission_id", "kind", "source", "note", "status", "created_by", "created_at"]);
 
-  return { ids, orgs: orgs.length, initiatives: initiatives.length, assignments: assignments.length, submissions: submissions.length };
+  return {
+    ids,
+    orgs: orgs.length,
+    initiatives: initiatives.length,
+    assignments: assignments.length,
+    submissions: submissions.length,
+    council: councilRows.length,
+  };
 }
 
 async function main() {
