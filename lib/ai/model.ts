@@ -10,9 +10,22 @@ export function sha256(text: string): string {
   return createHash("sha256").update(text).digest("hex");
 }
 
+export type AiProvider = "anthropic" | "ollama";
+
+export function providerName(): AiProvider {
+  return process.env.AI_PROVIDER === "ollama" ? "ollama" : "anthropic";
+}
+
 export function modelFor(feature: AiFeature): string | null {
   const model = feature === "form_draft" ? process.env.AI_MODEL_FORM : process.env.AI_MODEL_NOTE;
-  return process.env.ANTHROPIC_API_KEY && model ? model : null;
+  if (!model) return null;
+  if (providerName() === "ollama") return model;
+  return process.env.ANTHROPIC_API_KEY ? model : null;
+}
+
+function timeoutFor(call: StructuredCall): number {
+  const factor = Number(process.env.AI_TIMEOUT_FACTOR);
+  return Number.isFinite(factor) && factor > 0 ? Math.round(call.timeoutMs * factor) : call.timeoutMs;
 }
 
 const PRICES: Record<string, { input: number; output: number }> = {};
@@ -44,10 +57,51 @@ export type StructuredResult = {
   latencyMs: number;
 };
 
+type OllamaChat = {
+  message?: { content?: string };
+  done_reason?: string;
+  prompt_eval_count?: number;
+  eval_count?: number;
+};
+
+async function callOllama(call: StructuredCall, model: string): Promise<StructuredResult | null> {
+  const base = (process.env.OLLAMA_URL || "http://127.0.0.1:11434").replace(/\/+$/, "");
+  const started = Date.now();
+  const response = await fetch(`${base}/api/chat`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    signal: AbortSignal.timeout(timeoutFor(call)),
+    body: JSON.stringify({
+      model,
+      stream: false,
+      think: false,
+      format: call.schema,
+      options: { temperature: 0, num_predict: call.maxTokens },
+      messages: [
+        { role: "system", content: call.system },
+        { role: "user", content: call.user },
+      ],
+    }),
+  });
+  if (!response.ok) throw new Error(`local model returned ${response.status}`);
+  const body = (await response.json()) as OllamaChat;
+  if (body.done_reason === "length") throw new Error("local model output was cut off");
+  const output = JSON.parse(body.message?.content ?? "");
+  return {
+    output,
+    model: `${model} (local)`,
+    tokensIn: body.prompt_eval_count ?? 0,
+    tokensOut: body.eval_count ?? 0,
+    costUsd: 0,
+    latencyMs: Date.now() - started,
+  };
+}
+
 export async function callStructured(call: StructuredCall): Promise<StructuredResult | null> {
   const model = modelFor(call.feature);
   if (!model) return null;
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: call.timeoutMs, maxRetries: 1 });
+  if (providerName() === "ollama") return callOllama(call, model);
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: timeoutFor(call), maxRetries: 1 });
   const started = Date.now();
   const response = await client.messages.create({
     model,
