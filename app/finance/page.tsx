@@ -112,7 +112,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
       </section>
 
       <section aria-label="Borough and activity" className="grid gap-4 xl:grid-cols-12">
-        <div className="min-w-0 xl:col-span-7">
+        <div className="min-w-0 xl:col-span-8">
           <StatusStackChart
             title="Report status by borough"
             description="The same reports, grouped by where the organization is based."
@@ -121,7 +121,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
             periodLabel={period.label}
           />
         </div>
-        <Card className="xl:col-span-5">
+        <Card className="xl:col-span-4">
           <CardHeader title="Recent activity" description="Latest actions across all reports." />
           <ActivityFeed items={activity} />
           <CardBody className="border-t border-line py-3 text-sm">
