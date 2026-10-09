@@ -24,9 +24,25 @@ function dueCell(row: ReportRow) {
   return <span className="text-muted">On time</span>;
 }
 
+function FlagsCell({ row }: { row: ReportRow }) {
+  if (row.flags.length === 0) return <span className="text-muted">None</span>;
+  const labels = row.flags.map((flag) => FLAG_LABEL[flag.reason]);
+  const more = labels.length - 1;
+  return (
+    <div className="whitespace-nowrap" title={labels.join(", ")}>
+      <FlagBadge label={labels[0]} />
+      {more > 0 ? (
+        <span className="mt-1 block text-xs text-muted">
+          +{more} more<span className="sr-only">: {labels.slice(1).join(", ")}</span>
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; emptyHref: string }) {
   return (
-    <Table>
+    <Table density="compact" stack>
       <THead>
         <tr>
           <TH>Reference</TH>
@@ -50,7 +66,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
         ) : (
           rows.map((row) => (
             <TR key={row.assignmentId} className={row.bucket === "missing" ? "bg-bad-bg/40" : undefined}>
-              <TD className="whitespace-nowrap">
+              <TD className="whitespace-nowrap" primary>
                 {row.submissionId ? (
                   <Link href={`/finance/submissions/${row.submissionId}`} className="num font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     {row.referenceNo}
@@ -60,35 +76,38 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 )}
                 {row.updatedAt ? <span className="block text-xs text-muted">Updated {formatDate(row.updatedAt)}</span> : null}
               </TD>
-              <TD className="min-w-48">
-                <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-                  {row.orgName}
-                </Link>
-                <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
-                <span className="block text-xs text-muted">{row.borough}</span>
+              <TD className="min-w-48" label="Organization">
+                <div>
+                  <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    {row.orgName}
+                  </Link>
+                  <span className="block whitespace-nowrap text-xs text-muted">
+                    <span className="num font-mono">{row.ein}</span>, {row.borough}
+                  </span>
+                </div>
               </TD>
-              <TD className="min-w-40">
+              <TD className="min-w-40" stackHidden>
                 <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-link hover:underline">
                   {row.initiativeName}
                 </Link>
                 <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>
               </TD>
-              <TD className="min-w-28">
+              <TD className="min-w-28" stackHidden>
                 <span title={row.sponsors.map((s) => s.name).join(", ")}>{sponsorShort(row.sponsors)}</span>
                 <span className="block text-xs text-muted">{fundingLabel(row.fundingSource)}</span>
               </TD>
-              <TD>
-                <ContractCell status={row.contractStatus} number={row.contractNumber} registeredOn={row.contractRegisteredOn} />
+              <TD stackHidden>
+                <ContractCell status={row.contractStatus} number={row.contractNumber} registeredOn={row.contractRegisteredOn} quiet />
               </TD>
-              <TD align="right">{formatCurrency(row.award)}</TD>
-              <TD className="whitespace-nowrap">
-                <StateBadge state={reportState(row.status, row.dueOn)} />
-                <span className="mt-1 block text-xs">{dueCell(row)}</span>
-              </TD>
-              <TD>
-                <div className="flex flex-wrap gap-1">
-                  {row.flags.length === 0 ? <span className="text-muted">None</span> : row.flags.map((flag) => <FlagBadge key={flag.reason} label={FLAG_LABEL[flag.reason]} />)}
+              <TD align="right" label="Award">{formatCurrency(row.award, { cents: false })}</TD>
+              <TD className="whitespace-nowrap" label="State">
+                <div>
+                  <StateBadge state={reportState(row.status, row.dueOn)} />
+                  <span className="mt-1 block text-xs">{dueCell(row)}</span>
                 </div>
+              </TD>
+              <TD label="Flags">
+                <FlagsCell row={row} />
               </TD>
             </TR>
           ))
