@@ -9,7 +9,7 @@ import { loadSubmissionDetail } from "@/lib/finance/review/detail";
 import { plainError } from "@/lib/finance/review/errors";
 import { buildConcerns, containsRuleId, lineDiff, PRESET_CONCERNS, type Concern } from "@/lib/finance/review/return-note-core";
 import { buildSnapshot } from "@/lib/snapshot";
-import { validateSubmission } from "@/lib/rules/validate";
+import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 
 export type ActionResult = { ok: boolean; message: string };
 
@@ -204,7 +204,7 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
       const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>("SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1", [id]);
       const snapshot = buildSnapshot({
         formVersionId: row.formVersionId!,
-        answers,
+        answers: visibleAnswers(row.definition!, answers),
         budget: row.budget,
         attachments: attachments.map((a) => ({ path: a.path, filename: a.filename, bytes: Number(a.bytes), mime: a.mime })),
       });
