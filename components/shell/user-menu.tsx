@@ -39,7 +39,7 @@ export function UserMenu({ name, initials, email, roleText, orgText }: { name: s
         </span>
         <ChevronDown className="h-4 w-4 text-navy-200 transition-transform group-open:rotate-180" aria-hidden="true" />
       </summary>
-      <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-lg border border-line bg-white text-ink shadow-raised">
+      <div className="menu-panel absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-lg border border-line bg-white text-ink shadow-raised">
         <div className="border-b border-line bg-surface px-4 py-3">
           <p className="truncate text-sm font-semibold">{name}</p>
           <p className="truncate text-xs text-muted">{email}</p>
