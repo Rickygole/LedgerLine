@@ -7,7 +7,7 @@ const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"
 
 export const metadata: Metadata = {
   title: { default: "LedgerLine", template: "%s | LedgerLine" },
-  description: "Initiative reporting proof of concept. Synthetic data. Not an official NYC system.",
+  description: "Initiative reporting for funded organizations and Council Finance.",
   robots: { index: false, follow: false },
 };
 
