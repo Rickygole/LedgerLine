@@ -16,7 +16,7 @@ export function Segmented({ label, param, options, current, base }: { label: str
             key={option.value}
             href={qs ? `?${qs}` : "?"}
             aria-current={active ? "true" : undefined}
-            className={cn("whitespace-nowrap rounded px-3 py-1.5 text-sm font-medium transition-colors", active ? "bg-white font-semibold text-navy-900 shadow-sm ring-1 ring-line" : "text-muted hover:bg-white/70 hover:text-ink")}
+            className={cn("whitespace-nowrap rounded px-3 py-1.5 text-sm font-medium", active ? "bg-white font-semibold text-navy-900 shadow-sm ring-1 ring-line" : "text-muted hover:bg-white/70 hover:text-ink")}
           >
             {option.label}
             {option.count !== undefined ? <span className={cn("num ml-1.5 text-xs", active ? "text-navy-700" : "text-muted")}>{option.count}</span> : null}

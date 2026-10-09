@@ -108,7 +108,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                   <Link
                     href={buildHref(base, { q, status, agency: data.agency, period: data.period.id, category: selected ? undefined : c.category })}
                     aria-current={selected ? "true" : undefined}
-                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-navy-50", selected && "bg-navy-50 ring-1 ring-navy-600/30")}
+                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 hover:bg-navy-50", selected && "bg-navy-50 ring-1 ring-navy-600/30")}
                   >
                     <span className="flex items-baseline justify-between gap-3 text-sm">
                       <span className={cn("truncate", selected ? "font-semibold text-navy-900" : "text-ink")}>{c.category}</span>

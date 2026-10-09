@@ -13,7 +13,7 @@ export function FilterPills({ label, pills }: { label: string; pills: Pill[] }) 
               href={pill.href}
               aria-current={pill.active ? "true" : undefined}
               className={cn(
-                "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-sm border px-3 text-sm font-medium transition-colors",
+                "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-sm border px-3 text-sm font-medium",
                 pill.active ? "border-navy-800 bg-navy-800 text-white" : "border-line bg-white text-ink hover:border-line-strong hover:bg-navy-50"
               )}
             >
