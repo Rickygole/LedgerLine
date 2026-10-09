@@ -6,8 +6,9 @@ import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
 import { expectedState } from "@/lib/finance/admin/state";
 import { formatCurrency } from "@/lib/rules/money";
-import { PageHeader } from "@/components/ui/page-header";
-import { Card, CardHeader, CardBody, DescriptionList } from "@/components/ui/card";
+import { ProfileHeader } from "@/components/ui/profile-header";
+import { PrintButton } from "@/components/ui/print-button";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Badge, StateBadge } from "@/components/ui/status-badge";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { CreateDraftForm } from "@/components/finance/admin/create-draft-form";
@@ -33,31 +34,31 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
 
   return (
     <>
-      <PageHeader
+      <ProfileHeader
         title={initiative.name}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: initiative.code }]}
-        meta={
-          <>
-            <span className="font-mono text-xs text-muted">{initiative.code}</span>
-            <Badge tone="info">{initiative.category}</Badge>
-            <Badge tone={initiative.status === "active" ? "ok" : "neutral"}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>
-          </>
-        }
-      />
-
-      <Card className="mb-6">
-        <CardBody>
-          <DescriptionList
-            columns={3}
-            items={[
-              { label: "Code", value: <span className="font-mono">{initiative.code}</span> },
-              { label: "Fiscal year", value: initiative.fiscal_year_id },
-              { label: "Total funding", value: <span className="num">{formatCurrency(Number(initiative.total_funding))}</span> },
-            ]}
-          />
-          <p className="mt-5 max-w-3xl text-sm leading-relaxed">{initiative.description}</p>
-        </CardBody>
-      </Card>
+        meta={[
+          <span key="code" className="whitespace-nowrap font-mono text-[13px]">{initiative.code}</span>,
+          <Badge key="category" tone="info">{initiative.category}</Badge>,
+          <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
+          <span key="fy" className="whitespace-nowrap">{initiative.fiscal_year_id}</span>,
+        ]}
+        actions={<PrintButton label="Print" />}
+      >
+        <div className="grid gap-5 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <p className="max-w-[72ch] text-sm leading-relaxed text-ink">{initiative.description}</p>
+          <dl className="grid grid-cols-2 gap-4 lg:border-l lg:border-line lg:pl-6">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Total funding</dt>
+              <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding))}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Organizations</dt>
+              <dd className="num mt-1 text-lg font-bold text-ink">{funded.length}</dd>
+            </div>
+          </dl>
+        </div>
+      </ProfileHeader>
 
       <Card className="mb-6">
         <CardHeader title="Funded organizations" description={`${funded.length} ${funded.length === 1 ? "organization" : "organizations"} receive funding through this initiative.`} />
@@ -80,7 +81,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
               funded.map((f) => (
                 <TR key={f.assignment_id}>
                   <TD>
-                    <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-navy-800 hover:underline">
+                    <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-navy-700 hover:underline">
                       {f.legal_name}
                     </Link>
                   </TD>
@@ -139,7 +140,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                   <TD>{f.published_by_name ?? <span className="text-muted">Not published</span>}</TD>
                   <TD>{f.published_at ? formatDateTime(f.published_at) : <span className="text-muted">Not published</span>}</TD>
                   <TD>
-                    <Link href={`/finance/forms/${f.id}`} className="font-semibold text-navy-800 hover:underline">
+                    <Link href={`/finance/forms/${f.id}`} className="font-semibold text-navy-700 hover:underline">
                       {f.status === "draft" ? "Edit" : "View"}
                       <span className="sr-only"> version {f.version}</span>
                     </Link>
