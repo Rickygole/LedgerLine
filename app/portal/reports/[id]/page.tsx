@@ -56,12 +56,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     <>
       <ReportHeader header={header} />
       {data.note ? (
-        <section aria-labelledby="changes-requested" className="mb-6 rounded-lg border border-warn/40 bg-warn-bg px-5 py-4">
-          <h2 id="changes-requested" className="flex items-center gap-2 text-base font-bold text-warn">
-            <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-            Changes requested
+        <section aria-labelledby="changes-requested" className="mb-6 rounded-lg border border-l-4 border-line border-l-warn bg-white px-5 py-4 shadow-card">
+          <h2 id="changes-requested" className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+            <AlertTriangle className="h-4 w-4 text-warn" aria-hidden="true" />
+            Council Finance asked for changes
           </h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{data.note.note}</p>
+          <p className="mt-2 max-w-[72ch] whitespace-pre-wrap rounded-md bg-surface px-3 py-2.5 text-sm leading-6 text-ink">{data.note.note}</p>
           <p className="mt-2 text-xs text-muted">
             {data.note.by ? `${data.note.by}, Council Finance` : "Council Finance"}, {formatDateTime(data.note.at)} ET. Update the report below, then submit it again.
           </p>

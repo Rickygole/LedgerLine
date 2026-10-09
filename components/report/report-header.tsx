@@ -33,8 +33,8 @@ export function ReportHeader({ header }: { header: Header }) {
                 ),
               },
               { label: "Award", value: <span className="num font-semibold">{formatCurrency(header.awardAmount)}</span> },
-              { label: "EIN", value: <span className="num">{header.ein}</span> },
-              { label: "Reference number", value: <span className="num">{header.referenceNo}</span> },
+              { label: "EIN", value: <span className="num whitespace-nowrap font-mono text-[13px]">{header.ein}</span> },
+              { label: "Reference number", value: <span className="num whitespace-nowrap font-mono text-[13px]">{header.referenceNo}</span> },
               { label: "Status", value: <StateBadge state={reportState(header.status, header.dueOn)} audience="cbo" /> },
             ]}
           />
