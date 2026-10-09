@@ -64,7 +64,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
       </ProfileHeader>
 
       <Card className="mb-6">
-        <CardHeader title="Funded organizations" description={`${funded.length} ${funded.length === 1 ? "organization" : "organizations"} receive funding through this initiative.`} />
+        <CardHeader title="Funded organizations" description={`${funded.length} ${funded.length === 1 ? "organization receives" : "organizations receive"} funding through this initiative.`} />
         <Table>
           <THead>
             <tr>

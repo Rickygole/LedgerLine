@@ -114,7 +114,10 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
 
   const remember = useCallback(
     (sectionKey: string | null) => {
-      if (sectionKey) window.localStorage.setItem(storageKey, sectionKey);
+      if (!sectionKey) return;
+      window.localStorage.setItem(storageKey, sectionKey);
+      setResume(sectionKey);
+      setResumeDismissed(true);
     },
     [storageKey]
   );
