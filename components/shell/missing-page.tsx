@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Lock, SearchX } from "lucide-react";
 import type { Role } from "@/lib/auth";
 import { ButtonLink } from "@/components/ui/button";
 import { StatusPanel } from "./status-page";
@@ -29,12 +29,9 @@ export function ForbiddenPanel({ role, roleText, portalArea = false }: { role: R
         : "This page is for a different kind of account. Sign in with the account that has access, or ask your LedgerLine administrator.";
   return (
     <StatusPanel
-      icon={Lock}
-      eyebrow="Access restricted"
       title="You do not have access to this page"
       actions={
         <ButtonLink href={home}>
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {role === "cbo_submitter" ? "Back to My reports" : role ? "Back to dashboard" : "Sign in"}
         </ButtonLink>
       }
@@ -51,11 +48,17 @@ export function MissingPage({ role, roleText }: { role: Role | null; roleText: s
   const label = role === "cbo_submitter" ? "Go to My reports" : role ? "Go to your dashboard" : "Go to sign in";
   return (
     <StatusPanel
-      icon={SearchX}
-      eyebrow="Page not found"
       title="We could not find that page"
       actions={<ButtonLink href={home}>{label}</ButtonLink>}
-      footnote="If a link inside LedgerLine brought you here, let your LedgerLine administrator know."
+      footnote={
+        <>
+          If a link inside LedgerLine brought you here, let your LedgerLine administrator know. Contact details are on the{" "}
+          <Link href="/help" className="text-link underline underline-offset-2 hover:text-link-hover">
+            Help
+          </Link>{" "}
+          page.
+        </>
+      }
     >
       <p>The page you asked for does not exist or has moved. Check the address, or start again from your dashboard.</p>
     </StatusPanel>
