@@ -11,17 +11,17 @@ export type EvidenceRow = {
   area: string;
   summary: string;
   route: string | null;
-  state: "verified" | "not_verified" | "demonstrated" | "talk_track";
+  state: "verified" | "failing" | "demonstrated" | "planned";
   reason: string | null;
-  talk: string | null;
+  note: string | null;
   tests: { title: string; file: string; status: string; suite: string }[];
 };
 
 const BADGE: Record<EvidenceRow["state"], { label: string; tone: "ok" | "warn" | "info" | "neutral" }> = {
   verified: { label: "Verified by test", tone: "ok" },
-  not_verified: { label: "Not verified", tone: "warn" },
+  failing: { label: "Test failing", tone: "warn" },
   demonstrated: { label: "Demonstrated", tone: "info" },
-  talk_track: { label: "Not built", tone: "neutral" },
+  planned: { label: "Planned", tone: "neutral" },
 };
 
 export function RequirementTable({ rows, repository, commit }: { rows: EvidenceRow[]; repository: string; commit: string }) {
@@ -41,7 +41,7 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
   return (
     <Card className="mt-6">
       <CardHeader
-        title="All requirements"
+        title="Traceability matrix"
         description={`${filtered.length} of ${rows.length} shown`}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -53,13 +53,13 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
               <option value="US">User stories</option>
               <option value="BR">Business rules</option>
             </Select>
-            <label className="sr-only" htmlFor="trust-state">Evidence</label>
+            <label className="sr-only" htmlFor="trust-state">Status</label>
             <Select id="trust-state" value={state} onChange={(e) => setState(e.target.value)} className="h-9 w-44">
-              <option value="">All evidence</option>
+              <option value="">All statuses</option>
               <option value="verified">Verified by test</option>
-              <option value="not_verified">Not verified</option>
+              <option value="failing">Test failing</option>
               <option value="demonstrated">Demonstrated</option>
-              <option value="talk_track">Not built</option>
+              <option value="planned">Planned</option>
             </Select>
           </div>
         }
@@ -70,8 +70,8 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
             <TH className="w-24">ID</TH>
             <TH>Requirement</TH>
             <TH className="w-36">Area</TH>
-            <TH className="w-40">Evidence</TH>
-            <TH>Tests or explanation</TH>
+            <TH className="w-40">Status</TH>
+            <TH>Tests and notes</TH>
           </tr>
         </THead>
         <tbody>
@@ -82,6 +82,7 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
               <TD>
                 <span className="font-medium text-ink">{row.summary}</span>
                 {row.route ? <span className="block font-mono text-xs text-muted">{row.route}</span> : null}
+                {row.note ? <span className="mt-1 block text-xs leading-5 text-muted">{row.note}</span> : null}
               </TD>
               <TD className="text-muted">{row.area}</TD>
               <TD>
@@ -102,7 +103,7 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
                     {row.tests.length > 4 ? <li className="text-xs text-muted">and {row.tests.length - 4} more</li> : null}
                   </ul>
                 ) : (
-                  <span className="text-xs text-muted">{row.talk ?? "Shown in the walkthrough."}</span>
+                  <span className="text-xs text-muted">{row.state === "planned" ? "Not an application behavior that a test asserts." : "No automated test is tagged to this requirement."}</span>
                 )}
               </TD>
             </TR>
