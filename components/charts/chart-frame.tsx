@@ -8,12 +8,12 @@ export const CHART_COLORS: Record<Bucket, string> = {
   submitted: "#56B4E9",
   returned: "#E69F00",
   incomplete: "#CC79A7",
-  missing: "#D55E00",
+  missing: "#B84F00",
   outstanding: "#BFC5CE",
 };
 
 export const LABEL_ON_DARK: Record<Bucket, boolean> = {
-  accepted: true,
+  accepted: false,
   in_review: true,
   submitted: false,
   returned: false,
