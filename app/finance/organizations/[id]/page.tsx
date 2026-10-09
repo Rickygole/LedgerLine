@@ -5,14 +5,14 @@ import { AlertTriangle, Check, CheckCircle2, ExternalLink, FolderOpen, Landmark,
 import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
-import { reportState } from "@/lib/reporting";
-import { expectedState } from "@/lib/finance/admin/state";
+import { isMissing, reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
 import { ProfileHeader, monogram } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Badge, StateBadge } from "@/components/ui/status-badge";
+import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
 import { Stat } from "@/components/ui/stat";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { TabNav } from "@/components/finance/admin/tab-nav";
@@ -41,13 +41,12 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
     return { ...loaded, activity };
   });
   if (!data) notFound();
-  const { org, awards, reports, periods, contacts, team, messages, activity } = data;
-  const due = Object.fromEntries(periods.map((p) => [p.id, p.due_on]));
+  const { org, awards, reports, contacts, team, messages, activity } = data;
 
-  const active = awards.filter((a) => a.initiative_status === "active");
-  const totalAwarded = active.reduce((sum, a) => sum + Number(a.award_amount), 0);
+  const years = [...new Set(awards.map((a) => a.fiscal_year_id))].sort();
+  const totalAwarded = awards.reduce((sum, a) => sum + Number(a.award_amount), 0);
   const accepted = reports.filter((r) => r.status === "accepted").length;
-  const overdue = active.filter((a) => expectedState(a.ye_status, due["FY26-YE"], a.published) === "missing").length;
+  const overdue = awards.flatMap((a) => a.periods ?? []).filter((p) => isMissing(p.status, p.due_on)).length;
   const primary = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
   const address = `${org.address_line}, ${org.city}, ${org.state} ${org.postal_code}`;
 
@@ -75,7 +74,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
           ) : null,
           overdue > 0 ? (
             <Badge key="compliance" tone="bad" icon={AlertTriangle}>
-              {overdue} overdue
+              {overdue} missing
             </Badge>
           ) : (
             <Badge key="compliance" tone="ok" icon={CheckCircle2}>
@@ -115,10 +114,10 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       {tab === "overview" ? (
         <>
           <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <Stat label="Total awarded" value={formatCurrency(totalAwarded)} hint={`Across ${active.length} active ${active.length === 1 ? "award" : "awards"}`} icon={Landmark} />
-            <Stat label="Active initiatives" value={active.length} hint="FY26 and FY27" icon={FolderOpen} />
+            <Stat label="Total awarded" value={formatCurrency(totalAwarded)} hint={`Across ${awards.length} ${awards.length === 1 ? "award" : "awards"}`} icon={Landmark} />
+            <Stat label="Awards" value={awards.length} hint={years.join(" and ") || "No fiscal year"} icon={FolderOpen} />
             <Stat label="Reports accepted" value={accepted} tone="ok" hint={`${reports.length} submitted or started`} icon={CheckCircle2} />
-            <Stat label="Overdue" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} hint="FY26 Year-End" icon={AlertTriangle} />
+            <Stat label="Missing reports" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} hint="Nothing submitted and past due" icon={AlertTriangle} />
           </section>
           <div className="grid items-start gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
@@ -188,7 +187,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                   </Link>
                 }
               />
-              <AwardsTable awards={awards} due={due} />
+              <AwardsTable awards={awards} />
             </Card>
           </div>
         </>
@@ -196,7 +195,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
 
       {tab === "awards" ? (
         <Card>
-          <AwardsTable awards={awards} due={due} />
+          <AwardsTable awards={awards} />
         </Card>
       ) : null}
 
@@ -357,22 +356,23 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
   );
 }
 
-function AwardsTable({ awards, due }: { awards: OrgAward[]; due: Record<string, string> }) {
+function AwardsTable({ awards }: { awards: OrgAward[] }) {
   return (
     <Table>
       <THead>
         <tr>
           <TH>Initiative</TH>
-          <TH>Category</TH>
-          <TH>Sponsoring agency</TH>
+          <TH>Year</TH>
+          <TH>Agency</TH>
           <TH align="right">Award</TH>
-          <TH>FY26 Year-End</TH>
-          <TH>FY27 Mid-Year</TH>
+          <TH>Funding and sponsor</TH>
+          <TH>Contract</TH>
+          <TH>Reports</TH>
         </tr>
       </THead>
       <tbody>
         {awards.length === 0 ? (
-          <EmptyRow colSpan={6}>This organization has no awards yet.</EmptyRow>
+          <EmptyRow colSpan={8}>This organization has no awards yet.</EmptyRow>
         ) : (
           awards.map((a) => (
             <TR key={a.assignment_id}>
@@ -382,14 +382,17 @@ function AwardsTable({ awards, due }: { awards: OrgAward[]; due: Record<string, 
                 </Link>
                 <div className="font-mono text-[13px] text-muted">{a.code}</div>
               </TD>
-              <TD>{a.category}</TD>
+              <TD className="whitespace-nowrap">{a.fiscal_year_id}</TD>
               <TD>{a.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
               <TD align="right">{formatCurrency(Number(a.award_amount))}</TD>
               <TD>
-                <StateBadge state={expectedState(a.ye_status, due["FY26-YE"], a.published)} />
+                <SponsorsCell sponsors={a.sponsors} source={a.funding_source} />
               </TD>
               <TD>
-                <StateBadge state={expectedState(a.mid_status, due["FY27-MY"], a.published)} />
+                <ContractCell status={a.contract_status} number={a.contract_number} registeredOn={a.contract_registered_on} />
+              </TD>
+              <TD>
+                <AwardPeriods periods={a.periods} />
               </TD>
             </TR>
           ))
