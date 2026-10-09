@@ -209,6 +209,7 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
   it("emails each owing organization once and a second run adds nothing", async () => {
     const expected = await owingOrgs();
     const result = await asUser(app, priya, async () => {
+      await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
       const first = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
       const second = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
       const rows = (await app.query("SELECT org_id, to_email, subject, body_text FROM outbox WHERE template = 'reminder' ORDER BY org_id")).rows;
@@ -229,11 +230,23 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
     const { rows } = await owner.query("SELECT id FROM organization");
     const done = rows.map((r) => r.id).filter((id) => !owing.has(id));
     const queued = await asUser(app, priya, async () => {
+      await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
       await app.query("SELECT app.queue_reminders('FY26-YE', $1::date)", [today]);
       return (await app.query("SELECT DISTINCT org_id FROM outbox WHERE template = 'reminder'")).rows.map((r) => r.org_id);
     });
     expect(done.length).toBeGreaterThan(0);
     for (const id of done) expect(queued).not.toContain(id);
+  });
+
+  it("ignores initiatives that only exist after a later rollover", async () => {
+    const counts = await asUser(app, priya, async () => {
+      await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
+      const before = (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n;
+      await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)");
+      const after = (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n;
+      return { before, after };
+    });
+    expect(counts.after).toBe(counts.before);
   });
 
   it("sends nothing on a day that matches no rule", async () => {
@@ -244,7 +257,11 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
   it("is limited to finance administrators and previews for all finance staff", async () => {
     const denied = await asUser(app, daniel, () => errorCode(() => app.query("SELECT app.queue_reminders('FY26-YE', $1::date)", [today])));
     expect(denied).toBe("42501");
-    const preview = await asUser(app, daniel, async () => (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n);
+    const preview = await asUser(app, priya, async () => {
+      await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
+      await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
+      return (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n;
+    });
     expect(preview).toBeGreaterThan(0);
     const org = await asUser(app, maria, () => errorCode(() => app.query("SELECT * FROM app.reminder_targets('FY26-YE', $1::date)", [today])));
     expect(org).toBe("42501");
@@ -255,6 +272,7 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
   });
 
   it("uses a scheduler identity that cannot sign in", async () => {
+    await owner.query("SELECT app.ensure_scheduler()");
     const { rows } = await owner.query("SELECT role, can_sign_in, password_hash FROM app_user WHERE email = 'system.scheduler@ledgerline.example'");
     expect(rows[0]).toEqual({ role: "finance_admin", can_sign_in: false, password_hash: null });
   });
