@@ -203,9 +203,11 @@ export default async function PlatformPage() {
             <p className="text-sm">
               This system holds <span className="num font-semibold">{financeUsers}</span> Finance accounts across three permission levels, well within the 50 to 100 expected. Submitting users are not licensed or capped: each funded organization can add as many staff as it needs.
             </p>
-            <div>
-              <Link href="/finance/users" className="text-sm font-semibold text-navy-800 hover:underline">Manage users and roles</Link>
-            </div>
+            {user.role === "finance_admin" ? (
+              <div>
+                <Link href="/finance/users" className="text-sm font-semibold text-navy-800 hover:underline">Manage users and roles</Link>
+              </div>
+            ) : null}
           </CardBody>
         </Card>
 
