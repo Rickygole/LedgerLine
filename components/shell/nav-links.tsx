@@ -9,7 +9,7 @@ export type NavItem = { href: string; label: string; exact?: boolean };
 export function NavLinks({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className="-mb-px flex gap-0.5 overflow-x-auto [scrollbar-width:none]">
+    <nav aria-label="Main" className="-mb-px flex gap-0.5 overflow-x-auto [scrollbar-width:none] [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] lg:[mask-image:none]">
       {items.map((item) => {
         const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
