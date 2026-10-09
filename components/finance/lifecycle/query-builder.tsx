@@ -74,7 +74,7 @@ export function QueryBuilder({ params, errors, periods, categories, initiatives,
         </div>
         {select("q-borough", "borough", "Borough", BOROUGHS.map((b) => ({ value: b, label: b })), "All boroughs")}
         <div>
-          <Label htmlFor="q-district">Organization's council district</Label>
+          <Label htmlFor="q-district">Council district of the organization</Label>
           <Input id="q-district" type="text" inputMode="numeric" value={values.district ?? ""} onChange={(e) => set("district", e.target.value, 400)} placeholder="1 to 51" aria-invalid={errors.district ? true : undefined} aria-describedby={errors.district ? "q-district-error" : undefined} />
           <FieldError id="q-district-error">{errors.district}</FieldError>
         </div>
