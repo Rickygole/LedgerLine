@@ -35,7 +35,7 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
     <>
       <PageHeader
         title="My reports"
-        description={`Welcome, ${user.fullName.split(" ")[0]}. These are the reports ${user.orgName ?? "your organization"} owes the City Council, one row per initiative and reporting period.`}
+        description={`Welcome, ${user.fullName.split(" ")[0]}. Here are the reports due for ${user.orgName ?? "your organization"}, one row for each initiative and reporting period.`}
         crumbs={[{ label: "Portal" }, { label: "My reports" }]}
       />
       {org ? <OrgSummary org={org} activeAwards={awards.size} totalAwarded={totalAwarded} /> : null}

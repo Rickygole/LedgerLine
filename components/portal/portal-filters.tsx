@@ -5,7 +5,7 @@ export type FilterOption = { value: string; label: string; count?: number };
 
 export function Segmented({ label, param, options, current, base }: { label: string; param: string; options: FilterOption[]; current: string; base: Record<string, string> }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-md border border-line bg-surface p-0.5">
+    <div role="group" aria-label={label} className="inline-flex max-w-full flex-wrap gap-0.5 rounded-md border border-line bg-surface p-0.5">
       {options.map((option) => {
         const active = option.value === current;
         const query = new URLSearchParams({ ...base, [param]: option.value });

@@ -1,14 +1,15 @@
 import { Inbox } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { ScrollArea } from "./scroll-area";
 
 const pin =
   "max-lg:[&_tbody_td:first-child:not([colspan])]:sticky max-lg:[&_tbody_td:first-child:not([colspan])]:left-0 max-lg:[&_tbody_td:first-child:not([colspan])]:z-[1] max-lg:[&_tbody_td:first-child:not([colspan])]:min-w-[11rem] max-lg:[&_tbody_td:first-child:not([colspan])]:bg-inherit max-lg:[&_tbody_td:first-child:not([colspan])]:shadow-[inset_-1px_0_0_var(--color-line)] max-lg:[&_thead_th:first-child]:sticky max-lg:[&_thead_th:first-child]:left-0 max-lg:[&_thead_th:first-child]:z-[2] max-lg:[&_thead_th:first-child]:bg-surface max-lg:[&_thead_th:first-child]:shadow-[inset_-1px_0_0_var(--color-line)]";
 
-export function Table({ children, className }: { children: React.ReactNode; className?: string }) {
+export function Table({ children, className, stack = false }: { children: React.ReactNode; className?: string; stack?: boolean }) {
   return (
-    <div className={cn("relative overflow-x-auto overscroll-x-contain", pin, className)}>
+    <ScrollArea className={cn(stack ? "table-stack" : pin, className)}>
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:min-w-0">{children}</table>
-    </div>
+    </ScrollArea>
   );
 }
 
@@ -29,11 +30,15 @@ export function TH({ children, className, align = "left" }: { children?: React.R
 }
 
 export function TR({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <tr className={cn("border-b border-line/80 bg-white transition-colors last:border-0 hover:bg-navy-50", className)}>{children}</tr>;
+  return <tr className={cn("border-b border-line/80 bg-white transition-colors last:border-0 hover:bg-navy-50/60", className)}>{children}</tr>;
 }
 
-export function TD({ children, className, align = "left" }: { children?: React.ReactNode; className?: string; align?: "left" | "right" }) {
-  return <td className={cn("px-4 py-3 align-middle text-ink", align === "right" && "num whitespace-nowrap text-right", className)}>{children}</td>;
+export function TD({ children, className, align = "left", label, primary, action }: { children?: React.ReactNode; className?: string; align?: "left" | "right"; label?: string; primary?: boolean; action?: boolean }) {
+  return (
+    <td data-label={label} data-primary={primary ? "" : undefined} data-action={action ? "" : undefined} className={cn("px-4 py-3 align-middle text-ink", align === "right" && "num whitespace-nowrap text-right", className)}>
+      {children}
+    </td>
+  );
 }
 
 export function EmptyRow({ colSpan, children }: { colSpan: number; children: React.ReactNode }) {

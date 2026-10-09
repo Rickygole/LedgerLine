@@ -99,7 +99,7 @@ export function StatusStackChart({ title, description, dimension, data, periodLa
           <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 12, bottom: 24, left: 0 }} barCategoryGap={7}>
             <CartesianGrid horizontal={false} stroke={GRID} />
             <XAxis type="number" allowDecimals={false} tick={AXIS} tickLine={false} axisLine={{ stroke: GRID }} label={{ value: "Number of reports", position: "insideBottom", offset: -14, ...AXIS }} />
-            <YAxis type="category" dataKey="name" width={narrow ? 104 : 150} tick={<Tick max={narrow ? 14 : 24} />} tickLine={false} axisLine={false} interval={0} />
+            <YAxis type="category" dataKey="name" width={narrow ? 112 : 150} tick={<Tick max={narrow ? 13 : 24} />} tickLine={false} axisLine={false} interval={0} />
             <Tooltip cursor={{ fill: "rgba(36,73,124,0.06)" }} contentStyle={{ borderRadius: 8, borderColor: GRID, fontSize: 12 }} />
             {used.map((bucket) => (
               <Bar key={bucket} dataKey={bucket} name={BUCKET_LABEL[bucket]} stackId="status" fill={CHART_COLORS[bucket]} stroke="#ffffff" strokeWidth={1} isAnimationActive={false}>

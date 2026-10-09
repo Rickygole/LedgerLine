@@ -31,12 +31,12 @@ export default async function MessagesPage() {
     <>
       <PageHeader
         title="Messages"
-        description="Emails the system has sent to your organization, such as submission confirmations. In this demo no real email leaves the system, so each message is shown here."
+        description="Copies of the emails LedgerLine has sent to your organization, such as submission confirmations and update requests."
         crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages" }]}
       />
       <Card>
         <CardHeader title="Sent messages" description={`${rows.length} ${rows.length === 1 ? "message" : "messages"}, newest first.`} />
-        <Table>
+        <Table stack>
           <THead>
             <tr>
               <TH>Subject</TH>
@@ -52,18 +52,18 @@ export default async function MessagesPage() {
             ) : (
               rows.map((r) => (
                 <TR key={r.id}>
-                  <TD>
+                  <TD primary>
                     <Link href={`/portal/messages/${r.id}`} className="flex items-center gap-2 font-semibold text-navy-700 hover:underline">
                       <Mail className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                       {r.subject}
                     </Link>
                   </TD>
-                  <TD>
+                  <TD label="Type">
                     <Badge tone="neutral">{templateLabel(r.template)}</Badge>
                   </TD>
-                  <TD>{r.to_email}</TD>
-                  <TD className="whitespace-nowrap">{formatDateTime(r.created_at)}</TD>
-                  <TD>
+                  <TD label="Sent to" className="break-all">{r.to_email}</TD>
+                  <TD className="whitespace-nowrap" label="Sent">{formatDateTime(r.created_at)}</TD>
+                  <TD label="Related report">
                     {r.submission_id ? (
                       <Link href={`/portal/reports/${r.submission_id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-navy-700 hover:underline">
                         {r.reference_no}

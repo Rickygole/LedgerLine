@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Initiative" };
 
 const FORM_TONE = { published: "ok", draft: "warn", superseded: "neutral" } as const;
-const SOURCE_LABEL: Record<string, string> = { seed: "Seed", manual: "Manual", ai_draft: "AI draft", rule_draft: "Rule draft" };
+const SOURCE_LABEL: Record<string, string> = { seed: "Imported", manual: "Manual", ai_draft: "AI draft", rule_draft: "Rule draft" };
 
 export default async function InitiativeDetail({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser(FINANCE_ROLES);
@@ -136,7 +136,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                   </TD>
                   <TD>{SOURCE_LABEL[f.source] ?? f.source}</TD>
                   <TD>
-                    {formatDateTime(f.created_at)}
+                    {formatDateTime(f.published_at && new Date(f.published_at) < new Date(f.created_at) ? f.published_at : f.created_at)}
                     {f.created_by_name ? <div className="text-xs text-muted">{f.created_by_name}</div> : null}
                   </TD>
                   <TD>{f.published_by_name ?? <span className="text-muted">Not published</span>}</TD>

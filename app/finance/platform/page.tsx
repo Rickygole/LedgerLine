@@ -66,7 +66,7 @@ const MILESTONES: Milestone[] = [
   { when: "Nov 2026", title: "Kickoff and discovery", detail: "Confirm the initiative list, the standard questions, the user roster and the permission groups with Council Finance." },
   { when: "Nov to Dec 2026", title: "Configure and load", detail: "Build initiative forms from the question library, load organizations and awards, and set reminder schedules." },
   { when: "Dec 2026", title: "Security review and environment ready", detail: "Production environment built in Azure Government, controls mapped to NIST 800-53, and the breach procedure agreed." },
-  { when: "Jan 4 to Jan 15, 2027", title: "User acceptance testing", detail: "Finance staff and a sample of organizations test real scenarios. Defects are logged, fixed and retested before sign off." },
+  { when: "Jan 4 to Jan 15, 2027", title: "User acceptance testing", detail: "Finance staff and a group of funded organizations work through real scenarios. Defects are logged, fixed and retested before sign off." },
   { when: "Jan 11 to Jan 22, 2027", title: "Training", detail: "Role based sessions for Finance administrators, analysts and viewers, and live and recorded walkthroughs for funded organizations." },
   { when: "Jan 25, 2027", title: "Cutover rehearsal and go or no go", detail: "A full dry run of the launch checklist. Finance leadership makes the final go decision." },
   { when: "Feb 1, 2027", title: "Go live", detail: "The system opens for reporting. Launch week support runs with extended hours and daily check ins.", goal: true },

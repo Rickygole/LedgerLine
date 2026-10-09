@@ -165,7 +165,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           </button>
           <button type="button" role="tab" aria-selected={view === "preview"} onClick={() => setView("preview")} className={cn("inline-flex h-8 items-center gap-2 rounded px-3 text-sm font-semibold", view === "preview" ? "bg-navy-800 text-white" : "text-ink hover:bg-navy-50")}>
             <Eye className="h-4 w-4" aria-hidden="true" />
-            Preview as CBO
+            Preview as organization
           </button>
         </div>
         {editable ? (

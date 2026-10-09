@@ -38,6 +38,35 @@ export function wordCount(text: string): number {
   return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
 }
 
+function phrase(label: string): string {
+  const clean = label.trim().replace(/[\s:.?]+$/, "");
+  const [first, ...rest] = clean.split(" ");
+  const keepCase = /[A-Z]/.test(first.slice(1)) || rest.some((word) => /^[A-Z]/.test(word));
+  return keepCase ? clean : first.toLowerCase() + (rest.length ? ` ${rest.join(" ")}` : "");
+}
+
+export function requiredMessage(question: Pick<Question, "label" | "type">): string {
+  const label = question.label.trim();
+  const words = phrase(label);
+  switch (question.type) {
+    case "yesno":
+      return `Answer Yes or No: ${label.endsWith("?") ? label : `${label}?`}`;
+    case "select":
+      return `Choose ${/^[aeiou]/i.test(words) ? "an" : "a"} ${words}.`;
+    case "table":
+      return `Fill in the ${words} table.`;
+    case "integer":
+    case "number":
+      return /^(number|total|count|amount) /i.test(words) ? `Enter the ${words}.` : `Enter the number of ${words}.`;
+    case "percent":
+      return `Enter the ${words} as a percentage.`;
+    case "currency":
+      return `Enter the ${words} in dollars.`;
+    default:
+      return `Enter the ${words}.`;
+  }
+}
+
 function checkType(question: Question, value: AnswerValue): string | null {
   const text = typeof value === "string" ? value.trim() : String(value);
   switch (question.type) {
@@ -55,7 +84,7 @@ function checkType(question: Question, value: AnswerValue): string | null {
     case "ein":
       return /^\d{2}-?\d{7}$/.test(text) ? null : `${question.label} must be 9 digits, like 12-3456789.`;
     case "yesno":
-      return ["Yes", "No"].includes(text) ? null : `Choose Yes or No for ${question.label}.`;
+      return ["Yes", "No"].includes(text) ? null : `Answer Yes or No: ${question.label.trim().replace(/[.?]*$/, "?")}`;
     default:
       return null;
   }
@@ -66,7 +95,7 @@ function questionIssues(question: Question, answers: Answers): Issue[] {
   const value = answers[question.key];
   if (isBlank(value)) {
     if (question.required) {
-      issues.push({ field: question.key, ruleId: RULES.required, severity: "block", message: `Enter ${question.label.toLowerCase()}.` });
+      issues.push({ field: question.key, ruleId: RULES.required, severity: "block", message: requiredMessage(question) });
     }
     return issues;
   }
