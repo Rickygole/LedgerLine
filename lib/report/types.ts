@@ -69,7 +69,7 @@ export type UploadActionResult =
   | { status: "error"; message: string };
 
 export type PrepareUploadResult =
-  | { status: "ok"; pathname: string; signature: string }
+  | { status: "ok"; pathname: string; signature: string; contentType: string }
   | { status: "rejected"; message: string }
   | { status: "signed_out" }
   | { status: "error"; message: string };

@@ -5,7 +5,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
 import { loadReport } from "@/lib/report/data";
 import { writeDraft } from "@/lib/report/write";
-import type { SaveResult } from "@/lib/report/types";
+import { cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, signPath } from "@/lib/report/attachments";
+import type { PrepareUploadResult, SaveResult, UploadActionResult } from "@/lib/report/types";
+import { buildPath, checkUpload, putFile } from "@/lib/storage";
 
 const cell = z.union([z.string().max(2000), z.number(), z.null()]);
 
@@ -67,5 +69,84 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
     if (code === "42501") return { status: "locked", message: "You do not have permission to change this report." };
     if (code === "40001") return { status: "stale", by: null, at: new Date().toISOString() };
     return { status: "error", message: "Couldn't save. Keep this tab open." };
+  }
+}
+
+const uploadTarget = z.object({ submissionId: z.uuid(), filename: z.string().min(1).max(400), bytes: z.number().int().min(0) });
+
+export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> {
+  const parsed = uploadTarget.safeParse(raw);
+  if (!parsed.success) return { status: "rejected", message: "That file could not be read." };
+  const { submissionId, bytes } = parsed.data;
+  const filename = cleanFilename(parsed.data.filename);
+  const problem = checkUpload(filename, bytes);
+  if (problem) return { status: "rejected", message: problem };
+
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) return { status: "signed_out" };
+  try {
+    const target = await withClaims(user.id, (tx) => openSubmissionForUpload(tx, submissionId));
+    if (!target) return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    const pathname = buildPath(target.ein, submissionId, filename);
+    return { status: "ok", pathname, signature: signPath(user.id, submissionId, pathname), contentType: mimeFor(filename) };
+  } catch {
+    return { status: "error", message: "The upload could not start. Try again." };
+  }
+}
+
+export async function recordBlobUpload(raw: unknown): Promise<UploadActionResult> {
+  const parsed = z.object({ submissionId: z.uuid(), pathname: z.string().min(3).max(300), signature: z.string().min(10).max(200), filename: z.string().min(1).max(400) }).safeParse(raw);
+  if (!parsed.success) return { status: "rejected", message: "That upload could not be confirmed." };
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) return { status: "signed_out" };
+  const { submissionId, pathname, signature } = parsed.data;
+  const filename = cleanFilename(parsed.data.filename);
+  if (!pathSignatureValid(user.id, submissionId, pathname, signature)) return { status: "rejected", message: "That upload could not be confirmed." };
+
+  const blob = await import("@vercel/blob");
+  let meta: Awaited<ReturnType<typeof blob.head>>;
+  try {
+    meta = await blob.head(pathname);
+  } catch {
+    return { status: "error", message: "The uploaded file could not be found. Try again." };
+  }
+  const problem = checkUpload(filename, meta.size);
+  if (problem || meta.contentType.split(";")[0] !== mimeFor(filename)) {
+    await blob.del(meta.url).catch(() => undefined);
+    return { status: "rejected", message: problem ?? "Use PDF, Word, Excel or CSV." };
+  }
+  try {
+    const attachment = await withClaims(user.id, (tx) => insertAttachment(tx, { submissionId, pathname, filename, bytes: meta.size, mime: mimeFor(filename) }));
+    return { status: "ok", attachment };
+  } catch (error) {
+    await blob.del(meta.url).catch(() => undefined);
+    if (pgCode(error) === "42501") return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    return { status: "error", message: "The file uploaded but could not be saved to the report. Try again." };
+  }
+}
+
+export async function uploadLocalAttachment(formData: FormData): Promise<UploadActionResult> {
+  const submissionId = z.uuid().safeParse(formData.get("submissionId"));
+  const file = formData.get("file");
+  if (!submissionId.success || !(file instanceof File)) return { status: "rejected", message: "That file could not be read." };
+  const filename = cleanFilename(file.name);
+  const problem = checkUpload(filename, file.size);
+  if (problem) return { status: "rejected", message: problem };
+
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) return { status: "signed_out" };
+  try {
+    const target = await withClaims(user.id, (tx) => openSubmissionForUpload(tx, submissionId.data));
+    if (!target) return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    const body = Buffer.from(await file.arrayBuffer());
+    const invalid = contentLooksValid(filename, body.subarray(0, 4096));
+    if (invalid) return { status: "rejected", message: invalid };
+    const pathname = buildPath(target.ein, submissionId.data, filename);
+    await putFile(pathname, body, mimeFor(filename));
+    const attachment = await withClaims(user.id, (tx) => insertAttachment(tx, { submissionId: submissionId.data, pathname, filename, bytes: body.length, mime: mimeFor(filename) }));
+    return { status: "ok", attachment };
+  } catch (error) {
+    if (pgCode(error) === "42501") return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    return { status: "error", message: "The file could not be uploaded. Try again." };
   }
 }
