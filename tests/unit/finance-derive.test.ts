@@ -46,7 +46,7 @@ function row(over: Partial<Omit<ReportRow, "issues" | "bucket" | "daysPastDue" |
     ein: "00-1040217",
     borough: "Bronx",
     initiativeId: "11111111-1111-1111-1111-111111111111",
-    initiativeName: "Youth Mentoring Networks (sample)",
+    initiativeName: "Youth Mentoring Networks",
     initiativeCode: "CI-004",
     category: "Youth Services",
     award: 90000,
@@ -140,7 +140,7 @@ describe("flag evidence", () => {
 describe("filters", () => {
   const rows = [
     row(),
-    row({ orgName: "Harborview Youth Alliance", ein: "00-1109729", borough: "Brooklyn", category: "Health", initiativeId: "22222222-2222-2222-2222-222222222222", initiativeName: "Diabetes Prevention (sample)", initiativeCode: "CI-050", submissionId: "s2", status: "accepted", answers: completeAnswers, budget: budget(90000) }),
+    row({ orgName: "Harborview Youth Alliance", ein: "00-1109729", borough: "Brooklyn", category: "Health", initiativeId: "22222222-2222-2222-2222-222222222222", initiativeName: "Diabetes Prevention", initiativeCode: "CI-050", submissionId: "s2", status: "accepted", answers: completeAnswers, budget: budget(90000) }),
   ];
 
   it("matches organization name or EIN", () => {

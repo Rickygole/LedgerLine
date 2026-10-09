@@ -273,7 +273,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       n++;
       const id = randomUUID();
       const formId = randomUUID();
-      const name = `${base} (sample)`;
+      const name = base;
       const definition = buildDefinition(`${base} report`, CATEGORY_METRICS[category]);
       initiatives.push({ id, name, category, formId, definition });
       initiativeRows.push({
@@ -281,7 +281,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
         code: `CI-${String(n).padStart(3, "0")}`,
         name,
         category,
-        description: `Synthetic sample initiative supporting ${category.toLowerCase()} programs. Funded organizations report performance, spending and narrative outcomes twice a year.`,
+        description: `Council funding for ${category.toLowerCase()} programs delivered by community organizations and City agencies. Funded organizations report performance, spending and outcomes twice a year.`,
         fiscal_year_id: "FY27",
         total_funding: 0,
         status: "active",
@@ -304,7 +304,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   await insertRows(client, "form_version", formRows, ["id", "initiative_id", "version", "status", "definition", "source", "created_by", "published_by", "published_at"]);
 
   const byName = (name: string) => {
-    const found = initiatives.find((i) => i.name === `${name} (sample)`);
+    const found = initiatives.find((i) => i.name === name);
     if (!found) throw new Error(`missing initiative ${name}`);
     return found;
   };
@@ -401,7 +401,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     outboxRows.push({
       to_email: org.contact.email,
       template: "submission_confirmation",
-      subject: `[DEMO] Report received: ${initiative.name}, ${opts.period === "FY26-YE" ? "FY26 Year-End" : "FY27 Mid-Year"}`,
+      subject: `Report received: ${initiative.name}, ${opts.period === "FY26-YE" ? "FY26 Year-End" : "FY27 Mid-Year"}`,
       body_text: `We received your report ${base.reference_no} for ${initiative.name}.`,
       submission_id: id,
       org_id: org.id,
