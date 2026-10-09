@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-export function TabNav({ base, tabs, current, label }: { base: string; tabs: { key: string; label: string; count?: number }[]; current: string; label: string }) {
+export function TabNav({ base, tabs, current, label, attached = false }: { base: string; tabs: { key: string; label: string; count?: number }[]; current: string; label: string; attached?: boolean }) {
   return (
-    <nav aria-label={label} className="mb-4 flex gap-1 overflow-x-auto border-b border-line">
+    <nav aria-label={label} className={cn("flex gap-1 overflow-x-auto [scrollbar-width:none]", attached ? "-mb-px" : "mb-4 border-b border-line")}>
       {tabs.map((tab) => {
         const active = tab.key === current;
         return (
@@ -11,10 +11,10 @@ export function TabNav({ base, tabs, current, label }: { base: string; tabs: { k
             key={tab.key}
             href={`${base}?tab=${tab.key}`}
             aria-current={active ? "page" : undefined}
-            className={cn("-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors", active ? "border-navy-800 text-navy-900" : "border-transparent text-muted hover:text-ink")}
+            className={cn("-mb-px inline-flex items-center whitespace-nowrap border-b-2 px-3 py-3 text-sm font-semibold transition-colors focus-visible:-outline-offset-2", active ? "border-navy-800 text-navy-900" : "border-transparent text-muted hover:border-line-strong hover:text-ink")}
           >
             {tab.label}
-            {tab.count !== undefined ? <span className="num ml-2 rounded-full bg-surface px-2 py-0.5 text-xs text-muted ring-1 ring-inset ring-line">{tab.count}</span> : null}
+            {tab.count !== undefined ? <span className={cn("num ml-2 rounded-full px-1.5 py-px text-xs", active ? "bg-navy-800 text-white" : "bg-surface text-muted ring-1 ring-inset ring-line")}>{tab.count}</span> : null}
           </Link>
         );
       })}
