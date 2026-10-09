@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 export function Card({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("rounded-lg border border-line bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]", className)} {...props}>
+    <div className={cn("min-w-0 rounded-xl border border-line bg-white shadow-card", className)} {...props}>
       {children}
     </div>
   );
@@ -10,12 +10,12 @@ export function Card({ className, children, ...props }: React.HTMLAttributes<HTM
 
 export function CardHeader({ title, description, actions, className }: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4", className)}>
+    <div className={cn("flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-line px-5 py-4", className)}>
       <div className="min-w-0">
-        <h2 className="text-base font-semibold text-ink">{title}</h2>
+        <h2 className="text-[15px] font-semibold leading-6 text-ink">{title}</h2>
         {description ? <p className="mt-0.5 text-sm text-muted">{description}</p> : null}
       </div>
-      {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
   );
 }
@@ -30,7 +30,7 @@ export function DescriptionList({ items, columns = 2 }: { items: { label: string
     <dl className={cn("grid grid-cols-1 gap-x-6 gap-y-4", cols)}>
       {items.map((item) => (
         <div key={item.label} className="min-w-0">
-          <dt className="text-xs font-semibold uppercase tracking-wide text-muted">{item.label}</dt>
+          <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">{item.label}</dt>
           <dd className="mt-1 text-sm text-ink break-words">{item.value ?? <span className="text-muted">Not provided</span>}</dd>
         </div>
       ))}
