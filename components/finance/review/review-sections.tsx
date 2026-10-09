@@ -18,6 +18,8 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
   if (value === null || value === undefined || value === "") return <span className="text-muted">Not answered</span>;
   if (question.type === "table" && Array.isArray(value)) {
     const columns = question.columns ?? [];
+    const filled = value.filter((row) => columns.some((c) => String(row[c.key] ?? "").trim() !== ""));
+    if (filled.length === 0) return <span className="text-muted">No rows entered</span>;
     return (
       <div className="overflow-x-auto rounded-md border border-line">
         <table className="w-full text-sm">
@@ -31,7 +33,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
             </tr>
           </thead>
           <tbody>
-            {value.map((row, index) => (
+            {filled.map((row, index) => (
               <tr key={index} className="border-t border-line">
                 {columns.map((c) => (
                   <td key={c.key} className={`px-3 py-2 ${c.type === "text" ? "" : "num text-right"}`}>
