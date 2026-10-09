@@ -96,8 +96,8 @@ export async function loadAnswers(tx: Tx, submissionId: string): Promise<{ answe
 }
 
 export async function loadBudget(tx: Tx, submissionId: string): Promise<BudgetLine[]> {
-  const rows = await tx.query<{ row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: string }>(
-    "SELECT row_id, position, category, description, amount FROM budget_line WHERE submission_id = $1 ORDER BY position, row_id",
+  const rows = await tx.query<{ row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: string; actual_spent: string | null }>(
+    "SELECT row_id, position, category, description, amount, actual_spent FROM budget_line WHERE submission_id = $1 ORDER BY position, row_id",
     [submissionId]
   );
   return rows.map((row) => ({
@@ -106,6 +106,7 @@ export async function loadBudget(tx: Tx, submissionId: string): Promise<BudgetLi
     category: row.category,
     description: row.description,
     amount: Number(row.amount),
+    actual: row.actual_spent === null ? null : Number(row.actual_spent),
   }));
 }
 

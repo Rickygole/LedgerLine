@@ -20,14 +20,19 @@ export async function writeDraft(tx: Tx, input: { submissionId: string; answers:
       [input.submissionId, keys, values]
     );
   }
-  const lines = input.budget.map((line, index) => ({ ...line, position: index + 1, amount: Math.round(line.amount * 100) / 100 }));
+  const lines = input.budget.map((line, index) => ({
+    ...line,
+    position: index + 1,
+    amount: Math.round(line.amount * 100) / 100,
+    actual: line.actual === null || line.actual === undefined ? null : Math.round(line.actual * 100) / 100,
+  }));
   if (lines.length > 0) {
     await tx.query(
-      `INSERT INTO budget_line (submission_id, row_id, position, category, description, amount)
-       SELECT $1, t.r, t.p, t.c, t.d, t.a FROM unnest($2::uuid[], $3::int[], $4::text[], $5::text[], $6::numeric[]) AS t(r, p, c, d, a)
+      `INSERT INTO budget_line (submission_id, row_id, position, category, description, amount, actual_spent)
+       SELECT $1, t.r, t.p, t.c, t.d, t.a, t.s FROM unnest($2::uuid[], $3::int[], $4::text[], $5::text[], $6::numeric[], $7::numeric[]) AS t(r, p, c, d, a, s)
        ON CONFLICT (submission_id, row_id) DO UPDATE
-         SET position = excluded.position, category = excluded.category, description = excluded.description, amount = excluded.amount`,
-      [input.submissionId, lines.map((l) => l.rowId), lines.map((l) => l.position), lines.map((l) => l.category), lines.map((l) => l.description), lines.map((l) => l.amount)]
+         SET position = excluded.position, category = excluded.category, description = excluded.description, amount = excluded.amount, actual_spent = excluded.actual_spent`,
+      [input.submissionId, lines.map((l) => l.rowId), lines.map((l) => l.position), lines.map((l) => l.category), lines.map((l) => l.description), lines.map((l) => l.amount), lines.map((l) => l.actual)]
     );
   }
   await tx.query("DELETE FROM budget_line WHERE submission_id = $1 AND NOT (row_id = ANY($2::uuid[]))", [input.submissionId, lines.map((l) => l.rowId)]);

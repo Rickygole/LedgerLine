@@ -32,7 +32,13 @@ export function buildSnapshot(input: {
     answers: input.answers,
     budget: [...input.budget]
       .sort((a, b) => a.position - b.position)
-      .map(({ position, category, description, amount }) => ({ position, category, description, amount })),
+      .map(({ position, category, description, amount, actual }) => ({
+        position,
+        category,
+        description,
+        amount,
+        ...(actual === null || actual === undefined ? {} : { actual }),
+      })),
     attachments: [...input.attachments].sort((a, b) => a.path.localeCompare(b.path)),
   }) as Snapshot;
 }

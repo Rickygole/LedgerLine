@@ -78,8 +78,8 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
   if (!base) return null;
 
   const answerRows = await tx.query<{ question_key: string; value: Answers[string] }>("SELECT question_key, value FROM answer WHERE submission_id = $1", [id]);
-  const budgetRows = await tx.query<{ row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number }>(
-      "SELECT row_id, position, category, description, amount::float8 AS amount FROM budget_line WHERE submission_id = $1 ORDER BY position",
+  const budgetRows = await tx.query<{ row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number; actual: number | null }>(
+      "SELECT row_id, position, category, description, amount::float8 AS amount, actual_spent::float8 AS actual FROM budget_line WHERE submission_id = $1 ORDER BY position",
       [id]
     );
   const flagRows = await tx.query<{ id: string; kind: string; source: string; note: string | null; status: string; created_at: string; created_by: string | null; resolved_at: string | null; resolved_by: string | null }>(
@@ -108,7 +108,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
 
   const answers: Answers = {};
   for (const a of answerRows) answers[a.question_key] = a.value;
-  const budget: BudgetLine[] = budgetRows.map((b) => ({ rowId: b.row_id, position: b.position, category: b.category, description: b.description, amount: b.amount }));
+  const budget: BudgetLine[] = budgetRows.map((b) => ({ rowId: b.row_id, position: b.position, category: b.category, description: b.description, amount: b.amount, actual: b.actual }));
   const openFlags: OpenFlag[] = flagRows.filter((f) => f.status === "open").map((f) => ({ id: f.id, kind: f.kind, note: f.note }));
 
   const row = finishRow({
