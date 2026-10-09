@@ -8,7 +8,7 @@ export function one(params: SearchParams, key: string): string {
 
 export function pageNumber(params: SearchParams): number {
   const n = Number.parseInt(one(params, "page"), 10);
-  return Number.isFinite(n) && n > 0 ? n : 1;
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 10_000) : 1;
 }
 
 export function pickOne<T extends string>(value: string, allowed: readonly T[], fallback: T): T {
@@ -33,3 +33,10 @@ export function isUuid(value: string): boolean {
 }
 
 export const PAGE_SIZE = 25;
+
+export function isoDate(value: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return "";
+  const [y, m, d] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d ? value : "";
+}

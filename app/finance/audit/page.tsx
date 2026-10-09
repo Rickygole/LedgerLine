@@ -11,19 +11,18 @@ import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { AuditSentence } from "@/components/finance/admin/audit-line";
 import { actionLabel, auditFilterOptions, listAudit } from "@/lib/finance/admin/audit";
-import { one, pageNumber, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
+import { one, pageNumber, PAGE_SIZE, type SearchParams, isoDate } from "@/lib/finance/admin/params";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Audit log" };
 
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser(FINANCE_ROLES);
   const params = await searchParams;
-  const from = DATE.test(one(params, "from")) ? one(params, "from") : "";
-  const to = DATE.test(one(params, "to")) ? one(params, "to") : "";
+  const from = isoDate(one(params, "from"));
+  const to = isoDate(one(params, "to"));
   const page = pageNumber(params);
 
   const data = await withClaims(user.id, async (tx) => {
