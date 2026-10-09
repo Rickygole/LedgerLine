@@ -24,9 +24,10 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
     <form action={action} noValidate className="space-y-4 px-5 py-4" onReset={() => setChosenRole(null)}>
       <ErrorSummary errors={summary} />
       {state?.ok ? (
-        <p role="status" className="rounded-md border border-ok/30 bg-ok-bg px-4 py-3 text-sm font-semibold text-ok">
-          {state.ok}
-        </p>
+        <div role="status" className="rounded-md border border-ok/30 bg-ok-bg px-4 py-3 text-sm font-semibold text-ok">
+          <p>{state.ok}</p>
+          {state.link ? <code data-testid="issued-link" className="mt-1 block break-all font-mono text-xs font-normal text-ink">{state.link}</code> : null}
+        </div>
       ) : null}
       <div className="grid gap-4 md:grid-cols-2">
         <div>
