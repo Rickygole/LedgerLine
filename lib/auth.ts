@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
 import { withClaims } from "@/lib/db";
 import { SESSION_COOKIE, verifySessionClaims } from "@/lib/session";
@@ -55,7 +55,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireUser(roles?: Role[]): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (roles && !roles.includes(user.role)) notFound();
+  if (roles && !roles.includes(user.role)) forbidden();
   return user;
 }
 
