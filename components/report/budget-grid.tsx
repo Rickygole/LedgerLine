@@ -12,7 +12,7 @@ import { formatCurrency, parseAmount } from "@/lib/rules/money";
 import { parseBudgetPaste } from "@/lib/rules/paste";
 import { balanceMessage, budgetTotals } from "@/lib/rules/validate";
 
-const ROW_GRID = "min-[720px]:grid min-[720px]:grid-cols-[4rem_9rem_minmax(0,1fr)_11rem_6rem] min-[720px]:items-start min-[720px]:gap-3";
+const ROW_GRID = "min-[720px]:grid min-[720px]:grid-cols-[4rem_7rem_minmax(0,1fr)_11rem_6rem] min-[720px]:items-start min-[720px]:gap-3";
 
 export function BudgetGrid({
   rows,
@@ -159,7 +159,7 @@ export function BudgetGrid({
         <p className="px-4 pt-3 text-sm font-semibold text-bad">{gridError}</p>
       ) : null}
 
-      <div className="hidden border-b border-line bg-surface/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted min-[720px]:grid min-[720px]:grid-cols-[4rem_9rem_minmax(0,1fr)_11rem_6rem] min-[720px]:gap-3">
+      <div className="hidden border-b border-line bg-surface/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted min-[720px]:grid min-[720px]:grid-cols-[4rem_7rem_minmax(0,1fr)_11rem_6rem] min-[720px]:gap-3">
         <span>Line</span>
         <span>Category</span>
         <span>Description</span>
@@ -195,8 +195,8 @@ export function BudgetGrid({
                     <span>Category</span>
                   </label>
                   <Select id={`budget-cat-${row.rowId}`} value={row.category} onChange={(event) => update(row.rowId, { category: event.target.value as "PS" | "OTPS" })}>
-                    <option value="PS">PS (personnel)</option>
-                    <option value="OTPS">OTPS (other)</option>
+                    <option value="PS">PS</option>
+                    <option value="OTPS">OTPS</option>
                   </Select>
                 </div>
                 <div className="max-[719px]:mb-3">
