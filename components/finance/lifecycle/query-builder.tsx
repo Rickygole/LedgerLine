@@ -82,7 +82,7 @@ export function QueryBuilder({ params, errors, periods, categories, initiatives,
         {select("q-funding", "funding", "Funding source", FUNDING_OPTIONS, "All funding sources")}
         {select("q-contract", "contract", "Contract status", CONTRACT_OPTIONS, "All contract statuses")}
         {select("q-org-type", "org_type", "Organization type", ORG_TYPE_OPTIONS.map((o) => ({ ...o })), "All types")}
-        {select("q-bucket", "bucket", "Status bucket", BUCKET_OPTIONS, "All buckets")}
+        {select("q-bucket", "bucket", "Reporting stage", BUCKET_OPTIONS, "All stages")}
         {select("q-status", "status", "Report status", STATUS_OPTIONS.map((o) => ({ ...o })), "All statuses")}
         {select("q-flag", "flag", "Flag type", FLAG_OPTIONS.map((o) => ({ ...o })), "No flag filter")}
         <div>
