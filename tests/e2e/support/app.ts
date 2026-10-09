@@ -74,3 +74,16 @@ export async function setBudget(page: Page, lines: { category: "PS" | "OTPS"; de
     await page.getByLabel(`Line ${n} Amount`).blur();
   }
 }
+
+export async function submitOverdueDraft(page: Page): Promise<string> {
+  const id = await openOverdueDraft(page);
+  await fillRequiredAnswers(page);
+  await setBudget(page, [
+    { category: "PS", description: "Mentor stipends", amount: "60000" },
+    { category: "OTPS", description: "Program supplies", amount: "25000" },
+  ]);
+  await expect(page.getByText(/^Saved \d/)).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("button", { name: "Submit report" }).click();
+  await page.waitForURL(/\/submitted$/);
+  return id;
+}
