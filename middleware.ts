@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith("/api")) return withHeaders(new NextResponse("Passcode required", { status: 401 }));
     const url = request.nextUrl.clone();
     url.pathname = "/gate";
-    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname)}`;
+    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(`${pathname}${request.nextUrl.search}`)}`;
     return withHeaders(NextResponse.redirect(url));
   }
 
