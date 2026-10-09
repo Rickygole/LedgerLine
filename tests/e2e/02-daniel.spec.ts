@@ -59,7 +59,7 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
   await page.getByLabel("Flag note").fill(note);
   await page.getByRole("button", { name: "Add manual flag" }).click();
   await expect(page.getByText(/flag.*added|added.*flag/i).first()).toBeVisible();
-  await page.goto("/finance/flagged");
+  await page.goto("/finance/flagged?flag=manual");
   await expect(page.getByText(note).first()).toBeVisible();
 });
 
