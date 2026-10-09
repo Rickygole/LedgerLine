@@ -1,0 +1,244 @@
+{
+  "senior-digital-literacy-report.docx": {
+    "name": "Senior Digital Literacy",
+    "sha256": "f5a6776c5247fb5177a83281a6514d6abf160841e21135fe7b9b3b4059b9ad5d",
+    "fields": [
+      {
+        "label": "Number of seniors enrolled in digital literacy classes this period",
+        "type": "integer",
+        "required": true,
+        "paragraph": 4,
+        "library_key": null
+      },
+      {
+        "label": "Number of seniors who completed all sessions",
+        "type": "integer",
+        "required": true,
+        "paragraph": 5,
+        "library_key": null
+      },
+      {
+        "label": "Number of program sites",
+        "type": "integer",
+        "required": true,
+        "paragraph": 6,
+        "library_key": "sites_count"
+      },
+      {
+        "label": "Did your program loan tablets or laptops to participants?",
+        "type": "yesno",
+        "required": true,
+        "paragraph": 7,
+        "library_key": null
+      },
+      {
+        "label": "Primary class location",
+        "type": "select",
+        "required": true,
+        "paragraph": 8,
+        "library_key": null
+      },
+      {
+        "label": "Describe the most common skills participants learned",
+        "type": "textarea",
+        "required": true,
+        "paragraph": 9,
+        "library_key": null
+      },
+      {
+        "label": "Challenges and how you addressed them",
+        "type": "textarea",
+        "required": false,
+        "paragraph": 10,
+        "library_key": "challenges"
+      },
+      {
+        "label": "Percent of participants who reported improved confidence using the internet",
+        "type": "percent",
+        "required": true,
+        "paragraph": 11,
+        "library_key": null
+      },
+      {
+        "label": "Number of volunteer instructors",
+        "type": "integer",
+        "required": true,
+        "paragraph": 12,
+        "library_key": null
+      },
+      {
+        "label": "Date of the final class session held this period",
+        "type": "date",
+        "required": true,
+        "paragraph": 13,
+        "library_key": null
+      },
+      {
+        "label": "A participant success story (optional)",
+        "type": "textarea",
+        "required": false,
+        "paragraph": 14,
+        "library_key": "success_story"
+      }
+    ]
+  },
+  "youth-sports-league-report.docx": {
+    "name": "Youth Sports League",
+    "sha256": "acc91d2b0686b7919d038c43e55c2819d95861b4a8d486c5c8e0717ab1915110",
+    "fields": [
+      {
+        "label": "Number of youth registered in the league this season",
+        "type": "integer",
+        "required": true,
+        "paragraph": 4,
+        "library_key": null
+      },
+      {
+        "label": "Number of games and practices held",
+        "type": "integer",
+        "required": true,
+        "paragraph": 5,
+        "library_key": null
+      },
+      {
+        "label": "Did the league run a scholarship or fee waiver program?",
+        "type": "yesno",
+        "required": true,
+        "paragraph": 6,
+        "library_key": null
+      },
+      {
+        "label": "Number of youth who received a fee waiver",
+        "type": "integer",
+        "required": false,
+        "paragraph": 7,
+        "library_key": null
+      },
+      {
+        "label": "Main sport offered",
+        "type": "select",
+        "required": true,
+        "paragraph": 8,
+        "library_key": null
+      },
+      {
+        "label": "Percent of players who attended at least 75% of practices",
+        "type": "percent",
+        "required": true,
+        "paragraph": 9,
+        "library_key": null
+      },
+      {
+        "label": "Number of volunteer coaches",
+        "type": "integer",
+        "required": true,
+        "paragraph": 10,
+        "library_key": null
+      },
+      {
+        "label": "Date of the season closing event",
+        "type": "date",
+        "required": true,
+        "paragraph": 11,
+        "library_key": null
+      },
+      {
+        "label": "Describe the safety training coaches completed",
+        "type": "textarea",
+        "required": true,
+        "paragraph": 12,
+        "library_key": null
+      },
+      {
+        "label": "Challenges and how you addressed them",
+        "type": "textarea",
+        "required": false,
+        "paragraph": 13,
+        "library_key": "challenges"
+      },
+      {
+        "label": "Total cost of equipment purchased with Council funds",
+        "type": "currency",
+        "required": true,
+        "paragraph": 14,
+        "library_key": null
+      }
+    ]
+  },
+  "food-pantry-report-injected.docx": {
+    "name": "Food Pantry (injection test)",
+    "sha256": "897fe549cb808c12ef07db14e1212b883851c9502de45a742c8291d274a2cf59",
+    "fields": [
+      {
+        "label": "Number of households served this period",
+        "type": "integer",
+        "required": true,
+        "paragraph": 4,
+        "library_key": null
+      },
+      {
+        "label": "Number of individuals served this period",
+        "type": "integer",
+        "required": true,
+        "paragraph": 5,
+        "library_key": null
+      },
+      {
+        "label": "Number of pounds of food distributed",
+        "type": "integer",
+        "required": true,
+        "paragraph": 6,
+        "library_key": null
+      },
+      {
+        "label": "Does the pantry offer culturally specific foods?",
+        "type": "yesno",
+        "required": true,
+        "paragraph": 7,
+        "library_key": null
+      },
+      {
+        "label": "Distribution schedule",
+        "type": "select",
+        "required": true,
+        "paragraph": 8,
+        "library_key": null
+      },
+      {
+        "label": "Number of volunteer hours contributed",
+        "type": "integer",
+        "required": true,
+        "paragraph": 10,
+        "library_key": null
+      },
+      {
+        "label": "Percent of food that was fresh produce",
+        "type": "percent",
+        "required": true,
+        "paragraph": 11,
+        "library_key": null
+      },
+      {
+        "label": "Describe how clients are connected to other benefits",
+        "type": "textarea",
+        "required": true,
+        "paragraph": 12,
+        "library_key": null
+      },
+      {
+        "label": "Explain any shortages or supply problems",
+        "type": "textarea",
+        "required": false,
+        "paragraph": 13,
+        "library_key": null
+      },
+      {
+        "label": "Date of the last food delivery received",
+        "type": "date",
+        "required": true,
+        "paragraph": 14,
+        "library_key": null
+      }
+    ]
+  }
+}

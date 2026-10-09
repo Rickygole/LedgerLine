@@ -1,0 +1,127 @@
+{
+  "template": "youth-sports-league-report.docx",
+  "note": "Pre-recorded draft that a person reviewed against the template. The template text was treated as data.",
+  "output": {
+    "questions": [
+      {
+        "label": "Number of youth registered in the league this season",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 4,
+          "quote": "Number of youth registered in the league this season"
+        }
+      },
+      {
+        "label": "Number of games and practices held",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 5,
+          "quote": "Number of games and practices held"
+        }
+      },
+      {
+        "label": "Did the league run a scholarship or fee waiver program?",
+        "type": "yesno",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 6,
+          "quote": "Did the league run a scholarship or fee waiver program?"
+        }
+      },
+      {
+        "label": "Number of youth who received a fee waiver",
+        "type": "integer",
+        "required": false,
+        "section": "performance",
+        "citation": {
+          "paragraph": 7,
+          "quote": "Number of youth who received a fee waiver"
+        }
+      },
+      {
+        "label": "Main sport offered",
+        "type": "select",
+        "required": true,
+        "section": "performance",
+        "options": [
+          "Basketball",
+          "Soccer",
+          "Baseball",
+          "Track"
+        ],
+        "citation": {
+          "paragraph": 8,
+          "quote": "Main sport offered"
+        }
+      },
+      {
+        "label": "Percent of players who attended at least 75% of practices",
+        "type": "percent",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 9,
+          "quote": "Percent of players who attended at least 75% of practices"
+        }
+      },
+      {
+        "label": "Number of volunteer coaches",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 10,
+          "quote": "Number of volunteer coaches"
+        }
+      },
+      {
+        "label": "Date of the season closing event",
+        "type": "date",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 11,
+          "quote": "Date of the season closing event"
+        }
+      },
+      {
+        "label": "Describe the safety training coaches completed",
+        "type": "textarea",
+        "required": true,
+        "section": "narrative",
+        "max_words": 300,
+        "citation": {
+          "paragraph": 12,
+          "quote": "Describe the safety training coaches completed"
+        }
+      },
+      {
+        "label": "Challenges and how you addressed them",
+        "type": "textarea",
+        "required": false,
+        "section": "narrative",
+        "max_words": 300,
+        "library_key": "challenges",
+        "citation": {
+          "paragraph": 13,
+          "quote": "What were the biggest challenges the league faced this season?"
+        }
+      },
+      {
+        "label": "Total cost of equipment purchased with Council funds",
+        "type": "currency",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 14,
+          "quote": "Total cost of equipment purchased with Council funds"
+        }
+      }
+    ]
+  }
+}

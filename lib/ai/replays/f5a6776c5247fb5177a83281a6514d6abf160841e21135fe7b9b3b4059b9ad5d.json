@@ -1,0 +1,130 @@
+{
+  "template": "senior-digital-literacy-report.docx",
+  "note": "Pre-recorded draft that a person reviewed against the template. The template text was treated as data.",
+  "output": {
+    "questions": [
+      {
+        "label": "Number of seniors enrolled in digital literacy classes this period",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 4,
+          "quote": "Number of seniors enrolled in digital literacy classes this period"
+        }
+      },
+      {
+        "label": "Number of seniors who completed all sessions",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 5,
+          "quote": "Number of seniors who completed all sessions"
+        }
+      },
+      {
+        "label": "Number of program sites",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "library_key": "sites_count",
+        "citation": {
+          "paragraph": 6,
+          "quote": "Number of sites where classes were held"
+        }
+      },
+      {
+        "label": "Did your program loan tablets or laptops to participants?",
+        "type": "yesno",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 7,
+          "quote": "Did your program loan tablets or laptops to participants?"
+        }
+      },
+      {
+        "label": "Primary class location",
+        "type": "select",
+        "required": true,
+        "section": "performance",
+        "options": [
+          "Senior center",
+          "Library",
+          "Participant home",
+          "Other"
+        ],
+        "citation": {
+          "paragraph": 8,
+          "quote": "Primary class location"
+        }
+      },
+      {
+        "label": "Describe the most common skills participants learned",
+        "type": "textarea",
+        "required": true,
+        "section": "narrative",
+        "max_words": 300,
+        "citation": {
+          "paragraph": 9,
+          "quote": "Describe the most common skills participants learned"
+        }
+      },
+      {
+        "label": "Challenges and how you addressed them",
+        "type": "textarea",
+        "required": false,
+        "section": "narrative",
+        "max_words": 300,
+        "library_key": "challenges",
+        "citation": {
+          "paragraph": 10,
+          "quote": "Explain any barriers participants faced in attending classes"
+        }
+      },
+      {
+        "label": "Percent of participants who reported improved confidence using the internet",
+        "type": "percent",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 11,
+          "quote": "Percent of participants who reported improved confidence using the internet"
+        }
+      },
+      {
+        "label": "Number of volunteer instructors",
+        "type": "integer",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 12,
+          "quote": "Number of volunteer instructors"
+        }
+      },
+      {
+        "label": "Date of the final class session held this period",
+        "type": "date",
+        "required": true,
+        "section": "performance",
+        "citation": {
+          "paragraph": 13,
+          "quote": "Date of the final class session held this period"
+        }
+      },
+      {
+        "label": "A participant success story (optional)",
+        "type": "textarea",
+        "required": false,
+        "section": "narrative",
+        "max_words": 300,
+        "library_key": "success_story",
+        "citation": {
+          "paragraph": 14,
+          "quote": "Describe one participant story that shows the program's impact"
+        }
+      }
+    ]
+  }
+}
