@@ -5,7 +5,7 @@ import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
-import { cleanParams, countMatches, describe, exportHref, listSaved, queryOptions, resultsHref } from "@/lib/lifecycle/queries";
+import { cleanParams, countMatches, describe, enteredParams, exportHref, listSaved, queryOptions, resultsHref, validateParams } from "@/lib/lifecycle/queries";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
@@ -21,12 +21,15 @@ export const metadata: Metadata = { title: "Saved queries" };
 export default async function QueriesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
-  const { options, params, count, saved } = await withClaims(user.id, async (tx) => {
+  const { options, params, entered, errors, count, saved } = await withClaims(user.id, async (tx) => {
     const options = await queryOptions(tx);
-    const params = cleanParams(raw, options.periods.map((p) => p.id));
-    return { options, params, count: await countMatches(tx, params), saved: await listSaved(tx) };
+    const params = cleanParams(raw, options.periods);
+    const errors = validateParams(raw, options.periods);
+    const count = Object.keys(errors).length > 0 ? null : await countMatches(tx, params);
+    return { options, params, entered: enteredParams(raw, options.periods), errors, count, saved: await listSaved(tx) };
   });
-  const lines = describe(params);
+  const lines = describe(params, options.members);
+  const problems = Object.values(errors);
 
   return (
     <>
@@ -41,7 +44,12 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
           <Card className="lg:col-span-8">
             <CardHeader title="Query builder" description="Choose any combination of criteria. The count updates as you change them." />
             <CardBody>
-              <QueryBuilder params={params} periods={options.periods} categories={options.categories} initiatives={options.initiatives} />
+              {problems.length > 0 ? (
+                <p role="alert" className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm font-semibold text-bad">
+                  {problems.length === 1 ? "One filter is not valid and was ignored." : `${problems.length} filters are not valid and were ignored.`} Fix the marked fields to see the count.
+                </p>
+              ) : null}
+              <QueryBuilder params={entered} errors={errors} periods={options.periods} categories={options.categories} initiatives={options.initiatives} members={options.members} />
             </CardBody>
           </Card>
           <Card className="border-l-[3px] border-l-navy-600 lg:sticky lg:top-4 lg:col-span-4">
@@ -49,7 +57,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Matching reports</p>
                 <p className="num mt-1 text-[28px] font-bold leading-8 text-ink" aria-live="polite" data-testid="match-count">
-                  {count}
+                  {count ?? "None"}
                 </p>
               </div>
               <div>
@@ -89,13 +97,13 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                 <EmptyRow colSpan={4}>You have not saved a query yet. Build one above and give it a name.</EmptyRow>
               ) : (
                 saved.map((q) => {
-                  const p = cleanParams(q.params, options.periods.map((x) => x.id));
+                  const p = cleanParams(q.params, options.periods);
                   return (
                     <TR key={q.id} className="align-top">
                       <TD className="font-semibold">{q.name}</TD>
                       <TD>
                         <div className="flex flex-wrap gap-1.5">
-                          {describe(p).map((line) => (
+                          {describe(p, options.members).map((line) => (
                             <Badge key={line}>{line}</Badge>
                           ))}
                         </div>

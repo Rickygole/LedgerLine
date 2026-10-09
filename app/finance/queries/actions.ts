@@ -6,7 +6,8 @@ import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
 import { isUuid } from "@/lib/finance/admin/params";
-import { cleanParams, QUERY_KEYS, toSearch } from "@/lib/lifecycle/queries";
+import { loadPeriods } from "@/lib/finance/review/data";
+import { cleanParams, QUERY_KEYS, toSearch, validateParams } from "@/lib/lifecycle/queries";
 
 export type QueryState = { error?: string } | undefined;
 
@@ -20,12 +21,17 @@ export async function saveQuery(_prev: QueryState, formData: FormData): Promise<
   let saved: string;
   try {
     saved = await withClaims(user.id, async (tx) => {
-      const periods = await tx.query<{ id: string }>("SELECT id FROM reporting_period");
-      const clean = cleanParams(raw, periods.map((p) => p.id));
+      const periods = await loadPeriods(tx);
+      const errors = validateParams(raw, periods);
+      const first = Object.values(errors)[0];
+      if (first) throw Object.assign(new Error(first), { invalidFilter: first });
+      const clean = cleanParams(raw, periods);
       await tx.query("INSERT INTO saved_query (owner, name, params) VALUES (app.uid(), $1, $2::jsonb)", [name, JSON.stringify(clean)]);
       return toSearch(clean);
     });
   } catch (error) {
+    const invalid = (error as { invalidFilter?: string }).invalidFilter;
+    if (invalid) return { error: `A filter is not valid: ${invalid}` };
     if ((error as { code?: string }).code === "23505") return { error: "You already have a saved query with that name. Choose another name." };
     return { error: plainError(error) };
   }
