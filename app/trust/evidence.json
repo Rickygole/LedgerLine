@@ -1,0 +1,1361 @@
+{
+  "generatedAt": "2026-10-09T04:15:48.791Z",
+  "commit": "98890657e3ab6c5923eefe4961544a1ddd7ed310",
+  "runUrl": null,
+  "repository": "Rickygole/LedgerLine",
+  "totals": {
+    "tests": 32,
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0
+  },
+  "summary": {
+    "verified": {
+      "stories": 13,
+      "rules": 6
+    },
+    "not_verified": {
+      "stories": 0,
+      "rules": 0
+    },
+    "demonstrated": {
+      "stories": 37,
+      "rules": 15
+    },
+    "talk_track": {
+      "stories": 16,
+      "rules": 8
+    }
+  },
+  "requirements": [
+    {
+      "id": "US-001",
+      "area": "Configuration",
+      "summary": "Finance can add a new initiative without rebuilding the system",
+      "route": "/finance/initiatives/new",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-002",
+      "area": "Configuration",
+      "summary": "Finance can attach required reports to an initiative",
+      "route": "/finance/initiatives/new",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-003",
+      "area": "Configuration",
+      "summary": "Questions are maintained centrally, not rebuilt per form",
+      "route": "/finance/forms",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-004",
+      "area": "Configuration",
+      "summary": "Standard questions are shared and initiative questions are specific",
+      "route": "/finance/forms",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-005",
+      "area": "Configuration",
+      "summary": "Field types cover performance, financial, budget and narrative data",
+      "route": "/finance/forms",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-006",
+      "area": "Configuration",
+      "summary": "Follow-up questions appear only when an answer calls for them",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "required fields enforces a branched question only when it is shown",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-007",
+      "area": "Configuration",
+      "summary": "A question can contain a table to complete",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-008",
+      "area": "Configuration",
+      "summary": "Drop-down answers are limited to valid choices",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "types and lengths rejects a value outside the dropdown list",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-009",
+      "area": "Annual rollover",
+      "summary": "Copy the prior fiscal year's structure into a new year",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Form versions are copied as drafts today; a year-level copy wizard is the next build step.",
+      "tests": []
+    },
+    {
+      "id": "US-010",
+      "area": "Annual rollover",
+      "summary": "Questions and layouts carry forward automatically",
+      "route": "/finance/initiatives",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-011",
+      "area": "Annual rollover",
+      "summary": "Rename, combine or retire initiatives and reports",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Initiative status supports retirement; rename and combine with lineage links are designed but not built in this proof of concept.",
+      "tests": []
+    },
+    {
+      "id": "US-012",
+      "area": "Annual rollover",
+      "summary": "History stays linked when initiatives change",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Submissions pin the form version they were created on, so history is never rewritten.",
+      "tests": []
+    },
+    {
+      "id": "US-013",
+      "area": "Access",
+      "summary": "Each person has their own account",
+      "route": "/login",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-014",
+      "area": "Access",
+      "summary": "Organizations see only the reports assigned to them",
+      "route": "/portal",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "organizations see only their own reports returns nothing at all without a signed-in identity",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports limits Maria to her own organization and submissions",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports shows Maria a report her colleague submitted",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports refuses a storage path under another organization's EIN",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports gives another organization's submitter no view of Maria's data",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
+    },
+    {
+      "id": "US-015",
+      "area": "Access",
+      "summary": "Organizations see their full history, including colleagues' reports",
+      "route": "/portal/history",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "organizations see only their own reports shows Maria a report her colleague submitted",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
+    },
+    {
+      "id": "US-016",
+      "area": "Submission",
+      "summary": "Start a required report",
+      "route": "/portal",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-017",
+      "area": "Submission",
+      "summary": "Save partway and return later",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-018",
+      "area": "Submission",
+      "summary": "Work in progress saves automatically",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-019",
+      "area": "Submission",
+      "summary": "Submit a completed report",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-020",
+      "area": "Submission",
+      "summary": "The submitter receives an email copy of what was submitted",
+      "route": "/portal/messages",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-021",
+      "area": "Submission",
+      "summary": "Print or save a submitted report as PDF",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-022",
+      "area": "Documents",
+      "summary": "Upload several supporting documents",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-023",
+      "area": "Documents",
+      "summary": "Excel, Word, CSV and PDF files are accepted",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-024",
+      "area": "Documents",
+      "summary": "Files up to 25 MB are accepted",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-025",
+      "area": "Budget",
+      "summary": "Budgets are entered in a spreadsheet-style grid",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "amount parsing reads plain, dollar and comma formatted values",
+          "file": "tests/unit/money.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "amount parsing treats parentheses as negative",
+          "file": "tests/unit/money.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "amount parsing expands K and M suffixes",
+          "file": "tests/unit/money.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "amount parsing rejects text that is not an amount",
+          "file": "tests/unit/money.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget paste from Excel skips a header row and maps category, description and amount",
+          "file": "tests/unit/paste.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget paste from Excel ignores blank lines and total rows",
+          "file": "tests/unit/paste.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget paste from Excel accepts long-form category names and a leading line number",
+          "file": "tests/unit/paste.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget paste from Excel reports lines with no amount instead of guessing",
+          "file": "tests/unit/paste.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget paste from Excel handles a full 100-line paste",
+          "file": "tests/unit/paste.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-026",
+      "area": "Budget",
+      "summary": "Totals calculate as you type",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "totals adds in cents so floating point never drifts",
+          "file": "tests/unit/money.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "totals formats negatives with parentheses",
+          "file": "tests/unit/money.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-027",
+      "area": "Validation",
+      "summary": "Finance sets fields that must add up to a required value",
+      "route": "/finance/forms",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "budget must equal the award blocks when over the award and says by how much",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award blocks when under the award",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award passes when balanced to the cent across many lines",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award states balance in words",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-028",
+      "area": "Validation",
+      "summary": "A report cannot be submitted until required totals match",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "budget must equal the award blocks when over the award and says by how much",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award blocks when under the award",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award passes when balanced to the cent across many lines",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award states balance in words",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-029",
+      "area": "Validation",
+      "summary": "Fields enforce number, currency, percent and other types",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "types and lengths rejects a malformed EIN and phone with plain messages",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "types and lengths counts words against the limit",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "types and lengths rejects a value outside the dropdown list",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-030",
+      "area": "Validation",
+      "summary": "Fields enforce length limits such as EIN digits and word counts",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "types and lengths rejects a malformed EIN and phone with plain messages",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "types and lengths counts words against the limit",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "types and lengths rejects a value outside the dropdown list",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-031",
+      "area": "Validation",
+      "summary": "Missing required fields are identified before submission",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "required fields blocks every missing required field",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "required fields enforces a branched question only when it is shown",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "US-032",
+      "area": "Validation",
+      "summary": "Unbalanced budgets and other errors are caught before submission",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-033",
+      "area": "Validation",
+      "summary": "EIN and organization details are checked against the master list",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-034",
+      "area": "Validation",
+      "summary": "Organization details fill in automatically",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-035",
+      "area": "Validation",
+      "summary": "Error messages say exactly what to fix",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-036",
+      "area": "Administration",
+      "summary": "Finance administers its own users",
+      "route": "/finance/users",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-037",
+      "area": "Administration",
+      "summary": "Access levels include view-only",
+      "route": "/finance/users",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "view-only finance users cannot write lets a viewer read but not flag a submission",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
+    },
+    {
+      "id": "US-038",
+      "area": "Administration",
+      "summary": "Finance can trigger password resets",
+      "route": "/finance/users",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-039",
+      "area": "Oversight",
+      "summary": "One central dashboard of submissions",
+      "route": "/finance",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-040",
+      "area": "Oversight",
+      "summary": "Outstanding, missing and incomplete reports are identified",
+      "route": "/finance",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-041",
+      "area": "Oversight",
+      "summary": "Submissions filter across many fields",
+      "route": "/finance/submissions",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-042",
+      "area": "Oversight",
+      "summary": "A flagged items view gathers problems for review",
+      "route": "/finance/flagged",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-043",
+      "area": "Review",
+      "summary": "Finance can flag a submission",
+      "route": "/finance/submissions",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-044",
+      "area": "Review",
+      "summary": "Finance can request updates and the organization resubmits",
+      "route": "/finance/submissions",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-045",
+      "area": "Review",
+      "summary": "Authorized staff can correct submitted data with an audit record",
+      "route": "/finance/submissions",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-046",
+      "area": "Data",
+      "summary": "Export submitted data to Excel",
+      "route": "/finance/submissions",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-047",
+      "area": "Data",
+      "summary": "Export submitted data to CSV",
+      "route": "/finance/submissions",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-048",
+      "area": "Data",
+      "summary": "Build queries from selected criteria",
+      "route": "/finance/submissions",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-049",
+      "area": "Data",
+      "summary": "Generate charts",
+      "route": "/finance",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-050",
+      "area": "Data",
+      "summary": "Generate graphs of trends and comparisons",
+      "route": "/finance",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-051",
+      "area": "Data",
+      "summary": "Dashboard visualizations",
+      "route": "/finance",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-052",
+      "area": "Notifications",
+      "summary": "Automated reminder emails to organizations",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Every email is written to an outbox table today; scheduled reminders reuse it with a daily job.",
+      "tests": []
+    },
+    {
+      "id": "US-053",
+      "area": "Hosting",
+      "summary": "Hosted outside Council-owned servers",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Vendor-hosted cloud. Production target is Azure Government; see the hosting slide.",
+      "tests": []
+    },
+    {
+      "id": "US-054",
+      "area": "Hosting",
+      "summary": "Cloud hosting meets FedRAMP or NIST 800-53",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Controls map to NIST 800-53 families: access control in row level security, audit in append-only tables, input validation on the server.",
+      "tests": []
+    },
+    {
+      "id": "US-055",
+      "area": "Data ownership",
+      "summary": "The Council owns all system data",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Full Excel and CSV export is the exit path; no proprietary data formats.",
+      "tests": []
+    },
+    {
+      "id": "US-056",
+      "area": "Retention",
+      "summary": "Submitted data is kept permanently",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "The application has no delete path for submissions, revisions or audit history.",
+      "tests": []
+    },
+    {
+      "id": "US-057",
+      "area": "Audit",
+      "summary": "Audit trails and change history",
+      "route": "/finance/audit",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "audit history is append-only denies update and delete on audit events for the app role",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "audit history is append-only denies update and delete on submission revisions for the app role",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "audit history is append-only blocks even the database owner from rewriting history",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
+    },
+    {
+      "id": "US-058",
+      "area": "Security",
+      "summary": "The Council is told about any breach",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Breach notification and remediation reporting are contractual and procedural.",
+      "tests": []
+    },
+    {
+      "id": "US-059",
+      "area": "Scale",
+      "summary": "No limit on submitting users",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Accounts are rows, not seats.",
+      "tests": []
+    },
+    {
+      "id": "US-060",
+      "area": "Scale",
+      "summary": "50 to 100 Finance users with different permissions",
+      "route": "/finance/users",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "US-061",
+      "area": "Support",
+      "summary": "Vendor help with account issues",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Support model.",
+      "tests": []
+    },
+    {
+      "id": "US-062",
+      "area": "Support",
+      "summary": "Post-launch support, monitoring and maintenance",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Support model.",
+      "tests": []
+    },
+    {
+      "id": "US-063",
+      "area": "Support",
+      "summary": "Support requests answered quickly, preferably within 24 hours",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Support model.",
+      "tests": []
+    },
+    {
+      "id": "US-064",
+      "area": "Maintenance",
+      "summary": "Annual review of reporting structure with Finance",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Configuration, not code: annual changes are form drafts.",
+      "tests": []
+    },
+    {
+      "id": "US-065",
+      "area": "Delivery",
+      "summary": "Formal testing period before go-live",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Delivery timeline to February 1, 2027 includes UAT.",
+      "tests": []
+    },
+    {
+      "id": "US-066",
+      "area": "Delivery",
+      "summary": "Formal training period before go-live",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Delivery timeline includes Finance training.",
+      "tests": []
+    },
+    {
+      "id": "BR-001",
+      "area": "Rules",
+      "summary": "About 175 initiatives, changing each year",
+      "route": "/finance/initiatives",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-002",
+      "area": "Rules",
+      "summary": "Each initiative reports at least twice a year",
+      "route": "/finance",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-003",
+      "area": "Rules",
+      "summary": "Reports combine performance, financial and narrative content",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-004",
+      "area": "Rules",
+      "summary": "Forms mix common and initiative-specific questions",
+      "route": "/finance/forms",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-005",
+      "area": "Rules",
+      "summary": "An initiative can fund one or more than 100 organizations",
+      "route": "/finance/initiatives",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-006",
+      "area": "Rules",
+      "summary": "One report per initiative, even for multi-initiative organizations",
+      "route": "/portal",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-007",
+      "area": "Rules",
+      "summary": "Several people at one organization may submit",
+      "route": "/portal/history",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-008",
+      "area": "Rules",
+      "summary": "Budgets can have up to 100 lines",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "budget paste from Excel handles a full 100-line paste",
+          "file": "tests/unit/paste.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "BR-009",
+      "area": "Rules",
+      "summary": "The EIN determines which reports an organization owes",
+      "route": "/portal",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-010",
+      "area": "Rules",
+      "summary": "Organizations can open only their assigned reports",
+      "route": "/portal",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "organizations see only their own reports returns nothing at all without a signed-in identity",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports limits Maria to her own organization and submissions",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports shows Maria a report her colleague submitted",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports refuses a storage path under another organization's EIN",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organizations see only their own reports gives another organization's submitter no view of Maria's data",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
+    },
+    {
+      "id": "BR-011",
+      "area": "Rules",
+      "summary": "Sign-in is per person, never a shared login",
+      "route": "/login",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-012",
+      "area": "Rules",
+      "summary": "Uploads are limited to 25 MB per file",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-013",
+      "area": "Rules",
+      "summary": "Work can be paused and resumed",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-014",
+      "area": "Rules",
+      "summary": "Submission triggers an email with the submitted content",
+      "route": "/portal/messages",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-015",
+      "area": "Rules",
+      "summary": "Questions and layouts carry into the next fiscal year",
+      "route": "/finance/initiatives",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-016",
+      "area": "Rules",
+      "summary": "Renamed or combined initiatives keep their history",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Version pinning keeps history today; lineage links are designed.",
+      "tests": []
+    },
+    {
+      "id": "BR-017",
+      "area": "Rules",
+      "summary": "50 to 100 Finance users with varied permissions",
+      "route": "/finance/users",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-018",
+      "area": "Rules",
+      "summary": "Unlimited submitting users",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Accounts are rows, not seats.",
+      "tests": []
+    },
+    {
+      "id": "BR-019",
+      "area": "Rules",
+      "summary": "Submitted data is kept permanently",
+      "route": "/finance/audit",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "audit history is append-only denies update and delete on audit events for the app role",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "audit history is append-only denies update and delete on submission revisions for the app role",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "audit history is append-only blocks even the database owner from rewriting history",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
+    },
+    {
+      "id": "BR-020",
+      "area": "Rules",
+      "summary": "The Council owns the data",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Full export is the exit path.",
+      "tests": []
+    },
+    {
+      "id": "BR-021",
+      "area": "Rules",
+      "summary": "Required fields must be complete before submission",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "required fields blocks every missing required field",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "required fields enforces a branched question only when it is shown",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "BR-022",
+      "area": "Rules",
+      "summary": "Totals must equal the required amount before submission",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "status can only change through the workflow function denies a direct status update even for the reporting organization",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "status can only change through the workflow function denies a direct status update for a finance analyst",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "status can only change through the workflow function refuses submit from a different organization through the function",
+          "file": "tests/sql/access.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "budget must equal the award blocks when over the award and says by how much",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award blocks when under the award",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award passes when balanced to the cent across many lines",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget must equal the award states balance in words",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "BR-023",
+      "area": "Rules",
+      "summary": "EIN and organization details match the master list",
+      "route": "/portal/reports",
+      "state": "verified",
+      "reason": null,
+      "talk": null,
+      "tests": [
+        {
+          "title": "types and lengths rejects a malformed EIN and phone with plain messages",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "types and lengths counts words against the limit",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "types and lengths rejects a value outside the dropdown list",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        }
+      ]
+    },
+    {
+      "id": "BR-024",
+      "area": "Rules",
+      "summary": "Organization details fill in where possible",
+      "route": "/portal/reports",
+      "state": "demonstrated",
+      "reason": null,
+      "talk": null,
+      "tests": []
+    },
+    {
+      "id": "BR-025",
+      "area": "Rules",
+      "summary": "Breaches are reported with a remediation plan",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Contractual and procedural.",
+      "tests": []
+    },
+    {
+      "id": "BR-026",
+      "area": "Rules",
+      "summary": "Hosted in a compliant cloud, not on Council servers",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "See the hosting slide.",
+      "tests": []
+    },
+    {
+      "id": "BR-027",
+      "area": "Rules",
+      "summary": "Target go-live February 1, 2027",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Delivery timeline.",
+      "tests": []
+    },
+    {
+      "id": "BR-028",
+      "area": "Rules",
+      "summary": "Annual structure review with Finance",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Configuration, not code.",
+      "tests": []
+    },
+    {
+      "id": "BR-029",
+      "area": "Rules",
+      "summary": "Fast post-launch support response",
+      "route": null,
+      "state": "talk_track",
+      "reason": null,
+      "talk": "Support model.",
+      "tests": []
+    }
+  ]
+}
