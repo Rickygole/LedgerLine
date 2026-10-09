@@ -2,12 +2,12 @@ import { Inbox } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const pin =
-  "max-lg:[&_tbody_td:first-child:not([colspan])]:sticky max-lg:[&_tbody_td:first-child:not([colspan])]:left-0 max-lg:[&_tbody_td:first-child:not([colspan])]:z-[1] max-lg:[&_tbody_td:first-child:not([colspan])]:min-w-44 max-lg:[&_tbody_td:first-child:not([colspan])]:bg-inherit max-lg:[&_tbody_td:first-child:not([colspan])]:shadow-[inset_-1px_0_0_var(--color-line)] max-lg:[&_thead_th:first-child]:sticky max-lg:[&_thead_th:first-child]:left-0 max-lg:[&_thead_th:first-child]:z-[2] max-lg:[&_thead_th:first-child]:bg-surface max-lg:[&_thead_th:first-child]:shadow-[inset_-1px_0_0_var(--color-line)]";
+  "max-lg:[&_tbody_td:first-child:not([colspan])]:sticky max-lg:[&_tbody_td:first-child:not([colspan])]:left-0 max-lg:[&_tbody_td:first-child:not([colspan])]:z-[1] max-lg:[&_tbody_td:first-child:not([colspan])]:min-w-[11rem] max-lg:[&_tbody_td:first-child:not([colspan])]:bg-inherit max-lg:[&_tbody_td:first-child:not([colspan])]:shadow-[inset_-1px_0_0_var(--color-line)] max-lg:[&_thead_th:first-child]:sticky max-lg:[&_thead_th:first-child]:left-0 max-lg:[&_thead_th:first-child]:z-[2] max-lg:[&_thead_th:first-child]:bg-surface max-lg:[&_thead_th:first-child]:shadow-[inset_-1px_0_0_var(--color-line)]";
 
 export function Table({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn("relative overflow-x-auto overscroll-x-contain", pin, className)}>
-      <table className="w-full min-w-[36rem] border-collapse text-sm lg:min-w-0">{children}</table>
+      <table className="w-full min-w-[48rem] border-collapse text-sm lg:min-w-0">{children}</table>
     </div>
   );
 }
