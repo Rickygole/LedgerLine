@@ -47,7 +47,16 @@ export async function transitionAction(_prev: ActionResult | undefined, formData
   const lock = lockField.safeParse(formData.get("lockVersion"));
   if (!["start_review", "accept"].includes(action) || !lock.success) return failed("That action is not available.");
   try {
-    await withClaims(user.id, (tx) => tx.query("SELECT * FROM app.transition_submission($1, $2, $3, NULL, NULL, NULL, NULL)", [id, action, lock.data]));
+    const problem = await withClaims(user.id, async (tx) => {
+      if (action === "accept") {
+        await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [id]);
+        const issues = (await loadSubmissionDetail(tx, id))?.row.issues ?? [];
+        if (issues.length > 0) return `Resolve these problems before accepting this report: ${issues.map((issue) => issue.message.replace(/\.$/, "")).join("; ")}.`;
+      }
+      await tx.query("SELECT * FROM app.transition_submission($1, $2, $3, NULL, NULL, NULL, NULL)", [id, action, lock.data]);
+      return null;
+    });
+    if (problem) return failed(problem);
   } catch (error) {
     return failed(plainError(error));
   }
