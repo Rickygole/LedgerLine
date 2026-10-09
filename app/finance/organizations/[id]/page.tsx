@@ -7,7 +7,7 @@ import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
 import { isMissing, reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
-import { ProfileHeader, monogram } from "@/components/ui/profile-header";
+import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
@@ -159,10 +159,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
               <div className="border-t border-line px-5 py-4">
                 <h3 className="text-[13px] font-semibold text-muted">Primary contact</h3>
                 {primary ? (
-                  <div className="mt-2 flex items-start gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-100 text-xs font-bold text-navy-800" aria-hidden="true">
-                      {monogram(primary.full_name)}
-                    </span>
+                  <div className="mt-2">
                     <div className="min-w-0 text-sm">
                       <p className="font-semibold text-ink">{primary.full_name}</p>
                       <p className="text-muted">{primary.title}</p>
