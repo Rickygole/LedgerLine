@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Mail, Plus, Save, Send } from "lucide-react";
 import { deleteRule, restoreDefaults, saveRule, sendNow, toggleRule, type ReminderState } from "@/app/finance/reminders/actions";
 import { PLACEHOLDERS, type RuleRow } from "@/lib/lifecycle/reminders";
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
-import { ErrorSummary } from "@/components/finance/admin/error-summary";
+import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 
 function Status({ state }: { state: ReminderState }) {
   if (state?.error) return <p role="alert" className="text-sm font-semibold text-bad">{state.error}</p>;
@@ -20,11 +20,14 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
   const days = rule ? Math.abs(rule.offset_days) : 3;
   const timing = rule && rule.offset_days > 0 ? "after" : "before";
   const errors = state?.fieldErrors ?? {};
-  const summary = Object.entries(errors).map(([key, message]) => ({ id: `rule-${key}`, message }));
+  const summary = Object.entries(errors).map(([key, message]) => ({ target: `rule-${key}`, message }));
+  const summaryRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (state?.fieldErrors || state?.error) summaryRef.current?.focus();
+  }, [state]);
   return (
     <form action={action} className="space-y-4" noValidate>
-      <ErrorSummary errors={summary} />
-      {state?.error && summary.length === 0 ? <p role="alert" className="rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm text-bad">{state.error}</p> : null}
+      <ErrorSummary ref={summaryRef} title={summary.length > 0 ? problemsTitle(summary.length, "you save") : "The rule was not saved"} items={summary.length > 0 ? summary : state?.error ? [{ message: state.error }] : []} className="mb-0" />
       <input type="hidden" name="period" value={period} />
       {rule ? <input type="hidden" name="id" value={rule.id} /> : null}
       <div className="grid gap-4 sm:grid-cols-2">
