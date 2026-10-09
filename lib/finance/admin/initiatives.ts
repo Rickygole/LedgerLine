@@ -1,5 +1,6 @@
 import type { Tx } from "@/lib/db";
-import { ASSIGNMENT_STATE } from "./sql";
+import type { Sponsor } from "@/lib/finance/review/types";
+import { ASSIGNMENT_STATE, PERIODS_SQL, SPONSORS_SQL } from "./sql";
 import { PAGE_SIZE, likePattern } from "./params";
 
 export type InitiativeRow = {
@@ -8,6 +9,7 @@ export type InitiativeRow = {
   name: string;
   category: string;
   status: string;
+  agency: string | null;
   orgs: number;
   funding: string;
   accepted: number;
@@ -15,44 +17,56 @@ export type InitiativeRow = {
   full_count: number;
 };
 
-export async function listInitiatives(tx: Tx, today: string, filters: { q: string; category: string; status: string; page: number }) {
+export type InitiativeFilters = { q: string; category: string; status: string; agency: string; page: number };
+
+export async function listInitiatives(tx: Tx, today: string, periodId: string, filters: InitiativeFilters) {
   const rows = await tx.query<InitiativeRow>(
     `WITH ${ASSIGNMENT_STATE}
-     SELECT i.id, i.code, i.name, i.category, i.status, i.total_funding AS funding,
+     SELECT i.id, i.code, i.name, i.category, i.status, i.administering_agency AS agency, i.total_funding AS funding,
             count(ay.id)::int AS orgs,
-            count(ay.id) FILTER (WHERE ay.ye_status = 'accepted')::int AS accepted,
-            count(ay.id) FILTER (WHERE ay.ye_missing)::int AS missing,
+            count(ay.id) FILTER (WHERE ay.period_status = 'accepted')::int AS accepted,
+            count(ay.id) FILTER (WHERE ay.is_missing)::int AS missing,
             count(*) OVER ()::int AS full_count
-     FROM initiative i LEFT JOIN ay ON ay.initiative_id = i.id
-     WHERE ($2 = '' OR i.name ILIKE $3 OR i.code ILIKE $3)
-       AND ($4 = '' OR i.category = $4)
-       AND ($5 = '' OR i.status = $5)
+     FROM initiative i
+     JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id
+     LEFT JOIN ay ON ay.initiative_id = i.id
+     WHERE ($3 = '' OR i.name ILIKE $4 OR i.code ILIKE $4)
+       AND ($5 = '' OR i.category = $5)
+       AND ($6 = '' OR i.status = $6)
+       AND ($7 = '' OR i.administering_agency = $7)
      GROUP BY i.id
      ORDER BY i.code
-     LIMIT ${PAGE_SIZE} OFFSET $6`,
-    [today, filters.q, likePattern(filters.q), filters.category, filters.status, (filters.page - 1) * PAGE_SIZE]
+     LIMIT ${PAGE_SIZE} OFFSET $8`,
+    [today, periodId, filters.q, likePattern(filters.q), filters.category, filters.status, filters.agency, (filters.page - 1) * PAGE_SIZE]
   );
   return { rows, total: rows[0]?.full_count ?? 0 };
 }
 
-export async function categorySummary(tx: Tx, today: string) {
+export async function categorySummary(tx: Tx, today: string, periodId: string) {
   return tx.query<{ category: string; initiatives: number; funding: string; accepted: number; assignments: number; missing: number }>(
     `WITH ${ASSIGNMENT_STATE},
      per_cat AS (
-       SELECT i.category, count(*)::int AS initiatives, sum(i.total_funding) AS funding FROM initiative i GROUP BY i.category
+       SELECT i.category, count(*)::int AS initiatives, sum(i.total_funding) AS funding
+       FROM initiative i JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id
+       GROUP BY i.category
      ),
      per_assign AS (
        SELECT i.category,
               count(ay.id)::int AS assignments,
-              count(ay.id) FILTER (WHERE ay.ye_status = 'accepted')::int AS accepted,
-              count(ay.id) FILTER (WHERE ay.ye_missing)::int AS missing
+              count(ay.id) FILTER (WHERE ay.period_status = 'accepted')::int AS accepted,
+              count(ay.id) FILTER (WHERE ay.is_missing)::int AS missing
        FROM initiative i JOIN ay ON ay.initiative_id = i.id GROUP BY i.category
      )
      SELECT c.category, c.initiatives, c.funding, coalesce(a.accepted, 0) AS accepted, coalesce(a.assignments, 0) AS assignments, coalesce(a.missing, 0) AS missing
      FROM per_cat c LEFT JOIN per_assign a ON a.category = c.category
      ORDER BY c.category`,
-    [today]
+    [today, periodId]
   );
+}
+
+export async function listAgencies(tx: Tx) {
+  const rows = await tx.query<{ agency: string }>(`SELECT DISTINCT administering_agency AS agency FROM initiative WHERE administering_agency IS NOT NULL ORDER BY 1`);
+  return rows.map((r) => r.agency);
 }
 
 export async function listCategories(tx: Tx) {
@@ -69,7 +83,10 @@ export type InitiativeDetail = {
   fiscal_year_id: string;
   total_funding: string;
   status: string;
+  administering_agency: string | null;
 };
+
+export type AwardPeriod = { id: string; label: string; due_on: string; status: string | null };
 
 export type FundedOrg = {
   assignment_id: string;
@@ -79,9 +96,12 @@ export type FundedOrg = {
   borough: string;
   award_amount: string;
   sponsoring_agency: string | null;
-  ye_status: string | null;
-  mid_status: string | null;
-  published: boolean;
+  funding_source: string;
+  contract_status: string;
+  contract_number: string | null;
+  contract_registered_on: string | null;
+  sponsors: Sponsor[] | null;
+  periods: AwardPeriod[] | null;
 };
 
 export type FormVersionRow = {
@@ -97,18 +117,17 @@ export type FormVersionRow = {
 
 export async function loadInitiative(tx: Tx, id: string) {
   const initiative = await tx.one<InitiativeDetail>(
-    `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status FROM initiative WHERE id = $1`,
+    `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status, administering_agency FROM initiative WHERE id = $1`,
     [id]
   );
   if (!initiative) return null;
   const funded = await tx.query<FundedOrg>(
     `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, a.award_amount, a.sponsoring_agency,
-            sy.status AS ye_status, sm.status AS mid_status,
-            EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = a.initiative_id AND fv.status = 'published') AS published
+            a.funding_source, a.contract_status, a.contract_number, a.contract_registered_on::text AS contract_registered_on,
+            ${SPONSORS_SQL} AS sponsors,
+            ${PERIODS_SQL} AS periods
      FROM assignment a
      JOIN organization o ON o.id = a.org_id
-     LEFT JOIN submission sy ON sy.assignment_id = a.id AND sy.period_id = 'FY26-YE'
-     LEFT JOIN submission sm ON sm.assignment_id = a.id AND sm.period_id = 'FY27-MY'
      WHERE a.initiative_id = $1
      ORDER BY o.legal_name`,
     [id]
@@ -122,6 +141,5 @@ export async function loadInitiative(tx: Tx, id: string) {
      ORDER BY f.version DESC`,
     [id]
   );
-  const periods = await tx.query<{ id: string; due_on: string }>(`SELECT id, due_on::text FROM reporting_period`);
-  return { initiative, funded, forms, due: Object.fromEntries(periods.map((p) => [p.id, p.due_on])) as Record<string, string> };
+  return { initiative, funded, forms };
 }

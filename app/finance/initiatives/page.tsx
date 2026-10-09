@@ -15,7 +15,9 @@ import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { ProgressBar } from "@/components/finance/admin/progress-bar";
-import { categorySummary, listCategories, listInitiatives } from "@/lib/finance/admin/initiatives";
+import { categorySummary, listAgencies, listCategories, listInitiatives } from "@/lib/finance/admin/initiatives";
+import { loadPeriods } from "@/lib/finance/review/data";
+import { defaultPeriodId } from "@/lib/finance/review/filters";
 import { buildHref, one, pageNumber, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
 
 export const runtime = "nodejs";
@@ -31,11 +33,15 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
   const today = todayInNewYork();
 
   const data = await withClaims(user.id, async (tx) => {
+    const periods = await loadPeriods(tx);
+    const period = periods.find((p) => p.id === one(params, "period")) ?? periods.find((p) => p.id === defaultPeriodId(periods))!;
     const categories = await listCategories(tx);
+    const agencies = await listAgencies(tx);
     const category = categories.includes(one(params, "category")) ? one(params, "category") : "";
-    const list = await listInitiatives(tx, today, { q, category, status, page });
-    const summary = await categorySummary(tx, today);
-    return { categories, category, summary, ...list };
+    const agency = agencies.includes(one(params, "agency")) ? one(params, "agency") : "";
+    const list = await listInitiatives(tx, today, period.id, { q, category, status, agency, page });
+    const summary = await categorySummary(tx, today, period.id);
+    return { periods, period, categories, agencies, category, agency, summary, ...list };
   });
 
   const base = "/finance/initiatives";
@@ -44,13 +50,13 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     { funding: 0, initiatives: 0, accepted: 0, assignments: 0, missing: 0 }
   );
   const maxFunding = Math.max(0, ...data.summary.map((c) => Number(c.funding)));
-  const kept = { q, category: data.category, status };
+  const kept = { q, category: data.category, status, agency: data.agency, period: data.period.id };
 
   return (
     <>
       <PageHeader
         title="Initiatives"
-        description="Council initiatives, who is funded and how FY26 Year-End reporting is going."
+        description={`Council initiatives funded in ${data.period.fiscalYearId} and how ${data.period.label} reporting is going.`}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives" }]}
         actions={
           user.role === "finance_admin" ? (
@@ -67,8 +73,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
           {[
             { label: "Total funding", value: formatCurrency(totals.funding), hint: `${data.summary.length} categories` },
             { label: "Initiatives", value: totals.initiatives, hint: `${totals.assignments} organization awards` },
-            { label: "FY26 accepted", value: `${totals.accepted} of ${totals.assignments}`, hint: "Year-End reports accepted" },
-            { label: "Missing reports", value: totals.missing, hint: "FY26 Year-End, past due", bad: totals.missing > 0 },
+            { label: `${data.period.id} accepted`, value: `${totals.accepted} of ${totals.assignments}`, hint: `${data.period.label} reports accepted` },
+            { label: "Missing reports", value: totals.missing, hint: `${data.period.label}, nothing submitted and past due`, bad: totals.missing > 0 },
           ].map((tile) => (
             <div key={tile.label} className="min-w-0 bg-white px-4 py-4 sm:px-5">
               <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted">
@@ -86,7 +92,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               Funding by category <span className="font-normal text-muted">(total and number of initiatives)</span>
             </h2>
             {data.category ? (
-              <Link href={buildHref(base, { q, status })} className="text-sm font-semibold text-navy-700 hover:underline">
+              <Link href={buildHref(base, { q, status, agency: data.agency, period: data.period.id })} className="text-sm font-semibold text-navy-700 hover:underline">
                 Show all categories
               </Link>
             ) : (
@@ -100,7 +106,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               return (
                 <li key={c.category}>
                   <Link
-                    href={buildHref(base, { q, status, category: selected ? undefined : c.category })}
+                    href={buildHref(base, { q, status, agency: data.agency, period: data.period.id, category: selected ? undefined : c.category })}
                     aria-current={selected ? "true" : undefined}
                     className={cn("group block rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-navy-50", selected && "bg-navy-50 ring-1 ring-navy-600/30")}
                   >
@@ -126,9 +132,18 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
       </Card>
 
       <Card>
-        <FilterBar action={base} clearHref={base}>
+        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Code or name" />
+          </FilterField>
+          <FilterField label="Reporting period" htmlFor="period">
+            <Select id="period" name="period" defaultValue={data.period.id}>
+              {data.periods.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </Select>
           </FilterField>
           <FilterField label="Category" htmlFor="category">
             <Select id="category" name="category" defaultValue={data.category}>
@@ -136,6 +151,16 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               {data.categories.map((c) => (
                 <option key={c} value={c}>
                   {c}
+                </option>
+              ))}
+            </Select>
+          </FilterField>
+          <FilterField label="Administering agency" htmlFor="agency">
+            <Select id="agency" name="agency" defaultValue={data.agency}>
+              <option value="">All agencies</option>
+              {data.agencies.map((a) => (
+                <option key={a} value={a}>
+                  {a}
                 </option>
               ))}
             </Select>
@@ -154,15 +179,16 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               <TH>Code</TH>
               <TH>Initiative</TH>
               <TH>Category</TH>
+              <TH>Agency</TH>
               <TH align="right">Organizations</TH>
               <TH align="right">Total funding</TH>
-              <TH>FY26 Year-End</TH>
+              <TH>{data.period.label}</TH>
               <TH align="right">Missing</TH>
             </tr>
           </THead>
           <tbody>
             {data.rows.length === 0 ? (
-              <EmptyRow colSpan={7}>No initiatives match these filters. Clear the filters to see every initiative.</EmptyRow>
+              <EmptyRow colSpan={8}>No initiatives match these filters. Clear the filters to see every initiative.</EmptyRow>
             ) : (
               data.rows.map((row) => (
                 <TR key={row.id}>
@@ -174,6 +200,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                     {row.status === "retired" ? <span className="ml-2"><Badge>Retired</Badge></span> : null}
                   </TD>
                   <TD className="whitespace-nowrap">{row.category}</TD>
+                  <TD className="whitespace-nowrap">{row.agency ?? <span className="text-muted">Not set</span>}</TD>
                   <TD align="right">{row.orgs}</TD>
                   <TD align="right">{formatCurrency(Number(row.funding))}</TD>
                   <TD>{row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>
