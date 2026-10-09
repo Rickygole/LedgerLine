@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { AlertTriangle, Plus } from "lucide-react";
+import { cn } from "@/lib/cn";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
@@ -38,6 +39,11 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
   });
 
   const base = "/finance/initiatives";
+  const totals = data.summary.reduce(
+    (t, c) => ({ funding: t.funding + Number(c.funding), initiatives: t.initiatives + c.initiatives, accepted: t.accepted + c.accepted, assignments: t.assignments + c.assignments, missing: t.missing + c.missing }),
+    { funding: 0, initiatives: 0, accepted: 0, assignments: 0, missing: 0 }
+  );
+  const maxFunding = Math.max(0, ...data.summary.map((c) => Number(c.funding)));
   const kept = { q, category: data.category, status };
 
   return (
@@ -56,21 +62,68 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
         }
       />
 
-      <section aria-label="Totals by category" className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-        {data.summary.map((c) => (
-          <Link
-            key={c.category}
-            href={buildHref(base, { category: c.category })}
-            className={`rounded-lg border bg-white px-4 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:border-navy-600/40 hover:bg-navy-50/40 ${data.category === c.category ? "border-navy-700 ring-1 ring-navy-700" : "border-line"}`}
-          >
-            <p className="text-sm font-semibold text-ink">{c.category}</p>
-            <p className="num mt-1 text-lg font-bold text-ink">{formatCompactCurrency(Number(c.funding))}</p>
-            <p className="num text-xs text-muted">
-              {c.initiatives} initiatives, {c.accepted} of {c.assignments} accepted
-            </p>
-          </Link>
-        ))}
-      </section>
+      <Card className="mb-6">
+        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-t-xl border-b border-line bg-line lg:grid-cols-4">
+          {[
+            { label: "Total funding", value: formatCurrency(totals.funding), hint: `${data.summary.length} categories` },
+            { label: "Initiatives", value: totals.initiatives, hint: `${totals.assignments} organization awards` },
+            { label: "FY26 accepted", value: `${totals.accepted} of ${totals.assignments}`, hint: "Year-End reports accepted" },
+            { label: "Missing reports", value: totals.missing, hint: "FY26 Year-End, past due", bad: totals.missing > 0 },
+          ].map((tile) => (
+            <div key={tile.label} className="min-w-0 bg-white px-4 py-4 sm:px-5">
+              <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted">
+                {tile.bad ? <AlertTriangle className="h-3.5 w-3.5 text-bad" aria-hidden="true" /> : null}
+                {tile.label}
+              </dt>
+              <dd className="num mt-1.5 text-xl font-bold tracking-tight text-ink sm:text-2xl">{tile.value}</dd>
+              <dd className="mt-0.5 text-xs text-muted">{tile.hint}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="px-4 py-4 sm:px-5">
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold text-ink">
+              Funding by category <span className="font-normal text-muted">(total and number of initiatives)</span>
+            </h2>
+            {data.category ? (
+              <Link href={buildHref(base, { q, status })} className="text-sm font-semibold text-navy-700 hover:underline">
+                Show all categories
+              </Link>
+            ) : (
+              <span className="text-xs text-muted">Choose a category to filter the list below</span>
+            )}
+          </div>
+          <ul className="grid gap-x-8 gap-y-1 sm:grid-cols-2 xl:grid-cols-3">
+            {data.summary.map((c) => {
+              const selected = data.category === c.category;
+              const share = maxFunding > 0 ? Math.max(2, Math.round((Number(c.funding) / maxFunding) * 100)) : 0;
+              return (
+                <li key={c.category}>
+                  <Link
+                    href={buildHref(base, { q, status, category: selected ? undefined : c.category })}
+                    aria-current={selected ? "true" : undefined}
+                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-navy-50", selected && "bg-navy-50 ring-1 ring-navy-600/30")}
+                  >
+                    <span className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className={cn("truncate", selected ? "font-semibold text-navy-900" : "text-ink")}>{c.category}</span>
+                      <span className="num shrink-0 text-muted">
+                        {formatCompactCurrency(Number(c.funding))}
+                        <span className="ml-2 text-xs">
+                          {c.initiatives}
+                          <span className="sr-only"> initiatives</span>
+                        </span>
+                      </span>
+                    </span>
+                    <span className="mt-1 block h-1 overflow-hidden rounded-full bg-navy-100" aria-hidden="true">
+                      <span className={cn("block h-full rounded-full", selected ? "bg-navy-800" : "bg-navy-600/70 group-hover:bg-navy-600")} style={{ width: `${share}%` }} />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </Card>
 
       <Card>
         <FilterBar action={base} clearHref={base}>
@@ -113,14 +166,14 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             ) : (
               data.rows.map((row) => (
                 <TR key={row.id}>
-                  <TD className="font-mono text-xs">{row.code}</TD>
+                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{row.code}</TD>
                   <TD>
-                    <Link href={`${base}/${row.id}`} className="font-semibold text-navy-800 hover:underline">
+                    <Link href={`${base}/${row.id}`} className="font-semibold text-navy-700 hover:underline">
                       {row.name}
                     </Link>
                     {row.status === "retired" ? <span className="ml-2"><Badge>Retired</Badge></span> : null}
                   </TD>
-                  <TD>{row.category}</TD>
+                  <TD className="whitespace-nowrap">{row.category}</TD>
                   <TD align="right">{row.orgs}</TD>
                   <TD align="right">{formatCurrency(Number(row.funding))}</TD>
                   <TD>{row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>

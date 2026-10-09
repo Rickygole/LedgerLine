@@ -34,7 +34,7 @@ export function UserActions({ userId, name, role, active, isSelf, isCbo }: { use
             <label htmlFor={`role-${userId}`} className="sr-only">
               Role for {name}
             </label>
-            <Select id={`role-${userId}`} name="role" defaultValue={role} disabled={isSelf} className="h-8 w-48 py-1">
+            <Select id={`role-${userId}`} name="role" defaultValue={role} disabled={isSelf} className="h-8 w-52 py-1">
               {ROLE_OPTIONS.map((r) => (
                 <option key={r.value} value={r.value}>
                   {r.label}

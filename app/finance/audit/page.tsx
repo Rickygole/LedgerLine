@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
@@ -17,6 +18,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Audit log" };
 
+const DAY = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const TIME = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
+const dayLabel = (at: string | Date) => DAY.format(new Date(at));
+const timeLabel = (at: string | Date) => TIME.format(new Date(at));
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser(FINANCE_ROLES);
@@ -79,10 +84,10 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             <Input id="to" name="to" type="date" defaultValue={to} />
           </FilterField>
         </FilterBar>
-        <Table>
+        <Table className="max-h-[72vh]">
           <THead>
             <tr>
-              <TH>When</TH>
+              <TH>Time</TH>
               <TH>What happened</TH>
               <TH>Organization</TH>
               <TH>Entity</TH>
@@ -92,21 +97,36 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             {data.rows.length === 0 ? (
               <EmptyRow colSpan={4}>No audit entries match these filters.</EmptyRow>
             ) : (
-              data.rows.map((row) => (
-                <TR key={row.id}>
-                  <TD className="whitespace-nowrap align-top text-muted">
-                    <time dateTime={new Date(row.at).toISOString()}>{formatDateTime(row.at)}</time>
-                  </TD>
-                  <TD className="max-w-xl align-top">
-                    <AuditSentence row={row} />
-                    {row.note ? <p className="mt-1 text-muted">Note: {row.note}</p> : null}
-                  </TD>
-                  <TD className="align-top">{row.org_name ?? <span className="text-muted">Not applicable</span>}</TD>
-                  <TD className="align-top">
-                    <Badge>{actionLabel(row.entity)}</Badge>
-                  </TD>
-                </TR>
-              ))
+              data.rows.map((row, index) => {
+                const day = dayLabel(row.at);
+                const newDay = index === 0 || dayLabel(data.rows[index - 1].at) !== day;
+                return (
+                  <Fragment key={row.id}>
+                    {newDay ? (
+                      <tr>
+                        <th colSpan={4} scope="colgroup" className="sticky top-9 z-[5] border-b border-line bg-navy-50 px-4 py-1.5 text-left text-xs font-semibold text-navy-900">
+                          {day}
+                        </th>
+                      </tr>
+                    ) : null}
+                    <TR>
+                      <TD className="whitespace-nowrap align-top text-muted">
+                        <time dateTime={new Date(row.at).toISOString()} title={formatDateTime(row.at)} className="num">
+                          {timeLabel(row.at)}
+                        </time>
+                      </TD>
+                      <TD className="max-w-xl align-top">
+                        <AuditSentence row={row} />
+                        {row.note ? <p className="mt-1 text-muted">Note: {row.note}</p> : null}
+                      </TD>
+                      <TD className="align-top">{row.org_name ?? <span className="text-muted">Not applicable</span>}</TD>
+                      <TD className="align-top">
+                        <Badge>{actionLabel(row.entity)}</Badge>
+                      </TD>
+                    </TR>
+                  </Fragment>
+                );
+              })
             )}
           </tbody>
         </Table>

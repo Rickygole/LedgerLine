@@ -7,7 +7,7 @@ export function AuditSentence({ row }: { row: AuditRow }) {
   const phrase = auditPhrase(row);
   const href = auditEntityHref(row);
   const subject = href && phrase.subject ? (
-    <Link href={href} className="font-semibold text-navy-800 hover:underline">
+    <Link href={href} className="font-semibold text-navy-700 hover:underline">
       {phrase.subject}
     </Link>
   ) : (

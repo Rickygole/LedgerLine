@@ -1,40 +1,37 @@
-import { ShieldCheck } from "lucide-react";
 import { Logo } from "./logo";
 import { CreditFooter, SyntheticBanner } from "./synthetic-banner";
 
 export function AuthFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white">
+      <a href="#main" className="skip-link">
+        Skip to main content
+      </a>
       <SyntheticBanner />
-      <div className="grid flex-1 lg:grid-cols-[1.05fr_1fr]">
-        <section className="relative hidden overflow-hidden bg-navy-900 text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
-          <div aria-hidden="true" className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:32px_32px]" />
+      <div className="grid flex-1 lg:min-h-[calc(100dvh-28px-57px)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+        <section aria-label="About LedgerLine" className="on-dark relative hidden overflow-hidden bg-navy-950 text-white lg:flex lg:flex-col lg:justify-between lg:gap-12 lg:p-12 xl:p-16">
+          <div aria-hidden="true" className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_at_top_left,black_30%,transparent_75%)]" />
+          <div aria-hidden="true" className="absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-navy-600/25 blur-3xl" />
           <div className="relative">
             <Logo subtitle="Initiative Reporting System" />
           </div>
-          <div className="relative max-w-lg">
-            <p className="text-sm font-semibold uppercase tracking-widest text-navy-100/70">Every Council-funded initiative, line by line.</p>
-            <h1 className="mt-4 text-4xl font-bold leading-tight">One place for funded organizations to report and for Finance to review.</h1>
-            <ul className="mt-8 space-y-3 text-sm text-navy-100/90">
-              {[
-                "Configurable reporting forms that change each fiscal year without a rebuild",
-                "Spreadsheet-style budgets that must balance to the award before submission",
-                "Review, request updates, and a complete audit trail for every report",
-              ].map((line) => (
-                <li key={line} className="flex gap-3">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-navy-100/70" aria-hidden="true" />
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="relative max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-navy-300">Council initiative reporting</p>
+            <p className="mt-4 text-4xl font-bold leading-[1.15] tracking-tight xl:text-[42px]">One place for funded organizations to report and for Finance to review.</p>
+            <p className="mt-6 max-w-lg text-[15px] leading-7 text-navy-200">Organizations file their mid-year and year-end reports here. Finance staff review each one, ask for changes when something is off, and accept it once the budget matches the award.</p>
           </div>
-          <p className="relative text-xs text-navy-100/60">Proof of concept prepared for Estrada Consulting by Ricky Gole. Not an official NYC system.</p>
+          <p className="relative text-xs text-navy-300">Synthetic demonstration data throughout.</p>
         </section>
-        <section className="flex items-center justify-center px-4 py-12 sm:px-8">
-          <div className="w-full max-w-md">{children}</div>
-        </section>
+        <main id="main" tabIndex={-1} className="flex min-w-0 items-center justify-center bg-surface px-4 py-10 focus:outline-none sm:px-8 lg:bg-white lg:py-16">
+          <div className="w-full max-w-md">
+            <div className="mb-8 lg:hidden">
+              <Logo tone="light" subtitle="Initiative Reporting System" />
+            </div>
+            {children}
+          </div>
+        </main>
       </div>
-      <CreditFooter />
+      <CreditFooter className="mt-0" />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import type { OrgProfile } from "@/lib/portal/data";
 export function OrgSummary({ org, activeAwards, totalAwarded }: { org: OrgProfile; activeAwards: number; totalAwarded: number }) {
   const cells: { label: string; value: React.ReactNode }[] = [
     { label: "Legal name", value: <span className="font-semibold">{org.legalName}</span> },
-    { label: "EIN", value: <span className="font-mono">{org.ein}</span> },
+    { label: "EIN", value: <span className="whitespace-nowrap font-mono text-[13px]">{org.ein}</span> },
     { label: "Borough and district", value: `${org.borough}${org.councilDistrict ? `, District ${org.councilDistrict}` : ""}` },
     { label: "Active awards", value: <span className="num">{activeAwards}</span> },
     { label: "Total awarded", value: <span className="num font-semibold">{formatCurrency(totalAwarded)}</span> },

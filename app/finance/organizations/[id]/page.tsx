@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, ExternalLink, Mail, MapPin, Phone, Star } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, ExternalLink, FolderOpen, Landmark, Mail, MapPin, Phone, Star } from "lucide-react";
 import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
 import { expectedState } from "@/lib/finance/admin/state";
 import { formatCurrency } from "@/lib/rules/money";
-import { PageHeader } from "@/components/ui/page-header";
+import { ProfileHeader, monogram } from "@/components/ui/profile-header";
+import { PrintButton } from "@/components/ui/print-button";
+import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Badge, StateBadge } from "@/components/ui/status-badge";
 import { Stat } from "@/components/ui/stat";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { TabNav } from "@/components/finance/admin/tab-nav";
 import { AuditSentence } from "@/components/finance/admin/audit-line";
-import { loadOrganization } from "@/lib/finance/admin/organizations";
+import { loadOrganization, type OrgAward } from "@/lib/finance/admin/organizations";
 import { orgActivity } from "@/lib/finance/admin/audit";
 import { orgTypeLabel } from "@/lib/finance/admin/sql";
 import { isUuid, one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
@@ -24,13 +26,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Organization profile" };
 
-const TABS = ["awards", "reports", "contacts", "activity", "messages"] as const;
+const TABS = ["overview", "awards", "reports", "contacts", "activity", "messages"] as const;
 
 export default async function OrganizationProfile({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParams> }) {
   const user = await requireUser(FINANCE_ROLES);
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const tab = pickOne(one(await searchParams, "tab"), TABS, "awards");
+  const tab = pickOne(one(await searchParams, "tab"), TABS, "overview");
 
   const data = await withClaims(user.id, async (tx) => {
     const loaded = await loadOrganization(tx, id);
@@ -46,116 +48,155 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
   const totalAwarded = active.reduce((sum, a) => sum + Number(a.award_amount), 0);
   const accepted = reports.filter((r) => r.status === "accepted").length;
   const overdue = active.filter((a) => expectedState(a.ye_status, due["FY26-YE"], a.published) === "missing").length;
+  const primary = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
   const address = `${org.address_line}, ${org.city}, ${org.state} ${org.postal_code}`;
 
   return (
     <>
-      <PageHeader
+      <ProfileHeader
         title={org.legal_name}
+        subtitle={org.dba_name ? `Doing business as ${org.dba_name}` : undefined}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations", href: "/finance/organizations" }, { label: org.legal_name }]}
-        meta={
+        meta={[
+          <Badge key="type" tone="info">
+            {orgTypeLabel(org.org_type)}
+          </Badge>,
+          <span key="ein" className="whitespace-nowrap font-mono text-[13px]">
+            EIN {org.ein}
+          </span>,
+          <span key="area" className="whitespace-nowrap">
+            {org.borough}
+            {org.council_district ? `, District ${org.council_district}` : ""}
+          </span>,
+          org.founded_year ? (
+            <span key="founded" className="num whitespace-nowrap">
+              Founded {org.founded_year}
+            </span>
+          ) : null,
+          overdue > 0 ? (
+            <Badge key="compliance" tone="bad" icon={AlertTriangle}>
+              {overdue} overdue
+            </Badge>
+          ) : (
+            <Badge key="compliance" tone="ok" icon={CheckCircle2}>
+              Reports current
+            </Badge>
+          ),
+        ]}
+        actions={
           <>
-            <Badge tone="info">{orgTypeLabel(org.org_type)}</Badge>
-            <span className="font-mono text-xs text-muted">EIN {org.ein}</span>
+            {primary ? (
+              <a href={`mailto:${primary.email}`} className={buttonClass("secondary", "sm")}>
+                <Mail className="h-4 w-4" aria-hidden="true" />
+                Email primary contact
+              </a>
+            ) : null}
+            <PrintButton label="Print profile" />
           </>
+        }
+        tabs={
+          <TabNav
+            attached
+            base={`/finance/organizations/${id}`}
+            label="Organization sections"
+            current={tab}
+            tabs={[
+              { key: "overview", label: "Overview" },
+              { key: "awards", label: "Awards", count: awards.length },
+              { key: "reports", label: "Reports", count: reports.length },
+              { key: "contacts", label: "Contacts and team", count: contacts.length + team.length },
+              { key: "activity", label: "Activity" },
+              { key: "messages", label: "Messages", count: messages.length },
+            ]}
+          />
         }
       />
 
-      <Card className="mb-6">
-        <CardBody className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">Mission</h2>
-            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
-            <div className="mt-5">
-              <DescriptionList
-                columns={3}
-                items={[
-                  { label: "Legal name", value: org.legal_name },
-                  { label: "Borough", value: org.borough },
-                  { label: "Council district", value: org.council_district ? <span className="num">{org.council_district}</span> : null },
-                  { label: "Founded", value: org.founded_year ? <span className="num">{org.founded_year}</span> : null },
-                  { label: "Annual budget", value: org.annual_budget ? <span className="num">{formatCurrency(Number(org.annual_budget))}</span> : null },
-                  { label: "Also known as", value: org.dba_name },
-                ]}
+      {tab === "overview" ? (
+        <>
+          <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <Stat label="Total awarded" value={formatCurrency(totalAwarded)} hint={`Across ${active.length} active ${active.length === 1 ? "award" : "awards"}`} icon={Landmark} />
+            <Stat label="Active initiatives" value={active.length} hint="FY26 and FY27" icon={FolderOpen} />
+            <Stat label="Reports accepted" value={accepted} tone="ok" hint={`${reports.length} submitted or started`} icon={CheckCircle2} />
+            <Stat label="Overdue" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} hint="FY26 Year-End" icon={AlertTriangle} />
+          </section>
+          <div className="grid items-start gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader title="About" />
+              <CardBody>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Mission</h3>
+                <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
+                <div className="mt-5 border-t border-line pt-5">
+                  <DescriptionList
+                    columns={3}
+                    items={[
+                      { label: "Legal name", value: org.legal_name },
+                      { label: "Borough", value: org.borough },
+                      { label: "Council district", value: org.council_district ? <span className="num">{org.council_district}</span> : null },
+                      { label: "Founded", value: org.founded_year ? <span className="num">{org.founded_year}</span> : null },
+                      { label: "Annual budget", value: org.annual_budget ? <span className="num">{formatCurrency(Number(org.annual_budget))}</span> : null },
+                      { label: "Also known as", value: org.dba_name },
+                    ]}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+            <Card className="self-start lg:row-span-2">
+              <CardHeader title="Contact" />
+              <ul className="space-y-3 px-5 py-4 text-sm">
+                <li className="flex gap-2.5">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                  <span>{address}</span>
+                </li>
+                <li className="flex gap-2.5">
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                  <span className="num">{org.phone ?? "No phone on file"}</span>
+                </li>
+                <li className="flex gap-2.5">
+                  <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                  <span className="break-all">{org.website ?? "No website on file"}</span>
+                </li>
+              </ul>
+              <div className="border-t border-line px-5 py-4">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">Primary contact</h3>
+                {primary ? (
+                  <div className="mt-2 flex items-start gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-100 text-xs font-bold text-navy-800" aria-hidden="true">
+                      {monogram(primary.full_name)}
+                    </span>
+                    <div className="min-w-0 text-sm">
+                      <p className="font-semibold text-ink">{primary.full_name}</p>
+                      <p className="text-muted">{primary.title}</p>
+                      <a href={`mailto:${primary.email}`} className="mt-1 block break-all font-medium text-navy-700 hover:underline">
+                        {primary.email}
+                      </a>
+                      {primary.phone ? <p className="num text-muted">{primary.phone}</p> : null}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-muted">No primary contact on file.</p>
+                )}
+              </div>
+            </Card>
+            <Card className="lg:col-span-2">
+              <CardHeader
+                title="Awards"
+                description="Active and past awards with report status by period."
+                actions={
+                  <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-navy-700 hover:underline">
+                    Open awards tab
+                  </Link>
+                }
               />
-            </div>
+              <AwardsTable awards={awards} due={due} />
+            </Card>
           </div>
-          <ul className="space-y-3 rounded-md bg-surface/70 p-4 text-sm">
-            <li className="flex gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-              <span>{address}</span>
-            </li>
-            <li className="flex gap-2">
-              <Phone className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-              <span className="num">{org.phone ?? "No phone on file"}</span>
-            </li>
-            <li className="flex gap-2">
-              <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-              <span className="break-all">{org.website ?? "No website on file"}</span>
-            </li>
-          </ul>
-        </CardBody>
-      </Card>
-
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Total awarded" value={formatCurrency(totalAwarded)} hint="Active initiatives" />
-        <Stat label="Active initiatives" value={active.length} />
-        <Stat label="Reports accepted" value={accepted} tone="ok" hint={`${reports.length} submitted or started`} />
-        <Stat label="Overdue" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} hint="FY26 Year-End" />
-      </div>
-
-      <TabNav
-        base={`/finance/organizations/${id}`}
-        label="Organization sections"
-        current={tab}
-        tabs={[
-          { key: "awards", label: "Awards", count: awards.length },
-          { key: "reports", label: "Reports", count: reports.length },
-          { key: "contacts", label: "Contacts and team", count: contacts.length + team.length },
-          { key: "activity", label: "Activity" },
-          { key: "messages", label: "Messages", count: messages.length },
-        ]}
-      />
+        </>
+      ) : null}
 
       {tab === "awards" ? (
         <Card>
-          <Table>
-            <THead>
-              <tr>
-                <TH>Initiative</TH>
-                <TH>Category</TH>
-                <TH>Sponsoring agency</TH>
-                <TH align="right">Award</TH>
-                <TH>FY26 Year-End</TH>
-                <TH>FY27 Mid-Year</TH>
-              </tr>
-            </THead>
-            <tbody>
-              {awards.length === 0 ? (
-                <EmptyRow colSpan={6}>This organization has no awards yet.</EmptyRow>
-              ) : (
-                awards.map((a) => (
-                  <TR key={a.assignment_id}>
-                    <TD>
-                      <Link href={`/finance/initiatives/${a.initiative_id}`} className="font-semibold text-navy-800 hover:underline">
-                        {a.name}
-                      </Link>
-                      <div className="font-mono text-xs text-muted">{a.code}</div>
-                    </TD>
-                    <TD>{a.category}</TD>
-                    <TD>{a.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
-                    <TD align="right">{formatCurrency(Number(a.award_amount))}</TD>
-                    <TD>
-                      <StateBadge state={expectedState(a.ye_status, due["FY26-YE"], a.published)} />
-                    </TD>
-                    <TD>
-                      <StateBadge state={expectedState(a.mid_status, due["FY27-MY"], a.published)} />
-                    </TD>
-                  </TR>
-                ))
-              )}
-            </tbody>
-          </Table>
+          <AwardsTable awards={awards} due={due} />
         </Card>
       ) : null}
 
@@ -180,7 +221,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 reports.map((r) => (
                   <TR key={r.id}>
                     <TD>
-                      <Link href={`/finance/submissions/${r.id}`} className="font-mono text-xs font-semibold text-navy-800 hover:underline">
+                      <Link href={`/finance/submissions/${r.id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-navy-700 hover:underline">
                         {r.reference_no}
                       </Link>
                     </TD>
@@ -209,7 +250,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
           <Card>
             <CardHeader title="Contacts" description="People Council Finance can reach about this organization." />
             <ul className="divide-y divide-line">
-              {contacts.length === 0 ? <li className="px-5 py-8 text-center text-sm text-muted">No contacts on file.</li> : null}
+              {contacts.length === 0 ? <li className="px-5 py-10 text-center text-sm text-muted">No contacts on file.</li> : null}
               {contacts.map((c) => (
                 <li key={c.id} className="px-5 py-4">
                   <div className="flex items-center gap-2">
@@ -295,11 +336,11 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 messages.map((m) => (
                   <TR key={m.id}>
                     <TD>
-                      <Link href={`/finance/outbox/${m.id}`} className="font-semibold text-navy-800 hover:underline">
+                      <Link href={`/finance/outbox/${m.id}`} className="font-semibold text-navy-700 hover:underline">
                         {m.subject}
                       </Link>
                     </TD>
-                    <TD className="font-mono text-xs">{m.template}</TD>
+                    <TD className="font-mono text-[13px] text-muted">{m.template}</TD>
                     <TD>{m.to_email}</TD>
                     <TD>
                       <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status}</Badge>
@@ -313,5 +354,47 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
         </Card>
       ) : null}
     </>
+  );
+}
+
+function AwardsTable({ awards, due }: { awards: OrgAward[]; due: Record<string, string> }) {
+  return (
+    <Table>
+      <THead>
+        <tr>
+          <TH>Initiative</TH>
+          <TH>Category</TH>
+          <TH>Sponsoring agency</TH>
+          <TH align="right">Award</TH>
+          <TH>FY26 Year-End</TH>
+          <TH>FY27 Mid-Year</TH>
+        </tr>
+      </THead>
+      <tbody>
+        {awards.length === 0 ? (
+          <EmptyRow colSpan={6}>This organization has no awards yet.</EmptyRow>
+        ) : (
+          awards.map((a) => (
+            <TR key={a.assignment_id}>
+              <TD>
+                <Link href={`/finance/initiatives/${a.initiative_id}`} className="font-semibold text-navy-700 hover:underline">
+                  {a.name}
+                </Link>
+                <div className="font-mono text-[13px] text-muted">{a.code}</div>
+              </TD>
+              <TD>{a.category}</TD>
+              <TD>{a.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
+              <TD align="right">{formatCurrency(Number(a.award_amount))}</TD>
+              <TD>
+                <StateBadge state={expectedState(a.ye_status, due["FY26-YE"], a.published)} />
+              </TD>
+              <TD>
+                <StateBadge state={expectedState(a.mid_status, due["FY27-MY"], a.published)} />
+              </TD>
+            </TR>
+          ))
+        )}
+      </tbody>
+    </Table>
   );
 }

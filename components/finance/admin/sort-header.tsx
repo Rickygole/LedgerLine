@@ -8,8 +8,8 @@ export function SortHeader({ base, params, field, label, sort, dir, align = "lef
   const nextDir = active && dir === "asc" ? "desc" : "asc";
   const Icon = dir === "asc" ? ArrowUp : ArrowDown;
   return (
-    <th scope="col" aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined} className={cn("px-4 py-2.5 font-semibold", align === "right" && "text-right")}>
-      <Link href={buildHref(base, { ...params, sort: field, dir: nextDir, page: undefined })} className={cn("inline-flex items-center gap-1 hover:text-navy-800", active && "text-navy-800")}>
+    <th scope="col" aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined} className={cn("whitespace-nowrap px-4 py-2.5 font-semibold", align === "right" && "text-right")}>
+      <Link href={buildHref(base, { ...params, sort: field, dir: nextDir, page: undefined })} className={cn("inline-flex items-center gap-1 rounded-sm hover:text-navy-800", active && "text-navy-800")}>
         {label}
         {active ? <Icon className="h-3.5 w-3.5" aria-hidden="true" /> : null}
       </Link>

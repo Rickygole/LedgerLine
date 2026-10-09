@@ -5,7 +5,7 @@ export type FilterOption = { value: string; label: string; count?: number };
 
 export function Segmented({ label, param, options, current, base }: { label: string; param: string; options: FilterOption[]; current: string; base: Record<string, string> }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex rounded-md border border-line bg-white p-0.5 shadow-sm">
+    <div role="group" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-md border border-line bg-surface p-0.5">
       {options.map((option) => {
         const active = option.value === current;
         const query = new URLSearchParams({ ...base, [param]: option.value });
@@ -16,10 +16,10 @@ export function Segmented({ label, param, options, current, base }: { label: str
             key={option.value}
             href={qs ? `?${qs}` : "?"}
             aria-current={active ? "true" : undefined}
-            className={cn("rounded px-3 py-1.5 text-sm font-medium transition-colors", active ? "bg-navy-800 text-white" : "text-muted hover:bg-navy-50 hover:text-ink")}
+            className={cn("whitespace-nowrap rounded px-3 py-1.5 text-sm font-medium transition-colors", active ? "bg-white font-semibold text-navy-900 shadow-sm ring-1 ring-line" : "text-muted hover:bg-white/70 hover:text-ink")}
           >
             {option.label}
-            {option.count !== undefined ? <span className={cn("num ml-1.5 text-xs", active ? "text-white/80" : "text-muted")}>{option.count}</span> : null}
+            {option.count !== undefined ? <span className={cn("num ml-1.5 text-xs", active ? "text-navy-700" : "text-muted")}>{option.count}</span> : null}
           </Link>
         );
       })}
