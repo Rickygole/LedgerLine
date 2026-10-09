@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRight, CalendarRange, Landmark, Layers, Users } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCompactCurrency, formatCurrency } from "@/lib/rules/money";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { fiscalYears, nextFiscalYear, validFiscalYear, yearSummary } from "@/lib/lifecycle/rollover";
 import { PageHeader } from "@/components/ui/page-header";
@@ -45,7 +45,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
       <RolloverSteps current={1} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <Card>
-          <CardHeader title="Choose the years" description="Roll over from one fiscal year into the next." />
+          <CardHeader title="Choose the source year" description="Pick the year to copy from and the new year to create." />
           <CardBody>
             <form action="/finance/rollover" className="space-y-4">
               <div>
@@ -64,7 +64,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
                 <Input id="to" name="to" defaultValue={to} pattern="FY[0-9]{2}" maxLength={4} aria-describedby="to-hint" />
               </div>
               <Button type="submit" variant="secondary">
-                Update preview
+                Show this year
               </Button>
             </form>
           </CardBody>
@@ -73,11 +73,11 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
           <Card>
             <CardHeader title={`${from} at a glance`} description={`What will be offered for carry forward into ${to || "the new year"}.`} />
             <CardBody>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <Stat label="Initiatives" value={summary.initiatives} icon={Layers} />
-                <Stat label="Funded organizations" value={summary.organizations} icon={Users} />
-                <Stat label="Assignments" value={summary.assignments} icon={CalendarRange} />
-                <Stat label="Total funding" value={formatCurrency(summary.totalFunding)} icon={Landmark} />
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <Stat label="Initiatives" value={summary.initiatives} icon={Layers} hint={`Active in ${from}`} />
+                <Stat label="Organizations" value={summary.organizations} icon={Users} hint="With at least one award" />
+                <Stat label="Assignments" value={summary.assignments} icon={CalendarRange} hint="Organization and initiative pairs" />
+                <Stat label="Funding" value={formatCompactCurrency(summary.totalFunding)} icon={Landmark} hint={formatCurrency(summary.totalFunding)} />
               </div>
               {targetSummary && targetSummary.initiatives > 0 ? (
                 <p className="mt-4 rounded-md border border-warn/30 bg-warn-bg px-3 py-2 text-sm text-warn">
@@ -88,11 +88,11 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               <div className="mt-5 flex justify-end">
                 {invalid ? (
                   <Button disabled>
-                    Continue to the plan <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    Review initiatives <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 ) : (
                   <ButtonLink href={planHref}>
-                    Continue to the plan <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    Review initiatives <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </ButtonLink>
                 )}
               </div>
