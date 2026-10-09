@@ -56,7 +56,7 @@ You need Node 22, pnpm 10 and Docker.
 | `pnpm test:unit` | Unit tests only, no database needed |
 | `pnpm db:migrate` | Apply SQL files in `db/migrations` |
 | `pnpm db:role` | Set the `app_server` password from `APP_SERVER_PASSWORD` |
-| `pnpm db:seed` | Reset and load synthetic data |
+| `pnpm db:seed` | Reset and load the starting data set |
 | `pnpm evidence` | Run tests and regenerate `app/trust/evidence.json` |
 
 ## Tests

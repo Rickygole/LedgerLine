@@ -882,11 +882,9 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       continue;
     }
     const mid = random();
-    if (mid < 0.91) createSubmission({ assignment, period: "FY26-MY", status: "accepted", quality: chance(0.03) ? "low" : "normal", submittedOn: chance(0.1) ? dateBetween("2026-02-01", "2026-02-20") : undefined });
-    else if (mid < 0.93) createSubmission({ assignment, period: "FY26-MY", status: "returned" });
-    else if (mid < 0.95) createSubmission({ assignment, period: "FY26-MY", status: "under_review" });
-    else if (mid < 0.97) createSubmission({ assignment, period: "FY26-MY", status: "submitted" });
-    else if (mid < 0.98) createSubmission({ assignment, period: "FY26-MY", status: "draft" });
+    if (mid < 0.96) createSubmission({ assignment, period: "FY26-MY", status: "accepted", quality: chance(0.03) ? "low" : "normal", submittedOn: chance(0.1) ? dateBetween("2026-02-01", "2026-02-20") : undefined });
+    else if (mid < 0.975) createSubmission({ assignment, period: "FY26-MY", status: "returned" });
+    else if (mid < 0.985) createSubmission({ assignment, period: "FY26-MY", status: "draft" });
 
     const year = random();
     const lateSubmitDate = chance(0.1) ? dateBetween("2026-10-01", TODAY) : undefined;
