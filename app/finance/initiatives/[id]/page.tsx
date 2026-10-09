@@ -4,13 +4,13 @@ import { notFound } from "next/navigation";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { expectedState } from "@/lib/finance/admin/state";
 import { formatCurrency } from "@/lib/rules/money";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { InitiativeLineage } from "@/components/finance/lifecycle/lineage-note";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Badge, StateBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/status-badge";
+import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { CreateDraftForm } from "@/components/finance/admin/create-draft-form";
 import { loadInitiative } from "@/lib/finance/admin/initiatives";
@@ -29,7 +29,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
   if (!isUuid(id)) notFound();
   const data = await withClaims(user.id, (tx) => loadInitiative(tx, id));
   if (!data) notFound();
-  const { initiative, funded, forms, due } = data;
+  const { initiative, funded, forms } = data;
   const hasDraft = forms.some((f) => f.status === "draft");
   const hasSource = forms.some((f) => f.status !== "draft");
 
@@ -44,6 +44,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <Badge key="category" tone="info">{initiative.category}</Badge>,
           <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
           <span key="fy" className="whitespace-nowrap">{initiative.fiscal_year_id}</span>,
+          <span key="agency" className="whitespace-nowrap">{initiative.administering_agency ? `Administered by ${initiative.administering_agency}` : "No administering agency"}</span>,
         ]}
         actions={<PrintButton label="Print" />}
       >
@@ -71,14 +72,15 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
               <TH>EIN</TH>
               <TH>Borough</TH>
               <TH align="right">Award</TH>
-              <TH>Sponsoring agency</TH>
-              <TH>FY26 Year-End</TH>
-              <TH>FY27 Mid-Year</TH>
+              <TH>Funding and sponsor</TH>
+              <TH>Agency</TH>
+              <TH>Contract</TH>
+              <TH>Reports</TH>
             </tr>
           </THead>
           <tbody>
             {funded.length === 0 ? (
-              <EmptyRow colSpan={7}>No organizations are assigned yet.</EmptyRow>
+              <EmptyRow colSpan={8}>No organizations are assigned yet.</EmptyRow>
             ) : (
               funded.map((f) => (
                 <TR key={f.assignment_id}>
@@ -90,12 +92,15 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                   <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{f.ein}</TD>
                   <TD>{f.borough}</TD>
                   <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
+                  <TD>
+                    <SponsorsCell sponsors={f.sponsors} source={f.funding_source} />
+                  </TD>
                   <TD>{f.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
                   <TD>
-                    <StateBadge state={expectedState(f.ye_status, due["FY26-YE"], f.published)} />
+                    <ContractCell status={f.contract_status} number={f.contract_number} registeredOn={f.contract_registered_on} />
                   </TD>
                   <TD>
-                    <StateBadge state={expectedState(f.mid_status, due["FY27-MY"], f.published)} />
+                    <AwardPeriods periods={f.periods} />
                   </TD>
                 </TR>
               ))

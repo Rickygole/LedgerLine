@@ -6,12 +6,18 @@ import type { Answers, BudgetLine, FormDefinition, Issue } from "@/lib/rules/typ
 import { PAGE_SIZE } from "./filters";
 import type { Filters, FlagReason, OpenFlag, ReportRow, RowFlag } from "./types";
 
-export const BUCKET_ORDER: Bucket[] = ["outstanding", "missing", "incomplete", "submitted", "in_review", "returned", "accepted"];
+export const BUCKET_ORDER: Bucket[] = ["outstanding", "missing", "submitted", "in_review", "returned", "accepted"];
 
 const SUBMITTED_STATUSES = ["submitted", "under_review", "returned", "accepted"];
 
 export function isSubmittedStatus(status: string | null): boolean {
   return status !== null && SUBMITTED_STATUSES.includes(status);
+}
+
+const EXPORT_STATUSES = ["submitted", "under_review", "accepted"];
+
+export function isExportable(status: string | null): boolean {
+  return status !== null && EXPORT_STATUSES.includes(status);
 }
 
 export function numberAnswer(answers: Answers, key: string): number | null {
@@ -77,7 +83,7 @@ export function flagsForRow(input: {
     }
   }
 
-  if (input.bucket === "incomplete") {
+  if ((status === "draft" || status === "returned") && input.daysPastDue > 0 && input.issues.length > 0) {
     const shown = input.issues.slice(0, 2).map((issue) => issue.message.replace(/\.$/, ""));
     const more = input.issues.length - shown.length;
     flags.push({
@@ -115,7 +121,7 @@ export function flagsForRow(input: {
 export function finishRow(base: Omit<ReportRow, "issues" | "bucket" | "daysPastDue" | "flags">): ReportRow {
   const issues = computeIssues(base.definition, base.answers, base.budget, base.award);
   const late = daysPastDue(base.dueOn);
-  const bucket = bucketFor(base.status, base.dueOn, issues.length > 0);
+  const bucket = bucketFor(base.status, base.dueOn);
   const flags = flagsForRow({ status: base.status, bucket, daysPastDue: late, award: base.award, budget: base.budget, answers: base.answers, definition: base.definition, issues, openFlags: base.openFlags });
   return { ...base, issues, bucket, daysPastDue: late, flags };
 }
@@ -136,12 +142,13 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
   const use = (key: keyof Filters) => !skip.includes(key) && Boolean(filters[key]);
   const q = (filters.q ?? "").toLowerCase();
   const einQuery = q.replace(/[^0-9]/g, "");
+  const einLike = /^[0-9-]+$/.test(q);
   const initiative = (filters.initiative ?? "").toLowerCase();
   return rows.filter((row) => {
     if (use("q")) {
-      const nameMatch = row.orgName.toLowerCase().includes(q);
-      const einMatch = einQuery.length >= 2 && row.ein.replace(/[^0-9]/g, "").includes(einQuery);
-      if (!nameMatch && !einMatch) return false;
+      const text = [row.orgName, row.initiativeName, row.initiativeCode, row.referenceNo, row.contractNumber].some((value) => (value ?? "").toLowerCase().includes(q));
+      const einMatch = einLike && einQuery.length >= 2 && row.ein.replace(/[^0-9]/g, "").includes(einQuery);
+      if (!text && !einMatch) return false;
     }
     if (use("initiative")) {
       if (UUID.test(initiative)) {
@@ -151,6 +158,10 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
     if (use("category") && row.category !== filters.category) return false;
     if (use("borough") && row.borough !== filters.borough) return false;
     if (use("district") && String(row.councilDistrict ?? "") !== filters.district) return false;
+    if (use("member") && !row.sponsors.some((s) => String(s.district) === filters.member)) return false;
+    if (use("funding") && row.fundingSource !== filters.funding) return false;
+    if (use("contract") && row.contractStatus !== filters.contract) return false;
+    if (use("agency") && row.agency !== filters.agency) return false;
     if (use("orgType") && row.orgType !== filters.orgType) return false;
     if (use("awardMin") && row.award < Number(filters.awardMin)) return false;
     if (use("awardMax") && row.award > Number(filters.awardMax)) return false;

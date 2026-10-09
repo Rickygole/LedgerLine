@@ -5,6 +5,8 @@ import { formatDate } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
+import { fundingLabel, sponsorShort } from "@/lib/finance/awards";
+import { ContractCell } from "@/components/finance/admin/award-cells";
 import type { ReportRow } from "@/lib/finance/review/types";
 
 function dueCell(row: ReportRow) {
@@ -29,18 +31,17 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
         <tr>
           <TH>Reference</TH>
           <TH>Organization</TH>
-          <TH>EIN</TH>
           <TH>Initiative</TH>
-          <TH>Borough</TH>
+          <TH>Council Member</TH>
+          <TH>Contract</TH>
           <TH align="right">Award</TH>
           <TH>State</TH>
           <TH>Flags</TH>
-          <TH>Updated</TH>
         </tr>
       </THead>
       <tbody>
         {rows.length === 0 ? (
-          <EmptyRow colSpan={9}>
+          <EmptyRow colSpan={8}>
             No reports match these filters.{" "}
             <Link href={emptyHref} className="font-semibold text-navy-700 hover:underline">
               Clear filters
@@ -57,20 +58,28 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 ) : (
                   <span className="text-[13px] text-muted">Not started</span>
                 )}
+                {row.updatedAt ? <span className="block text-xs text-muted">Updated {formatDate(row.updatedAt)}</span> : null}
               </TD>
               <TD className="min-w-48">
                 <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
                   {row.orgName}
                 </Link>
+                <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
+                <span className="block text-xs text-muted">{row.borough}</span>
               </TD>
-              <TD className="num whitespace-nowrap font-mono text-[13px] text-muted">{row.ein}</TD>
-              <TD className="min-w-48">
+              <TD className="min-w-40">
                 <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-navy-700 hover:underline">
                   {row.initiativeName}
                 </Link>
-                <span className="block text-xs text-muted">{row.category}</span>
+                <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>
               </TD>
-              <TD className="whitespace-nowrap">{row.borough}</TD>
+              <TD className="min-w-28">
+                <span title={row.sponsors.map((s) => s.name).join(", ")}>{sponsorShort(row.sponsors)}</span>
+                <span className="block text-xs text-muted">{fundingLabel(row.fundingSource)}</span>
+              </TD>
+              <TD>
+                <ContractCell status={row.contractStatus} number={row.contractNumber} registeredOn={row.contractRegisteredOn} />
+              </TD>
               <TD align="right">{formatCurrency(row.award)}</TD>
               <TD className="whitespace-nowrap">
                 <StateBadge state={reportState(row.status, row.dueOn)} />
@@ -81,7 +90,6 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                   {row.flags.length === 0 ? <span className="text-muted">None</span> : row.flags.map((flag) => <FlagBadge key={flag.reason} label={FLAG_LABEL[flag.reason]} />)}
                 </div>
               </TD>
-              <TD className="whitespace-nowrap text-muted">{row.updatedAt ? formatDate(row.updatedAt) : "None"}</TD>
             </TR>
           ))
         )}

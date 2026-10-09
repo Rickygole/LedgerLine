@@ -10,7 +10,9 @@ import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatCurrency } from "@/lib/rules/money";
-import { loadObligations, loadOrganization } from "@/lib/portal/data";
+import { ContractCell } from "@/components/finance/admin/award-cells";
+import { todayInNewYork } from "@/lib/dates";
+import { currentFiscalYear, loadObligations, loadOrganization } from "@/lib/portal/data";
 import { orgTypeLabel } from "@/lib/finance/admin/sql";
 
 export const metadata: Metadata = { title: "Organization profile" };
@@ -19,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 type Contact = { id: string; full_name: string; title: string; email: string; phone: string | null; is_primary: boolean };
 type Member = { id: string; full_name: string; title: string | null; email: string; role: Role };
-type Funded = { assignment_id: string; code: string; name: string; category: string; sponsoring_agency: string | null; award_amount: string; reports_on_file: number };
+type Funded = { assignment_id: string; fiscal_year_id: string; code: string; name: string; category: string; sponsoring_agency: string | null; award_amount: string; contract_status: string; contract_number: string | null; contract_registered_on: string | null; reports_on_file: number };
 
 const TABS = ["overview", "people", "initiatives"] as const;
 
@@ -32,18 +34,20 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
     contacts: await tx.query<Contact>(`SELECT id, full_name, title, email, phone, is_primary FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name`, [user.orgId]),
     members: await tx.query<Member>(`SELECT id, full_name, title, email, role FROM app_user WHERE org_id = $1 AND active ORDER BY full_name`, [user.orgId]),
     funded: await tx.query<Funded>(
-      `SELECT a.id AS assignment_id, i.code, i.name, i.category, a.sponsoring_agency, a.award_amount::text AS award_amount,
+      `SELECT a.id AS assignment_id, i.fiscal_year_id, i.code, i.name, i.category, a.sponsoring_agency, a.award_amount::text AS award_amount,
+              a.contract_status, a.contract_number, a.contract_registered_on::text AS contract_registered_on,
               (SELECT count(*)::int FROM submission s WHERE s.assignment_id = a.id AND s.submitted_at IS NOT NULL) AS reports_on_file
        FROM assignment a JOIN initiative i ON i.id = a.initiative_id
-       WHERE a.org_id = $1 ORDER BY i.name`,
+       WHERE a.org_id = $1 ORDER BY i.fiscal_year_id DESC, i.name`,
       [user.orgId],
     ),
     obligations: await loadObligations(tx, user.orgId!),
+    fiscalYear: await currentFiscalYear(tx, todayInNewYork()),
   }));
   if (!data.org) notFound();
-  const { org, contacts, members, funded, obligations } = data;
+  const { org, contacts, members, funded, obligations, fiscalYear } = data;
   const primary = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
-  const totalAward = funded.reduce((sum, f) => sum + Number(f.award_amount), 0);
+  const totalAward = funded.filter((f) => f.fiscal_year_id === fiscalYear).reduce((sum, f) => sum + Number(f.award_amount), 0);
   const totalReports = funded.reduce((sum, f) => sum + f.reports_on_file, 0);
   const accepted = obligations.filter((o) => o.status === "accepted").length;
   const submitted = obligations.filter((o) => o.status === "submitted" || o.status === "under_review").length;
@@ -122,7 +126,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                       { label: "Council district", value: org.councilDistrict ? `District ${org.councilDistrict}` : null },
                       { label: "Founded", value: org.foundedYear ? <span className="num">{org.foundedYear}</span> : null },
                       { label: "Annual budget", value: org.annualBudget !== null ? <span className="num">{formatCurrency(org.annualBudget)}</span> : null },
-                      { label: "Total awarded", value: <span className="num">{formatCurrency(totalAward)}</span> },
+                      { label: `Total awarded, ${fiscalYear}`, value: <span className="num">{formatCurrency(totalAward)}</span> },
                       { label: "Reports on file", value: <span className="num">{totalReports}</span> },
                     ]}
                   />
@@ -247,15 +251,16 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             <THead>
               <tr>
                 <TH>Initiative</TH>
-                <TH>Category</TH>
-                <TH>Sponsoring agency</TH>
+                <TH>Year</TH>
+                <TH>Administering agency</TH>
+                <TH>Contract</TH>
                 <TH align="right">Award</TH>
                 <TH align="right">Reports on file</TH>
               </tr>
             </THead>
             <tbody>
               {funded.length === 0 ? (
-                <EmptyRow colSpan={5}>No initiatives are assigned to this organization yet.</EmptyRow>
+                <EmptyRow colSpan={6}>No initiatives are assigned to this organization yet.</EmptyRow>
               ) : (
                 funded.map((f) => (
                   <TR key={f.assignment_id}>
@@ -263,8 +268,11 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                       <p className="font-medium text-ink">{f.name}</p>
                       <p className="font-mono text-[13px] text-muted">{f.code}</p>
                     </TD>
-                    <TD>{f.category}</TD>
+                    <TD className="whitespace-nowrap">{f.fiscal_year_id}</TD>
                     <TD>{f.sponsoring_agency ?? <span className="text-muted">Not provided</span>}</TD>
+                    <TD>
+                      <ContractCell status={f.contract_status} number={f.contract_number} registeredOn={f.contract_registered_on} />
+                    </TD>
                     <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
                     <TD align="right">{f.reports_on_file}</TD>
                   </TR>
@@ -274,8 +282,8 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             {funded.length > 0 ? (
               <tfoot>
                 <tr className="border-t border-line bg-surface/70 font-semibold">
-                  <td className="px-4 py-3" colSpan={3}>
-                    Total
+                  <td className="px-4 py-3" colSpan={4}>
+                    Total, {fiscalYear}
                   </td>
                   <td className="num px-4 py-3 text-right">{formatCurrency(totalAward)}</td>
                   <td className="num px-4 py-3 text-right">{totalReports}</td>

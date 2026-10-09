@@ -1,7 +1,14 @@
-import type { Filters } from "./types";
+import { todayInNewYork } from "@/lib/dates";
+import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
+import type { Filters, PeriodInfo } from "./types";
 
-export const DEFAULT_PERIOD = "FY26-YE";
 export const PAGE_SIZE = 50;
+
+export function defaultPeriodId(periods: Pick<PeriodInfo, "id" | "dueOn">[], today = todayInNewYork()): string {
+  const sorted = [...periods].sort((a, b) => a.dueOn.localeCompare(b.dueOn));
+  const past = sorted.filter((p) => p.dueOn <= today);
+  return (past.length > 0 ? past[past.length - 1] : sorted[0])?.id ?? "";
+}
 
 export const BOROUGHS = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island", "Citywide"];
 
@@ -34,9 +41,10 @@ function one(raw: Raw, key: string): string {
   return (text ?? "").trim();
 }
 
-export function parseFilters(raw: Raw, periodIds: string[]): Filters {
+export function parseFilters(raw: Raw, periods: PeriodInfo[]): Filters {
   const period = one(raw, "period");
   const page = Number.parseInt(one(raw, "page"), 10);
+  const member = Number.parseInt(one(raw, "member"), 10);
   return {
     q: one(raw, "q").slice(0, 120),
     initiative: one(raw, "initiative").slice(0, 120),
@@ -46,7 +54,11 @@ export function parseFilters(raw: Raw, periodIds: string[]): Filters {
     orgType: ["cbo", "agency"].includes(one(raw, "org_type")) ? one(raw, "org_type") : "",
     awardMin: /^\d{1,10}(\.\d{1,2})?$/.test(one(raw, "award_min")) ? one(raw, "award_min") : "",
     awardMax: /^\d{1,10}(\.\d{1,2})?$/.test(one(raw, "award_max")) ? one(raw, "award_max") : "",
-    period: periodIds.includes(period) ? period : periodIds.includes(DEFAULT_PERIOD) ? DEFAULT_PERIOD : (periodIds[0] ?? DEFAULT_PERIOD),
+    member: /^\d{1,2}$/.test(one(raw, "member")) && member >= 1 && member <= 51 ? String(member) : "",
+    funding: FUNDING_SOURCES.some((f) => f.value === one(raw, "funding")) ? one(raw, "funding") : "",
+    contract: CONTRACT_STATUSES.some((c) => c.value === one(raw, "contract")) ? one(raw, "contract") : "",
+    agency: /^[A-Z]{2,6}$/.test(one(raw, "agency")) ? one(raw, "agency") : "",
+    period: periods.some((p) => p.id === period) ? period : defaultPeriodId(periods),
     bucket: one(raw, "bucket").slice(0, 30),
     status: one(raw, "status").slice(0, 30),
     flag: one(raw, "flag").slice(0, 30),
@@ -56,7 +68,7 @@ export function parseFilters(raw: Raw, periodIds: string[]): Filters {
 
 export function filtersToParams(filters: Partial<Filters>, include: { page?: boolean } = {}): URLSearchParams {
   const params = new URLSearchParams();
-  const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "district", "orgType", "awardMin", "awardMax", "period", "bucket", "status", "flag"];
+  const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "district", "member", "funding", "contract", "agency", "orgType", "awardMin", "awardMax", "period", "bucket", "status", "flag"];
   const names: Partial<Record<keyof Filters, string>> = { orgType: "org_type", awardMin: "award_min", awardMax: "award_max" };
   for (const key of keys) {
     const value = filters[key];
@@ -73,5 +85,5 @@ export function hrefWith(base: string, filters: Partial<Filters>, changes: Parti
 }
 
 export function activeFilterCount(filters: Filters): number {
-  return [filters.q, filters.initiative, filters.category, filters.borough, filters.district, filters.orgType, filters.awardMin, filters.awardMax, filters.bucket, filters.status, filters.flag].filter((v) => v !== "").length;
+  return [filters.q, filters.initiative, filters.category, filters.borough, filters.district, filters.member, filters.funding, filters.contract, filters.agency, filters.orgType, filters.awardMin, filters.awardMax, filters.bucket, filters.status, filters.flag].filter((v) => v !== "").length;
 }

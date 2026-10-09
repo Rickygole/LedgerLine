@@ -15,6 +15,8 @@ const PHRASES: Record<string, string> = {
   publish: "published a form version",
 };
 
+export const QUIET_ACTIONS = ["sign_in", "sign_out", "reminder_defaults_restored", "reminders_queued", "password_reset_requested", "export"];
+
 export function actionInWords(action: string): string {
   return PHRASES[action] ?? action.replace(/_/g, " ");
 }

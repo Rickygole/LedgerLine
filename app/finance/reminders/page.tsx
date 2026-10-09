@@ -4,7 +4,8 @@ import { BellRing, Check, Pause } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
-import { one, type SearchParams } from "@/lib/finance/admin/params";
+import { isoDate, one, type SearchParams } from "@/lib/finance/admin/params";
+import { defaultPeriodId } from "@/lib/finance/review/filters";
 import { describeOffset, listPeriods, listRules, offsetFor, previewTargets, shiftDate } from "@/lib/lifecycle/reminders";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -23,14 +24,16 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
   const canEdit = user.role === "finance_admin";
   const params = await searchParams;
   const requestedDate = one(params, "date");
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : todayInNewYork();
+  const today = todayInNewYork();
+  const date = isoDate(requestedDate) || today;
+  const badDate = requestedDate !== "" && !isoDate(requestedDate);
   const editId = one(params, "edit");
   const adding = one(params, "add") === "1";
 
   const data = await withClaims(user.id, async (tx) => {
     const periods = await listPeriods(tx);
     const requested = one(params, "period");
-    const period = periods.find((p) => p.id === requested) ?? periods.find((p) => p.id === "FY26-YE") ?? periods[0];
+    const period = periods.find((p) => p.id === requested) ?? periods.find((p) => p.id === defaultPeriodId(periods.map((x) => ({ id: x.id, dueOn: x.due_on })))) ?? periods[0];
     if (!period) return null;
     const rules = await listRules(tx, period.id);
     const targets = await previewTargets(tx, period.id, date);
@@ -68,6 +71,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         }
       />
       {one(params, "saved") === "1" ? <p role="status" className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">Rule saved.</p> : null}
+      {badDate ? <p role="alert" className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm font-semibold text-bad">{requestedDate} is not a real calendar date. Showing {formatDate(today)} instead.</p> : null}
       {!canEdit ? <p className="mb-4 rounded-md border border-line bg-surface px-3 py-2 text-sm text-muted">You can view rules and preview messages. Only a Finance administrator can change rules or send reminders.</p> : null}
 
       <form action="/finance/reminders" className="mb-6 flex flex-wrap items-end gap-3">
@@ -201,7 +205,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
               </Table>
               {canEdit ? (
                 <CardBody className="sticky bottom-0 z-10 rounded-b-xl border-t border-line bg-white/95 backdrop-blur">
-                  <SendNowForm period={period.id} date={date} count={targets.length} fresh={fresh} />
+                  <SendNowForm period={period.id} date={date} today={today} count={targets.length} fresh={fresh} />
                 </CardBody>
               ) : null}
             </>

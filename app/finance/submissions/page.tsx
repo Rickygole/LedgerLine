@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { loadFilterOptions, loadPeriods, loadReportRows } from "@/lib/finance/review/data";
-import { applyFilters, BUCKET_ORDER, countBuckets, paginate, sortRows } from "@/lib/finance/review/derive";
+import { applyFilters, BUCKET_ORDER, countBuckets, isExportable, paginate, sortRows } from "@/lib/finance/review/derive";
 import { filtersToParams, hrefWith, parseFilters } from "@/lib/finance/review/filters";
 import { BUCKET_LABEL } from "@/lib/reporting";
 
@@ -24,13 +24,13 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
 
-  const { periods, filters, rows, categories } = await withClaims(user.id, async (tx) => {
+  const { periods, filters, rows, options } = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const filters = parseFilters(raw, periods.map((p) => p.id));
+    const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
     const options = await loadFilterOptions(tx);
-    return { periods, filters, rows, categories: options.categories };
+    return { periods, filters, rows, options };
   });
 
   const matched = sortRows(applyFilters(rows, filters));
@@ -42,7 +42,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
     params.set("format", format);
     return `/api/export?${params.toString()}`;
   };
-  const withSubmission = matched.filter((r) => r.submissionId).length;
+  const withSubmission = matched.filter((r) => isExportable(r.status)).length;
 
   return (
     <>
@@ -68,8 +68,10 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         action={base}
         filters={filters}
         periods={periods}
-        categories={categories}
-        fields={["q", "initiative", "category", "borough", "period", "status", "flag"]}
+        categories={options.categories}
+        members={options.members}
+        agencies={options.agencies}
+        fields={["q", "initiative", "category", "borough", "member", "funding", "contract", "agency", "period", "status", "flag"]}
         clearHref={hrefWith(base, {}, { period: filters.period })}
       />
 
@@ -86,7 +88,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         <Pagination page={paged.page} pages={paged.pages} from={paged.from} to={paged.to} total={paged.total} hrefFor={(p) => hrefWith(base, filters, { page: p }, { page: true })} />
       </Card>
       <p className="mt-3 text-xs text-muted">
-        <span className="num">{matched.length}</span> {matched.length === 1 ? "row matches" : "rows match"}. Exports include the {withSubmission} {withSubmission === 1 ? "report" : "reports"} in these results that have been started.
+        <span className="num">{matched.length}</span> {matched.length === 1 ? "row matches" : "rows match"}. Exports include the {withSubmission} {withSubmission === 1 ? "report" : "reports"} in these results that have been submitted. Drafts and reports returned to the organization are left out.
       </p>
     </>
   );

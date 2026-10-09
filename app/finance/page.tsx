@@ -14,6 +14,7 @@ import { withClaims } from "@/lib/db";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { countBuckets, groupBy } from "@/lib/finance/review/derive";
 import { hrefWith, parseFilters } from "@/lib/finance/review/filters";
+import { QUIET_ACTIONS } from "@/lib/finance/review/audit-words";
 import type { Filters, ReportRow } from "@/lib/finance/review/types";
 import { formatCompactCurrency } from "@/lib/rules/money";
 
@@ -29,10 +30,9 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
 
   const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const filters = parseFilters(raw, periods.map((p) => p.id));
+    const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
-    const initiatives = await tx.one<{ n: string }>("SELECT count(*)::text AS n FROM initiative WHERE status = 'active'");
     const activity = await tx.query<{
       id: string;
       at: string;
@@ -51,14 +51,17 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
        LEFT JOIN submission s ON e.entity = 'submission' AND s.id::text = e.entity_id
        LEFT JOIN assignment a ON a.id = s.assignment_id
        LEFT JOIN initiative i ON i.id = a.initiative_id
-       ORDER BY e.id DESC LIMIT 10`
+       WHERE e.action <> ALL ($1::text[]) AND (u.email IS NULL OR u.email <> 'system.scheduler@ledgerline.example')
+       ORDER BY e.at DESC, e.id DESC LIMIT 10`,
+      [QUIET_ACTIONS]
     );
-    return { periods, period, rows, initiatives: Number(initiatives?.n ?? 0), activity };
+    return { periods, period, rows, activity };
   });
 
   const { periods, period, rows } = data;
   const counts = countBuckets(rows);
   const awarded = rows.reduce((sum, row) => sum + row.award, 0);
+  const initiativeCount = new Set(rows.map((row) => row.initiativeId)).size;
   const flagged = rows.filter((row) => row.flags.length > 0).length;
   const untilDue = daysBetween(todayInNewYork(), period.dueOn);
   const pct = (n: number) => (rows.length === 0 ? "0%" : `${Math.round((n / rows.length) * 100)}%`);
@@ -103,7 +106,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
         meta={
           <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted">
             <li>
-              <span className="num font-semibold text-ink">{data.initiatives}</span> active initiatives
+              <span className="num font-semibold text-ink">{initiativeCount}</span> {initiativeCount === 1 ? "initiative" : "initiatives"} in {period.fiscalYearId}
             </li>
             <li className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
             <li>

@@ -13,6 +13,12 @@ export const FIXED_COLUMNS = [
   "award",
   "submitted_at",
   "budget_total",
+  "funding_source",
+  "council_members",
+  "agency",
+  "contract_status",
+  "contract_number",
+  "contract_registered_on",
 ] as const;
 
 export const BUDGET_COLUMNS = ["reference_no", "position", "category", "description", "amount"] as const;
@@ -34,6 +40,12 @@ export type ExportSubmission = {
   award: number;
   submittedAt: string | null;
   budgetTotal: number;
+  fundingSource: string;
+  councilMembers: string;
+  agency: string;
+  contractStatus: string;
+  contractNumber: string;
+  contractRegisteredOn: string;
   answers: Record<string, unknown>;
   budget: ExportBudgetLine[];
 };
@@ -131,6 +143,12 @@ export function submissionsSheet(submissions: ExportSubmission[], numericKeys: S
       numberCell(s.award, "#,##0.00"),
       s.submittedAt ? numberCell(excelSerialInNewYork(s.submittedAt), "yyyy-mm-dd hh:mm") : null,
       numberCell(s.budgetTotal, "#,##0.00"),
+      textCell(s.fundingSource),
+      textCell(s.councilMembers),
+      textCell(s.agency),
+      textCell(s.contractStatus),
+      textCell(s.contractNumber),
+      textCell(s.contractRegisteredOn),
     ];
     for (const column of extra) {
       const key = column.endsWith("_answer") && (FIXED_COLUMNS as readonly string[]).includes(column.slice(0, -7)) ? column.slice(0, -7) : column;
@@ -173,7 +191,7 @@ export function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
     [DISCLAIMER],
     [],
     ["Sheet", "What it contains"],
-    ["Submissions", "One row per submitted or drafted report. Fixed columns first, then one column per question key found in the answers."],
+    ["Submissions", "One row per submitted report. Drafts and reports returned to the organization are not included. Fixed columns first, then one column per question key found in the answers."],
     ["Budget lines", "One row per budget line, linked to Submissions by reference_no. Amounts are numbers in US dollars."],
     ["README", "This sheet."],
     [],

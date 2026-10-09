@@ -9,9 +9,9 @@ import { Segmented } from "@/components/portal/portal-filters";
 import { OrgSummary } from "@/components/portal/org-summary";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime, todayInNewYork } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
-import { actionFor, loadObligations, loadOrganization } from "@/lib/portal/data";
+import { actionFor, currentFiscalYear, loadObligations, loadOrganization } from "@/lib/portal/data";
 
 export const metadata: Metadata = { title: "My reports" };
 export const runtime = "nodejs";
@@ -20,15 +20,16 @@ export const dynamic = "force-dynamic";
 export default async function PortalHome({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
   const user = await requireUser(["cbo_submitter"]);
   const params = await searchParams;
-  const { org, obligations } = await withClaims(user.id, async (tx) => ({
+  const { org, obligations, fiscalYear } = await withClaims(user.id, async (tx) => ({
     org: await loadOrganization(tx, user.orgId!),
     obligations: await loadObligations(tx, user.orgId!),
+    fiscalYear: await currentFiscalYear(tx, todayInNewYork()),
   }));
   const periods = Array.from(new Map(obligations.map((o) => [o.periodId, o.periodLabel])).entries());
   const period = periods.some(([id]) => id === params.period) ? params.period! : "all";
   const rows = period === "all" ? obligations : obligations.filter((o) => o.periodId === period);
   const urgent = obligations.filter((o) => o.needsAction);
-  const awards = new Map(obligations.map((o) => [o.assignmentId, o.award]));
+  const awards = new Map(obligations.filter((o) => o.fiscalYearId === fiscalYear).map((o) => [o.assignmentId, o.award]));
   const totalAwarded = Array.from(awards.values()).reduce((sum, v) => sum + v, 0);
 
   return (
@@ -38,7 +39,7 @@ export default async function PortalHome({ searchParams }: { searchParams: Promi
         description={`Welcome, ${user.fullName.split(" ")[0]}. Here are the reports due for ${user.orgName ?? "your organization"}, one row for each initiative and reporting period.`}
         crumbs={[{ label: "Portal" }, { label: "My reports" }]}
       />
-      {org ? <OrgSummary org={org} activeAwards={awards.size} totalAwarded={totalAwarded} /> : null}
+      {org ? <OrgSummary org={org} fiscalYear={fiscalYear} activeAwards={awards.size} totalAwarded={totalAwarded} /> : null}
 
       {urgent.length > 0 ? (
         <section aria-labelledby="action-needed" className="mb-6 rounded-xl border border-l-4 border-line border-l-bad bg-white px-5 py-4 shadow-card">

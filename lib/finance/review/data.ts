@@ -1,7 +1,7 @@
 import type { Tx } from "@/lib/db";
 import type { Answers, BudgetLine, FormDefinition } from "@/lib/rules/types";
 import { finishRow } from "./derive";
-import type { OpenFlag, PeriodInfo, ReportRow } from "./types";
+import type { OpenFlag, PeriodInfo, ReportRow, Sponsor } from "./types";
 
 export async function loadPeriods(tx: Tx): Promise<PeriodInfo[]> {
   const rows = await tx.query<{ id: string; label: string; due_on: string; fiscal_year_id: string }>(
@@ -23,6 +23,12 @@ type BaseRow = {
   code: string;
   category: string;
   award: number;
+  funding_source: string;
+  agency: string | null;
+  contract_status: string;
+  contract_registered_on: string | null;
+  contract_number: string | null;
+  sponsors: Sponsor[] | null;
   submission_id: string | null;
   reference_no: string | null;
   status: string | null;
@@ -37,14 +43,18 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
   const base = await tx.query<BaseRow>(
     `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, o.council_district, o.org_type,
             i.id AS initiative_id, i.name AS initiative_name, i.code, i.category,
-            a.award_amount::float8 AS award,
+            a.award_amount::float8 AS award, a.funding_source, a.sponsoring_agency AS agency,
+            a.contract_status, a.contract_registered_on::text AS contract_registered_on, a.contract_number,
+            (SELECT jsonb_agg(jsonb_build_object('district', sp.district, 'name', cm.full_name, 'amount', sp.amount::float8) ORDER BY sp.amount DESC, sp.district)
+               FROM assignment_sponsor sp JOIN council_member cm ON cm.district = sp.district WHERE sp.assignment_id = a.id) AS sponsors,
             s.id AS submission_id, s.reference_no, s.status, s.revision, s.lock_version,
             to_char(s.submitted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS submitted_at, to_char(s.updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS updated_at, s.form_version_id
-     FROM assignment a
+     FROM obligation ob
+     JOIN assignment a ON a.id = ob.assignment_id
      JOIN organization o ON o.id = a.org_id
-     JOIN initiative i ON i.id = a.initiative_id AND i.status = 'active'
-     LEFT JOIN submission s ON s.assignment_id = a.id AND s.period_id = $1
-     WHERE s.id IS NOT NULL OR EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published')`,
+     JOIN initiative i ON i.id = a.initiative_id
+     LEFT JOIN submission s ON s.id = ob.submission_id
+     WHERE ob.period_id = $1`,
     [period.id]
   );
   const submissionIds = base.map((r) => r.submission_id).filter((id): id is string => id !== null);
@@ -100,6 +110,12 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
       initiativeCode: r.code,
       category: r.category,
       award: r.award,
+      fundingSource: r.funding_source,
+      agency: r.agency,
+      contractStatus: r.contract_status,
+      contractRegisteredOn: r.contract_registered_on,
+      contractNumber: r.contract_number,
+      sponsors: r.sponsors ?? [],
       periodId: period.id,
       dueOn: period.dueOn,
       submissionId: r.submission_id,
@@ -119,6 +135,14 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
 }
 
 export async function loadFilterOptions(tx: Tx) {
-  const categories = await tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative WHERE status = 'active' ORDER BY category");
-  return { categories: categories.map((c) => c.category) };
+  const categories = await tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative ORDER BY category");
+  const members = await tx.query<{ district: number; full_name: string }>(
+    "SELECT district, full_name FROM council_member WHERE district IN (SELECT district FROM assignment_sponsor) ORDER BY district"
+  );
+  const agencies = await tx.query<{ agency: string }>("SELECT DISTINCT sponsoring_agency AS agency FROM assignment WHERE sponsoring_agency IS NOT NULL ORDER BY 1");
+  return {
+    categories: categories.map((c) => c.category),
+    members: members.map((m) => ({ district: m.district, name: m.full_name })),
+    agencies: agencies.map((a) => a.agency),
+  };
 }

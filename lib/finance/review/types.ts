@@ -9,6 +9,8 @@ export type OpenFlag = { id: string; kind: string; note: string | null };
 
 export type PeriodInfo = { id: string; label: string; dueOn: string; fiscalYearId: string };
 
+export type Sponsor = { district: number; name: string; amount: number };
+
 export type ReportRow = {
   assignmentId: string;
   orgId: string;
@@ -22,6 +24,12 @@ export type ReportRow = {
   initiativeCode: string;
   category: string;
   award: number;
+  fundingSource: string;
+  agency: string | null;
+  contractStatus: string;
+  contractRegisteredOn: string | null;
+  contractNumber: string | null;
+  sponsors: Sponsor[];
   periodId: string;
   dueOn: string;
   submissionId: string | null;
@@ -48,6 +56,10 @@ export type Filters = {
   category: string;
   borough: string;
   district: string;
+  member: string;
+  funding: string;
+  contract: string;
+  agency: string;
   orgType: string;
   awardMin: string;
   awardMax: string;

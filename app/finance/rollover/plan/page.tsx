@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
-import { rolloverInitiatives, validFiscalYear } from "@/lib/lifecycle/rollover";
+import { fiscalYears, rolloverInitiatives, validFiscalYear } from "@/lib/lifecycle/rollover";
 import { PageHeader } from "@/components/ui/page-header";
 import { RolloverWizard } from "@/components/finance/lifecycle/rollover-wizard";
 
@@ -17,7 +17,9 @@ export default async function RolloverPlanPage({ searchParams }: { searchParams:
   const from = one(params, "from");
   const to = one(params, "to");
   if (!validFiscalYear(from) || !validFiscalYear(to)) notFound();
-  const { initiatives, forms } = await withClaims(admin.id, async (tx) => {
+  if (Number(to.slice(2)) <= Number(from.slice(2))) redirect(`/finance/rollover?from=${from}&to=${to}`);
+  const data = await withClaims(admin.id, async (tx) => {
+    if (!(await fiscalYears(tx)).includes(from)) return null;
     const initiatives = await rolloverInitiatives(tx, from);
     const forms = await tx.query<{ initiative_id: string; version: number; questions: number }>(
       `SELECT DISTINCT ON (f.initiative_id) f.initiative_id, f.version,
@@ -29,6 +31,8 @@ export default async function RolloverPlanPage({ searchParams }: { searchParams:
     );
     return { initiatives, forms: forms.map((f) => ({ initiativeId: f.initiative_id, version: f.version, questions: f.questions })) };
   });
+  if (!data) redirect("/finance/rollover");
+  const { initiatives, forms } = data;
   return (
     <>
       <PageHeader
