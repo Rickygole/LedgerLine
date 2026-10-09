@@ -18,13 +18,13 @@ export async function middleware(request: NextRequest) {
     return withHeaders(NextResponse.redirect(url));
   }
 
-  if (pathname === "/login" || pathname.startsWith("/api")) return withHeaders(NextResponse.next());
+  if (pathname === "/login" || pathname === "/reset" || pathname.startsWith("/api")) return withHeaders(NextResponse.next());
 
   const sub = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
   if (!sub && (pathname.startsWith("/portal") || pathname.startsWith("/finance") || pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.search = "";
+    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(`${pathname}${request.nextUrl.search}`)}`;
     return withHeaders(NextResponse.redirect(url));
   }
   return withHeaders(NextResponse.next());
