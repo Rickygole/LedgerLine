@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, CircleAlert, Eye, MessageSquareText, ShieldCheck } from "lucide-react";
-import { CreditFooter, SyntheticBanner } from "@/components/shell/synthetic-banner";
+import { SiteFooter } from "@/components/shell/site-footer";
 import { Logo } from "@/components/shell/logo";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/dates";
@@ -43,7 +43,6 @@ export default function TrustPage() {
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
-      <SyntheticBanner />
       <header className="on-dark bg-navy-900">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6">
           <Link href="/" className="rounded-md">
@@ -134,7 +133,7 @@ export default function TrustPage() {
           </>
         )}
       </main>
-      <CreditFooter />
+      <SiteFooter />
     </div>
   );
 }

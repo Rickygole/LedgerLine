@@ -2,7 +2,7 @@ import Link from "next/link";
 import { roleLabel, type CurrentUser } from "@/lib/auth";
 import { Logo } from "./logo";
 import { NavLinks, type NavItem } from "./nav-links";
-import { CreditFooter, SyntheticBanner } from "./synthetic-banner";
+import { SiteFooter } from "./site-footer";
 import { UserMenu } from "./user-menu";
 
 const FINANCE_NAV: NavItem[] = [
@@ -48,19 +48,14 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
-      <SyntheticBanner />
       <header className="no-print on-dark bg-navy-900 text-white">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <Link href={isCbo ? "/portal" : "/finance"} className="shrink-0 rounded-md" aria-label={`LedgerLine ${isCbo ? "Initiative Reporting Portal" : "Council Finance Workspace"} home`}>
               <Logo subtitle={isCbo ? "Initiative Reporting Portal" : "Council Finance Workspace"} />
             </Link>
-            <span className="hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-navy-100 md:inline-flex">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-300" aria-hidden="true" />
-              Demo environment
-            </span>
           </div>
-          <UserMenu name={user.fullName} initials={initials(user.fullName)} email={user.email} roleText={roleLabel(user.role)} orgText={isCbo ? user.orgName : "New York City Council Finance Division"} />
+          <UserMenu name={user.fullName} initials={initials(user.fullName)} email={user.email} roleText={roleLabel(user.role)} orgText={isCbo ? user.orgName : "Council Finance"} />
         </div>
       </header>
       <div className="no-print border-b border-line bg-white">
@@ -71,7 +66,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
       <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1440px] flex-1 px-4 py-6 focus:outline-none sm:px-6 sm:py-8">
         {children}
       </main>
-      <CreditFooter />
+      <SiteFooter />
     </div>
   );
 }

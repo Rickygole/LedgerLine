@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BookOpenCheck, ChevronDown, Info, LogOut } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 import { signOut } from "@/app/actions/session";
 
 export function UserMenu({ name, initials, email, roleText, orgText }: { name: string; initials: string; email: string; roleText: string; orgText: string | null }) {
@@ -46,21 +46,7 @@ export function UserMenu({ name, initials, email, roleText, orgText }: { name: s
           <p className="mt-2 inline-flex rounded-full bg-navy-100 px-2 py-0.5 text-[11px] font-semibold text-navy-800">{roleText}</p>
           {orgText ? <p className="mt-1.5 truncate text-xs text-muted">{orgText}</p> : null}
         </div>
-        <ul className="py-1 text-sm">
-          <li>
-            <a href="/trust" className="flex items-center gap-2.5 px-4 py-2 hover:bg-navy-50">
-              <BookOpenCheck className="h-4 w-4 text-muted" aria-hidden="true" />
-              Requirements evidence
-            </a>
-          </li>
-          <li>
-            <a href="/about" className="flex items-center gap-2.5 px-4 py-2 hover:bg-navy-50">
-              <Info className="h-4 w-4 text-muted" aria-hidden="true" />
-              About this proof of concept
-            </a>
-          </li>
-        </ul>
-        <form action={signOut} className="border-t border-line py-1">
+        <form action={signOut} className="py-1">
           <button type="submit" className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm font-medium text-bad hover:bg-bad-bg">
             <LogOut className="h-4 w-4" aria-hidden="true" />
             Sign out
