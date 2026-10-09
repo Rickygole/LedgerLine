@@ -90,10 +90,10 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                       {m.subject}
                     </Link>
                   </TD>
-                  <TD className="whitespace-nowrap" label="Template">
+                  <TD className="min-w-28" label="Template">
                     <span>{templateLabel(m.template)}</span>
                   </TD>
-                  <TD className="max-w-[16rem] text-muted" label="To">
+                  <TD className="max-w-[14rem] text-muted" label="To">
                     <span className="block min-w-0 truncate" title={m.to_email}>
                       {m.to_email}
                     </span>
@@ -110,7 +110,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                   <TD label="Status">
                     <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}</Badge>
                   </TD>
-                  <TD className="whitespace-nowrap" label="Created">
+                  <TD className="min-w-28" label="Created">
                     <span>{formatDateTime(m.created_at)}</span>
                   </TD>
                 </TR>
