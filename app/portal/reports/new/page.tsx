@@ -60,7 +60,7 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
               { label: "Initiative", value: details.initiative },
               { label: "Reporting period", value: `${details.period} (${formatDate(details.starts_on)} to ${formatDate(details.ends_on)})` },
               { label: "Due", value: formatDate(details.due_on) },
-              { label: "Started by", value: user.fullName },
+              { label: "Starting as", value: user.fullName },
             ]}
           />
           <form action={startReportAction} className="flex flex-wrap gap-3">
