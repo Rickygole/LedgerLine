@@ -7,7 +7,7 @@ import { REVIEW_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { draftReturnNote } from "@/lib/ai/return-note";
 import { loadSubmissionDetail } from "@/lib/finance/review/detail";
-import { plainError } from "@/lib/finance/review/errors";
+import { plainError, STALE_MESSAGE } from "@/lib/finance/review/errors";
 import { buildConcerns, containsRuleId, lineDiff, PRESET_CONCERNS, type Concern } from "@/lib/finance/review/return-note-core";
 import { buildSnapshot } from "@/lib/snapshot";
 import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
@@ -196,6 +196,8 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
   const key = String(formData.get("questionKey") ?? "");
   const value = String(formData.get("value") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
+  const lock = lockField.safeParse(formData.get("lockVersion"));
+  if (!lock.success) return failed("That action is not available.");
   if (!key) return failed("Choose the question to correct.");
   if (!reason) return failed("Enter a reason. Every correction is recorded with its reason.");
   try {
@@ -204,6 +206,7 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
       const detail = await loadSubmissionDetail(tx, id);
       if (!detail || !detail.row.definition) return "That report could not be found.";
       const { row } = detail;
+      if (row.lockVersion !== lock.data) return STALE_MESSAGE;
       const question = row.definition!.sections.flatMap((s) => s.questions).find((q) => q.key === key);
       if (!question || question.type === "table") return "That question cannot be corrected here.";
       if (String(row.answers[key] ?? "") === value) return "The new value is the same as the current value. Enter a different value to correct.";

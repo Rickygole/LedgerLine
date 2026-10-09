@@ -77,7 +77,7 @@ function FlagForm({ submissionId }: { submissionId: string }) {
   );
 }
 
-function CorrectionForm({ submissionId, questions }: { submissionId: string; questions: CorrectableQuestion[] }) {
+function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId: string; lockVersion: number; questions: CorrectableQuestion[] }) {
   const [question, setQuestion] = useState("");
   const [value, setValue] = useState("");
   const [reason, setReason] = useState("");
@@ -89,6 +89,7 @@ function CorrectionForm({ submissionId, questions }: { submissionId: string; que
         event.preventDefault();
         const fd = new FormData();
         fd.set("submissionId", submissionId);
+        fd.set("lockVersion", String(lockVersion));
         fd.set("questionKey", question);
         fd.set("value", value);
         fd.set("reason", reason);
@@ -184,7 +185,7 @@ export function ActionsPanel({
             <summary className="cursor-pointer text-sm font-semibold text-ink">Correct an answer</summary>
             <p className="mt-2 text-sm text-muted">Creates a new revision under your name. The status does not change.</p>
             <div className="mt-3">
-              <CorrectionForm submissionId={submissionId} questions={questions} />
+              <CorrectionForm submissionId={submissionId} lockVersion={lockVersion} questions={questions} />
             </div>
           </details>
         ) : null}

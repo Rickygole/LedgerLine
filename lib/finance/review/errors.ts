@@ -9,10 +9,12 @@ const MESSAGE_MAP: [RegExp, string][] = [
   [/only accepted reports can be reopened/i, "Only accepted reports can be reopened."],
 ];
 
+export const STALE_MESSAGE = "Someone else changed this report while you were working. Reload the page to see the latest version, then try again.";
+
 export function plainError(error: unknown): string {
   const code = pgCode(error);
   const message = error instanceof Error ? error.message : "";
-  if (code === "40001") return "Someone else changed this report while you were working. Reload the page to see the latest version, then try again.";
+  if (code === "40001") return STALE_MESSAGE;
   if (code === "42501") return "Your role cannot do this. Only Finance analysts and administrators can review reports.";
   if (code === "23514" || code === "P0001") {
     const known = MESSAGE_MAP.find(([pattern]) => pattern.test(message));
