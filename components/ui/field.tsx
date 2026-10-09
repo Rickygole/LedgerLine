@@ -37,10 +37,10 @@ export function Hint({ id, children }: { id?: string; children: React.ReactNode 
   );
 }
 
-export function FieldError({ id, children }: { id?: string; children?: React.ReactNode }) {
+export function FieldError({ id, children, className }: { id?: string; children?: React.ReactNode; className?: string }) {
   if (!children) return null;
   return (
-    <p id={id} className="mt-1.5 text-sm font-semibold text-bad">
+    <p id={id} className={cn("mt-1.5 text-sm font-semibold text-bad", className)}>
       {children}
     </p>
   );
