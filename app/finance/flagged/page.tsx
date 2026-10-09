@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Flag } from "lucide-react";
 import { FilterBar } from "@/components/finance/review/filter-bar";
+import { FilterPills } from "@/components/finance/review/filter-pills";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -13,7 +14,6 @@ import { applyFilters, sortRows } from "@/lib/finance/review/derive";
 import { FLAG_LABEL, FLAG_ORDER, hrefWith, parseFilters } from "@/lib/finance/review/filters";
 import type { FlagReason } from "@/lib/finance/review/types";
 import { formatCurrency } from "@/lib/rules/money";
-import { cn } from "@/lib/cn";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,29 +62,21 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
 
       <FilterBar action={base} filters={filters} periods={periods} categories={categories} fields={["q", "initiative", "category", "borough", "period", "flag"]} clearHref={clearHref} />
 
-      <nav aria-label="Flag reasons" className="mb-5 flex flex-wrap gap-2">
-        <Link href={hrefWith(base, filters, { flag: "" })} className={cn("rounded-full border px-3 py-1 text-sm font-medium", filters.flag === "" ? "border-navy-800 bg-navy-800 text-white" : "border-line bg-white hover:bg-navy-50")}>
-          All reasons
-        </Link>
-        {FLAG_ORDER.map((reason) => (
-          <Link
-            key={reason}
-            href={hrefWith(base, filters, { flag: reason })}
-            aria-current={filters.flag === reason ? "true" : undefined}
-            className={cn("rounded-full border px-3 py-1 text-sm font-medium", filters.flag === reason ? "border-navy-800 bg-navy-800 text-white" : "border-line bg-white hover:bg-navy-50")}
-          >
-            {FLAG_LABEL[reason]} <span className="num">{counts[reason]}</span>
-          </Link>
-        ))}
-      </nav>
+      <FilterPills
+        label="Flag reasons"
+        pills={[
+          { key: "all", label: "All reasons", count: flaggedRows.length, href: hrefWith(base, filters, { flag: "" }), active: filters.flag === "" || filters.flag === "any" },
+          ...FLAG_ORDER.map((reason) => ({ key: reason, label: FLAG_LABEL[reason], count: counts[reason], href: hrefWith(base, filters, { flag: reason }), active: filters.flag === reason })),
+        ]}
+      />
 
       {visible.length === 0 ? (
         <Card>
-          <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-            <Flag className="h-8 w-8 text-muted" aria-hidden="true" />
-            <p className="text-base font-semibold text-ink">No flagged items match these filters</p>
-            <p className="max-w-md text-sm text-muted">Try a different reporting period or remove a filter to see more reports.</p>
-            <Link href={clearHref} className={buttonClass("secondary", "md")}>
+          <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+            <Flag className="h-6 w-6 text-muted" aria-hidden="true" />
+            <p className="text-[15px] font-semibold text-ink">No flagged items</p>
+            <p className="max-w-md text-sm text-muted">Nothing in this period matches these filters. Try another period or clear a filter.</p>
+            <Link href={clearHref} className={buttonClass("secondary", "sm", "mt-2")}>
               Clear filters
             </Link>
           </div>
@@ -114,10 +106,10 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                       return (
                         <TR key={`${reason}-${row.assignmentId}`}>
                           <TD className="min-w-48">
-                            <Link href={`/finance/organizations/${row.orgId}`} className="font-medium text-ink hover:text-navy-700 hover:underline">
+                            <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
                               {row.orgName}
                             </Link>
-                            <span className="num block text-xs text-muted">{row.ein}</span>
+                            <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
                           </TD>
                           <TD className="min-w-48">
                             <Link href={`/finance/initiatives/${row.initiativeId}`} className="hover:text-navy-700 hover:underline">
@@ -125,11 +117,11 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                             </Link>
                           </TD>
                           <TD align="right">{formatCurrency(row.award)}</TD>
-                          <TD className="max-w-xl">{evidence}</TD>
+                          <TD className="max-w-xl text-[13px] leading-5 text-ink">{evidence}</TD>
                           <TD className="whitespace-nowrap text-right">
                             {row.submissionId ? (
                               <Link href={`/finance/submissions/${row.submissionId}`} className="font-semibold text-navy-700 hover:underline">
-                                Open {row.referenceNo}
+                                Open <span className="font-mono text-[13px]">{row.referenceNo}</span>
                               </Link>
                             ) : (
                               <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
