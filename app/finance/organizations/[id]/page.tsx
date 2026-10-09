@@ -115,7 +115,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       {tab === "overview" ? (
         <>
           <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <Stat label="Total awarded" value={formatCurrency(totalAwarded)} hint={`Across ${awards.length} ${awards.length === 1 ? "award" : "awards"}`} icon={Landmark} />
+            <Stat label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} hint={`Across ${awards.length} ${awards.length === 1 ? "award" : "awards"}`} icon={Landmark} />
             <Stat label="Awards" value={awards.length} hint={years.join(" and ") || "No fiscal year"} icon={FolderOpen} />
             <Stat label="Reports accepted" value={accepted} tone="ok" hint={`${reports.length} submitted or started`} icon={CheckCircle2} />
             <Stat label="Missing reports" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} hint="Nothing submitted and past due" icon={AlertTriangle} />
