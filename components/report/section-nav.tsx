@@ -2,20 +2,42 @@
 
 import { AlertCircle, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { Select } from "@/components/ui/field";
 
 export type NavSection = { key: string; title: string; state: "complete" | "attention" | "todo" };
 
 export function SectionNav({ sections, active, onJump }: { sections: NavSection[]; active: string; onJump: (key: string) => void }) {
   const done = sections.filter((section) => section.state === "complete").length;
+  const index = Math.max(0, sections.findIndex((section) => section.key === active));
+  const current = sections[index];
   return (
     <nav aria-label="Report sections" className="no-print">
+      <div className="rounded border border-line bg-white p-3 lg:hidden">
+        <p className="text-sm font-semibold text-ink">
+          Section <span className="num">{index + 1}</span> of <span className="num">{sections.length}</span>: {current?.title}
+        </p>
+        <p className="num mt-0.5 text-xs text-muted">
+          {done} of {sections.length} sections complete
+        </p>
+        <label htmlFor="section-jump" className="mt-3 block text-sm font-semibold text-ink">
+          Go to section
+        </label>
+        <Select id="section-jump" value={current?.key} onChange={(event) => onJump(event.target.value)} className="mt-1">
+          {sections.map((section, i) => (
+            <option key={section.key} value={section.key}>
+              {i + 1}. {section.title}
+              {section.state === "complete" ? " (complete)" : section.state === "attention" ? " (needs attention)" : ""}
+            </option>
+          ))}
+        </Select>
+      </div>
       <p className="num mb-2 hidden text-[13px] font-semibold text-muted lg:block">
         {done} of {sections.length} sections complete
       </p>
       <div className="mb-3 hidden h-1.5 overflow-hidden rounded-full bg-line lg:block" aria-hidden="true">
         <div className="h-full bg-ok" style={{ width: `${Math.round((done / sections.length) * 100)}%` }} />
       </div>
-      <ol className="relative -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-2 lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
+      <ol className="relative hidden lg:flex lg:flex-col lg:gap-0.5">
         {sections.map((section) => {
           const Icon = section.state === "complete" ? CheckCircle2 : section.state === "attention" ? AlertCircle : Circle;
           return (
