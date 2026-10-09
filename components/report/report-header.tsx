@@ -15,12 +15,12 @@ export function ReportHeader({ header }: { header: Header }) {
         title={header.initiativeName}
         description={`${header.periodLabel} report for ${header.orgName}`}
         crumbs={[{ label: "My reports", href: "/portal" }, { label: header.initiativeName }]}
-        meta={<StateBadge state={reportState(header.status, header.dueOn)} audience="cbo" />}
       />
       <Card className="mb-6">
         <CardBody>
           <DescriptionList
             columns={3}
+            compact
             items={[
               { label: "Reporting period", value: `${header.periodLabel}, ${formatDate(header.startsOn)} to ${formatDate(header.endsOn)}` },
               {
