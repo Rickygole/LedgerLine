@@ -1,13 +1,13 @@
 "use server";
 
-import mammoth from "mammoth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
 import { draftFormFromDocx, type DraftResult } from "@/lib/ai/form-draft";
 import { FIELD_TYPES, validateDefinition } from "@/lib/forms/editor/definition";
-import { checkField, mergeFields, splitParagraphs, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { checkField, mergeFields, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { readTemplate } from "@/lib/forms/editor/docx";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
 import type { FormDefinition } from "@/lib/rules/types";
 
@@ -104,8 +104,7 @@ export async function analyzeTemplate(formId: string, formData: FormData): Promi
   if (file.size > MAX_UPLOAD_BYTES) return fail("That file is larger than 2 MB. Save a smaller copy and try again.");
   let paragraphs: string[];
   try {
-    const result = await mammoth.extractRawText({ buffer: Buffer.from(await file.arrayBuffer()) });
-    paragraphs = splitParagraphs(result.value);
+    paragraphs = await readTemplate(Buffer.from(await file.arrayBuffer()));
   } catch {
     return fail("That file could not be read as a Word document. Check that it is a .docx file.");
   }
