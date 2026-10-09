@@ -132,3 +132,11 @@ test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filt
   expect(denied.status()).toBe(403);
   await context.close();
 });
+
+test("[US-049][US-051] the dashboard draws its charts from the current reports", async ({ page }) => {
+  await page.goto("/finance");
+  const charts = page.locator("svg.recharts-surface");
+  await expect(charts.first()).toBeVisible();
+  expect(await charts.count()).toBeGreaterThanOrEqual(2);
+  expect(await page.locator(".recharts-bar-rectangle, .recharts-sector").count()).toBeGreaterThan(0);
+});
