@@ -1,22 +1,34 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { ooxmlProblem } from "./ooxml";
 import type { Tx } from "@/lib/db";
 import { ALLOWED_TYPES, extensionOf } from "@/lib/storage";
 import type { AttachmentItem } from "./types";
 
-function secret(): string {
+const PATH_KEY_LABEL = "ledgerline:attachment-path:v1";
+export const UPLOAD_TICKET_SECONDS = 15 * 60;
+
+function pathKey(): Buffer {
   const value = process.env.AUTH_SECRET;
   if (!value) throw new Error("AUTH_SECRET is not set");
-  return value;
+  return createHmac("sha256", value).update(PATH_KEY_LABEL).digest();
 }
 
-export function signPath(userId: string, submissionId: string, pathname: string): string {
-  return createHmac("sha256", secret()).update(`${userId}|${submissionId}|${pathname}`).digest("hex");
+export function signPath(userId: string, submissionId: string, pathname: string, expiresAt: number = Math.floor(Date.now() / 1000) + UPLOAD_TICKET_SECONDS): string {
+  const mac = createHmac("sha256", pathKey()).update(`${userId}|${submissionId}|${pathname}|${expiresAt}`).digest("hex");
+  return `${expiresAt}.${mac}`;
+}
+
+export function signatureExpiry(signature: string): number | null {
+  const match = /^(\d{1,12})\.[0-9a-f]{64}$/.exec(signature);
+  return match ? Number(match[1]) : null;
 }
 
 export function pathSignatureValid(userId: string, submissionId: string, pathname: string, signature: string): boolean {
-  const expected = Buffer.from(signPath(userId, submissionId, pathname), "hex");
-  const given = Buffer.from(signature, "hex");
+  const expiresAt = signatureExpiry(signature);
+  if (expiresAt === null || expiresAt < Math.floor(Date.now() / 1000)) return false;
+  const expected = Buffer.from(signPath(userId, submissionId, pathname, expiresAt));
+  const given = Buffer.from(signature);
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
@@ -26,15 +38,17 @@ export function cleanFilename(raw: string): string {
   return cleaned.slice(-200) || "attachment";
 }
 
-const OLE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
-
 export function contentLooksValid(filename: string, head: Buffer): string | null {
   const ext = extensionOf(filename);
   if (ext === "pdf" && head.subarray(0, 5).toString("latin1") !== "%PDF-") return "This file does not look like a PDF.";
   if ((ext === "docx" || ext === "xlsx") && head.subarray(0, 2).toString("latin1") !== "PK") return `This file does not look like ${ext === "docx" ? "a Word" : "an Excel"} file.`;
-  if ((ext === "doc" || ext === "xls") && !head.subarray(0, 8).equals(OLE_SIGNATURE)) return `This file does not look like ${ext === "doc" ? "a Word" : "an Excel"} file.`;
   if (ext === "csv" && head.includes(0)) return "This file does not look like a CSV.";
   return null;
+}
+
+export function macroProblem(filename: string, body: Buffer): string | null {
+  const ext = extensionOf(filename);
+  return ext === "docx" || ext === "xlsx" ? ooxmlProblem(ext, body) : null;
 }
 
 export function mimeFor(filename: string): string {

@@ -9,9 +9,9 @@ import { plainError } from "@/lib/finance/admin/errors";
 import { isUuid } from "@/lib/finance/admin/params";
 import { STAFF_ROLES } from "@/lib/finance/admin/users";
 
-export type UserActionState = { ok?: string; error?: string } | undefined;
+export type UserActionState = { ok?: string; error?: string; link?: string } | undefined;
 
-export type CreateUserState = { ok?: string; error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
+export type CreateUserState = { ok?: string; link?: string; error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
 
 type Target = { id: string; full_name: string; role: string; active: boolean };
 
@@ -72,8 +72,8 @@ export async function sendPasswordReset(_prev: UserActionState, formData: FormDa
   try {
     return await withClaims(admin.id, async (tx) => {
       const target = await loadTarget(tx, userId);
-      await tx.query(`SELECT app.queue_password_reset($1, $2)`, [userId, origin]);
-      return { ok: `Reset message for ${target.full_name} added to the outbox.` };
+      const issued = await tx.one<{ link: string }>(`SELECT link FROM app.queue_password_reset($1, $2)`, [userId, origin]);
+      return { ok: `Reset message for ${target.full_name} added to the outbox. The link below is shown only now and works once for 30 minutes.`, link: issued?.link };
     });
   } catch (error) {
     if (pgCode(error) === "23514") return { error: "That user could not be found or is inactive. Activate the account first." };
@@ -112,10 +112,12 @@ export async function createUser(_prev: CreateUserState, formData: FormData): Pr
   }
   const origin = await appOrigin();
   const data = parsed.data;
+  let link: string | undefined;
   try {
-    await withClaims(admin.id, (tx) =>
-      tx.query(`SELECT app.create_user($1, $2, $3, $4, $5, $6)`, [data.email, data.fullName, data.title || null, data.role, data.role === "cbo_submitter" ? data.orgId : null, origin])
+    const issued = await withClaims(admin.id, (tx) =>
+      tx.one<{ link: string }>(`SELECT link FROM app.create_user($1, $2, $3, $4, $5, $6)`, [data.email, data.fullName, data.title || null, data.role, data.role === "cbo_submitter" ? data.orgId : null, origin])
     );
+    link = issued?.link;
   } catch (error) {
     if (pgCode(error) === "23505") return { fieldErrors: { email: "An account with that email address already exists." }, values };
     if (pgCode(error) === "23503") return { fieldErrors: { orgId: "That organization could not be found." }, values };
@@ -124,5 +126,5 @@ export async function createUser(_prev: CreateUserState, formData: FormData): Pr
     revalidatePath("/finance/users");
     revalidatePath("/finance/outbox");
   }
-  return { ok: `Account created for ${data.fullName}. A message with a link to set a password was added to the outbox.` };
+  return { ok: `Account created for ${data.fullName}. A message was added to the outbox. The link below is shown only now and works once for 30 minutes.`, link };
 }

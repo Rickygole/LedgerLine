@@ -29,25 +29,19 @@ describe("[BR-012] upload size limit", () => {
   });
 });
 
-describe("[US-023] legacy Word and Excel files", () => {
-  it("accepts .doc and .xls by name", () => {
-    expect(checkUpload("minutes.doc", 1000)).toBeNull();
-    expect(checkUpload("ledger.xls", 1000)).toBeNull();
-    expect(ALLOWED_TYPES.doc).toBe("application/msword");
-    expect(ALLOWED_TYPES.xls).toBe("application/vnd.ms-excel");
+describe("[US-023] legacy Word and Excel files are no longer accepted", () => {
+  it("rejects .doc and .xls by name", () => {
+    expect(checkUpload("minutes.doc", 1000)).toBe("Use PDF, Word (.docx), Excel (.xlsx) or CSV.");
+    expect(checkUpload("ledger.xls", 1000)).toBe("Use PDF, Word (.docx), Excel (.xlsx) or CSV.");
+    expect(ALLOWED_TYPES.doc).toBeUndefined();
+    expect(ALLOWED_TYPES.xls).toBeUndefined();
   });
 
   it("still rejects other types", () => {
-    expect(checkUpload("setup.exe", 100)).toBe("Use PDF, Word, Excel or CSV.");
+    expect(checkUpload("setup.exe", 100)).toBe("Use PDF, Word (.docx), Excel (.xlsx) or CSV.");
   });
-});
 
-describe("[US-023] legacy file content checks", () => {
-  it("is applied by contentLooksValid", async () => {
-    const { contentLooksValid } = await import("@/lib/report/attachments");
-    const ole = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0, 0]);
-    expect(contentLooksValid("minutes.doc", ole)).toBeNull();
-    expect(contentLooksValid("fake.xls", Buffer.from("MZ executable"))).toBe("This file does not look like an Excel file.");
-    expect(contentLooksValid("fake.doc", Buffer.from("%PDF-1.4"))).toBe("This file does not look like a Word file.");
+  it("still accepts the four supported types", () => {
+    for (const name of ["a.pdf", "a.docx", "a.xlsx", "a.csv"]) expect(checkUpload(name, 1000)).toBeNull();
   });
 });

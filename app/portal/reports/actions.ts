@@ -8,10 +8,12 @@ import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
 import { reportIssues } from "@/lib/report/issues";
 import { writeDraft } from "@/lib/report/write";
-import { attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, removeAttachmentRow, signPath } from "@/lib/report/attachments";
-import type { PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
+import { UPLOAD_TICKET_SECONDS, attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, macroProblem, mimeFor, openSubmissionForUpload, pathSignatureValid, removeAttachmentRow, signPath } from "@/lib/report/attachments";
+import type { AttachmentItem, PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
 import { buildSnapshot } from "@/lib/snapshot";
-import { buildPath, checkUpload, putFile } from "@/lib/storage";
+import { FILE_TYPE_HELP } from "@/lib/report/upload-rules";
+import { allowedWithin } from "@/lib/throttle";
+import { buildPath, checkUpload, extensionOf, putFile } from "@/lib/storage";
 import type { Answers } from "@/lib/rules/types";
 import { CERTIFICATION_STATEMENT, certificationIssues, certificationNote, type Certification } from "@/lib/rules/certify";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
@@ -86,6 +88,8 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
   }
 }
 
+const UPLOADS_PER_HOUR = 60;
+
 const uploadTarget = z.object({ submissionId: z.uuid(), filename: z.string().min(1).max(400), bytes: z.number().int().min(0) });
 
 export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> {
@@ -99,6 +103,7 @@ export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> 
   const user = await getCurrentUser().catch(() => null);
   if (!user) return { status: "signed_out" };
   try {
+    if (!(await allowedWithin(`upload:${user.id}`, 60, UPLOADS_PER_HOUR))) return { status: "rejected", message: "You have started a lot of uploads in the last hour. Wait a while and try again." };
     const target = await withClaims(user.id, async (tx) => {
       const open = await openSubmissionForUpload(tx, submissionId);
       return open && { ...open, limit: await attachmentLimitProblem(tx, submissionId, bytes) };
@@ -106,7 +111,9 @@ export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> 
     if (!target) return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
     if (target.limit) return { status: "rejected", message: target.limit };
     const pathname = buildPath(target.ein, submissionId, filename);
-    return { status: "ok", pathname, signature: signPath(user.id, submissionId, pathname), contentType: mimeFor(filename) };
+    const expiresAt = Math.floor(Date.now() / 1000) + UPLOAD_TICKET_SECONDS;
+    await withClaims(user.id, (tx) => tx.query("SELECT app.issue_upload_ticket($1, $2, to_timestamp($3))", [pathname, submissionId, expiresAt]));
+    return { status: "ok", pathname, signature: signPath(user.id, submissionId, pathname, expiresAt), contentType: mimeFor(filename) };
   } catch {
     return { status: "error", message: "The upload could not start. Try again." };
   }
@@ -118,34 +125,57 @@ export async function recordBlobUpload(raw: unknown): Promise<UploadActionResult
   const user = await getCurrentUser().catch(() => null);
   if (!user) return { status: "signed_out" };
   const { submissionId, pathname, signature } = parsed.data;
+  const refused: UploadActionResult = { status: "rejected", message: "That upload could not be confirmed." };
+  if (!pathSignatureValid(user.id, submissionId, pathname, signature)) return refused;
+
+  const signedName = pathname.split("/").pop() ?? "";
   const filename = cleanFilename(parsed.data.filename);
-  if (!pathSignatureValid(user.id, submissionId, pathname, signature)) return { status: "rejected", message: "That upload could not be confirmed." };
+  if (extensionOf(filename) !== extensionOf(signedName)) return refused;
+
+  let redeemed: boolean;
+  try {
+    redeemed = (await withClaims(user.id, (tx) => tx.one<{ ok: boolean }>("SELECT app.redeem_upload_ticket($1, $2) AS ok", [pathname, submissionId])))?.ok === true;
+  } catch {
+    return { status: "error", message: "The upload could not be confirmed. Try again." };
+  }
+  if (!redeemed) return refused;
 
   const blob = await import("@vercel/blob");
+  const discard = (url: string) => blob.del(url).catch(() => undefined);
   let meta: Awaited<ReturnType<typeof blob.head>>;
   try {
     meta = await blob.head(pathname);
   } catch {
     return { status: "error", message: "The uploaded file could not be found. Try again." };
   }
-  const problem = checkUpload(filename, meta.size);
-  if (problem || meta.contentType.split(";")[0] !== mimeFor(filename)) {
-    await blob.del(meta.url).catch(() => undefined);
-    return { status: "rejected", message: problem ?? "Use PDF, Word, Excel or CSV." };
+  const problem = checkUpload(signedName, meta.size);
+  if (problem || meta.contentType.split(";")[0] !== mimeFor(signedName)) {
+    await discard(meta.url);
+    return { status: "rejected", message: problem ?? FILE_TYPE_HELP };
   }
-  const start = await fetch(meta.downloadUrl ?? meta.url, { headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`, range: "bytes=0-4095" } })
-    .then(async (response) => (response.ok ? Buffer.from(await response.arrayBuffer()).subarray(0, 4096) : null))
+  const body = await fetch(meta.downloadUrl ?? meta.url, { headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` } })
+    .then(async (response) => (response.ok ? Buffer.from(await response.arrayBuffer()) : null))
     .catch(() => null);
-  const invalid = start ? contentLooksValid(filename, start) : "The uploaded file could not be checked. Try again.";
+  const invalid = body ? contentLooksValid(signedName, body.subarray(0, 4096)) ?? macroProblem(signedName, body) : "The uploaded file could not be checked. Try again.";
   if (invalid) {
-    await blob.del(meta.url).catch(() => undefined);
+    await discard(meta.url);
     return { status: "rejected", message: invalid };
   }
   try {
-    const attachment = await withClaims(user.id, (tx) => insertAttachment(tx, { submissionId, pathname, filename, bytes: meta.size, mime: mimeFor(filename) }));
-    return { status: "ok", attachment };
+    const outcome = await withClaims<{ problem: string } | { attachment: AttachmentItem }>(user.id, async (tx) => {
+      await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [submissionId]);
+      if (!(await openSubmissionForUpload(tx, submissionId))) return { problem: "Files can only be added to a report that is still open for editing." };
+      const limit = await attachmentLimitProblem(tx, submissionId, meta.size);
+      if (limit) return { problem: limit };
+      return { attachment: await insertAttachment(tx, { submissionId, pathname, filename, bytes: meta.size, mime: mimeFor(signedName) }) };
+    });
+    if ("problem" in outcome) {
+      await discard(meta.url);
+      return { status: "rejected", message: outcome.problem };
+    }
+    return { status: "ok", attachment: outcome.attachment };
   } catch (error) {
-    await blob.del(meta.url).catch(() => undefined);
+    await discard(meta.url);
     if (pgCode(error) === "42501") return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
     return { status: "error", message: "The file uploaded but could not be saved to the report. Try again." };
   }
@@ -169,7 +199,7 @@ export async function uploadLocalAttachment(formData: FormData): Promise<UploadA
     if (!target) return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
     if (target.limit) return { status: "rejected", message: target.limit };
     const body = Buffer.from(await file.arrayBuffer());
-    const invalid = contentLooksValid(filename, body.subarray(0, 4096));
+    const invalid = contentLooksValid(filename, body.subarray(0, 4096)) ?? macroProblem(filename, body);
     if (invalid) return { status: "rejected", message: invalid };
     const pathname = buildPath(target.ein, submissionId.data, filename);
     await putFile(pathname, body, mimeFor(filename));

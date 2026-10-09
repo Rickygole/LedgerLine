@@ -15,9 +15,10 @@ const ROLE_OPTIONS = [
 function Message({ state }: { state: UserActionState }) {
   if (!state) return null;
   return (
-    <p role={state.error ? "alert" : "status"} className={`text-xs font-semibold ${state.error ? "text-bad" : "text-ok"}`}>
-      {state.error ?? state.ok}
-    </p>
+    <div role={state.error ? "alert" : "status"} className={`text-xs font-semibold ${state.error ? "text-bad" : "text-ok"}`}>
+      <p>{state.error ?? state.ok}</p>
+      {state.link ? <code data-testid="issued-link" className="mt-1 block break-all font-mono font-normal text-ink">{state.link}</code> : null}
+    </div>
   );
 }
 

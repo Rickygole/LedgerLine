@@ -1,12 +1,11 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE, verifySession } from "@/lib/session";
+import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const store = await cookies();
-  const userId = await verifySession(store.get(SESSION_COOKIE)?.value);
-  return NextResponse.json({ signedIn: Boolean(userId) }, { status: userId ? 200 : 401, headers: { "cache-control": "no-store" } });
+  const user = await getCurrentUser().catch(() => null);
+  const signedIn = user?.role === "cbo_submitter";
+  return NextResponse.json({ signedIn }, { status: signedIn ? 200 : 401, headers: { "cache-control": "no-store" } });
 }

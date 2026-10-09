@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       </p>
       <h3>Reports and documents</h3>
       <p>
-        The answers, budget lines and supporting documents your organization enters for each report, and organization details such as address, contacts and mission. Supporting documents can be PDF, Word, Excel or CSV files of up to 25 MB each, with no more than 20 files on one report.
+        The answers, budget lines and supporting documents your organization enters for each report, and organization details such as address, contacts and mission. Supporting documents can be PDF, Word (.docx), Excel (.xlsx) or CSV files of up to 25 MB each, with no more than 20 files on one report. Files that contain macros are refused.
       </p>
       <h3>Emails LedgerLine prepares</h3>
       <p>LedgerLine writes submission confirmations, requests for changes, reminders and password reset messages. A copy of each message, with the address it is for, is kept in an outbox that Finance staff can see.</p>
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
       </ul>
       <p>No names, email addresses, phone numbers or other contact details are sent to the model. Each use is recorded with the reviewer, the time, the model and the draft it produced.</p>
       <p>
-        The LedgerLine administrator decides whether these tools use a model at all. If no model is set up, or the model cannot be reached, LedgerLine drafts with fixed rules instead and nothing is sent outside LedgerLine. The administrator can also turn off AI drafting of notes with a system setting. These are administrator settings, not choices you can change from your account.
+        The LedgerLine administrator decides whether these tools use a model at all. If no model is set up, or the model cannot be reached, LedgerLine drafts with fixed rules instead and nothing is sent outside LedgerLine. The administrator can also turn off AI drafting of notes and of form questions with a system setting. When it is off, both tools draft with fixed rules and nothing is sent to a model. These are administrator settings, not choices you can change from your account.
       </p>
 
       <h2 id="cookies">Cookies and browser storage</h2>

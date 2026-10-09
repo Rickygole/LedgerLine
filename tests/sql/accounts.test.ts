@@ -39,11 +39,15 @@ async function code(client: Client, fn: () => Promise<unknown>): Promise<string 
   }
 }
 
-async function latestToken(client: Client, template: string, email: string): Promise<string> {
-  const { rows } = await client.query<{ body_text: string }>("SELECT body_text FROM outbox WHERE template = $1 AND to_email = $2 ORDER BY created_at DESC LIMIT 1", [template, email]);
-  const match = rows[0]?.body_text.match(/\/reset\?token=([0-9a-f]{64})/);
-  if (!match) throw new Error("no token link in the outbox message");
+function tokenFrom(link: string): string {
+  const match = link.match(/\/reset\?token=([0-9a-f]{64})$/);
+  if (!match) throw new Error("no token in the issued link");
   return match[1];
+}
+
+async function issueReset(client: Client, target: string): Promise<string> {
+  const { rows } = await client.query<{ link: string }>("SELECT link FROM app.queue_password_reset($1, $2)", [target, ORIGIN]);
+  return tokenFrom(rows[0].link);
 }
 
 beforeAll(async () => {
@@ -65,12 +69,12 @@ describe("[US-038] password reset tokens", () => {
   it("emails a link, stores only a hash, and sets the password once", async () => {
     await inTx(app, async () => {
       await claims(app, priya);
-      await app.query("SELECT app.queue_password_reset($1, $2)", [maria, ORIGIN]);
+      const token = await issueReset(app, maria);
       const email = "maria.santos@motthavenyouth.example.org";
       const body = (await app.query("SELECT body_text, org_id FROM outbox WHERE template = 'password_reset' AND to_email = $1 ORDER BY created_at DESC LIMIT 1", [email])).rows[0];
-      expect(body.body_text).toContain(`${ORIGIN}/reset?token=`);
+      expect(body.body_text).toContain(`${ORIGIN}/reset?token=[withheld]`);
+      expect(body.body_text).not.toContain(token);
       expect(body.org_id).toBeNull();
-      const token = await latestToken(app, "password_reset", email);
       const stored = await owner.query("SELECT 1 FROM password_token WHERE token_hash = $1 OR token_hash = $2", [token, hashToken(token)]);
       expect(stored.rowCount).toBe(0);
 
@@ -89,8 +93,7 @@ describe("[US-038] password reset tokens", () => {
   it("rejects an expired token", async () => {
     await inTx(owner, async () => {
       await claims(owner, priya);
-      await owner.query("SELECT app.queue_password_reset($1, $2)", [maria, ORIGIN]);
-      const token = await latestToken(owner, "password_reset", "maria.santos@motthavenyouth.example.org");
+      const token = await issueReset(owner, maria);
       await owner.query("UPDATE password_token SET expires_at = now() - interval '1 minute' WHERE token_hash = $1", [hashToken(token)]);
       expect((await owner.query("SELECT email FROM app.password_token_info($1)", [hashToken(token)])).rowCount).toBe(0);
       expect(await code(owner, () => owner.query("SELECT app.reset_password($1, $2)", [hashToken(token), FRESH_HASH]))).toBe("23514");
@@ -109,9 +112,8 @@ describe("[US-038] password reset tokens", () => {
   it("invalidates an earlier link when a newer one is issued", async () => {
     await inTx(app, async () => {
       await claims(app, priya);
-      await app.query("SELECT app.queue_password_reset($1, $2)", [maria, ORIGIN]);
-      const first = await latestToken(app, "password_reset", "maria.santos@motthavenyouth.example.org");
-      await app.query("SELECT app.queue_password_reset($1, $2)", [maria, ORIGIN]);
+      const first = await issueReset(app, maria);
+      await issueReset(app, maria);
       await claims(app, null);
       expect(await code(app, () => app.query("SELECT app.reset_password($1, $2)", [hashToken(first), FRESH_HASH]))).toBe("23514");
     });
@@ -167,8 +169,7 @@ describe("[US-013] sessions can be revoked", () => {
       const jti = "33333333-3333-4333-8333-333333333333";
       expect((await app.query("SELECT app.session_valid($1, $2) AS ok", [jti, version])).rows[0].ok).toBe(true);
       await claims(app, priya);
-      await app.query("SELECT app.queue_password_reset($1, $2)", [maria, ORIGIN]);
-      const token = await latestToken(app, "password_reset", "maria.santos@motthavenyouth.example.org");
+      const token = await issueReset(app, maria);
       await claims(app, null);
       await app.query("SELECT app.reset_password($1, $2)", [hashToken(token), FRESH_HASH]);
       await claims(app, maria);
@@ -190,7 +191,7 @@ describe("[US-013] sessions can be revoked", () => {
 
 describe("[US-036] creating users", () => {
   const call = (client: Client, args: [string, string, string | null, string, string | null]) =>
-    client.query("SELECT app.create_user($1, $2, $3, $4, $5, $6) AS id", [...args, ORIGIN]);
+    client.query("SELECT user_id AS id, outbox_id, link FROM app.create_user($1, $2, $3, $4, $5, $6)", [...args, ORIGIN]);
 
   it("lets an admin add a Finance user who cannot sign in until the password is set", async () => {
     await inTx(app, async () => {
@@ -202,7 +203,7 @@ describe("[US-036] creating users", () => {
       expect((await app.query("SELECT 1 FROM app.login_lookup($1)", ["new.analyst@finance.example.gov"])).rowCount).toBe(0);
       expect((await app.query("SELECT 1 FROM audit_event WHERE entity = 'app_user' AND entity_id = $1 AND action = 'user_create' AND actor_id = $2", [id, priya])).rowCount).toBe(1);
 
-      const token = await latestToken(app, "password_set", "new.analyst@finance.example.gov");
+      const token = tokenFrom(created.rows[0].link);
       await claims(app, null);
       await app.query("SELECT app.reset_password($1, $2)", [hashToken(token), FRESH_HASH]);
       expect((await app.query("SELECT 1 FROM app.login_lookup($1)", ["new.analyst@finance.example.gov"])).rowCount).toBe(1);
@@ -264,6 +265,61 @@ describe("[US-035] free-text limits are enforced in SQL", () => {
         owner.query("SELECT app.correct_answer($1, 'program_name', '\"x\"'::jsonb, $2, '{}'::jsonb)", [rows[0].id, "r".repeat(2000)])
       );
       expect(ok).toBeNull();
+    });
+  });
+});
+
+describe("[BR-010] password links never reach the outbox", () => {
+  const PRIVATE = ["password_reset", "password_set"];
+
+  async function visibleTokenRows(actor: string): Promise<number> {
+    await claims(app, actor);
+    const { rows } = await app.query("SELECT body_text FROM outbox WHERE body_text ~ 'token=[0-9a-f]{20,}'");
+    return rows.length;
+  }
+
+  it("keeps the live token out of every outbox row and out of non-admin reach", async () => {
+    await inTx(app, async () => {
+      await claims(app, priya);
+      const token = await issueReset(app, maria);
+      const created = await app.query("SELECT link FROM app.create_user($1, $2, $3, $4, $5, $6)", ["fresh.viewer@finance.example.gov", "Fresh Viewer", null, "finance_viewer", null, ORIGIN]);
+      const setToken = tokenFrom(created.rows[0].link);
+      for (const actor of [priya, daniel, grace]) {
+        expect(await visibleTokenRows(actor)).toBe(0);
+      }
+      const asOwner = await owner.query("SELECT 1 FROM outbox WHERE position($1 in body_text) > 0 OR position($2 in body_text) > 0", [token, setToken]);
+      expect(asOwner.rowCount).toBe(0);
+    });
+  });
+
+  it("lets only an admin read reset and set-password messages", async () => {
+    await inTx(app, async () => {
+      await claims(app, priya);
+      await issueReset(app, maria);
+      await app.query("SELECT * FROM app.create_user($1, $2, $3, $4, $5, $6)", ["second.viewer@finance.example.gov", "Second Viewer", null, "finance_viewer", null, ORIGIN]);
+      const adminSees = await app.query("SELECT template FROM outbox WHERE template = ANY($1)", [PRIVATE]);
+      expect(adminSees.rowCount).toBeGreaterThanOrEqual(2);
+      for (const actor of [daniel, grace]) {
+        await claims(app, actor);
+        const seen = await app.query("SELECT template FROM outbox WHERE template = ANY($1)", [PRIVATE]);
+        expect(seen.rowCount).toBe(0);
+      }
+    });
+  });
+
+  it("hides migrated historic messages too", async () => {
+    const { rows } = await owner.query("SELECT count(*)::int AS n FROM outbox WHERE template = ANY($1) AND body_text ~ 'token=[0-9a-fA-F]{20,}'", [PRIVATE]);
+    expect(rows[0].n).toBe(0);
+  });
+
+  it("still lets an admin issue a working link end to end", async () => {
+    await inTx(app, async () => {
+      await claims(app, priya);
+      const token = await issueReset(app, maria);
+      await claims(app, null);
+      expect((await app.query("SELECT email FROM app.password_token_info($1)", [hashToken(token)])).rowCount).toBe(1);
+      await app.query("SELECT app.reset_password($1, $2)", [hashToken(token), FRESH_HASH]);
+      expect((await app.query("SELECT 1 FROM app.login_lookup($1)", ["maria.santos@motthavenyouth.example.org"])).rowCount).toBe(1);
     });
   });
 });

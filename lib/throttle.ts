@@ -13,3 +13,8 @@ export async function allowed(key: string, limit: number): Promise<boolean> {
   const rows = await anonymous<{ ok: boolean }>("SELECT app.record_attempt($1, 15, $2) AS ok", [key, limit]);
   return rows[0]?.ok === true;
 }
+
+export async function allowedWithin(key: string, minutes: number, limit: number): Promise<boolean> {
+  const rows = await anonymous<{ ok: boolean }>("SELECT app.record_attempt($1, $2, $3) AS ok", [key, minutes, limit]);
+  return rows[0]?.ok === true;
+}

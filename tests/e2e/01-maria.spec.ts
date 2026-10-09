@@ -70,7 +70,7 @@ test("[US-022][US-023] several supporting documents of the allowed types attach 
   const files = await ownerQuery<{ filename: string }>("SELECT filename FROM attachment WHERE submission_id = $1 ORDER BY filename", [id]);
   expect(files.map((f) => f.filename)).toEqual(["invoice.pdf", "roster.csv"]);
   await page.locator("#attachment-input").setInputFiles({ name: "setup.exe", mimeType: "application/octet-stream", buffer: Buffer.from("MZ") });
-  await expect(page.getByText("Use PDF, Word, Excel or CSV.")).toBeVisible();
+  await expect(page.getByText("Use PDF, Word (.docx), Excel (.xlsx) or CSV.")).toBeVisible();
 });
 
 test("[BR-012] the browser refuses a file over 25 MB before sending it and says why", async ({ page }) => {
