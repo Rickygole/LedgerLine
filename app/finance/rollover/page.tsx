@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRight, CalendarRange, Landmark, Layers, Users } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
+import { formatDate } from "@/lib/dates";
 import { formatCompactCurrency, formatCurrency } from "@/lib/rules/money";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { fiscalYears, nextFiscalYear, validFiscalYear, yearSummary } from "@/lib/lifecycle/rollover";
@@ -10,6 +11,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Input, Label, Select, Hint } from "@/components/ui/field";
+import { CHECKLIST, checklistDone, loadDecisions, reviewForYear } from "@/lib/ops/reviews";
+import { Badge } from "@/components/ui/status-badge";
 import { RolloverSteps } from "@/components/finance/lifecycle/rollover-steps";
 
 export const runtime = "nodejs";
@@ -19,13 +22,22 @@ export const metadata: Metadata = { title: "Annual rollover" };
 export default async function RolloverPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const admin = await requireUser(["finance_admin"]);
   const params = await searchParams;
-  const { years, from, to, summary, targetSummary } = await withClaims(admin.id, async (tx) => {
+  const { years, from, to, summary, targetSummary, review, decisions } = await withClaims(admin.id, async (tx) => {
     const years = await fiscalYears(tx);
     const requested = one(params, "from");
     const from = years.includes(requested) ? requested : (years[years.length - 1] ?? "");
     const requestedTo = one(params, "to").toUpperCase();
     const to = validFiscalYear(requestedTo) ? requestedTo : nextFiscalYear(from);
-    return { years, from, to, summary: await yearSummary(tx, from), targetSummary: years.includes(to) ? await yearSummary(tx, to) : null };
+    const review = await reviewForYear(tx, from);
+    return {
+      years,
+      from,
+      to,
+      summary: await yearSummary(tx, from),
+      targetSummary: years.includes(to) ? await yearSummary(tx, to) : null,
+      review,
+      decisions: review ? await loadDecisions(tx, review.id) : [],
+    };
   });
   const invalid = !validFiscalYear(to) || Number(to.slice(2)) <= Number(from.slice(2));
   const planHref = `/finance/rollover/plan?from=${from}&to=${to}`;
@@ -70,6 +82,35 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
           </CardBody>
         </Card>
         <div className="space-y-4">
+          <Card>
+            <CardHeader
+              title={`${from} structure review`}
+              description="The annual review decides what to keep, rename, combine or retire before this rollover."
+              actions={review ? review.status === "signed_off" ? <Badge tone="ok">Signed off {formatDate(review.signed_off_on)}</Badge> : <Badge tone="warn">In progress</Badge> : <Badge>Not started</Badge>}
+            />
+            <CardBody className="space-y-3 text-sm">
+              {review ? (
+                <>
+                  <p>
+                    {checklistDone(review)} of {CHECKLIST.length} checklist items ticked, {review.participants} {review.participants === 1 ? "participant" : "participants"}, {review.decisions} {review.decisions === 1 ? "decision" : "decisions"}.
+                  </p>
+                  {decisions.length > 0 ? (
+                    <ul className="list-disc space-y-1 pl-5">
+                      {decisions.slice(0, 5).map((d) => (
+                        <li key={d.id}>{d.decision}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {review.status !== "signed_off" ? <p className="font-semibold text-warn">The review is not signed off yet.</p> : null}
+                </>
+              ) : (
+                <p className="font-semibold text-warn">No structure review has been started for {from}.</p>
+              )}
+              <ButtonLink href={review ? `/finance/reviews/${from}` : "/finance/reviews"} variant="secondary" size="sm">
+                {review ? "Open the review" : "Start the review"}
+              </ButtonLink>
+            </CardBody>
+          </Card>
           <Card>
             <CardHeader title={`${from} at a glance`} description={`What will be offered for carry forward into ${to || "the new year"}.`} />
             <CardBody>
