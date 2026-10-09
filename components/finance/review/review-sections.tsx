@@ -20,7 +20,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
     return (
       <div className="overflow-x-auto rounded-md border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-surface/70 text-left text-xs font-semibold uppercase tracking-wide text-muted">
+          <thead className="bg-surface/70 text-left text-[13px] font-semibold text-muted">
             <tr>
               {columns.map((c) => (
                 <th key={c.key} scope="col" className={`px-3 py-2 ${c.type === "text" ? "" : "text-right"}`}>
@@ -93,9 +93,9 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
                 {questions.map((q) => {
                   const fix = corrections[q.key];
                   return (
-                    <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "md:col-span-2" : ""}>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">{q.label}</dt>
-                      <dd className="mt-1 text-sm text-ink">
+                    <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "min-w-0 md:col-span-2" : "min-w-0"}>
+                      <dt className="text-[13px] font-semibold text-muted">{q.label}</dt>
+                      <dd className="mt-1 text-sm text-ink break-words">
                         {formatValue(q, row.answers[q.key])}
                         {fix ? (
                           <span className="mt-1.5 block text-xs text-muted">
@@ -128,7 +128,7 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
                 ["Certified on", `${formatDateTime(detail.certification.certifiedAt)} ET`],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-muted">{label}</dt>
+                  <dt className="text-[13px] font-semibold text-muted">{label}</dt>
                   <dd className="mt-1 text-sm text-ink">{value}</dd>
                 </div>
               ))}

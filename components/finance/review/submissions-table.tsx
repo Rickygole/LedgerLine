@@ -68,7 +68,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                 <span className="block text-xs text-muted">{row.borough}</span>
               </TD>
               <TD className="min-w-40">
-                <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-link underline underline-offset-2 hover:text-link-hover">
+                <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-link hover:underline">
                   {row.initiativeName}
                 </Link>
                 <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>

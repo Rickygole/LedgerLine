@@ -112,7 +112,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                             <span className="num block whitespace-nowrap font-mono text-xs text-muted">{row.ein}</span>
                           </TD>
                           <TD className="min-w-48">
-                            <Link href={`/finance/initiatives/${row.initiativeId}`} className="hover:text-link underline underline-offset-2 hover:text-link-hover">
+                            <Link href={`/finance/initiatives/${row.initiativeId}`} className="hover:text-link hover:underline">
                               {row.initiativeName}
                             </Link>
                           </TD>
