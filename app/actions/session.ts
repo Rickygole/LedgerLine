@@ -2,13 +2,14 @@
 
 import bcrypt from "bcryptjs";
 import { createHash, timingSafeEqual } from "node:crypto";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { homeFor, type Role } from "@/lib/auth";
 import { anonymous, withClaims } from "@/lib/db";
 import { safeNext } from "@/lib/redirect";
-import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession } from "@/lib/session";
+import { allowed, clientKey, TOO_MANY } from "@/lib/throttle";
+import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession, verifySessionClaims } from "@/lib/session";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
@@ -16,19 +17,8 @@ const loginSchema = z.object({
 });
 
 const DUMMY_HASH = "$2b$10$ub.I6pzHcfPjvdwuphNjf.D0PorzRHkVo7g34JoMBQE4O5FnPI8TO";
-const TOO_MANY = "Too many attempts. Wait 15 minutes and try again.";
 
-export type FormState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
-
-async function clientKey(): Promise<string> {
-  const h = await headers();
-  return (h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? "local").split(",")[0].trim();
-}
-
-async function allowed(key: string, limit: number): Promise<boolean> {
-  const rows = await anonymous<{ ok: boolean }>("SELECT app.record_attempt($1, 15, $2) AS ok", [key, limit]);
-  return rows[0]?.ok === true;
-}
+export type FormState = { error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
 
 async function lookup(email: string): Promise<{ id: string; password_hash: string } | null> {
   const rows = await anonymous<{ id: string; password_hash: string }>("SELECT * FROM app.login_lookup($1)", [email]);
@@ -42,34 +32,41 @@ function sameSecret(a: string, b: string): boolean {
 }
 
 export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
+  const rawEmail = String(formData.get("email") ?? "").slice(0, 254);
+  const values = { email: rawEmail };
   const parsed = loginSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) fieldErrors[String(issue.path[0])] = issue.message;
-    return { fieldErrors };
+    return { fieldErrors, values };
   }
   const ip = await clientKey();
   const email = parsed.data.email.toLowerCase();
-  if (!(await allowed(`login-ip:${ip}`, 30)) || !(await allowed(`login-email:${email}`, 8))) return { error: TOO_MANY };
+  if (!(await allowed(`login-ip:${ip}`, 30)) || !(await allowed(`login-email:${email}`, 8))) return { error: TOO_MANY, values };
 
   const account = await lookup(email);
   const valid = await bcrypt.compare(parsed.data.password, account?.password_hash ?? DUMMY_HASH);
-  if (!account || !valid) return { error: "That email and password do not match an account." };
+  if (!account || !valid) return { error: "That email and password do not match an account.", values };
 
-  const role = await withClaims(account.id, async (tx) => {
-    const row = await tx.one<{ role: Role }>("SELECT role FROM app_user WHERE id = app.uid()");
+  const session = await withClaims(account.id, async (tx) => {
+    const row = await tx.one<{ role: Role; version: number }>("SELECT role, app.current_session_version() AS version FROM app_user WHERE id = app.uid()");
     await tx.query("SELECT app.write_audit('user', $1, 'sign_in', NULL, NULL, NULL, NULL)", [account.id]);
-    return row?.role;
+    return row;
   });
-  if (!role) return { error: "This account is not active." };
+  if (!session) return { error: "This account is not active.", values };
+  const role = session.role;
 
   const store = await cookies();
-  store.set(SESSION_COOKIE, await signSession(account.id), sessionCookieOptions);
+  store.set(SESSION_COOKIE, await signSession(account.id, session.version), sessionCookieOptions);
   redirect(safeNext(formData.get("next"), homeFor(role)));
 }
 
 export async function signOut() {
   const store = await cookies();
+  const claims = await verifySessionClaims(store.get(SESSION_COOKIE)?.value);
+  if (claims) {
+    await withClaims(claims.sub, (tx) => tx.query("SELECT app.revoke_session($1::uuid, $2::timestamptz)", [claims.jti, claims.expiresAt.toISOString()]));
+  }
   store.delete(SESSION_COOKIE);
   redirect("/login");
 }
