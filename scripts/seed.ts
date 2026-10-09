@@ -34,6 +34,7 @@ import {
   type Borough,
   type Category,
 } from "./seed-data";
+import { CITYWIDE_INITIATIVES, generateInitiatives, type InitiativeSpec } from "./seed-initiatives";
 
 export const PERSONAS = {
   maria: { email: "maria.santos@motthavenyouth.example.org", name: "Maria Santos", title: "Program Director" },
@@ -209,6 +210,8 @@ type SeedInitiative = {
   awards: [number, number];
   amount: [number, number];
   retired: boolean;
+  open: boolean;
+  renamedTo?: string;
 };
 
 type AssignmentRow = {
@@ -429,7 +432,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   const financeRows: Record<string, unknown>[] = [
     { id: ids.priya, email: PERSONAS.priya.email, full_name: PERSONAS.priya.name, title: PERSONAS.priya.title, role: "finance_admin", org_id: null, password_hash: hash, can_sign_in: true },
     { id: ids.daniel, email: PERSONAS.daniel.email, full_name: PERSONAS.daniel.name, title: PERSONAS.daniel.title, role: "finance_analyst", org_id: null, password_hash: hash, can_sign_in: true },
-    { id: ids.grace, email: PERSONAS.grace.email, full_name: PERSONAS.grace.name, title: PERSONAS.grace.title, role: "finance_viewer", org_id: null, password_hash: null, can_sign_in: false },
+    { id: ids.grace, email: PERSONAS.grace.email, full_name: PERSONAS.grace.name, title: PERSONAS.grace.title, role: "finance_viewer", org_id: null, password_hash: hash, can_sign_in: true },
   ];
   const reviewerIds: string[] = [ids.daniel];
   const staffPlan: ("finance_admin" | "finance_analyst" | "finance_viewer")[] = [
@@ -453,7 +456,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   const lineageRows: Record<string, unknown>[] = [];
   let initiativeSeq = 0;
 
-  const addInitiative = (spec: { name: string; category: Category; kind: "named" | "local"; awards: [number, number]; amount: [number, number]; description: string; retired?: boolean }, fiscalYear: "FY26" | "FY27", source?: SeedInitiative) => {
+  const addInitiative = (spec: { name: string; category: Category; kind: "named" | "local"; awards: [number, number]; amount: [number, number]; description: string; retired?: boolean; open?: boolean; renamedTo?: string }, fiscalYear: "FY26" | "FY27", source?: SeedInitiative) => {
     const id = randomUUID();
     const formId = randomUUID();
     initiativeSeq++;
@@ -472,6 +475,8 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       awards: spec.awards,
       amount: spec.amount,
       retired: Boolean(spec.retired),
+      open: Boolean(spec.open),
+      renamedTo: spec.renamedTo,
     };
     initiatives.push(row);
     initiativeRows.push({
@@ -505,22 +510,27 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     name: `Local ${category} Discretionary Fund`,
     category,
     kind: "local" as const,
-    awards: [3, 8] as [number, number],
+    awards: [4, 10] as [number, number],
     amount: [8000, 90000] as [number, number],
     description: `Discretionary awards that individual Council Members designate to neighborhood ${category.toLowerCase()} programs in their districts.`,
   });
 
+  const takenNames = new Set<string>([...NAMED_INITIATIVES.flatMap((n) => [n.name, n.renamedTo ?? n.name]), ...CITYWIDE_INITIATIVES.map((c) => c.name), ...CATEGORIES.map((c) => localSpec(c).name)]);
+  const generated = generateInitiatives(CATEGORIES, takenNames, { shuffle, pick, random });
+
   const fy26: SeedInitiative[] = [];
+  const fy27Only: InitiativeSpec[] = generated.filter((g) => g.newInFy27);
   for (const named of NAMED_INITIATIVES) fy26.push(addInitiative({ ...named, kind: "named", retired: named.retiredAtRollover }, "FY26"));
+  for (const citywide of CITYWIDE_INITIATIVES) fy26.push(addInitiative(citywide, "FY26"));
   for (const category of CATEGORIES) fy26.push(addInitiative(localSpec(category), "FY26"));
+  for (const spec of generated.filter((g) => !g.newInFy27)) fy26.push(addInitiative({ ...spec, retired: spec.retiredAtRollover }, "FY26"));
 
   const fy27: SeedInitiative[] = [];
   for (const prior of fy26) {
     if (prior.retired) continue;
-    const spec = NAMED_INITIATIVES.find((n) => n.name === prior.name);
-    const name = spec?.renamedTo ?? prior.name;
+    const name = prior.renamedTo ?? prior.name;
     const description = (initiativeRows.find((r) => r.id === prior.id)!.description as string);
-    const next = addInitiative({ name, category: prior.category, kind: prior.kind, awards: prior.awards, amount: prior.amount, description }, "FY27", prior);
+    const next = addInitiative({ name, category: prior.category, kind: prior.kind, awards: prior.awards, amount: prior.amount, description, open: prior.open }, "FY27", prior);
     fy27.push(next);
     lineageRows.push({
       predecessor_id: prior.id,
@@ -532,6 +542,8 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       created_at: "2026-06-22T10:30:00-04:00",
     });
   }
+  const fy27New = fy27Only.map((spec) => addInitiative(spec, "FY27"));
+  fy27.push(...fy27New);
   for (const prior of fy26.filter((p) => p.retired)) {
     lineageRows.push({ predecessor_id: prior.id, successor_id: null, kind: "retired", fiscal_year_id: "FY27", note: "Retired at rollover to FY27", created_by: ids.priya, created_at: "2026-06-22T10:30:00-04:00" });
   }
@@ -596,7 +608,11 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     return row;
   };
 
-  const poolFor = (initiative: SeedInitiative) => shuffle(orgs.filter((o) => o.id !== maria.id && o.categories.includes(initiative.category)));
+  const poolFor = (initiative: SeedInitiative) => {
+    const own = shuffle(orgs.filter((o) => o.id !== maria.id && o.categories.includes(initiative.category)));
+    if (!initiative.open) return own;
+    return [...own, ...shuffle(orgs.filter((o) => o.id !== maria.id && o.org_type === "cbo" && !o.categories.includes(initiative.category)))];
+  };
 
   assign(late, maria, 85000, "citywide");
   assign(accepted, maria, 62500, "citywide");
@@ -622,8 +638,13 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     const factor = isMaria ? 1 : pick([1, 1, 1.04, 1.1, 0.95, 0.9, 1.15]);
     assign(next, org, Math.max(5000, roundTo(prior.award_amount * factor, 500)), prior.funding_source);
   }
-  for (const next of fy27) {
-    if (chance(0.35)) {
+  for (const next of fy27New) {
+    const pool = poolFor(next);
+    const count = Math.min(pool.length, between(next.awards[0], next.awards[1]));
+    for (const org of pool.slice(0, count)) assign(next, org, award(next.kind, next.amount));
+  }
+  for (const next of fy27.filter((i) => !fy27New.includes(i))) {
+    if (chance(next.open ? 0 : 0.35)) {
       const pool = poolFor(next).filter((o) => !pairs.has(`${next.id}:${o.id}`));
       if (pool.length > 0) assign(next, pool[0], award(next.kind, next.amount));
     }
