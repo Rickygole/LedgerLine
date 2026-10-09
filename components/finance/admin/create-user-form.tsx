@@ -52,7 +52,7 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
           <Label htmlFor="role" required>
             Role
           </Label>
-          <Select id="role" name="role" value={role} onChange={(event) => setChosenRole(event.target.value)} aria-invalid={fe.role ? true : undefined} aria-describedby={fe.role ? "role-error" : undefined}>
+          <Select key={state?.values?.role ?? ""} id="role" name="role" defaultValue={state?.values?.role ?? ""} onChange={(event) => setChosenRole(event.target.value)} aria-invalid={fe.role ? true : undefined} aria-describedby={fe.role ? "role-error" : undefined}>
             <option value="" disabled>
               Choose a role
             </option>
@@ -70,7 +70,7 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
               Organization
             </Label>
             <Hint id="orgId-hint">The person will see only the reports assigned to this organization.</Hint>
-            <Select id="orgId" name="orgId" defaultValue={state?.values?.orgId ?? ""} aria-invalid={fe.orgId ? true : undefined} aria-describedby={fe.orgId ? "orgId-hint orgId-error" : "orgId-hint"}>
+            <Select key={state?.values?.orgId ?? ""} id="orgId" name="orgId" defaultValue={state?.values?.orgId ?? ""} aria-invalid={fe.orgId ? true : undefined} aria-describedby={fe.orgId ? "orgId-hint orgId-error" : "orgId-hint"}>
               <option value="" disabled>
                 Choose an organization
               </option>

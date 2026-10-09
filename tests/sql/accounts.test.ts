@@ -134,7 +134,7 @@ describe("[US-038] password reset tokens", () => {
     }
   });
 
-  it("does not let app_server read password hashes or tokens directly", async () => {
+  it("[BR-010] does not let app_server read password hashes or tokens directly", async () => {
     await inTx(app, async () => {
       await claims(app, priya);
       expect(await code(app, () => app.query("SELECT password_hash FROM app_user LIMIT 1"))).toBe("42501");

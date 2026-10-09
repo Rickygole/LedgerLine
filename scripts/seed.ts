@@ -153,7 +153,7 @@ async function insertRows(client: Client, table: string, rows: Record<string, un
 async function reset(client: Client, scene: string) {
   const guarded = ["audit_event", "submission_revision"];
   for (const table of guarded) await client.query(`ALTER TABLE ${table} DISABLE TRIGGER USER`);
-  await client.query(`TRUNCATE audit_event, submission_revision, ai_action, outbox, flag, attachment, budget_line, answer, submission,
+  await client.query(`TRUNCATE auth_attempt, audit_event, submission_revision, ai_action, outbox, flag, attachment, budget_line, answer, submission,
     form_version, question, assignment, reporting_period, initiative, app_user, contact, organization, fiscal_year, app_setting RESTART IDENTITY CASCADE`);
   for (const table of guarded) await client.query(`ALTER TABLE ${table} ENABLE TRIGGER USER`);
   await client.query("INSERT INTO demo_reset (scene) VALUES ($1)", [scene]);

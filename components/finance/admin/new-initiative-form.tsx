@@ -25,7 +25,7 @@ export function NewInitiativeForm({ categories, nextCode }: { categories: string
         <Label htmlFor="category" required>
           Category
         </Label>
-        <Select id="category" name="category" defaultValue={state?.values?.category ?? ""} aria-invalid={fe.category ? true : undefined} aria-describedby={fe.category ? "category-error" : undefined}>
+        <Select key={state?.values?.category ?? ""} id="category" name="category" defaultValue={state?.values?.category ?? ""} aria-invalid={fe.category ? true : undefined} aria-describedby={fe.category ? "category-error" : undefined}>
           <option value="" disabled>
             Choose a category
           </option>
