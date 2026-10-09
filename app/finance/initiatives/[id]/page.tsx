@@ -58,7 +58,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <dl className="grid grid-cols-2 gap-4 lg:border-l lg:border-line lg:pl-6">
             <div>
               <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
-              <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding))}</dd>
+              <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding), { cents: false })}</dd>
             </div>
             <div>
               <dt className="text-[13px] font-semibold text-muted">Organizations</dt>
@@ -70,7 +70,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
 
       <Card className="mb-6">
         <CardHeader title="Funded organizations" description={`${funded.length} ${funded.length === 1 ? "organization" : "organizations"} receive funding through this initiative.`} />
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Organization</TH>
@@ -89,7 +89,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             ) : (
               funded.map((f) => (
                 <TR key={f.assignment_id}>
-                  <TD>
+                  <TD className="min-w-[14rem]">
                     <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {f.legal_name}
                     </Link>
