@@ -19,6 +19,7 @@ import { TabNav } from "@/components/finance/admin/tab-nav";
 import { AuditSentence } from "@/components/finance/admin/audit-line";
 import { loadOrganization, type OrgAward } from "@/lib/finance/admin/organizations";
 import { orgActivity } from "@/lib/finance/admin/audit";
+import { templateLabel } from "@/lib/finance/admin/outbox";
 import { orgTypeLabel } from "@/lib/finance/admin/sql";
 import { isUuid, one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
 
@@ -327,7 +328,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
             </THead>
             <tbody>
               {messages.length === 0 ? (
-                <EmptyRow colSpan={5}>No messages have been sent to this organization.</EmptyRow>
+                <EmptyRow colSpan={5}>No messages for this organization yet.</EmptyRow>
               ) : (
                 messages.map((m) => (
                   <TR key={m.id}>
@@ -336,10 +337,10 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                         {m.subject}
                       </Link>
                     </TD>
-                    <TD className="font-mono text-[13px] text-muted">{m.template}</TD>
+                    <TD className="whitespace-nowrap">{templateLabel(m.template)}</TD>
                     <TD>{m.to_email}</TD>
                     <TD>
-                      <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status}</Badge>
+                      <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}</Badge>
                     </TD>
                     <TD>{formatDateTime(m.created_at)}</TD>
                   </TR>
