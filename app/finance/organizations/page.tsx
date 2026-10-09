@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { Input, Select } from "@/components/ui/field";
-import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
+import { Table, THead, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { ProgressBar } from "@/components/finance/admin/progress-bar";

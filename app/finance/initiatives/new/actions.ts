@@ -24,7 +24,7 @@ function fieldErrors(error: z.ZodError): Record<string, string> {
 
 export async function createInitiative(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser(["finance_admin"]);
-  const parsed = createSchema.safeParse({ name: formData.get("name"), category: formData.get("category"), description: formData.get("description") });
+  const parsed = createSchema.safeParse({ name: String(formData.get("name") ?? ""), category: String(formData.get("category") ?? ""), description: String(formData.get("description") ?? "") });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
   let newId: string | null = null;
   for (let attempt = 0; attempt < 3 && !newId; attempt++) {

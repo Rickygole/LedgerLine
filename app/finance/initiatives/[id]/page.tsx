@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { reportState } from "@/lib/reporting";
+import { expectedState } from "@/lib/finance/admin/state";
 import { formatCurrency } from "@/lib/rules/money";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardHeader, CardBody, DescriptionList } from "@/components/ui/card";
@@ -89,10 +89,10 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                   <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
                   <TD>{f.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
                   <TD>
-                    <StateBadge state={reportState(f.ye_status, due["FY26-YE"])} />
+                    <StateBadge state={expectedState(f.ye_status, due["FY26-YE"], f.published)} />
                   </TD>
                   <TD>
-                    <StateBadge state={reportState(f.mid_status, due["FY27-MY"])} />
+                    <StateBadge state={expectedState(f.mid_status, due["FY27-MY"], f.published)} />
                   </TD>
                 </TR>
               ))

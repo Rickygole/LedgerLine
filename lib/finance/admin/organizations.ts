@@ -88,6 +88,7 @@ export type OrgAward = {
   ye_status: string | null;
   mid_id: string | null;
   mid_status: string | null;
+  published: boolean;
 };
 
 export type OrgReport = {
@@ -113,7 +114,8 @@ export async function loadOrganization(tx: Tx, orgId: string) {
   if (!org) return null;
   const awards = await tx.query<OrgAward>(
     `SELECT a.id AS assignment_id, i.id AS initiative_id, i.code, i.name, i.category, i.status AS initiative_status, a.award_amount, a.sponsoring_agency,
-            sy.id AS ye_id, sy.status AS ye_status, sm.id AS mid_id, sm.status AS mid_status
+            sy.id AS ye_id, sy.status AS ye_status, sm.id AS mid_id, sm.status AS mid_status,
+            EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published') AS published
      FROM assignment a
      JOIN initiative i ON i.id = a.initiative_id
      LEFT JOIN submission sy ON sy.assignment_id = a.id AND sy.period_id = 'FY26-YE'

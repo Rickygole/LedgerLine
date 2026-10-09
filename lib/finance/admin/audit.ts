@@ -1,4 +1,5 @@
 import type { Tx } from "@/lib/db";
+import { roleLabel, type Role } from "@/lib/auth";
 import { PAGE_SIZE, isUuid } from "./params";
 
 export type AuditRow = {
@@ -105,7 +106,7 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
     return { actor, verb: "assigned", subject: `${text(after.org_name) || "an organization"} to ${text(after.initiative_code) || "an initiative"}` };
   }
   if (row.entity === "app_user") {
-    if (row.action === "role_change") return { actor, verb: "changed the role of", subject: `${label} from ${text(before.role)} to ${text(after.role)}` };
+    if (row.action === "role_change") return { actor, verb: "changed the role of", subject: `${label} from ${roleLabel(text(before.role) as Role)} to ${roleLabel(text(after.role) as Role)}` };
     if (row.action === "activate") return { actor, verb: "activated", subject: label };
     if (row.action === "deactivate") return { actor, verb: "deactivated", subject: label };
     if (row.action === "password_reset_requested") return { actor, verb: "sent a password reset to", subject: label };

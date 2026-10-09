@@ -81,6 +81,7 @@ export type FundedOrg = {
   sponsoring_agency: string | null;
   ye_status: string | null;
   mid_status: string | null;
+  published: boolean;
 };
 
 export type FormVersionRow = {
@@ -102,7 +103,8 @@ export async function loadInitiative(tx: Tx, id: string) {
   if (!initiative) return null;
   const funded = await tx.query<FundedOrg>(
     `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, a.award_amount, a.sponsoring_agency,
-            sy.status AS ye_status, sm.status AS mid_status
+            sy.status AS ye_status, sm.status AS mid_status,
+            EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = a.initiative_id AND fv.status = 'published') AS published
      FROM assignment a
      JOIN organization o ON o.id = a.org_id
      LEFT JOIN submission sy ON sy.assignment_id = a.id AND sy.period_id = 'FY26-YE'

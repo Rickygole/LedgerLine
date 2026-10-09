@@ -6,6 +6,7 @@ import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
+import { expectedState } from "@/lib/finance/admin/state";
 import { formatCurrency } from "@/lib/rules/money";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
@@ -44,7 +45,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
   const active = awards.filter((a) => a.initiative_status === "active");
   const totalAwarded = active.reduce((sum, a) => sum + Number(a.award_amount), 0);
   const accepted = reports.filter((r) => r.status === "accepted").length;
-  const overdue = active.filter((a) => reportState(a.ye_status, due["FY26-YE"]) === "missing").length;
+  const overdue = active.filter((a) => expectedState(a.ye_status, due["FY26-YE"], a.published) === "missing").length;
   const address = `${org.address_line}, ${org.city}, ${org.state} ${org.postal_code}`;
 
   return (
@@ -145,10 +146,10 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                     <TD>{a.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
                     <TD align="right">{formatCurrency(Number(a.award_amount))}</TD>
                     <TD>
-                      <StateBadge state={reportState(a.ye_status, due["FY26-YE"])} />
+                      <StateBadge state={expectedState(a.ye_status, due["FY26-YE"], a.published)} />
                     </TD>
                     <TD>
-                      <StateBadge state={reportState(a.mid_status, due["FY27-MY"])} />
+                      <StateBadge state={expectedState(a.mid_status, due["FY27-MY"], a.published)} />
                     </TD>
                   </TR>
                 ))

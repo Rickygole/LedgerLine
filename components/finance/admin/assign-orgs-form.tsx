@@ -17,8 +17,8 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
   const [query, setQuery] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const byId = useMemo(() => new Map(orgs.map((o) => [o.id, o])), [orgs]);
-  const chosen = new Set(rows.map((r) => r.orgId));
   const matches = useMemo(() => {
+    const chosen = new Set(rows.map((r) => r.orgId));
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return orgs.filter((o) => !chosen.has(o.id) && (o.name.toLowerCase().includes(q) || o.ein.includes(q))).slice(0, 8);
