@@ -57,6 +57,8 @@ You need Node 22, pnpm 10 and Docker.
 | `pnpm db:migrate` | Apply SQL files in `db/migrations` |
 | `pnpm db:role` | Set the `app_server` password from `APP_SERVER_PASSWORD` |
 | `pnpm db:seed` | Reset and load the starting data set |
+| `pnpm db:seed:live` | Reseed the hosted database. Reads the owner connection string from the first line of `.env.neon` and `NEON_PERSONA_PASSWORD` from `.env.neon-app`, prints only the host, and asks you to type the host name first |
+| `pnpm preset <scene>` | Reset one demo scene on the local database: `fresh` (full reseed), `maria` (her overdue draft back to half filled with an empty budget), `daniel` (one of her reports under review with an open flag), `priya` (remove initiatives created since the last reseed). Add `--live` to target the hosted database with the same host confirmation. Uses the owner connection only and is not part of the deployed app |
 | `pnpm cron:reminders` | Call the reminders cron route of the running app |
 | `pnpm evidence` | Run tests and regenerate `app/trust/evidence.json` |
 
