@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, DescriptionList } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
@@ -26,35 +26,47 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-6 text-center">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-ok-bg text-ok">
-          <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
-        </span>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink">Report received</h1>
+      <div className="mb-6 rounded border-4 border-ok bg-white px-6 py-7 text-center">
+        <h1 className="text-[1.75rem] font-bold leading-9 text-ink">Report received</h1>
         <p className="mt-1 text-sm text-muted">
           {header.initiativeName}, {header.periodLabel}
         </p>
+        <p className="mt-5 text-base text-ink">Your reference number</p>
+        <p className="num mt-1 break-all font-mono text-2xl font-bold text-ink">{header.referenceNo}</p>
       </div>
+      <p className="mb-6 text-base leading-7 text-ink">
+        We are emailing a copy of this report to <span className="break-all font-semibold">{user.email}</span>. Keep your reference number in case you need to contact Council Finance.
+      </p>
       <Card>
         <CardBody className="space-y-5">
           <DescriptionList
             columns={2}
             items={[
               { label: "Submitted", value: `${formatDateTime(header.submittedAt)} ET` },
-              { label: "Reference number", value: <span className="num whitespace-nowrap font-mono text-[13px] font-semibold">{header.referenceNo}</span> },
-              { label: "Revision", value: <span className="num">{header.revision}</span> },
               { label: "Submitted by", value: header.submittedByName ?? user.fullName },
+              { label: "Revision", value: <span className="num">{header.revision}</span> },
             ]}
           />
-          <p className="rounded-md border border-line bg-surface px-4 py-3 text-sm leading-6 text-ink">We will email you if Finance needs changes. A copy of this report was sent to {user.email}.</p>
-          <div className="flex flex-wrap gap-3">
-            <ButtonLink href={`/portal/reports/${id}`}>View submitted copy</ButtonLink>
-            <ButtonLink href="/portal" variant="secondary">
-              Back to my reports
-            </ButtonLink>
-          </div>
         </CardBody>
       </Card>
+      <section aria-labelledby="next-heading" className="mt-8">
+        <h2 id="next-heading" className="text-xl font-bold text-ink">
+          What happens next
+        </h2>
+        <p className="mt-2 text-base leading-7 text-ink">
+          Council Finance reviews reports in the order received. We will email you if anything needs to change. You can check the status in{" "}
+          <Link href="/portal" className="text-link underline underline-offset-2 hover:text-link-hover">
+            My reports
+          </Link>
+          .
+        </p>
+      </section>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <ButtonLink href={`/portal/reports/${id}`}>View submitted copy</ButtonLink>
+        <ButtonLink href="/portal" variant="secondary">
+          Back to my reports
+        </ButtonLink>
+      </div>
     </div>
   );
 }
