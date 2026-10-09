@@ -1,4 +1,5 @@
 const PHRASES: Record<string, string> = {
+  start: "started the report",
   submit: "submitted the report",
   sign_in: "signed in",
   sign_out: "signed out",

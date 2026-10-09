@@ -40,7 +40,10 @@ export type EditorPayload = {
   resumeSection: string | null;
   hasProgress: boolean;
   currentUserName: string;
+  currentUserTitle: string;
 };
+
+export type CertificationDraft = { accepted: boolean; name: string; title: string };
 
 export type SaveInput = {
   submissionId: string;

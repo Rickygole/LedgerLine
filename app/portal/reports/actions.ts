@@ -8,11 +8,13 @@ import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
 import { reportIssues } from "@/lib/report/issues";
 import { writeDraft } from "@/lib/report/write";
-import { attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, signPath } from "@/lib/report/attachments";
+import { attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, removeAttachmentRow, signPath } from "@/lib/report/attachments";
 import type { PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
 import { buildSnapshot } from "@/lib/snapshot";
 import { buildPath, checkUpload, putFile } from "@/lib/storage";
 import type { Answers } from "@/lib/rules/types";
+import { CERTIFICATION_STATEMENT, certificationIssues, certificationNote, type Certification } from "@/lib/rules/certify";
+import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { blockingIssues, isVisible } from "@/lib/rules/validate";
 
 const cell = z.union([z.string().max(2000), z.number(), z.null()]);
@@ -32,9 +34,10 @@ const saveSchema = z.object({
         category: z.enum(["PS", "OTPS"]),
         description: z.string().max(500),
         amount: z.number().min(-1e11).max(1e11),
+        actual: z.number().min(-1e11).max(1e11).nullable().optional(),
       })
     )
-    .max(100),
+    .max(500),
 });
 
 export async function saveDraft(raw: unknown): Promise<SaveResult> {
@@ -47,6 +50,11 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
 
   try {
     return await withClaims(user.id, async (tx): Promise<SaveResult> => {
+      const form = await loadReport(tx, input.submissionId);
+      if (form && input.budget.length > form.definition.budget.maxLines) {
+        const over = input.budget.length - form.definition.budget.maxLines;
+        return { status: "error", message: `A budget can have at most ${form.definition.budget.maxLines} lines. This one has ${input.budget.length}. Remove ${over} ${over === 1 ? "line" : "lines"} and your changes will save.` };
+      }
       const touched = await tx.one<{ lock_version: number; updated_at: string }>(
         `UPDATE submission SET lock_version = lock_version + 1, updated_at = now(), updated_by = app.uid(), last_save_id = $3
          WHERE id = $1 AND status IN ('draft', 'returned') AND (lock_version = $2 OR (last_save_id = $3 AND lock_version = $2 + 1))
@@ -66,9 +74,8 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
       }
       const report = await loadReport(tx, input.submissionId);
       if (!report) return { status: "error", message: "This report could not be found." };
-      const allowedKeys = new Set(report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)));
-      const maxLines = report.definition.budget.maxLines;
-      await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget.slice(0, maxLines), allowedKeys });
+      const allowedKeys = new Set([...report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)), VARIANCE_NOTE_KEY]);
+      await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget, allowedKeys });
       return { status: "saved", lockVersion: touched.lock_version, savedAt: new Date(touched.updated_at).toISOString() };
     });
   } catch (error) {
@@ -180,14 +187,7 @@ export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } |
   const user = await getCurrentUser().catch(() => null);
   if (!user) return { status: "signed_out" };
   try {
-    const removed = await withClaims(user.id, async (tx) => {
-      await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [parsed.data.submissionId]);
-      const rows = await tx.query<{ filename: string }>("DELETE FROM attachment WHERE id = $1 AND submission_id = $2 RETURNING filename", [parsed.data.attachmentId, parsed.data.submissionId]);
-      if (rows[0]) {
-        await tx.query("SELECT app.write_audit('submission', $1, 'attachment_removed', $2, NULL, NULL, NULL)", [parsed.data.submissionId, rows[0].filename]);
-      }
-      return rows.length;
-    });
+    const removed = await withClaims(user.id, (tx) => removeAttachmentRow(tx, parsed.data.submissionId, parsed.data.attachmentId));
     if (removed === 0) return { status: "error", message: "That file is already gone or the report is no longer open for editing." };
     return { status: "ok" };
   } catch {
@@ -195,7 +195,11 @@ export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } |
   }
 }
 
-const submitSchema = z.object({ submissionId: z.uuid(), expectedLock: z.number().int().min(0) });
+const submitSchema = z.object({
+  submissionId: z.uuid(),
+  expectedLock: z.number().int().min(0),
+  certification: z.object({ accepted: z.boolean(), name: z.string().max(400), title: z.string().max(400) }).optional(),
+});
 
 export async function submitReport(raw: unknown): Promise<SubmitResult> {
   const parsed = submitSchema.safeParse(raw);
@@ -221,7 +225,7 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
       const stored = await loadAnswers(tx, header.id);
       const budget = await loadBudget(tx, header.id);
       const files = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>(
-        "SELECT path, filename, bytes, mime FROM attachment WHERE submission_id = $1 ORDER BY created_at, id",
+        "SELECT path, filename, bytes, mime FROM attachment WHERE submission_id = $1 AND removed_at IS NULL ORDER BY created_at, id",
         [header.id]
       );
 
@@ -233,12 +237,30 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
           if (value !== undefined) answers[question.key] = value;
         }
       }
+      if (definition.budget.enabled && stored.answers[VARIANCE_NOTE_KEY] !== undefined) answers[VARIANCE_NOTE_KEY] = stored.answers[VARIANCE_NOTE_KEY];
 
-      const issues = blockingIssues(reportIssues({ definition, answers: stored.answers, budget, awardAmount: header.awardAmount, orgEin: header.ein }));
-      if (issues.length > 0) return { status: "blocked", issues };
+      const issues = blockingIssues(
+        reportIssues({
+          definition,
+          answers: stored.answers,
+          budget,
+          awardAmount: header.awardAmount,
+          orgEin: header.ein,
+          orgName: header.orgName,
+          period: { startsOn: header.startsOn, endsOn: header.endsOn },
+        })
+      );
+      const certificationProblems = certificationIssues(parsed.data.certification);
+      if (issues.length > 0 || certificationProblems.length > 0) return { status: "blocked", issues: [...issues, ...certificationProblems] };
+      const certification: Certification = {
+        statement: CERTIFICATION_STATEMENT,
+        name: (parsed.data.certification?.name ?? "").trim(),
+        title: (parsed.data.certification?.title ?? "").trim(),
+        certifiedAt: new Date().toISOString(),
+      };
 
       const attachments = files.map((file) => ({ path: file.path, filename: file.filename, bytes: Number(file.bytes), mime: file.mime }));
-      const snapshot = buildSnapshot({ formVersionId: report.formVersionId, answers, budget, attachments });
+      const snapshot = buildSnapshot({ formVersionId: report.formVersionId, answers, budget, attachments, certification });
       const body = plainTextReport({
         title: header.initiativeName,
         referenceNo: header.referenceNo,
@@ -248,8 +270,9 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
         awardAmount: header.awardAmount,
         definition,
         answers,
-        budget: snapshot.budget as { position: number; category: "PS" | "OTPS"; description: string; amount: number }[],
+        budget: snapshot.budget as { position: number; category: "PS" | "OTPS"; description: string; amount: number; actual?: number }[],
         attachments,
+        certification,
       });
       const outbox = {
         to: user.email,
@@ -257,10 +280,11 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
         subject: `Report received: ${header.initiativeName}, ${header.periodLabel}`,
         body,
       };
-      await tx.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, $4::jsonb, NULL)", [
+      await tx.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, $4, $5::jsonb, NULL)", [
         header.id,
         parsed.data.expectedLock,
         JSON.stringify(snapshot),
+        certificationNote(certification),
         JSON.stringify(outbox),
       ]);
       return "done";

@@ -1,3 +1,4 @@
+import { amountBoundsProblem, numericProblem } from "./bounds";
 import { formatCurrency, sumAmounts, toCents } from "./money";
 import type { AnswerValue, Answers, BudgetLine, FormDefinition, Issue, Question, ValidationInput } from "./types";
 
@@ -41,15 +42,10 @@ function checkType(question: Question, value: AnswerValue): string | null {
   const text = typeof value === "string" ? value.trim() : String(value);
   switch (question.type) {
     case "integer":
-      return /^-?\d+$/.test(text) ? null : `${question.label} must be a whole number.`;
     case "number":
-      return /^-?\d*\.?\d+$/.test(text) ? null : `${question.label} must be a number.`;
     case "currency":
-      return /^-?\d*\.?\d{0,2}$/.test(text.replace(/[$,]/g, "")) && /\d/.test(text) ? null : `${question.label} must be a dollar amount, like 1250.00.`;
-    case "percent": {
-      const n = Number(text.replace("%", ""));
-      return /^(\d+\.?\d*|\.\d+)\s*%?$/.test(text) && n >= 0 && n <= 100 ? null : `${question.label} must be a percentage between 0 and 100.`;
-    }
+    case "percent":
+      return numericProblem(question.type, text, question.label);
     case "date":
       return /^\d{4}-\d{2}-\d{2}$/.test(text) && !Number.isNaN(Date.parse(text)) && new Date(text).toISOString().startsWith(text) ? null : `${question.label} must be a date.`;
     case "email":
@@ -80,6 +76,15 @@ function questionIssues(question: Question, answers: Answers): Issue[] {
     if (question.maxRows && rows.length > question.maxRows) {
       issues.push({ field: question.key, ruleId: RULES.length, severity: "block", message: `${question.label} can have at most ${question.maxRows} rows.` });
     }
+    rows.forEach((row, index) => {
+      for (const column of question.columns ?? []) {
+        if (column.type === "text") continue;
+        const cell = row[column.key];
+        if (cell === null || cell === undefined || String(cell).trim() === "") continue;
+        const problem = numericProblem(column.type, String(cell), `${column.label} in row ${index + 1}`);
+        if (problem) issues.push({ field: question.key, ruleId: RULES.type, severity: "block", message: problem });
+      }
+    });
     return issues;
   }
 
@@ -131,11 +136,17 @@ function budgetIssues(definition: FormDefinition, lines: BudgetLine[], award: nu
     return issues;
   }
   if (lines.length > definition.budget.maxLines) {
-    issues.push({ field: "budget", ruleId: RULES.budgetLines, severity: "block", message: `The budget can have at most ${definition.budget.maxLines} lines.` });
+    issues.push({ field: "budget", ruleId: RULES.budgetLines, severity: "block", message: `The budget can have at most ${definition.budget.maxLines} lines. This budget has ${lines.length}.` });
   }
   lines.forEach((line) => {
     if (line.description.trim() === "") {
       issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.required, severity: "block", message: `Line ${line.position}: enter a description.` });
+    }
+    const problem = amountBoundsProblem(line.amount, `Line ${line.position}: the amount`);
+    if (problem) issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.type, severity: "block", message: problem });
+    if (line.actual !== null && line.actual !== undefined) {
+      const actualProblem = amountBoundsProblem(line.actual, `Line ${line.position}: actual spent`);
+      if (actualProblem) issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.type, severity: "block", message: actualProblem });
     }
   });
   if (definition.budget.mustEqualAward) {

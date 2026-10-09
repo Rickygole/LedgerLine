@@ -1,7 +1,9 @@
-import { formatDate } from "@/lib/dates";
+import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
 import { formatCurrency, parseAmount } from "@/lib/rules/money";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
+import type { Certification } from "@/lib/rules/certify";
+import { VARIANCE_NOTE_KEY, spendSummary } from "@/lib/rules/spend";
 import { formatBytes } from "./upload-rules";
 
 export function displayScalar(question: Question, value: AnswerValue | undefined): string {
@@ -36,8 +38,9 @@ export type SummaryInput = {
   awardAmount: number;
   definition: FormDefinition;
   answers: Answers;
-  budget: { position: number; category: "PS" | "OTPS"; description: string; amount: number }[];
+  budget: { position: number; category: "PS" | "OTPS"; description: string; amount: number; actual?: number | null }[];
   attachments: { filename: string; bytes: number }[];
+  certification?: Pick<Certification, "name" | "title" | "certifiedAt" | "statement">;
 };
 
 export function plainTextReport(input: SummaryInput): string {
@@ -55,13 +58,21 @@ export function plainTextReport(input: SummaryInput): string {
     if (section.kind === "budget") {
       const totals = budgetTotals(input.budget.map((line) => ({ ...line, rowId: String(line.position) })));
       for (const line of input.budget) {
-        lines.push(`${line.position}. [${line.category}] ${line.description}: ${formatCurrency(line.amount)}`);
+        const spent = line.actual === null || line.actual === undefined ? "" : `, actual spent ${formatCurrency(line.actual)}`;
+        lines.push(`${line.position}. [${line.category}] ${line.description}: ${formatCurrency(line.amount)}${spent}`);
       }
       lines.push(`PS subtotal: ${formatCurrency(totals.ps)}`);
       lines.push(`OTPS subtotal: ${formatCurrency(totals.otps)}`);
       lines.push(`Total: ${formatCurrency(totals.total)}`);
       lines.push(`Award: ${formatCurrency(input.awardAmount)}`);
       lines.push(balanceMessage(totals.total, input.awardAmount).message);
+      const spend = spendSummary(input.budget.map((line) => ({ ...line, rowId: String(line.position) })), input.awardAmount);
+      if (spend.entered) {
+        lines.push(`Actual spent: ${formatCurrency(spend.actual)}`);
+        lines.push(`Unspent balance: ${formatCurrency(spend.unspent)} (${spend.unspentPercent.toFixed(1)}% of the award)`);
+        const note = input.answers[VARIANCE_NOTE_KEY];
+        if (typeof note === "string" && note.trim() !== "") lines.push(`Variance explanation: ${note.trim()}`);
+      }
       continue;
     }
     for (const question of section.questions) {
@@ -85,7 +96,24 @@ export function plainTextReport(input: SummaryInput): string {
   lines.push("-----------");
   if (input.attachments.length === 0) lines.push("None");
   for (const file of input.attachments) lines.push(`${file.filename} (${formatBytes(file.bytes)})`);
+  if (input.certification) {
+    lines.push("");
+    lines.push("CERTIFICATION");
+    lines.push("-------------");
+    lines.push(input.certification.statement);
+    lines.push(`${input.certification.name}, ${input.certification.title}`);
+    lines.push(`Certified ${formatDateTime(input.certification.certifiedAt)} ET`);
+  }
   lines.push("");
   lines.push("We will email you if Finance needs changes.");
   return lines.join("\n");
+}
+
+function dayKey(value: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
+}
+
+export function savedAtLabel(value: string, now: Date = new Date()): string {
+  const when = new Date(value);
+  return dayKey(when) === dayKey(now) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
 }

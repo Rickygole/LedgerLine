@@ -1,6 +1,8 @@
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
-export const ALLOWED_EXTENSIONS = ["pdf", "docx", "xlsx", "csv"] as const;
+export const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "csv"] as const;
+
+export const FILE_TYPE_HELP = "Use PDF, Word, Excel or CSV.";
 
 export const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(",");
 
@@ -10,10 +12,16 @@ export function formatBytes(bytes: number): string {
   return `${bytes} bytes`;
 }
 
+export function oversizeMessage(bytes: number): string {
+  const megabytes = Math.ceil((bytes / 1024 / 1024) * 10) / 10;
+  const limit = MAX_UPLOAD_BYTES / 1024 / 1024;
+  return `This file is ${megabytes.toFixed(1)} MB, which is over the ${limit.toFixed(1)} MB limit for one file.`;
+}
+
 export function clientCheckUpload(filename: string, bytes: number): string | null {
   const ext = filename.toLowerCase().split(".").pop() ?? "";
-  if (!(ALLOWED_EXTENSIONS as readonly string[]).includes(ext)) return "Use PDF, Word, Excel or CSV.";
-  if (bytes > MAX_UPLOAD_BYTES) return `${(bytes / 1024 / 1024).toFixed(0)} MB. The limit is 25 MB.`;
+  if (!(ALLOWED_EXTENSIONS as readonly string[]).includes(ext)) return FILE_TYPE_HELP;
+  if (bytes > MAX_UPLOAD_BYTES) return oversizeMessage(bytes);
   if (bytes <= 0) return "The file is empty.";
   return null;
 }

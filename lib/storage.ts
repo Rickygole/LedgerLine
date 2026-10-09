@@ -3,11 +3,15 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+import { FILE_TYPE_HELP, MAX_UPLOAD_BYTES, oversizeMessage } from "@/lib/report/upload-rules";
+
+export { MAX_UPLOAD_BYTES };
 
 export const ALLOWED_TYPES: Record<string, string> = {
   pdf: "application/pdf",
+  doc: "application/msword",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   csv: "text/csv",
 };
@@ -18,8 +22,8 @@ export function extensionOf(filename: string): string {
 
 export function checkUpload(filename: string, bytes: number): string | null {
   const ext = extensionOf(filename);
-  if (!ALLOWED_TYPES[ext]) return "Use PDF, Word, Excel or CSV.";
-  if (bytes > MAX_UPLOAD_BYTES) return `${(bytes / 1024 / 1024).toFixed(0)} MB. The limit is 25 MB.`;
+  if (!ALLOWED_TYPES[ext]) return FILE_TYPE_HELP;
+  if (bytes > MAX_UPLOAD_BYTES) return oversizeMessage(bytes);
   if (bytes <= 0) return "The file is empty.";
   return null;
 }

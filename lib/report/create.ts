@@ -2,7 +2,7 @@ import "server-only";
 import { randomInt, randomUUID } from "node:crypto";
 import { pgCode, withClaims } from "@/lib/db";
 
-export type StartResult = { status: "ok"; submissionId: string } | { status: "not_found" } | { status: "no_form" };
+export type StartResult = { status: "ok"; submissionId: string; created: boolean } | { status: "not_found" } | { status: "no_form" };
 
 function referenceFor(periodId: string): string {
   const match = /^FY(\d{2})-([A-Z]+)$/.exec(periodId);
@@ -25,7 +25,7 @@ export async function startReport(userId: string, assignmentId: string, periodId
         if (!period) return { status: "not_found" };
 
         const existing = await tx.one<{ id: string }>("SELECT id FROM submission WHERE assignment_id = $1 AND period_id = $2", [assignmentId, periodId]);
-        if (existing) return { status: "ok", submissionId: existing.id };
+        if (existing) return { status: "ok", submissionId: existing.id, created: false };
 
         const form = await tx.one<{ id: string }>("SELECT id FROM form_version WHERE initiative_id = $1 AND status = 'published'", [assignment.initiative_id]);
         if (!form) return { status: "no_form" };
@@ -41,7 +41,8 @@ export async function startReport(userId: string, assignmentId: string, periodId
            VALUES ($1, 'org_legal_name', to_jsonb($2::text), app.uid()), ($1, 'org_ein', to_jsonb($3::text), app.uid())`,
           [created.id, assignment.legal_name, assignment.ein]
         );
-        return { status: "ok", submissionId: created.id };
+        await tx.query("SELECT app.write_audit('submission', $1, 'start', $2, NULL, NULL, NULL)", [created.id, `${assignment.legal_name}, ${periodId}`]);
+        return { status: "ok", submissionId: created.id, created: true };
       });
       return result;
     } catch (error) {
@@ -50,4 +51,17 @@ export async function startReport(userId: string, assignmentId: string, periodId
     }
   }
   throw new Error("Could not allocate a reference number");
+}
+
+export type ExistingReport = { status: "found"; submissionId: string } | { status: "none" } | { status: "not_found" };
+
+export async function findReport(userId: string, assignmentId: string, periodId: string): Promise<ExistingReport> {
+  return withClaims(userId, async (tx): Promise<ExistingReport> => {
+    const assignment = await tx.one<{ id: string }>("SELECT id FROM assignment WHERE id = $1 AND org_id = app.org_id()", [assignmentId]);
+    if (!assignment) return { status: "not_found" };
+    const period = await tx.one<{ id: string }>("SELECT id FROM reporting_period WHERE id = $1", [periodId]);
+    if (!period) return { status: "not_found" };
+    const existing = await tx.one<{ id: string }>("SELECT id FROM submission WHERE assignment_id = $1 AND period_id = $2", [assignmentId, periodId]);
+    return existing ? { status: "found", submissionId: existing.id } : { status: "none" };
+  });
 }

@@ -10,6 +10,8 @@ import { loadSubmissionDetail } from "@/lib/finance/review/detail";
 import { plainError, STALE_MESSAGE } from "@/lib/finance/review/errors";
 import { buildConcerns, containsRuleId, lineDiff, PRESET_CONCERNS, type Concern } from "@/lib/finance/review/return-note-core";
 import { buildSnapshot } from "@/lib/snapshot";
+import { identityProblem } from "@/lib/rules/identity";
+import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 
 export type ActionResult = { ok: boolean; message: string };
@@ -156,10 +158,15 @@ export async function addFlagAction(_prev: ActionResult | undefined, formData: F
   if (!note) return failed("Add a note that says why this report is flagged.");
   if (note.length > 1000) return failed("Shorten the note to 1,000 characters or fewer.");
   try {
-    await withClaims(user.id, async (tx) => {
+    const refused = await withClaims(user.id, async (tx) => {
+      const current = await tx.one<{ status: string }>("SELECT status FROM submission WHERE id = $1", [id]);
+      if (!current) return "That report could not be found.";
+      if (current.status === "draft") return "This report has not been submitted yet, so it cannot be flagged.";
       const flag = await tx.one<{ id: string }>("INSERT INTO flag (submission_id, kind, source, note, created_by) VALUES ($1, 'manual', 'user', $2, app.uid()) RETURNING id", [id, note]);
       await tx.query("SELECT app.write_audit('submission', $1, 'flag_add', $2, NULL, $3::jsonb, NULL)", [id, note, JSON.stringify({ flag_id: flag?.id, kind: "manual" })]);
+      return null;
     });
+    if (refused) return failed(refused);
   } catch (error) {
     return failed(plainError(error));
   }
@@ -220,12 +227,15 @@ export async function correctionAction(_prev: ActionResult | undefined, formData
       const answers = { ...row.answers, [key]: value };
       const issues = validateSubmission({ definition: row.definition!, answers, budget: row.budget, awardAmount: row.award }).filter((i) => i.field === key && i.severity === "block");
       if (issues.length > 0) return issues[0].message;
-      const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>("SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1", [id]);
+      const identity = identityProblem(key, value, { legalName: row.orgName, ein: row.ein });
+      if (identity) return identity;
+      const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>("SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1 AND removed_at IS NULL", [id]);
       const snapshot = buildSnapshot({
         formVersionId: row.formVersionId!,
-        answers: visibleAnswers(row.definition!, answers),
+        answers: { ...visibleAnswers(row.definition!, answers), ...(answers[VARIANCE_NOTE_KEY] ? { [VARIANCE_NOTE_KEY]: answers[VARIANCE_NOTE_KEY] } : {}) },
         budget: row.budget,
         attachments: attachments.map((a) => ({ path: a.path, filename: a.filename, bytes: Number(a.bytes), mime: a.mime })),
+        certification: detail.certification ?? undefined,
       });
       await tx.query("SELECT app.correct_answer($1, $2, $3::jsonb, $4, $5::jsonb)", [id, key, JSON.stringify(value), reason, JSON.stringify(snapshot)]);
       return null;

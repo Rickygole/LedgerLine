@@ -26,10 +26,13 @@ export function cleanFilename(raw: string): string {
   return cleaned.slice(-200) || "attachment";
 }
 
+const OLE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+
 export function contentLooksValid(filename: string, head: Buffer): string | null {
   const ext = extensionOf(filename);
   if (ext === "pdf" && head.subarray(0, 5).toString("latin1") !== "%PDF-") return "This file does not look like a PDF.";
-  if ((ext === "docx" || ext === "xlsx") && head.subarray(0, 2).toString("latin1") !== "PK") return `This file does not look like a ${ext === "docx" ? "Word" : "Excel"} file.`;
+  if ((ext === "docx" || ext === "xlsx") && head.subarray(0, 2).toString("latin1") !== "PK") return `This file does not look like ${ext === "docx" ? "a Word" : "an Excel"} file.`;
+  if ((ext === "doc" || ext === "xls") && !head.subarray(0, 8).equals(OLE_SIGNATURE)) return `This file does not look like ${ext === "doc" ? "a Word" : "an Excel"} file.`;
   if (ext === "csv" && head.includes(0)) return "This file does not look like a CSV.";
   return null;
 }
@@ -49,7 +52,7 @@ export async function openSubmissionForUpload(tx: Tx, submissionId: string): Pro
 }
 
 export async function attachmentLimitProblem(tx: Tx, submissionId: string, bytes: number): Promise<string | null> {
-  const row = await tx.one<{ files: number; total: string }>("SELECT count(*)::int AS files, coalesce(sum(bytes), 0)::text AS total FROM attachment WHERE submission_id = $1", [submissionId]);
+  const row = await tx.one<{ files: number; total: string }>("SELECT count(*)::int AS files, coalesce(sum(bytes), 0)::text AS total FROM attachment WHERE submission_id = $1 AND removed_at IS NULL", [submissionId]);
   if ((row?.files ?? 0) >= 20) return "A report can have at most 20 files. Remove one to add another.";
   if (Number(row?.total ?? 0) + bytes > 200 * 1024 * 1024) return "A report can hold at most 200 MB of files. Remove a file to make room.";
   return null;
@@ -71,4 +74,24 @@ export async function insertAttachment(
   );
   if (!row) throw new Error("attachment not saved");
   return { id: row.id, filename: input.filename, bytes: input.bytes, uploadedAt: new Date(row.created_at).toISOString(), uploadedByName: row.full_name };
+}
+
+export async function removeAttachmentRow(tx: Tx, submissionId: string, attachmentId: string): Promise<number> {
+  await tx.query("SELECT 1 FROM submission WHERE id = $1 FOR UPDATE", [submissionId]);
+  const sent = await tx.one<{ id: string }>(
+    `SELECT a.id FROM attachment a
+     WHERE a.id = $1 AND a.submission_id = $2 AND a.removed_at IS NULL
+       AND EXISTS (
+         SELECT 1 FROM submission_revision r
+         WHERE r.submission_id = a.submission_id AND r.snapshot -> 'attachments' @> jsonb_build_array(jsonb_build_object('path', a.path))
+       )`,
+    [attachmentId, submissionId]
+  );
+  const rows = sent
+    ? await tx.query<{ filename: string }>("UPDATE attachment SET removed_at = now(), removed_by = app.uid() WHERE id = $1 AND submission_id = $2 AND removed_at IS NULL RETURNING filename", [attachmentId, submissionId])
+    : await tx.query<{ filename: string }>("DELETE FROM attachment WHERE id = $1 AND submission_id = $2 AND removed_at IS NULL RETURNING filename", [attachmentId, submissionId]);
+  if (rows[0]) {
+    await tx.query("SELECT app.write_audit('submission', $1, 'attachment_removed', $2, NULL, NULL, NULL)", [submissionId, rows[0].filename]);
+  }
+  return rows.length;
 }

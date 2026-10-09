@@ -1,12 +1,11 @@
 import { Download, Fingerprint } from "lucide-react";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
-import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
+import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
 import { displayScalar, tableRows } from "@/lib/report/format";
 import { formatBytes } from "@/lib/report/upload-rules";
-import { formatCurrency } from "@/lib/rules/money";
-import { budgetTotals, isVisible } from "@/lib/rules/validate";
-import { balanceCopy } from "./balance";
+import { isVisible } from "@/lib/rules/validate";
+import { BudgetTable } from "./budget-table";
 import type { FormDefinition } from "@/lib/rules/types";
 import type { Snapshot } from "@/lib/snapshot";
 import { PrintButton } from "./print-button";
@@ -35,10 +34,6 @@ export function SubmittedCopy({
   files: Record<string, string>;
 }) {
   const { snapshot } = revision;
-  const budget = snapshot.budget.map((line) => ({ ...line, rowId: String(line.position) }));
-  const totals = budgetTotals(budget);
-  const balance = balanceCopy(totals.total, awardAmount);
-
   return (
     <div className="space-y-6">
       <style>{`@media print { header, footer, [data-print-hide] { display: none !important; } main { padding: 0 !important; max-width: none !important; } }`}</style>
@@ -75,50 +70,7 @@ export function SubmittedCopy({
           <CardHeader title={section.title} />
           <CardBody>
             {section.kind === "budget" ? (
-              <div className="space-y-4">
-                <div className="overflow-hidden rounded-md border border-line">
-                  <Table>
-                    <THead>
-                      <tr>
-                        <TH>Line</TH>
-                        <TH>Category</TH>
-                        <TH>Description</TH>
-                        <TH align="right">Amount</TH>
-                      </tr>
-                    </THead>
-                    <tbody>
-                      {snapshot.budget.length === 0 ? <EmptyRow colSpan={4}>No budget lines.</EmptyRow> : null}
-                      {snapshot.budget.map((line) => (
-                        <TR key={line.position}>
-                          <TD className="num">{line.position}</TD>
-                          <TD>{line.category}</TD>
-                          <TD>{line.description}</TD>
-                          <TD align="right">{formatCurrency(line.amount)}</TD>
-                        </TR>
-                      ))}
-                    </tbody>
-                    <tfoot className="border-t border-line bg-surface/60 text-sm font-semibold">
-                      <tr>
-                        <td colSpan={3} className="px-4 py-2 text-right">PS subtotal</td>
-                        <td className="num px-4 py-2 text-right">{formatCurrency(totals.ps)}</td>
-                      </tr>
-                      <tr>
-                        <td colSpan={3} className="px-4 py-2 text-right">OTPS subtotal</td>
-                        <td className="num px-4 py-2 text-right">{formatCurrency(totals.otps)}</td>
-                      </tr>
-                      <tr>
-                        <td colSpan={3} className="px-4 py-2 text-right">Total</td>
-                        <td className="num px-4 py-2 text-right">{formatCurrency(totals.total)}</td>
-                      </tr>
-                      <tr>
-                        <td colSpan={3} className="px-4 py-2 text-right">Award</td>
-                        <td className="num px-4 py-2 text-right">{formatCurrency(awardAmount)}</td>
-                      </tr>
-                    </tfoot>
-                  </Table>
-                </div>
-                <p className="num text-sm font-semibold text-ink">{balance.text}</p>
-              </div>
+              <BudgetTable lines={snapshot.budget} award={awardAmount} answers={snapshot.answers} />
             ) : (
               <dl className="space-y-5">
                 {section.questions
@@ -169,6 +121,23 @@ export function SubmittedCopy({
           </CardBody>
         </Card>
       ))}
+
+      {snapshot.certification ? (
+        <Card>
+          <CardHeader title="Certification" />
+          <CardBody>
+            <p className="text-sm font-semibold text-ink">{snapshot.certification.statement}</p>
+            <DescriptionList
+              columns={3}
+              items={[
+                { label: "Certified by", value: snapshot.certification.name },
+                { label: "Title", value: snapshot.certification.title },
+                { label: "Certified on", value: `${formatDateTime(snapshot.certification.certifiedAt)} ET` },
+              ]}
+            />
+          </CardBody>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader title="Attachments" />
