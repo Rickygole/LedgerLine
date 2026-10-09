@@ -90,7 +90,7 @@ export async function sendNow(_prev: ReminderState, formData: FormData): Promise
   const period = String(formData.get("period") ?? "");
   const date = String(formData.get("date") ?? "");
   if (!isoDate(date)) return { error: "Choose a real calendar date." };
-  if (date !== todayInNewYork()) return { error: "Reminders can only be sent for today. Past due notices for another date would reach organizations with the wrong timing." };
+  if (date !== todayInNewYork()) return { error: "Reminders can be added to the outbox for today only. Past due notices for another date would reach organizations with the wrong timing." };
   try {
     const queued = await withClaims(admin.id, async (tx) => (await tx.one<{ n: number }>("SELECT app.queue_reminders($1, $2::date) AS n", [period, date]))?.n ?? 0);
     revalidatePath("/finance/outbox");
