@@ -31,7 +31,7 @@ function wrap(client: PoolClient): Tx {
     },
     async one<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
       const result = await client.query<T>(sql, params);
-      return result.rows[0] ?? null;
+      return (result.rows[0] as T | undefined) ?? null;
     },
   };
 }
@@ -50,6 +50,11 @@ export async function withClaims<T>(sub: string, fn: (tx: Tx) => Promise<T>): Pr
   } finally {
     client.release();
   }
+}
+
+export async function anonymous<T extends QueryResultRow = QueryResultRow>(sql: string, params: unknown[] = []): Promise<T[]> {
+  const result = await pool().query<T>(sql, params);
+  return result.rows;
 }
 
 export function pgCode(error: unknown): string | undefined {
