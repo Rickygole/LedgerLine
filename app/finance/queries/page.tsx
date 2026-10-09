@@ -9,7 +9,7 @@ import { cleanParams, countMatches, describe, enteredParams, exportHref, listSav
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink, buttonClass } from "@/components/ui/button";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { QueryBuilder } from "@/components/finance/lifecycle/query-builder";
 import { deleteQuery } from "./actions";
@@ -74,9 +74,9 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                 <ButtonLink href={resultsHref(params)} className="flex-1">
                   <ExternalLink className="h-4 w-4" aria-hidden="true" /> Open results
                 </ButtonLink>
-                <ButtonLink href={exportHref(params)} variant="secondary" className="flex-1">
+                <a href={exportHref(params)} download className={buttonClass("secondary", "md", "flex-1")}>
                   <Download className="h-4 w-4" aria-hidden="true" /> Export Excel
-                </ButtonLink>
+                </a>
               </div>
             </CardBody>
           </Card>
