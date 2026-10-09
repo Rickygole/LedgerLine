@@ -4,8 +4,9 @@ import { useActionState, useState, useTransition } from "react";
 import { CheckCircle2, Eye, Flag, Pencil } from "lucide-react";
 import { addFlagAction, correctionAction, transitionAction, type ActionResult } from "@/app/finance/submissions/[id]/actions";
 import { RequestUpdate } from "@/components/finance/review/request-update";
+import { StaleNotice, isStale } from "@/components/finance/review/stale-notice";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
 import type { Concern } from "@/lib/finance/review/return-note-core";
 
@@ -13,6 +14,7 @@ export type CorrectableQuestion = { key: string; label: string; current: string 
 
 function Message({ state }: { state: ActionResult | undefined }) {
   if (!state) return <div aria-live="polite" />;
+  if (!state.ok && isStale(state.message)) return <StaleNotice />;
   return (
     <p role={state.ok ? "status" : "alert"} className={state.ok ? "text-sm font-semibold text-ok" : "text-sm font-semibold text-bad"}>
       {state.message}
@@ -134,7 +136,7 @@ function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId
         </Label>
         <Textarea id="corr-reason" rows={2} value={reason} onChange={(event) => setReason(event.target.value)} aria-describedby={state && !state.ok ? "corr-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
       </div>
-      {state && !state.ok ? <FieldError id="corr-error">{state.message}</FieldError> : null}
+      {state && !state.ok ? isStale(state.message) ? <StaleNotice /> : <FieldError id="corr-error">{state.message}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Pencil className="h-4 w-4" aria-hidden="true" />
         {pending ? "Saving" : "Save correction"}
@@ -150,40 +152,52 @@ export function ActionsPanel({
   lockVersion,
   concerns,
   questions,
+  badge,
 }: {
   submissionId: string;
   status: string;
   lockVersion: number;
   concerns: Concern[];
   questions: CorrectableQuestion[];
+  badge?: React.ReactNode;
 }) {
   const reviewable = status === "submitted" || status === "under_review";
   const correctable = reviewable || status === "accepted";
   return (
     <Card>
-      <CardHeader title="Actions" description="Every action is recorded in the audit timeline." />
-      <CardBody className="space-y-5">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <h2 className="text-[15px] font-semibold text-ink">Actions</h2>
+        {badge}
+      </div>
+      <CardBody className="space-y-4">
         {reviewable ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {status === "submitted" ? <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="start_review" label="Start review" icon={Eye} variant="primary" /> : null}
-            <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="accept" label="Accept" icon={CheckCircle2} variant={status === "under_review" ? "primary" : "secondary"} />
+            <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="accept" label="Accept report" icon={CheckCircle2} variant={status === "under_review" ? "primary" : "secondary"} />
             <RequestUpdate submissionId={submissionId} lockVersion={lockVersion} concerns={concerns} />
           </div>
         ) : (
-          <p className="text-sm text-muted">
+          <p className="rounded-md bg-surface px-3 py-2.5 text-sm text-muted">
             {status === "accepted" ? "This report is accepted. You can still correct an answer or add a flag." : status === "returned" ? "Waiting on the organization to update and resubmit." : "This report has not been submitted yet."}
           </p>
         )}
-        <details className="border-t border-line pt-4">
-          <summary className="cursor-pointer text-sm font-semibold text-ink">Add manual flag</summary>
+        <p className="text-xs text-muted">Every action is recorded in the audit timeline under your name.</p>
+        <details className="group border-t border-line pt-3">
+          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            <Flag className="h-4 w-4 text-muted" aria-hidden="true" />
+            Add a manual flag
+          </summary>
           <div className="mt-3">
             <FlagForm submissionId={submissionId} />
           </div>
         </details>
         {correctable ? (
-          <details className="border-t border-line pt-4">
-            <summary className="cursor-pointer text-sm font-semibold text-ink">Correct an answer</summary>
-            <p className="mt-2 text-sm text-muted">Creates a new revision under your name. The status does not change.</p>
+          <details className="group border-t border-line pt-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+              <Pencil className="h-4 w-4 text-muted" aria-hidden="true" />
+              Correct an answer
+            </summary>
+            <p className="mt-2 text-[13px] text-muted">Creates a new revision under your name. The status does not change.</p>
             <div className="mt-3">
               <CorrectionForm submissionId={submissionId} lockVersion={lockVersion} questions={questions} />
             </div>
