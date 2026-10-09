@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { Eye } from "lucide-react";
 import { ActionsPanel, type CorrectableQuestion } from "@/components/finance/review/actions-panel";
 import { AttachmentsTab, AuditTab, BudgetTab, FlagsTab, ReportTab, RevisionsTab, TabNav } from "@/components/finance/review/review-sections";
-import { Badge, DueBadge, StateBadge } from "@/components/ui/status-badge";
+import { DueBadge, StateBadge } from "@/components/ui/status-badge";
+import { AuditTimeline } from "@/components/finance/review/audit-timeline";
+import { ProfileHeader } from "@/components/ui/profile-header";
 import { Card, CardBody } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
 import { FINANCE_ROLES, REVIEW_ROLES, requireUser } from "@/lib/auth";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
@@ -56,52 +57,51 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   const openFlagCount = detail.flags.filter((f) => f.status === "open").length;
   const late = row.status === "draft" || row.status === "returned" ? row.daysPastDue : 0;
 
+  const state = <StateBadge state={reportState(row.status, row.dueOn)} />;
+  const recent = detail.audit.slice(-5);
+
   return (
     <>
-      <PageHeader
+      <ProfileHeader
         title={row.initiativeName}
         crumbs={[{ label: "Submissions", href: "/finance/submissions" }, { label: row.referenceNo ?? "Report" }]}
-        description={
+        subtitle={
           <>
             <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-navy-700 hover:underline">
               {row.orgName}
-            </Link>{" "}
-            <span className="num">(EIN {row.ein})</span>, {row.borough}
+            </Link>
+            <span className="text-muted">, {row.borough}</span>
           </>
         }
-        meta={
-          <>
-            <StateBadge state={reportState(row.status, row.dueOn)} />
-            {row.status === "draft" || row.status === "returned" ? <DueBadge daysPastDue={late} /> : null}
-            <Badge>{row.referenceNo}</Badge>
-            <Badge>Revision {row.revision}</Badge>
-            <Badge>{detail.periodLabel}</Badge>
-          </>
-        }
-      />
+        meta={[
+          state,
+          late > 0 ? <DueBadge key="due" daysPastDue={late} /> : null,
+          <span key="ref" className="whitespace-nowrap font-mono text-[13px]">{row.referenceNo}</span>,
+          <span key="ein" className="whitespace-nowrap">
+            EIN <span className="font-mono text-[13px]">{row.ein}</span>
+          </span>,
+          <span key="rev" className="num whitespace-nowrap">Revision {row.revision}</span>,
+          <span key="period" className="whitespace-nowrap">{detail.periodLabel}</span>,
+        ]}
+        tabs={<TabNav id={id} current={tab} counts={{ attachments: detail.attachments.length, flags: openFlagCount, audit: detail.audit.length, revisions: detail.revisions.length }} />}
+      >
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-5 py-4 text-sm sm:px-6 md:grid-cols-4">
+          {[
+            ["Award", <span key="a" className="num font-semibold">{formatCurrency(row.award)}</span>],
+            ["Due", formatDate(row.dueOn)],
+            ["Submitted by", detail.submittedBy ?? "Not submitted"],
+            ["Submitted", row.submittedAt ? formatDateTime(row.submittedAt) : "Not submitted"],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="min-w-0">
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">{label}</dt>
+              <dd className="mt-1 truncate text-ink">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </ProfileHeader>
 
-      <div className="mb-5 grid grid-cols-2 gap-4 rounded-lg border border-line bg-white px-5 py-4 text-sm shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:grid-cols-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Award</p>
-          <p className="num mt-1 font-semibold">{formatCurrency(row.award)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Due</p>
-          <p className="mt-1">{formatDate(row.dueOn)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Submitted by</p>
-          <p className="mt-1">{detail.submittedBy ?? "Not submitted"}</p>
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Submitted</p>
-          <p className="mt-1">{row.submittedAt ? formatDateTime(row.submittedAt) : "Not submitted"}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0 order-2 xl:order-1">
-          <TabNav id={id} current={tab} counts={{ attachments: detail.attachments.length, flags: openFlagCount, audit: detail.audit.length, revisions: detail.revisions.length }} />
+      <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
+        <div className="order-2 min-w-0 lg:order-1 lg:col-span-8">
           {tab === "report" ? <ReportTab detail={detail} /> : null}
           {tab === "budget" ? <BudgetTab detail={detail} /> : null}
           {tab === "attachments" ? <AttachmentsTab submissionId={id} attachments={detail.attachments} /> : null}
@@ -109,9 +109,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           {tab === "audit" ? <AuditTab audit={detail.audit} labels={labels} /> : null}
           {tab === "revisions" ? <RevisionsTab revisions={detail.revisions} /> : null}
         </div>
-        <aside className="order-1 space-y-4 xl:order-2" aria-label="Review actions">
+        <aside className="order-1 space-y-4 lg:sticky lg:top-4 lg:order-2 lg:col-span-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:pb-1" aria-label="Review actions">
           {canReview ? (
-            <ActionsPanel submissionId={id} status={row.status ?? "draft"} lockVersion={row.lockVersion} concerns={concerns} questions={questions} />
+            <ActionsPanel submissionId={id} status={row.status ?? "draft"} lockVersion={row.lockVersion} concerns={concerns} questions={questions} badge={state} />
           ) : (
             <Card>
               <CardBody className="flex items-start gap-3 text-sm">
@@ -120,6 +120,17 @@ export default async function ReviewPage({ params, searchParams }: Props) {
               </CardBody>
             </Card>
           )}
+          <Card>
+            <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+              <h2 className="text-[15px] font-semibold text-ink">Audit timeline</h2>
+              {detail.audit.length > recent.length ? (
+                <Link href={`/finance/submissions/${id}?tab=audit`} className="text-sm font-semibold text-navy-700 hover:underline">
+                  All {detail.audit.length}
+                </Link>
+              ) : null}
+            </div>
+            <CardBody>{recent.length === 0 ? <p className="text-sm text-muted">No actions have been recorded.</p> : <AuditTimeline events={recent} labels={labels} compact />}</CardBody>
+          </Card>
         </aside>
       </div>
     </>
