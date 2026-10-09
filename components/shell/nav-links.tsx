@@ -18,7 +18,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative whitespace-nowrap rounded-t-md border-b-2 px-3 py-3 text-sm font-medium transition-colors focus-visible:-outline-offset-2",
+              "relative whitespace-nowrap rounded-t-md border-b-2 px-3 py-3 text-sm font-medium transition-colors focus-visible:bg-navy-50 focus-visible:-outline-offset-2",
               active ? "border-navy-800 font-semibold text-navy-900" : "border-transparent text-muted hover:border-line-strong hover:text-ink"
             )}
           >
