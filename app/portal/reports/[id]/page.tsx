@@ -27,13 +27,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     if (!report) return null;
     const editable = report.header.status === "draft" || report.header.status === "returned";
     if (editable) {
-      const [payload, note] = await Promise.all([
-        loadEditorPayload(tx, report, user.fullName),
-        report.header.status === "returned" ? loadReturnNote(tx, id) : Promise.resolve(null),
-      ]);
+      const payload = await loadEditorPayload(tx, report, user.fullName);
+      const note = report.header.status === "returned" ? await loadReturnNote(tx, id) : null;
       return { kind: "edit" as const, report, payload, note };
     }
-    const [revision, files] = await Promise.all([loadLatestRevision(tx, id), loadFileIds(tx, id)]);
+    const revision = await loadLatestRevision(tx, id);
+    const files = await loadFileIds(tx, id);
     return { kind: "view" as const, report, revision, files };
   });
   if (!data) notFound();

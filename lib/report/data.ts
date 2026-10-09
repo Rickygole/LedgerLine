@@ -150,11 +150,9 @@ export function resumeSectionFor(definition: FormDefinition, updatedAt: Record<s
 }
 
 export async function loadEditorPayload(tx: Tx, report: LoadedReport, currentUserName: string): Promise<EditorPayload> {
-  const [{ answers, updatedAt }, budget, attachments] = await Promise.all([
-    loadAnswers(tx, report.header.id),
-    loadBudget(tx, report.header.id),
-    loadAttachments(tx, report.header.id),
-  ]);
+  const { answers, updatedAt } = await loadAnswers(tx, report.header.id);
+  const budget = await loadBudget(tx, report.header.id);
+  const attachments = await loadAttachments(tx, report.header.id);
   return {
     header: report.header,
     definition: report.definition,
