@@ -73,7 +73,7 @@ test("[US-022][US-023] several supporting documents of the allowed types attach 
 test("[BR-012] the browser refuses a file over 25 MB before sending it and says why", async ({ page }) => {
   await openOverdueDraft(page);
   await page.locator("#attachment-input").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]) });
-  await expect(page.getByText("26 MB. The limit is 25 MB.")).toBeVisible();
+  await expect(page.getByText(/over the 25\.0 MB limit for one file/)).toBeVisible();
 });
 
 test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the amount, then submits once fixed", async ({ page }) => {

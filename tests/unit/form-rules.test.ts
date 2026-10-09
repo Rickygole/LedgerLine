@@ -29,7 +29,7 @@ describe("[BR-008] a budget can have up to 100 lines", () => {
   it("blocks the 101st line and says what the limit is", () => {
     const lines = Array.from({ length: 101 }, (_, i) => line(10, i + 1));
     const issues = validateSubmission({ definition, answers, budget: lines, awardAmount: 1010 });
-    expect(issues.find((i) => i.ruleId === "BR-008")?.message).toBe("The budget can have at most 100 lines.");
+    expect(issues.find((i) => i.ruleId === "BR-008")?.message).toBe("The budget can have at most 100 lines. This budget has 101.");
   });
 });
 

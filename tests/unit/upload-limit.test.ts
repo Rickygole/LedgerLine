@@ -15,12 +15,12 @@ describe("[BR-012] uploads are limited to 25 MB per file", () => {
   it("accepts a file of exactly 25 MB and refuses one byte more", async () => {
     const { checkUpload } = await import("@/lib/storage");
     expect(checkUpload("budget.xlsx", 25 * MB)).toBeNull();
-    expect(checkUpload("budget.xlsx", 25 * MB + 1)).toContain("The limit is 25 MB.");
+    expect(checkUpload("budget.xlsx", 25 * MB + 1)).toContain("over the 25.0 MB limit for one file");
   });
 
   it("refuses a 31 MB file on the server and names its size", async () => {
     const { checkUpload } = await import("@/lib/storage");
-    expect(checkUpload("scan.pdf", 31 * MB)).toBe("31 MB. The limit is 25 MB.");
+    expect(checkUpload("scan.pdf", 31 * MB)).toBe("This file is 31.0 MB, which is over the 25.0 MB limit for one file.");
   });
 
   it("gives the browser the same answer as the server for every size", async () => {
