@@ -46,7 +46,7 @@ describe("[US-023] Excel, Word, CSV and PDF files are accepted", () => {
   it("refuses other types in plain words", async () => {
     const { checkUpload } = await import("@/lib/storage");
     for (const name of ["setup.exe", "photo.png", "notes.txt", "archive.zip", "macro.xlsm", "noextension"]) {
-      expect(checkUpload(name, 2048)).toBe("Use PDF, Word, Excel or CSV.");
+      expect(checkUpload(name, 2048)).toBe("Use PDF, Word (.docx), Excel (.xlsx) or CSV.");
     }
   });
 
