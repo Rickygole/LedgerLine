@@ -1,4 +1,3 @@
-import { LockKeyhole } from "lucide-react";
 import { AuthFrame } from "@/components/shell/auth-frame";
 import { GateForm } from "./gate-form";
 
@@ -8,12 +7,10 @@ export default async function GatePage({ searchParams }: { searchParams: Promise
   const { next } = await searchParams;
   return (
     <AuthFrame>
-      <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-navy-50 text-navy-700 ring-1 ring-navy-100" aria-hidden="true">
-        <LockKeyhole className="h-5 w-5" />
-      </span>
-      <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px] sm:leading-9">Enter your access code</h1>
-      <p className="mt-2 text-sm leading-6 text-muted">This site is available by invitation. Enter the access code you were given to continue.</p>
+      <h1 className="text-2xl font-bold leading-8 text-ink">Enter your access code</h1>
+      <p className="mt-2 text-base leading-6 text-ink">LedgerLine is available by invitation. Enter the passcode you were given to continue to sign in.</p>
       <GateForm next={next ?? ""} />
+      <p className="mt-8 border-t border-line pt-5 text-sm leading-6 text-ink">Do not have a passcode? Ask the person who invited you to LedgerLine.</p>
     </AuthFrame>
   );
 }

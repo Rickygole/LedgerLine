@@ -9,11 +9,11 @@ export function ResetForm({ token, email }: { token: string; email: string }) {
   const [state, action, pending] = useActionState(setPassword, undefined);
   const error = state?.fieldErrors?.password;
   return (
-    <form action={action} className="mt-8 space-y-5" noValidate>
+    <form action={action} className="mt-6 space-y-5" noValidate>
       <input type="hidden" name="token" value={token} />
       <input type="email" name="username" value={email} autoComplete="username" readOnly hidden />
       {state?.error ? (
-        <div role="alert" className="rounded-md border border-bad/30 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
+        <div role="alert" className="border-l-4 border-bad bg-bad-bg px-4 py-3 text-sm font-semibold text-ink">
           {state.error}
         </div>
       ) : null}

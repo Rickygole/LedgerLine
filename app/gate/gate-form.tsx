@@ -8,7 +8,7 @@ import { FieldError, Input, Label } from "@/components/ui/field";
 export function GateForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(unlockGate, undefined);
   return (
-    <form action={action} className="mt-8 space-y-5">
+    <form action={action} className="mt-6 space-y-5">
       <input type="hidden" name="next" value={next} />
       <div>
         <Label htmlFor="passcode">Passcode</Label>
