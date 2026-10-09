@@ -60,7 +60,7 @@ export function MissingPage({ role, roleText }: { role: Role | null; roleText: s
         </>
       }
     >
-      <p>The page you asked for does not exist or has moved. Check the address, or start again from your dashboard.</p>
+      <p>The page you asked for does not exist or has moved. {role === "cbo_submitter" ? "Check the address, or start again from My reports." : role ? "Check the address, or start again from your dashboard." : "Check the address, or sign in to go to your dashboard."}</p>
     </StatusPanel>
   );
 }
