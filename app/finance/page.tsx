@@ -15,6 +15,7 @@ import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { countBuckets, groupBy } from "@/lib/finance/review/derive";
 import { hrefWith, parseFilters } from "@/lib/finance/review/filters";
 import { QUIET_ACTIONS } from "@/lib/finance/review/audit-words";
+import { auditEntityHref, auditPhrase, recentActivity } from "@/lib/finance/admin/audit";
 import type { Filters, ReportRow } from "@/lib/finance/review/types";
 import { formatCompactCurrency } from "@/lib/rules/money";
 
@@ -33,28 +34,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
     const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
-    const activity = await tx.query<{
-      id: string;
-      at: string;
-      actor: string | null;
-      action: string;
-      entity: string;
-      submission_id: string | null;
-      reference_no: string | null;
-      initiative: string | null;
-      ai: boolean;
-    }>(
-      `SELECT e.id::text AS id, to_char(e.at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS at, u.full_name AS actor, e.action, e.entity,
-              s.id AS submission_id, s.reference_no, i.name AS initiative, (e.ai_action_id IS NOT NULL) AS ai
-       FROM audit_event e
-       LEFT JOIN app_user u ON u.id = e.actor_id
-       LEFT JOIN submission s ON e.entity = 'submission' AND s.id::text = e.entity_id
-       LEFT JOIN assignment a ON a.id = s.assignment_id
-       LEFT JOIN initiative i ON i.id = a.initiative_id
-       WHERE e.action <> ALL ($1::text[]) AND (u.email IS NULL OR u.email <> 'system.scheduler@ledgerline.example')
-       ORDER BY e.at DESC, e.id DESC LIMIT 10`,
-      [QUIET_ACTIONS]
-    );
+    const activity = await recentActivity(tx, QUIET_ACTIONS);
     return { periods, period, rows, activity };
   });
 
@@ -71,17 +51,11 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
     .sort((a, b) => b.daysPastDue - a.daysPastDue || b.award - a.award)
     .slice(0, 4);
 
-  const activity: ActivityItem[] = data.activity.map((a) => ({
-    id: Number(a.id),
-    at: a.at,
-    actor: a.actor,
-    action: a.action,
-    entity: a.entity,
-    submissionId: a.submission_id,
-    referenceNo: a.reference_no,
-    initiative: a.initiative,
-    ai: a.ai,
-  }));
+  const activity: ActivityItem[] = data.activity.map((a) => {
+    const phrase = auditPhrase(a);
+    const href = a.entity === "app_user" && user.role !== "finance_admin" ? null : auditEntityHref(a);
+    return { id: a.id, at: new Date(a.at).toISOString(), actor: phrase.actor, verb: phrase.verb, subject: phrase.subject, href, initiative: a.initiative_name, ai: Boolean(a.ai_action_id) };
+  });
 
   const base = { period: period.id };
   const list = (extra: Partial<Filters>) => hrefWith("/finance/submissions", base, extra);
