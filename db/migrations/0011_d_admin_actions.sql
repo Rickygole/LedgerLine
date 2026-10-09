@@ -16,7 +16,7 @@ BEGIN
     v_target.email,
     'password_reset',
     '[DEMO] Reset your LedgerLine password',
-    'Hello ' || v_target.full_name || E',\n\nA Council Finance administrator asked us to help you choose a new LedgerLine password. In a live system this message would contain a single use link that expires in one hour.\n\nThis is a demonstration message. No link was created and your password has not changed.\n\nLedgerLine, New York City Council Finance Division',
+    'Hello ' || v_target.full_name || E',\n\nA Council Finance administrator asked us to help you choose a new LedgerLine password. In a live system this message would contain a single use link that expires in one hour.\n\nThis is a demonstration message. No link was created and your password has not changed.\n\nLedgerLine demonstration environment. Synthetic data, not an official NYC system.',
     v_target.org_id,
     app.uid()
   )
