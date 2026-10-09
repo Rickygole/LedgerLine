@@ -119,6 +119,18 @@ describe("flag evidence", () => {
     expect(fine.flags).toEqual([]);
   });
 
+  it("ignores participants served when branching hides that question", () => {
+    const branched = {
+      ...definition,
+      sections: definition.sections.map((section) => ({
+        ...section,
+        questions: section.questions.map((q) => (q.key === "participants_actual" ? { ...q, visibleWhen: { key: "served_youth", equals: "Yes" } } : q)),
+      })),
+    };
+    const r = row({ submissionId: "s1", status: "submitted", definition: branched, answers: { ...completeAnswers, participants_actual: "0" }, budget: budget(90000) });
+    expect(r.flags.find((f) => f.reason === "zero_outcomes")).toBeUndefined();
+  });
+
   it("adds open manual flags with their note", () => {
     const r = row({ submissionId: "s1", status: "submitted", answers: completeAnswers, budget: budget(90000), openFlags: [{ id: "f1", kind: "manual", note: "Check the vendor invoice" }] });
     expect(r.flags).toEqual([{ reason: "manual", evidence: "Flagged by Finance: Check the vendor invoice" }]);

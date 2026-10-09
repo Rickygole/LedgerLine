@@ -1,7 +1,7 @@
 import { bucketFor, BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { daysPastDue } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
-import { balanceMessage, blockingIssues, budgetTotals, validateSubmission } from "@/lib/rules/validate";
+import { balanceMessage, blockingIssues, budgetTotals, validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 import type { Answers, BudgetLine, FormDefinition, Issue } from "@/lib/rules/types";
 import { PAGE_SIZE } from "./filters";
 import type { Filters, FlagReason, OpenFlag, ReportRow, RowFlag } from "./types";
@@ -26,8 +26,9 @@ export function computeIssues(definition: FormDefinition | null, answers: Answer
   return blockingIssues(validateSubmission({ definition, answers, budget, awardAmount: award }));
 }
 
-export function outcomeFlag(status: string | null, answers: Answers): RowFlag | null {
+export function outcomeFlag(status: string | null, stored: Answers, definition: FormDefinition | null): RowFlag | null {
   if (status === null || status === "draft" || status === "returned") return null;
+  const answers = definition ? visibleAnswers(definition, stored) : stored;
   const actual = numberAnswer(answers, "participants_actual");
   const target = numberAnswer(answers, "participants_target");
   if (actual === null) return null;
@@ -56,6 +57,7 @@ export function flagsForRow(input: {
   award: number;
   budget: BudgetLine[];
   answers: Answers;
+  definition: FormDefinition | null;
   issues: Issue[];
   openFlags: OpenFlag[];
 }): RowFlag[] {
@@ -96,7 +98,7 @@ export function flagsForRow(input: {
     }
   }
 
-  const outcome = outcomeFlag(status, input.answers);
+  const outcome = outcomeFlag(status, input.answers, input.definition);
   if (outcome) flags.push(outcome);
 
   for (const open of input.openFlags) {
@@ -114,7 +116,7 @@ export function finishRow(base: Omit<ReportRow, "issues" | "bucket" | "daysPastD
   const issues = computeIssues(base.definition, base.answers, base.budget, base.award);
   const late = daysPastDue(base.dueOn);
   const bucket = bucketFor(base.status, base.dueOn, issues.length > 0);
-  const flags = flagsForRow({ status: base.status, bucket, daysPastDue: late, award: base.award, budget: base.budget, answers: base.answers, issues, openFlags: base.openFlags });
+  const flags = flagsForRow({ status: base.status, bucket, daysPastDue: late, award: base.award, budget: base.budget, answers: base.answers, definition: base.definition, issues, openFlags: base.openFlags });
   return { ...base, issues, bucket, daysPastDue: late, flags };
 }
 

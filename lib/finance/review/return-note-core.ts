@@ -66,7 +66,7 @@ export function buildConcerns(input: {
     }
     concerns.push({ id, ruleId: issue.ruleId, kind: "rule", label: field === "budget.lines" ? "Budget line descriptions" : labelFor(input.definition, issue.field), detail });
   }
-  const outcome = outcomeFlag(input.status === "draft" ? "submitted" : input.status, input.answers);
+  const outcome = outcomeFlag(input.status === "draft" ? "submitted" : input.status, input.answers, input.definition);
   if (outcome) {
     const zero = outcome.reason === "zero_outcomes";
     concerns.push({
