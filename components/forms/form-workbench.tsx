@@ -8,6 +8,8 @@ import { publishForm, saveDefinition } from "@/app/finance/forms/[formId]/action
 import { FormPreview } from "@/components/forms/form-preview";
 import { ImportPanel } from "@/components/forms/import-panel";
 import { QuestionEditor } from "@/components/forms/question-editor";
+import { QuestionOutline } from "@/components/forms/question-outline";
+import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Label, Select } from "@/components/ui/field";
@@ -25,11 +27,12 @@ type Props = {
   initialDefinition: FormDefinition;
   canEdit: boolean;
   openImport: boolean;
+  publishedVersion: number | null;
 };
 
 const BUDGET = "__budget";
 
-export function FormWorkbench({ formId, version, status, initiativeId, initiativeName, initialDefinition, canEdit, openImport }: Props) {
+export function FormWorkbench({ formId, version, status, initiativeId, initiativeName, initialDefinition, canEdit, openImport, publishedVersion }: Props) {
   const router = useRouter();
   const [saved, setSaved] = useState<FormDefinition>(initialDefinition);
   const [definition, setDefinition] = useState<FormDefinition>(initialDefinition);
@@ -43,8 +46,11 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
   const [newLabel, setNewLabel] = useState("");
   const [newType, setNewType] = useState<FieldType>("text");
   const [libraryKey, setLibraryKey] = useState("");
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [review, setReview] = useState<{ reviewed: number; total: number } | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const confirmRef = useRef<HTMLDivElement>(null);
 
   const editable = canEdit && status === "draft";
   const dirty = useMemo(() => JSON.stringify(cleanDefinition(definition)) !== JSON.stringify(cleanDefinition(saved)), [definition, saved]);
@@ -87,13 +93,24 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
   function openPublish() {
     const problems = validateDefinition(definition);
     if (problems.length > 0) return showErrors(problems);
-    dialogRef.current?.showModal();
+    setErrors([]);
+    setConfirming(true);
+    requestAnimationFrame(() => confirmRef.current?.focus());
   }
+
+  function reorder(key: string, from: number, to: number) {
+    let next = definition;
+    const step = to > from ? 1 : -1;
+    for (let at = from; at !== to; at += step) next = moveQuestion(next, key, at, step as 1 | -1);
+    setDefinition(next);
+  }
+
+  const reviewing = importOpen && review !== null && review.reviewed < review.total;
 
   function confirmPublish() {
     startTransition(async () => {
       const result = await publishForm(formId);
-      dialogRef.current?.close();
+      setConfirming(false);
       if (!result.ok) return showErrors(result.errors);
       setPublished(result.version);
       setErrors([]);
@@ -161,13 +178,42 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
               <Save className="h-4 w-4" aria-hidden="true" />
               {pending ? "Saving" : dirty ? "Save draft" : "Saved"}
             </Button>
-            <Button onClick={openPublish} disabled={pending || dirty} title={dirty ? "Save your changes before publishing" : undefined}>
-              <Rocket className="h-4 w-4" aria-hidden="true" />
+            {review && importOpen ? (
+              <span className={cn("num rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset", reviewing ? "bg-[#f1ecfb] text-[#5b3fa0] ring-[#5b3fa0]/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
+                {review.reviewed} of {review.total} reviewed
+              </span>
+            ) : null}
+            <Button onClick={openPublish} disabled={pending || dirty || importOpen || confirming} aria-describedby="publish-why" title={dirty ? "Save your changes before publishing" : importOpen ? "Finish the import review first" : undefined}>
+              {importOpen ? <Lock className="h-4 w-4" aria-hidden="true" /> : <Rocket className="h-4 w-4" aria-hidden="true" />}
               Publish
             </Button>
+            <span id="publish-why" className="sr-only">
+              {dirty ? "Save your changes before publishing." : importOpen ? "Review every imported question first." : ""}
+            </span>
           </div>
         ) : null}
       </div>
+
+      {confirming ? (
+        <div ref={confirmRef} tabIndex={-1} role="region" aria-labelledby="publish-title" className="mb-4 rounded-xl border border-l-4 border-line border-l-navy-800 bg-white px-5 py-4 shadow-card focus:outline-none">
+          <h2 id="publish-title" className="text-[15px] font-semibold text-ink">
+            Publish version {version}?
+          </h2>
+          <p className="mt-1 text-sm text-ink">
+            Publishing creates version {version}.{publishedVersion ? ` Organizations already reporting keep version ${publishedVersion}.` : " Organizations start using it right away."}
+          </p>
+          <p className="mt-1 text-sm text-muted">This cannot be undone. The change is recorded in the audit log under your name.</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button onClick={confirmPublish} disabled={pending}>
+              <Rocket className="h-4 w-4" aria-hidden="true" />
+              {pending ? "Publishing" : `Publish version ${version}`}
+            </Button>
+            <Button variant="secondary" onClick={() => setConfirming(false)} disabled={pending}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {status !== "draft" ? (
         <div className="mb-4 flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink" role="note">
@@ -181,16 +227,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
         </div>
       ) : null}
 
-      {errors.length > 0 ? (
-        <div ref={errorRef} tabIndex={-1} role="alert" className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-4 py-3 text-sm text-bad focus:outline-none focus:ring-2 focus:ring-bad/30">
-          <p className="font-semibold">{errors.length === 1 ? "There is a problem." : "There are problems to fix."}</p>
-          <ul className="mt-1 list-disc pl-5">
-            {errors.map((error) => (
-              <li key={error}>{error}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <ErrorSummary ref={errorRef} title={problemsTitle(errors.length, "you save or publish")} items={errors.map((message) => ({ message }))} className="mb-4" />
       {notice ? (
         <p className="mb-4 flex items-center gap-2 text-sm font-semibold text-ok" role="status">
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -202,9 +239,14 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
         <ImportPanel
           formId={formId}
           initiallyOpen={openImport}
-          onClose={() => setImportOpen(false)}
+          onClose={() => {
+            setImportOpen(false);
+            setReview(null);
+          }}
+          onProgress={(reviewed, total) => setReview((current) => (total === 0 ? null : current && current.reviewed === reviewed && current.total === total ? current : { reviewed, total }))}
           onApplied={(summary) => {
             setImportOpen(false);
+            setReview(null);
             setNotice(`Draft applied. ${summary}`);
             setErrors([]);
             router.refresh();
@@ -215,27 +257,25 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
       {view === "preview" ? (
         <FormPreview definition={definition} />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-          <nav aria-label="Sections" className="self-start">
-            <Card>
-              <CardHeader title="Sections" />
-              <ul className="p-2">
-                {definition.sections.map((s) => (
-                  <li key={s.key}>
-                    <button
-                      type="button"
-                      aria-current={sectionKey === s.key ? "true" : undefined}
-                      onClick={() => setSectionKey(s.key)}
-                      className={cn("flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm", sectionKey === s.key ? "bg-navy-50 font-semibold text-navy-900" : "text-ink hover:bg-surface")}
-                    >
-                      <span>{s.title}</span>
-                      <span className="num text-xs text-muted">{s.kind === "budget" ? (definition.budget.enabled ? "On" : "Off") : s.questions.length}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </nav>
+        <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_22rem]">
+          <div className="self-start lg:sticky lg:top-4">
+            <QuestionOutline
+              definition={definition}
+              sectionKey={sectionKey}
+              selectedKey={selectedKey}
+              budgetKey={BUDGET}
+              canReorder={editable}
+              onSection={(key) => {
+                setSectionKey(key);
+                setSelectedKey(null);
+              }}
+              onSelect={(key, questionKey) => {
+                setSectionKey(key);
+                setSelectedKey(questionKey);
+              }}
+              onReorder={reorder}
+            />
+          </div>
 
           <div className="min-w-0 space-y-4">
             {section?.kind === "budget" ? (
@@ -277,6 +317,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                             onChange={(patch) => setDefinition(updateQuestion(definition, question.key, patch))}
                             onMove={(direction) => setDefinition(moveQuestion(definition, section.key, index, direction))}
                             onRemove={() => setDefinition(removeQuestion(definition, question.key))}
+                            selected={selectedKey === question.key}
                           />
                         ))}
                       </ol>
@@ -334,26 +375,17 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
               </>
             ) : null}
           </div>
+
+          <aside aria-label="Live preview" className="hidden self-start xl:sticky xl:top-4 xl:block xl:max-h-[calc(100dvh-2rem)] xl:overflow-y-auto">
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+              Live preview, as organizations see it
+            </p>
+            <FormPreview definition={definition} only={definition.sections.find((s) => (s.kind === "budget" ? BUDGET : s.key) === sectionKey)?.key} />
+          </aside>
         </div>
       )}
 
-      <dialog ref={dialogRef} aria-labelledby="publish-title" className="m-auto w-full max-w-md rounded-lg border border-line p-0 shadow-xl backdrop:bg-ink/40">
-        <div className="p-6">
-          <h2 id="publish-title" className="text-lg font-semibold text-ink">
-            Publish version {version}?
-          </h2>
-          <p className="mt-2 text-sm text-ink">New reports use v{version}. Reports already started keep their version.</p>
-          <p className="mt-2 text-sm text-muted">The current published version becomes superseded. This cannot be undone, and the change is recorded in the audit log.</p>
-          <div className="mt-6 flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => dialogRef.current?.close()} disabled={pending}>
-              Cancel
-            </Button>
-            <Button onClick={confirmPublish} disabled={pending}>
-              {pending ? "Publishing" : `Publish version ${version}`}
-            </Button>
-          </div>
-        </div>
-      </dialog>
       <p className="mt-6 text-sm text-muted">
         <Link href={`/finance/initiatives/${initiativeId}`} className="text-navy-800 hover:underline">
           Back to {initiativeName}

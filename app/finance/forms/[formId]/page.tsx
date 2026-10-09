@@ -23,6 +23,7 @@ type FormRow = {
   initiative_code: string;
   published_at: Date | null;
   published_by_name: string | null;
+  published_version: number | null;
 };
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -35,7 +36,8 @@ export default async function FormPage({ params, searchParams }: { params: Promi
   const form = await withClaims(user.id, (tx) =>
     tx.one<FormRow>(
       `SELECT f.id, f.version, f.status, f.definition, f.initiative_id, i.name AS initiative_name, i.code AS initiative_code,
-              f.published_at, u.full_name AS published_by_name
+              f.published_at, u.full_name AS published_by_name,
+              (SELECT max(p.version) FROM form_version p WHERE p.initiative_id = f.initiative_id AND p.status = 'published') AS published_version
        FROM form_version f
        JOIN initiative i ON i.id = f.initiative_id
        LEFT JOIN app_user u ON u.id = f.published_by
@@ -53,7 +55,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
     <>
       <PageHeader
         title={`${form.initiative_name}: report form`}
-        crumbs={[{ label: "Finance", href: "/finance" }, { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` }, { label: `Form version ${form.version}` }]}
+        crumbs={[{ label: "Initiatives", href: "/finance/initiatives" }, { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` }, { label: `Form version ${form.version}` }]}
         description={form.status === "draft" ? "A draft is invisible to funded organizations until it is published." : "This version is read-only."}
         meta={
           <>
@@ -63,7 +65,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
             <span className="text-sm text-ink">
               Version <span className="num font-semibold">{form.version}</span>
             </span>
-            <span className="text-sm text-muted">{form.initiative_code}</span>
+            <span className="font-mono text-[13px] text-muted">{form.initiative_code}</span>
             {form.published_at ? (
               <span className="text-sm text-muted">
                 Published {formatDate(form.published_at)}
@@ -82,6 +84,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
         initialDefinition={form.definition}
         canEdit={editable}
         openImport={query.import === "1"}
+        publishedVersion={form.published_version}
       />
     </>
   );
