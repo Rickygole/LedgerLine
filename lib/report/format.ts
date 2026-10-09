@@ -1,5 +1,5 @@
 import { formatDate, formatDateTime, formatTime } from "@/lib/dates";
-import { formatCurrency, parseAmount } from "@/lib/rules/money";
+import { formatCount, formatCurrency, parseAmount } from "@/lib/rules/money";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
 import type { Certification } from "@/lib/rules/certify";
@@ -18,7 +18,7 @@ export function displayScalar(question: Question, value: AnswerValue | undefined
   if (question.type === "date") return formatDate(text);
   if (question.type === "integer" || question.type === "number") {
     const n = Number(text.replace(/,/g, ""));
-    return Number.isFinite(n) ? n.toLocaleString("en-US") : text;
+    return Number.isFinite(n) ? formatCount(n) : text;
   }
   return text;
 }
