@@ -106,6 +106,7 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
 
   function changeAnswer(key: string, value: AnswerValue) {
     setAnswers((current) => ({ ...current, [key]: value }));
+    setServerIssues(null);
     remember(sectionOf(key));
     markDirty();
   }
@@ -116,6 +117,7 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
 
   function changeRows(next: BudgetRow[]) {
     setRows(next);
+    setServerIssues(null);
     remember(definition.sections.find((section) => section.kind === "budget")?.key ?? null);
     markDirty();
   }
