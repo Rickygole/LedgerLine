@@ -347,7 +347,8 @@ export function BudgetGrid({
         </ul>
       )}
 
-      <dl className={cn("border-t border-line bg-surface/60 text-sm", !explainVariance && "rounded-b-lg")}>
+      <div className={cn("border-t border-line bg-surface/60 text-sm", !explainVariance && "rounded-b-lg")}>
+      <dl>
         {[
           ["Personal services (PS) subtotal", totals.ps],
           ["Other than personal services (OTPS) subtotal", totals.otps],
@@ -382,10 +383,10 @@ export function BudgetGrid({
               </dd>
             </div>
           </>
-        ) : (
-          <p className="px-3 pb-2.5 text-muted sm:px-4">Enter what was actually spent on each line to see the variance and the unspent balance. Actual spent does not have to equal the approved budget.</p>
-        )}
+        ) : null}
       </dl>
+      {spend.entered ? null : <p className="px-3 pb-2.5 text-muted sm:px-4">Enter what was actually spent on each line to see the variance and the unspent balance. Actual spent does not have to equal the approved budget.</p>}
+      </div>
 
       {explainVariance ? (
         <div className="rounded-b-lg border-t border-line px-3 py-4 sm:px-4">
