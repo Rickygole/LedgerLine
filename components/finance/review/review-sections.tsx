@@ -10,8 +10,19 @@ import type { AttachmentRow, AuditRecord, FlagRecord, RevisionRecord, Submission
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCount, formatCurrency } from "@/lib/rules/money";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
+
+function cellText(type: string, raw: unknown): string {
+  const text = String(raw ?? "").trim();
+  if (text === "" || type === "text") return text;
+  if (type === "currency") {
+    const amount = Number(text.replace(/[$,]/g, ""));
+    return Number.isFinite(amount) ? formatCurrency(amount) : text;
+  }
+  if (type === "percent") return text.endsWith("%") ? text : `${text}%`;
+  return formatCount(text);
+}
 
 function formatValue(question: Question, value: AnswerValue | undefined): React.ReactNode {
   if (value === null || value === undefined || value === "") return <span className="text-muted">Not answered</span>;
@@ -34,7 +45,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
               <tr key={index} className="border-t border-line">
                 {columns.map((c) => (
                   <td key={c.key} className={`px-3 py-2 ${c.type === "text" ? "" : "num text-right"}`}>
-                    {String(row[c.key] ?? "")}
+                    {cellText(c.type, row[c.key])}
                   </td>
                 ))}
               </tr>
@@ -46,7 +57,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
   }
   if (question.type === "currency") return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")))}</span>;
   if (question.type === "percent") return <span className="num">{String(value)}%</span>;
-  if (question.type === "integer" || question.type === "number") return <span className="num">{String(value)}</span>;
+  if (question.type === "integer" || question.type === "number") return <span className="num">{formatCount(String(value))}</span>;
   if (question.type === "textarea") return <span className="block whitespace-pre-wrap">{String(value)}</span>;
   return String(value);
 }
