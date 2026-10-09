@@ -9,7 +9,7 @@ import { formatCurrency } from "@/lib/rules/money";
 export const BOROUGHS = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island", "Citywide"] as const;
 
 export const ORG_TYPE_OPTIONS = [
-  { value: "cbo", label: "Community organization" },
+  { value: "cbo", label: "Nonprofit" },
   { value: "agency", label: "City agency" },
 ] as const;
 
