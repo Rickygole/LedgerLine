@@ -48,6 +48,13 @@ export async function openSubmissionForUpload(tx: Tx, submissionId: string): Pro
   );
 }
 
+export async function attachmentLimitProblem(tx: Tx, submissionId: string, bytes: number): Promise<string | null> {
+  const row = await tx.one<{ files: number; total: string }>("SELECT count(*)::int AS files, coalesce(sum(bytes), 0)::text AS total FROM attachment WHERE submission_id = $1", [submissionId]);
+  if ((row?.files ?? 0) >= 20) return "A report can have at most 20 files. Remove one to add another.";
+  if (Number(row?.total ?? 0) + bytes > 200 * 1024 * 1024) return "A report can hold at most 200 MB of files. Remove a file to make room.";
+  return null;
+}
+
 export async function insertAttachment(
   tx: Tx,
   input: { submissionId: string; pathname: string; filename: string; bytes: number; mime: string }

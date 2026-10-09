@@ -8,7 +8,7 @@ import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
 import { reportIssues } from "@/lib/report/issues";
 import { writeDraft } from "@/lib/report/write";
-import { cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, signPath } from "@/lib/report/attachments";
+import { attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, signPath } from "@/lib/report/attachments";
 import type { PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
 import { buildSnapshot } from "@/lib/snapshot";
 import { buildPath, checkUpload, putFile } from "@/lib/storage";
@@ -92,8 +92,12 @@ export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> 
   const user = await getCurrentUser().catch(() => null);
   if (!user) return { status: "signed_out" };
   try {
-    const target = await withClaims(user.id, (tx) => openSubmissionForUpload(tx, submissionId));
+    const target = await withClaims(user.id, async (tx) => {
+      const open = await openSubmissionForUpload(tx, submissionId);
+      return open && { ...open, limit: await attachmentLimitProblem(tx, submissionId, bytes) };
+    });
     if (!target) return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    if (target.limit) return { status: "rejected", message: target.limit };
     const pathname = buildPath(target.ein, submissionId, filename);
     return { status: "ok", pathname, signature: signPath(user.id, submissionId, pathname), contentType: mimeFor(filename) };
   } catch {
@@ -151,8 +155,12 @@ export async function uploadLocalAttachment(formData: FormData): Promise<UploadA
   const user = await getCurrentUser().catch(() => null);
   if (!user) return { status: "signed_out" };
   try {
-    const target = await withClaims(user.id, (tx) => openSubmissionForUpload(tx, submissionId.data));
+    const target = await withClaims(user.id, async (tx) => {
+      const open = await openSubmissionForUpload(tx, submissionId.data);
+      return open && { ...open, limit: await attachmentLimitProblem(tx, submissionId.data, file.size) };
+    });
     if (!target) return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    if (target.limit) return { status: "rejected", message: target.limit };
     const body = Buffer.from(await file.arrayBuffer());
     const invalid = contentLooksValid(filename, body.subarray(0, 4096));
     if (invalid) return { status: "rejected", message: invalid };
