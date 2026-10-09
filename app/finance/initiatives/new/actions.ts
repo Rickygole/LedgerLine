@@ -24,8 +24,9 @@ function fieldErrors(error: z.ZodError): Record<string, string> {
 
 export async function createInitiative(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser(["finance_admin"]);
-  const parsed = createSchema.safeParse({ name: String(formData.get("name") ?? ""), category: String(formData.get("category") ?? ""), description: String(formData.get("description") ?? "") });
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+  const values = { name: String(formData.get("name") ?? "").slice(0, 400), category: String(formData.get("category") ?? "").slice(0, 200), description: String(formData.get("description") ?? "").slice(0, 4000) };
+  const parsed = createSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values };
   let newId: string | null = null;
   for (let attempt = 0; attempt < 3 && !newId; attempt++) {
     try {
@@ -47,7 +48,7 @@ export async function createInitiative(_prev: FormState, formData: FormData): Pr
       });
     } catch (error) {
       if (pgCode(error) === "23505" && attempt < 2) continue;
-      return { error: plainError(error) };
+      return { error: plainError(error), values };
     }
   }
   redirect(`/finance/initiatives/new?step=2&initiative=${newId}`);

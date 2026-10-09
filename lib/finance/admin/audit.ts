@@ -109,8 +109,11 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
     if (row.action === "role_change") return { actor, verb: "changed the role of", subject: `${label} from ${roleLabel(text(before.role) as Role)} to ${roleLabel(text(after.role) as Role)}` };
     if (row.action === "activate") return { actor, verb: "activated", subject: label };
     if (row.action === "deactivate") return { actor, verb: "deactivated", subject: label };
+    if (row.action === "user_create") return { actor, verb: "created the account for", subject: label };
+    if (row.action === "password_set") return { actor, verb: "set a password for", subject: label };
     if (row.action === "password_reset_requested") return { actor, verb: "sent a password reset to", subject: label };
   }
+  if (row.entity === "user" && row.action === "sign_out") return { actor, verb: "signed out", subject: "" };
   if (row.entity === "user" && row.action === "sign_in") return { actor, verb: "signed in", subject: "" };
   return { actor, verb: `recorded ${row.action.replace(/_/g, " ")} on`, subject: `${row.entity.replace(/_/g, " ")} ${label}` };
 }

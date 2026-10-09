@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Bot } from "lucide-react";
 import { Badge } from "@/components/ui/status-badge";
+import { getCurrentUser } from "@/lib/auth";
 import { auditEntityHref, auditPhrase, type AuditRow } from "@/lib/finance/admin/audit";
 
-export function AuditSentence({ row }: { row: AuditRow }) {
+export async function AuditSentence({ row }: { row: AuditRow }) {
   const phrase = auditPhrase(row);
-  const href = auditEntityHref(row);
+  const viewer = await getCurrentUser();
+  const href = row.entity === "app_user" && viewer?.role !== "finance_admin" ? null : auditEntityHref(row);
   const subject = href && phrase.subject ? (
     <Link href={href} className="font-semibold text-navy-700 hover:underline">
       {phrase.subject}

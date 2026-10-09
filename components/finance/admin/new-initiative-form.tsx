@@ -18,14 +18,14 @@ export function NewInitiativeForm({ categories, nextCode }: { categories: string
           Initiative name
         </Label>
         <Hint id="name-hint">Shown to every funded organization. The code {nextCode} is assigned automatically.</Hint>
-        <Input id="name" name="name" placeholder="Senior Digital Literacy" maxLength={120} aria-invalid={fe.name ? true : undefined} aria-describedby={fe.name ? "name-hint name-error" : "name-hint"} />
+        <Input id="name" name="name" defaultValue={state?.values?.name} placeholder="Senior Digital Literacy" maxLength={120} aria-invalid={fe.name ? true : undefined} aria-describedby={fe.name ? "name-hint name-error" : "name-hint"} />
         <FieldError id="name-error">{fe.name}</FieldError>
       </div>
       <div>
         <Label htmlFor="category" required>
           Category
         </Label>
-        <Select id="category" name="category" defaultValue="" aria-invalid={fe.category ? true : undefined} aria-describedby={fe.category ? "category-error" : undefined}>
+        <Select key={state?.values?.category ?? ""} id="category" name="category" defaultValue={state?.values?.category ?? ""} aria-invalid={fe.category ? true : undefined} aria-describedby={fe.category ? "category-error" : undefined}>
           <option value="" disabled>
             Choose a category
           </option>
@@ -41,7 +41,7 @@ export function NewInitiativeForm({ categories, nextCode }: { categories: string
         <Label htmlFor="description" required>
           Description
         </Label>
-        <Textarea id="description" name="description" maxLength={1000} aria-invalid={fe.description ? true : undefined} aria-describedby={fe.description ? "description-error" : undefined} />
+        <Textarea id="description" name="description" defaultValue={state?.values?.description} maxLength={1000} aria-invalid={fe.description ? true : undefined} aria-describedby={fe.description ? "description-error" : undefined} />
         <FieldError id="description-error">{fe.description}</FieldError>
       </div>
       <p className="text-sm text-muted">The initiative is created for fiscal year FY27 with no funding until you assign organizations in the next step.</p>

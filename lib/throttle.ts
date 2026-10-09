@@ -1,0 +1,15 @@
+import "server-only";
+import { headers } from "next/headers";
+import { anonymous } from "@/lib/db";
+
+export const TOO_MANY = "Too many attempts. Wait 15 minutes and try again.";
+
+export async function clientKey(): Promise<string> {
+  const h = await headers();
+  return (h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? "local").split(",")[0].trim();
+}
+
+export async function allowed(key: string, limit: number): Promise<boolean> {
+  const rows = await anonymous<{ ok: boolean }>("SELECT app.record_attempt($1, 15, $2) AS ok", [key, limit]);
+  return rows[0]?.ok === true;
+}

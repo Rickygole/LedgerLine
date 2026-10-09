@@ -5,11 +5,12 @@ import { signIn } from "@/app/actions/session";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label } from "@/components/ui/field";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(signIn, undefined);
 
   return (
     <form action={action} className="mt-8 space-y-5" noValidate>
+      <input type="hidden" name="next" value={next} />
       {state?.error ? (
         <div role="alert" className="rounded-md border border-bad/30 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
           {state.error}
@@ -17,7 +18,7 @@ export function LoginForm() {
       ) : null}
       <div>
         <Label htmlFor="email">Work email</Label>
-        <Input id="email" name="email" type="email" autoComplete="username" required aria-invalid={state?.fieldErrors?.email ? true : undefined} aria-describedby={state?.fieldErrors?.email ? "email-error" : undefined} />
+        <Input id="email" name="email" type="email" autoComplete="username" defaultValue={state?.values?.email} required aria-invalid={state?.fieldErrors?.email ? true : undefined} aria-describedby={state?.fieldErrors?.email ? "email-error" : undefined} />
         <FieldError id="email-error">{state?.fieldErrors?.email}</FieldError>
       </div>
       <div>

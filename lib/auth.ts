@@ -1,9 +1,9 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
 import { withClaims } from "@/lib/db";
-import { SESSION_COOKIE, verifySession } from "@/lib/session";
+import { SESSION_COOKIE, verifySessionClaims } from "@/lib/session";
 
 export type Role = "cbo_submitter" | "finance_viewer" | "finance_analyst" | "finance_admin";
 
@@ -20,9 +20,9 @@ export type CurrentUser = {
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const store = await cookies();
-  const sub = await verifySession(store.get(SESSION_COOKIE)?.value);
-  if (!sub) return null;
-  return withClaims(sub, async (tx) => {
+  const claims = await verifySessionClaims(store.get(SESSION_COOKIE)?.value);
+  if (!claims) return null;
+  return withClaims(claims.sub, async (tx) => {
     const row = await tx.one<{
       id: string;
       email: string;
@@ -35,7 +35,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     }>(
       `SELECT u.id, u.email, u.full_name, u.title, u.role, u.org_id, o.legal_name, o.ein
        FROM app_user u LEFT JOIN organization o ON o.id = u.org_id
-       WHERE u.id = app.uid() AND u.active`
+       WHERE u.id = app.uid() AND u.active AND app.session_valid($1::uuid, $2::int)`,
+      [claims.jti, claims.version]
     );
     if (!row) return null;
     return {
@@ -54,7 +55,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireUser(roles?: Role[]): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (roles && !roles.includes(user.role)) notFound();
+  if (roles && !roles.includes(user.role)) forbidden();
   return user;
 }
 

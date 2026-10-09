@@ -10,24 +10,32 @@ function key(name: "AUTH_SECRET" | "GATE_COOKIE_SECRET"): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
-export async function signSession(sub: string): Promise<string> {
-  return new SignJWT({})
+export type SessionClaims = { sub: string; jti: string; version: number; expiresAt: Date };
+
+export async function signSession(sub: string, version: number): Promise<string> {
+  return new SignJWT({ sv: version })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(sub)
+    .setJti(crypto.randomUUID())
     .setIssuedAt()
     .setIssuer("ledgerline")
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
     .sign(key("AUTH_SECRET"));
 }
 
-export async function verifySession(token: string | undefined): Promise<string | null> {
+export async function verifySessionClaims(token: string | undefined): Promise<SessionClaims | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, key("AUTH_SECRET"), { issuer: "ledgerline" });
-    return typeof payload.sub === "string" ? payload.sub : null;
+    if (typeof payload.sub !== "string" || typeof payload.jti !== "string" || typeof payload.sv !== "number" || typeof payload.exp !== "number") return null;
+    return { sub: payload.sub, jti: payload.jti, version: payload.sv, expiresAt: new Date(payload.exp * 1000) };
   } catch {
     return null;
   }
+}
+
+export async function verifySession(token: string | undefined): Promise<string | null> {
+  return (await verifySessionClaims(token))?.sub ?? null;
 }
 
 export async function signGate(): Promise<string> {
