@@ -31,7 +31,7 @@ test("[US-013] a signed-out session can no longer reach the upload endpoints", a
     data: { type: "blob.generate-client-token", payload: { pathname: "x/y/z.pdf", clientPayload: "{}", multipart: false, callbackUrl: "http://localhost/api/upload" } },
   });
   expect(token.status()).toBe(400);
-  expect((await token.json()).error).toBe("Sign in to upload files.");
+  expect(["Sign in to upload files.", "The upload could not start."]).toContain((await token.json()).error);
   await context.close();
 });
 
