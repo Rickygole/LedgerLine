@@ -254,7 +254,7 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
       const outbox = {
         to: user.email,
         template: "submission_confirmation",
-        subject: `[DEMO] Report received: ${header.initiativeName}, ${header.periodLabel}`,
+        subject: `Report received: ${header.initiativeName}, ${header.periodLabel}`,
         body,
       };
       await tx.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, $4::jsonb, NULL)", [

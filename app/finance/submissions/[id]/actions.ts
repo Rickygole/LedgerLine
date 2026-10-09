@@ -125,13 +125,11 @@ export async function sendUpdateAction(raw: { submissionId: string; lockVersion:
         note,
         "",
         `Sign in to the Initiative Reporting Portal to update your report: ${proto}://${host}/portal`,
-        "",
-        "This is a demonstration message. Synthetic data, not NYC Council records.",
       ].join("\n");
       const outbox = {
         to: detail.primaryContact.email,
         template: "update_requested",
-        subject: `[DEMO] Update requested: ${row.initiativeName}, ${detail.periodLabel}`,
+        subject: `Update requested: ${row.initiativeName}, ${detail.periodLabel}`,
         body,
       };
       await tx.query("SELECT * FROM app.transition_submission($1, 'request_update', $2, NULL, $3, $4::jsonb, $5)", [
