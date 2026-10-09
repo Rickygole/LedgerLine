@@ -1,13 +1,19 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
-import { loadReport } from "@/lib/report/data";
+import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
+import { plainTextReport } from "@/lib/report/format";
+import { reportIssues } from "@/lib/report/issues";
 import { writeDraft } from "@/lib/report/write";
 import { cleanFilename, contentLooksValid, insertAttachment, mimeFor, openSubmissionForUpload, pathSignatureValid, signPath } from "@/lib/report/attachments";
-import type { PrepareUploadResult, SaveResult, UploadActionResult } from "@/lib/report/types";
+import type { PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
+import { buildSnapshot } from "@/lib/snapshot";
 import { buildPath, checkUpload, putFile } from "@/lib/storage";
+import type { Answers } from "@/lib/rules/types";
+import { blockingIssues, isVisible } from "@/lib/rules/validate";
 
 const cell = z.union([z.string().max(2000), z.number(), z.null()]);
 
@@ -169,4 +175,84 @@ export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } |
   } catch {
     return { status: "error", message: "The file could not be removed. Try again." };
   }
+}
+
+const submitSchema = z.object({ submissionId: z.uuid(), expectedLock: z.number().int().min(0) });
+
+export async function submitReport(raw: unknown): Promise<SubmitResult> {
+  const parsed = submitSchema.safeParse(raw);
+  if (!parsed.success) return { status: "error", message: "This report could not be submitted. Reload the page and try again." };
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) return { status: "signed_out" };
+
+  let outcome: SubmitResult | "done";
+  try {
+    outcome = await withClaims(user.id, async (tx): Promise<SubmitResult | "done"> => {
+      const report = await loadReport(tx, parsed.data.submissionId);
+      if (!report) return { status: "error", message: "This report could not be found." };
+      const { header, definition } = report;
+      if (header.status !== "draft" && header.status !== "returned") {
+        return { status: "error", message: "This report was already submitted." };
+      }
+      if (header.lockVersion !== parsed.data.expectedLock) {
+        return { status: "stale", by: header.updatedByName, at: header.updatedAt };
+      }
+
+      const allowed = new Set(definition.sections.flatMap((section) => section.questions.map((q) => q.key)));
+      const stored = await loadAnswers(tx, header.id);
+      const budget = await loadBudget(tx, header.id);
+      const files = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>(
+        "SELECT path, filename, bytes, mime FROM attachment WHERE submission_id = $1 ORDER BY created_at, id",
+        [header.id]
+      );
+
+      const answers: Answers = {};
+      for (const section of definition.sections) {
+        for (const question of section.questions) {
+          if (!allowed.has(question.key) || !isVisible(question, stored.answers)) continue;
+          const value = stored.answers[question.key];
+          if (value !== undefined) answers[question.key] = value;
+        }
+      }
+
+      const issues = blockingIssues(reportIssues({ definition, answers: stored.answers, budget, awardAmount: header.awardAmount, orgEin: header.ein }));
+      if (issues.length > 0) return { status: "blocked", issues };
+
+      const attachments = files.map((file) => ({ path: file.path, filename: file.filename, bytes: Number(file.bytes), mime: file.mime }));
+      const snapshot = buildSnapshot({ formVersionId: report.formVersionId, answers, budget, attachments });
+      const body = plainTextReport({
+        title: header.initiativeName,
+        referenceNo: header.referenceNo,
+        periodLabel: header.periodLabel,
+        orgName: header.orgName,
+        ein: header.ein,
+        awardAmount: header.awardAmount,
+        definition,
+        answers,
+        budget: snapshot.budget as { position: number; category: "PS" | "OTPS"; description: string; amount: number }[],
+        attachments,
+      });
+      const outbox = {
+        to: user.email,
+        template: "submission_confirmation",
+        subject: `[DEMO] Report received: ${header.initiativeName}, ${header.periodLabel}`,
+        body,
+      };
+      await tx.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, $4::jsonb, NULL)", [
+        header.id,
+        parsed.data.expectedLock,
+        JSON.stringify(snapshot),
+        JSON.stringify(outbox),
+      ]);
+      return "done";
+    });
+  } catch (error) {
+    const code = pgCode(error);
+    if (code === "40001") return { status: "stale", by: null, at: new Date().toISOString() };
+    if (code === "42501") return { status: "error", message: "Only your organization can submit this report." };
+    if (code === "23514") return { status: "error", message: "This report can no longer be submitted. It may already have been sent." };
+    return { status: "error", message: "The report could not be submitted. Your answers are saved. Try again." };
+  }
+  if (outcome !== "done") return outcome;
+  redirect(`/portal/reports/${parsed.data.submissionId}/submitted`);
 }
