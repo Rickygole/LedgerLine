@@ -7,7 +7,7 @@ export const CHART_COLORS: Record<Bucket, string> = {
   in_review: "#0072B2",
   submitted: "#56B4E9",
   returned: "#E69F00",
-  missing: "#B84F00",
+  missing: "#B42318",
   outstanding: "#BFC5CE",
 };
 
