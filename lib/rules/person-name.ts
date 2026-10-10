@@ -1,4 +1,4 @@
-export const PERSON_NAME_MAX = 120;
+const PERSON_NAME_MAX = 120;
 
 const ALLOWED = /^[\p{L}\p{M}][\p{L}\p{M} '’.\-]*$/u;
 

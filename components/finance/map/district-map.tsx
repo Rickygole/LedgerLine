@@ -6,11 +6,11 @@ import { boroughsForDistrict, districtInBorough, GEO_BOROUGHS } from "@/lib/geo/
 import { AutoSelect } from "./auto-select";
 import { DistrictMapView, type MapDistrict } from "./district-map-view";
 
-export const MAP_SOURCE = "Council district boundaries: NYC Department of City Planning, via NYC Open Data.";
+const MAP_SOURCE = "Council district boundaries: NYC Department of City Planning, via NYC Open Data.";
 
 type Common = { stats: DistrictStats; borough: string; periodId: string };
 
-export function districtHref(periodId: string, district: number, mode: MapMode, missing: number) {
+function districtHref(periodId: string, district: number, mode: MapMode, missing: number) {
   const params = new URLSearchParams({ period: periodId, district: String(district), by: mode });
   if (missing > 0) params.set("bucket", "missing");
   return `/finance/submissions?${params.toString()}`;
@@ -118,7 +118,7 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
             multiSponsor ? (
               <p>
                 District counts add up to <span className="num">{districtSum}</span> because an award with more than one sponsor counts in each sponsoring district. That is <span className="num">{stats.inDistricts.missing}</span> missing{" "}
-                {reportsWord(stats.inDistricts.missing)} funded by a district, plus <span className="num">{stats.speaker.missing}</span> Speaker's allocation and <span className="num">{stats.citywide.missing}</span> citywide.
+                {reportsWord(stats.inDistricts.missing)} funded by a district, plus <span className="num">{stats.speaker.missing}</span> Speaker&apos;s allocation and <span className="num">{stats.citywide.missing}</span> citywide.
               </p>
             ) : null
           ) : stats.noDistrict.due > 0 ? (

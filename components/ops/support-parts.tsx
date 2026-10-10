@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, Circle, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/status-badge";
 import { formatDateTime } from "@/lib/dates";
-import { formatDuration, type SupportMessage, type SupportState } from "@/lib/ops/support";
+import { type SupportMessage, type SupportState } from "@/lib/ops/support";
 
 export function SupportStateBadge({ state }: { state: SupportState }) {
   if (state === "overdue") return <Badge tone="bad" icon={AlertTriangle}>Overdue</Badge>;
@@ -25,8 +25,4 @@ export function Thread({ messages }: { messages: SupportMessage[] }) {
       ))}
     </ol>
   );
-}
-
-export function ageText(minutes: number): string {
-  return formatDuration(minutes);
 }

@@ -8,11 +8,9 @@ export const CHECKLIST = [
   { key: "rules", label: "Validation and reminder rules", detail: "Required totals, limits and reminder schedules." },
 ] as const;
 
-export type ChecklistKey = (typeof CHECKLIST)[number]["key"];
-
 export const DECISION_AREAS = [...CHECKLIST.map((c) => ({ value: c.key as string, label: c.label })), { value: "other", label: "Something else" }];
 
-export type ReviewRow = {
+type ReviewRow = {
   id: string;
   fiscal_year_id: string;
   review_date: string;
@@ -56,8 +54,8 @@ export async function reviewForYear(tx: Tx, fiscalYear: string): Promise<ReviewR
   return tx.one<ReviewRow>(`${SELECT} WHERE r.fiscal_year_id = $1`, [fiscalYear]);
 }
 
-export type ParticipantRow = { id: string; full_name: string; affiliation: string };
-export type DecisionRow = { id: string; area: string; decision: string; decided_by_name: string; created_at: string };
+type ParticipantRow = { id: string; full_name: string; affiliation: string };
+type DecisionRow = { id: string; area: string; decision: string; decided_by_name: string; created_at: string };
 
 export async function loadParticipants(tx: Tx, reviewId: string): Promise<ParticipantRow[]> {
   return tx.query<ParticipantRow>("SELECT id, full_name, affiliation FROM annual_review_participant WHERE review_id = $1 ORDER BY created_at, id", [reviewId]);

@@ -1,6 +1,6 @@
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
-export const ALLOWED_EXTENSIONS = ["pdf", "docx", "xlsx", "csv"] as const;
+const ALLOWED_EXTENSIONS = ["pdf", "docx", "xlsx", "csv"] as const;
 
 export const FILE_TYPE_HELP = "Use PDF, Word (.docx), Excel (.xlsx) or CSV.";
 

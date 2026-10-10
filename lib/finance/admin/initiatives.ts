@@ -3,7 +3,7 @@ import type { Sponsor } from "@/lib/finance/review/types";
 import { ASSIGNMENT_STATE, PERIODS_SQL, SPONSORS_SQL } from "./sql";
 import { PAGE_SIZE, likePattern } from "./params";
 
-export type InitiativeRow = {
+type InitiativeRow = {
   id: string;
   code: string;
   name: string;
@@ -19,7 +19,7 @@ export type InitiativeRow = {
   full_count: number;
 };
 
-export type InitiativeFilters = { q: string; category: string; status: string; agency: string; page: number; form?: string };
+type InitiativeFilters = { q: string; category: string; status: string; agency: string; page: number; form?: string };
 
 export async function listInitiatives(tx: Tx, today: string, periodId: string, filters: InitiativeFilters) {
   const rows = await tx.query<InitiativeRow>(
@@ -98,7 +98,7 @@ export type InitiativeDetail = {
 
 export type AwardPeriod = { id: string; label: string; due_on: string; status: string | null };
 
-export type FundedOrg = {
+type FundedOrg = {
   assignment_id: string;
   org_id: string;
   legal_name: string;
@@ -115,7 +115,7 @@ export type FundedOrg = {
   periods: AwardPeriod[] | null;
 };
 
-export type FormVersionRow = {
+type FormVersionRow = {
   id: string;
   version: number;
   status: "draft" | "published" | "superseded";

@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 
-export const FIXED_COLUMNS = [
+const FIXED_COLUMNS = [
   "reference_no",
   "ein",
   "organization",
@@ -21,11 +21,11 @@ export const FIXED_COLUMNS = [
   "contract_registered_on",
 ] as const;
 
-export const BUDGET_COLUMNS = ["reference_no", "position", "category", "description", "amount", "actual_spent"] as const;
+const BUDGET_COLUMNS = ["reference_no", "position", "category", "description", "amount", "actual_spent"] as const;
 
-export const DISCLAIMER = "Exported from LedgerLine. Figures reflect submissions on file at the time of export.";
+const DISCLAIMER = "Exported from LedgerLine. Figures reflect submissions on file at the time of export.";
 
-export type ExportBudgetLine = { position: number; category: string; description: string; amount: number; actual?: number | null };
+type ExportBudgetLine = { position: number; category: string; description: string; amount: number; actual?: number | null };
 
 export type ExportSubmission = {
   referenceNo: string;
@@ -50,7 +50,7 @@ export type ExportSubmission = {
   budget: ExportBudgetLine[];
 };
 
-export type ExportMeta = {
+type ExportMeta = {
   periodLabel: string;
   filters: string[];
   generatedOn: string;
@@ -72,7 +72,7 @@ function numberCell(value: number, format?: string): XLSX.CellObject {
   return { t: "n", v: value, ...(format ? { z: format } : {}) };
 }
 
-export function excelSerialInNewYork(iso: string): number {
+function excelSerialInNewYork(iso: string): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
     hourCycle: "h23",
@@ -88,7 +88,7 @@ export function excelSerialInNewYork(iso: string): number {
   return wall / 86_400_000 + 25569;
 }
 
-export function describeValue(value: unknown): string {
+function describeValue(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (Array.isArray(value)) {
     return value
@@ -121,7 +121,7 @@ function setRange(sheet: XLSX.WorkSheet, rows: number, cols: number) {
   sheet["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(rows - 1, 0), c: Math.max(cols - 1, 0) } });
 }
 
-export function submissionsSheet(submissions: ExportSubmission[], numericKeys: Set<string>): XLSX.WorkSheet {
+function submissionsSheet(submissions: ExportSubmission[], numericKeys: Set<string>): XLSX.WorkSheet {
   const extra = questionColumns(submissions);
   const header = [...FIXED_COLUMNS, ...extra];
   const sheet: XLSX.WorkSheet = {};
@@ -164,7 +164,7 @@ export function submissionsSheet(submissions: ExportSubmission[], numericKeys: S
   return sheet;
 }
 
-export function budgetSheet(submissions: ExportSubmission[]): XLSX.WorkSheet {
+function budgetSheet(submissions: ExportSubmission[]): XLSX.WorkSheet {
   const sheet: XLSX.WorkSheet = {};
   BUDGET_COLUMNS.forEach((name, c) => {
     sheet[XLSX.utils.encode_cell({ r: 0, c })] = { t: "s", v: name };
@@ -186,7 +186,7 @@ export function budgetSheet(submissions: ExportSubmission[]): XLSX.WorkSheet {
   return sheet;
 }
 
-export function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
+function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
   const lines: string[][] = [
     ["LedgerLine export"],
     [DISCLAIMER],

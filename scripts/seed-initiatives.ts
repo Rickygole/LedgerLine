@@ -13,7 +13,7 @@ export type InitiativeSpec = {
   newInFy27?: boolean;
 };
 
-export const SMALL_PER_CATEGORY: Record<Category, number> = {
+const SMALL_PER_CATEGORY: Record<Category, number> = {
   "Youth Services": 14,
   "Older Adults": 11,
   Education: 16,
@@ -28,7 +28,7 @@ export const SMALL_PER_CATEGORY: Record<Category, number> = {
   "Parks and Environment": 10,
 };
 
-export const NEW_IN_FY27_PER_CATEGORY: Partial<Record<Category, number>> = {
+const NEW_IN_FY27_PER_CATEGORY: Partial<Record<Category, number>> = {
   "Youth Services": 1,
   "Older Adults": 1,
   Education: 1,
@@ -38,7 +38,7 @@ export const NEW_IN_FY27_PER_CATEGORY: Partial<Record<Category, number>> = {
   "Arts and Culture": 1,
 };
 
-export const RETIRED_AT_ROLLOVER: Partial<Record<Category, number>> = {
+const RETIRED_AT_ROLLOVER: Partial<Record<Category, number>> = {
   "Youth Services": 1,
   Education: 1,
   Health: 1,
@@ -47,7 +47,7 @@ export const RETIRED_AT_ROLLOVER: Partial<Record<Category, number>> = {
   "Immigrant Services": 1,
 };
 
-export const AMOUNT_BY_CATEGORY: Record<Category, [number, number]> = {
+const AMOUNT_BY_CATEGORY: Record<Category, [number, number]> = {
   "Youth Services": [20000, 120000],
   "Older Adults": [20000, 110000],
   Education: [15000, 80000],
@@ -87,9 +87,9 @@ const FOCUS: Record<Category, string[]> = {
 };
 
 const DESCRIPTION_STYLES = [
-  (focus: string, category: Category) => `Grants to neighborhood organizations for ${focus.toLowerCase()}, with reporting on people served and spending by category.`,
+  (focus: string) => `Grants to neighborhood organizations for ${focus.toLowerCase()}, with reporting on people served and spending by category.`,
   (focus: string, category: Category) => `Supports ${focus.toLowerCase()} delivered by community groups in ${category.toLowerCase()}, with a participant target set at award.`,
-  (focus: string, category: Category) => `Funds staff and supplies for ${focus.toLowerCase()} at local sites, reported mid-year and at year-end.`,
+  (focus: string) => `Funds staff and supplies for ${focus.toLowerCase()} at local sites, reported mid-year and at year-end.`,
   (focus: string, category: Category) => `Provides operating support for ${focus.toLowerCase()} programs that serve residents in ${category.toLowerCase()}.`,
 ];
 
@@ -102,7 +102,7 @@ export const CITYWIDE_INITIATIVES: InitiativeSpec[] = [
   { name: "Community Health Access Partnership", category: "Health", kind: "named", awards: [5, 8], amount: [20000, 110000], open: true, description: "Health education, screening and enrollment help delivered by trusted community organizations." },
 ];
 
-export function smallAwardCount(roll: number): [number, number] {
+function smallAwardCount(roll: number): [number, number] {
   if (roll < 0.6) return [1, 1];
   if (roll < 0.86) return [2, 2];
   if (roll < 0.96) return [3, 3];

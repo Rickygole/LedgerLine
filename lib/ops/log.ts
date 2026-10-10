@@ -1,7 +1,7 @@
 import { nowDate } from "@/lib/dates";
 
 
-export type ErrorLogInput = {
+type ErrorLogInput = {
   requestId: string | null;
   digest: string | null;
   method: string;

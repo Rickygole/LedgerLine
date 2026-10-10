@@ -1,6 +1,6 @@
 import type { Answers, FormDefinition, Issue } from "./types";
 
-export const RANGE_RULES = {
+const RANGE_RULES = {
   days: "LL-RANGE-DAYS",
   subcount: "LL-RANGE-SUBCOUNT",
   served: "LL-RANGE-SERVED",

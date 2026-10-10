@@ -30,7 +30,7 @@ type HeaderRow = {
   submitted_by_name: string | null;
 };
 
-export type LoadedReport = {
+type LoadedReport = {
   header: ReportHeader;
   definition: FormDefinition;
   formVersionId: string;
@@ -127,7 +127,7 @@ export async function loadAttachments(tx: Tx, submissionId: string): Promise<Att
   }));
 }
 
-export function sectionOfQuestion(definition: FormDefinition, key: string): string | null {
+function sectionOfQuestion(definition: FormDefinition, key: string): string | null {
   return definition.sections.find((section) => section.questions.some((question) => question.key === key))?.key ?? null;
 }
 
@@ -151,7 +151,7 @@ export function resumeSectionFor(definition: FormDefinition, updatedAt: Record<s
   return best?.key ?? null;
 }
 
-export function landingSection(
+function landingSection(
   definition: FormDefinition,
   updatedAt: Record<string, string>,
   activity: { reportSavedAt: string; hasBudget: boolean; lastUploadAt: string | null }

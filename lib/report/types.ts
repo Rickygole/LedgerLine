@@ -44,8 +44,6 @@ export type EditorPayload = {
   currentUserTitle: string;
 };
 
-export type CertificationDraft = { accepted: boolean; name: string; title: string };
-
 export type SaveInput = {
   submissionId: string;
   expectedLock: number;

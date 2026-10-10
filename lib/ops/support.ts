@@ -12,7 +12,6 @@ export const CATEGORIES = [
   { value: "other", label: "Something else" },
 ] as const;
 
-export type SupportCategory = (typeof CATEGORIES)[number]["value"];
 export type SupportState = "open" | "responded" | "overdue" | "closed";
 
 export function categoryLabel(value: string): string {
@@ -59,7 +58,7 @@ export function targetSummary(rows: { createdAt: string; firstResponseAt: string
   return { responded: times.length, metTarget: met, medianMinutes: median };
 }
 
-export type SupportRow = {
+type SupportRow = {
   id: string;
   reference: string;
   requester: string;

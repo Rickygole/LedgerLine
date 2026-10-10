@@ -1,4 +1,4 @@
-export type ActionWords = {
+type ActionWords = {
   label: string;
   alone: string;
   verb: string;

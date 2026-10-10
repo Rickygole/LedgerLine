@@ -1,10 +1,9 @@
-export const MAX_COUNT = 10_000_000;
-export const MAX_CENTS = 99_999_999_999;
-export const MAX_PERCENT = 100;
-export const MAX_AMOUNT = MAX_CENTS / 100;
-export const MAX_AMOUNT_TEXT = "$999,999,999.99";
+const MAX_COUNT = 10_000_000;
+const MAX_CENTS = 99_999_999_999;
+const MAX_PERCENT = 100;
+const MAX_AMOUNT_TEXT = "$999,999,999.99";
 
-export type NumericKind = "integer" | "number" | "currency" | "percent";
+type NumericKind = "integer" | "number" | "currency" | "percent";
 
 const DECIMAL = /^(\d+\.?\d*|\.\d+)$/;
 

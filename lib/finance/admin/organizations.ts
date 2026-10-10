@@ -95,7 +95,7 @@ export type OrgAward = {
   periods: AwardPeriod[] | null;
 };
 
-export type OrgReport = {
+type OrgReport = {
   id: string;
   reference_no: string;
   period_id: string;

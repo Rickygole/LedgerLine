@@ -24,7 +24,7 @@ export const PRESET_CONCERNS: Concern[] = [
 const RULE_ID_PATTERN = /\b[A-Z]{2}-\d{2,3}\b/;
 const DOLLAR_PATTERN = /\$[\d,]+(?:\.\d{1,2})?/g;
 
-export function redactContactDetails(text: string): string {
+function redactContactDetails(text: string): string {
   return text
     .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[email removed]")
     .replace(/\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g, "[phone removed]")
@@ -95,7 +95,7 @@ export function buildConcerns(input: {
   return concerns;
 }
 
-export function fallbackSentence(concern: Concern): string {
+function fallbackSentence(concern: Concern): string {
   const label = concern.label;
   const lower = label.charAt(0).toLowerCase() + label.slice(1);
   switch (concern.ruleId) {
@@ -132,7 +132,7 @@ export function fallbackSentence(concern: Concern): string {
   }
 }
 
-export type AiInput = { concerns: { rule_id: string; field: string; value: string | null }[] };
+type AiInput = { concerns: { rule_id: string; field: string; value: string | null }[] };
 
 export function buildAiInput(concerns: Concern[]): AiInput {
   return { concerns: concerns.map((c) => ({ rule_id: c.ruleId, field: c.label, value: c.detail })) };

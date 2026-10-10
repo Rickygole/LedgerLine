@@ -6,7 +6,7 @@ import { withClaims } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
 import { isUuid } from "@/lib/finance/admin/params";
 
-export type DraftState = { error?: string } | undefined;
+type DraftState = { error?: string } | undefined;
 
 export async function createDraftFromPublished(_prev: DraftState, formData: FormData): Promise<DraftState> {
   const user = await requireUser(["finance_admin"]);

@@ -3,15 +3,15 @@ import type { Answers, BudgetLine, Issue } from "./types";
 
 export const VARIANCE_NOTE_KEY = "budget_variance_note";
 export const VARIANCE_THRESHOLD_PERCENT = 10;
-export const VARIANCE_NOTE_MIN = 10;
+const VARIANCE_NOTE_MIN = 10;
 export const VARIANCE_NOTE_MAX = 1000;
 
-export const SPEND_RULES = {
+const SPEND_RULES = {
   variance: "LL-VARIANCE",
   actual: "LL-ACTUAL",
 } as const;
 
-export type SpendSummary = {
+type SpendSummary = {
   entered: boolean;
   approved: number;
   actual: number;
@@ -51,11 +51,6 @@ function overThreshold(lines: BudgetLine[], award: number): boolean {
 
 export function needsVarianceNote(lines: BudgetLine[], award: number): boolean {
   return overThreshold(lines, award);
-}
-
-export function varianceNoteOk(answers: Answers): boolean {
-  const note = answers[VARIANCE_NOTE_KEY];
-  return typeof note === "string" && note.trim().length >= VARIANCE_NOTE_MIN;
 }
 
 export function spendIssues(input: { lines: BudgetLine[]; award: number; answers: Answers; phase: "edit" | "submit" }): Issue[] {

@@ -1,4 +1,4 @@
-export const STATUS_SERIES = [
+const STATUS_SERIES = [
   { key: "accepted", label: "Accepted", color: "#1a7f37" },
   { key: "in_review", label: "In review", color: "#1f4e85" },
   { key: "submitted", label: "Submitted", color: "#6cb4ee" },
@@ -7,7 +7,7 @@ export const STATUS_SERIES = [
   { key: "outstanding", label: "Not yet due", color: "#d5dae1" },
 ] as const;
 
-export type StatusSeriesKey = (typeof STATUS_SERIES)[number]["key"];
+type StatusSeriesKey = (typeof STATUS_SERIES)[number]["key"];
 
 export const STATUS_COLOR: Record<StatusSeriesKey, string> = Object.fromEntries(STATUS_SERIES.map((s) => [s.key, s.color])) as Record<StatusSeriesKey, string>;
 

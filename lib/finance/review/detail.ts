@@ -20,7 +20,7 @@ export type AuditRecord = {
   aiMode: string | null;
 };
 
-export type RevisionFile = { path: string; filename: string; bytes: number };
+type RevisionFile = { path: string; filename: string; bytes: number };
 
 export type RevisionRecord = { id: number; revision: number; kind: string; actor: string; reason: string | null; createdAt: string; sha256: string; files: RevisionFile[] };
 

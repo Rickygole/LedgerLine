@@ -26,12 +26,6 @@ export function sponsorNames(sponsors: Sponsor[]): string {
   return sponsors.map((s) => `${s.name} (District ${s.district})`).join(", ");
 }
 
-export function sponsorShort(sponsors: Sponsor[]): string {
-  if (sponsors.length === 0) return "None";
-  if (sponsors.length === 1) return sponsors[0].name;
-  return `${sponsors[0].name} and ${sponsors.length - 1} more`;
-}
-
 export function sponsorLabel(row: { fundingSource: string; sponsors: Sponsor[] }): string {
   if (row.fundingSource === "speaker") return "Speaker";
   if (row.fundingSource === "citywide") return "Citywide";

@@ -5,7 +5,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/cn";
 import type { Issue } from "@/lib/rules/types";
 
-export function problemsHeading(count: number, scope: "report" | "step") {
+function problemsHeading(count: number, scope: "report" | "step") {
   const noun = count === 1 ? "problem" : "problems";
   if (scope === "step") return `There ${count === 1 ? "is" : "are"} ${count} ${noun} to fix in this section`;
   return `There ${count === 1 ? "is" : "are"} ${count} ${noun} to fix before you submit`;

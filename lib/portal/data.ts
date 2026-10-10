@@ -167,10 +167,6 @@ export async function loadOrganization(tx: Tx, orgId: string): Promise<OrgProfil
   };
 }
 
-export function orgTypeLabel(value: string): string {
-  return value === "cbo" ? "Community-based organization" : "Agency";
-}
-
 export const STATUS_LABEL: Record<string, string> = {
   draft: "In progress",
   submitted: "Submitted",

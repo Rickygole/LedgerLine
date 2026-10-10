@@ -22,7 +22,7 @@ export function ActiveChips({ chips }: { chips: Chip[] }) {
   );
 }
 
-export type Tab = { key: string; label: string; count: number; href: string; active: boolean };
+type Tab = { key: string; label: string; count: number; href: string; active: boolean };
 
 export function UnderlineTabs({ label, tabs }: { label: string; tabs: Tab[] }) {
   return (

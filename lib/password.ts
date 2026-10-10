@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
-export const MIN_PASSWORD_LENGTH = 12;
-export const MAX_PASSWORD_BYTES = 72;
+const MIN_PASSWORD_LENGTH = 12;
+const MAX_PASSWORD_BYTES = 72;
 
 const TOKEN_FORMAT = /^[0-9a-f]{64}$/;
 

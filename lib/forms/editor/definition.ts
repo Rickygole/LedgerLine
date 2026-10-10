@@ -1,4 +1,4 @@
-import type { FieldType, FormDefinition, Question, Section } from "@/lib/rules/types";
+import type { FieldType, FormDefinition, Question } from "@/lib/rules/types";
 import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
 
 export const FIELD_TYPES: FieldType[] = ["text", "textarea", "number", "integer", "currency", "percent", "date", "email", "phone", "ein", "select", "yesno", "table"];
@@ -35,7 +35,7 @@ export function slugKey(label: string): string {
   return /^[a-z]/.test(key) ? key : `q_${key}`;
 }
 
-export function allQuestions(definition: FormDefinition): Question[] {
+function allQuestions(definition: FormDefinition): Question[] {
   return definition.sections.flatMap((section) => section.questions);
 }
 
@@ -54,10 +54,6 @@ export function newQuestion(definition: FormDefinition, label: string, type: Fie
   if (type === "textarea") question.maxWords = 300;
   if (type === "text") question.maxLength = 160;
   return question;
-}
-
-export function questionSections(definition: FormDefinition): Section[] {
-  return definition.sections.filter((section) => section.kind === "questions");
 }
 
 export function validateDefinition(definition: FormDefinition): string[] {

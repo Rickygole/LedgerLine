@@ -1,4 +1,4 @@
-export type EmailEnv = Record<string, string | undefined>;
+type EmailEnv = Record<string, string | undefined>;
 
 export type OutgoingEmail = { to: string; subject: string; text: string };
 

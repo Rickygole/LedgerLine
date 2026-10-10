@@ -2,7 +2,7 @@ import type { Tx } from "@/lib/db";
 import type { Role } from "@/lib/auth";
 import { PAGE_SIZE, likePattern } from "./params";
 
-export type UserRow = {
+type UserRow = {
   id: string;
   email: string;
   full_name: string;

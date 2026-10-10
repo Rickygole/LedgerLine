@@ -4,11 +4,11 @@ import { DRAFTABLE_TYPES, slugKey, uniqueKey } from "@/lib/forms/editor/definiti
 import type { FormDefinition, Question } from "@/lib/rules/types";
 
 export const SECTION_KEYS = ["performance", "narrative", "organization"] as const;
-export type DraftSection = (typeof SECTION_KEYS)[number];
+type DraftSection = (typeof SECTION_KEYS)[number];
 
 export const LIBRARY_KEYS = STANDARD_QUESTIONS.map((q) => q.key);
 
-export type ProposedColumn = { label: string; type: "text" | "integer" | "currency" | "percent" };
+type ProposedColumn = { label: string; type: "text" | "integer" | "currency" | "percent" };
 
 export type ProposedField = {
   label: string;
@@ -39,11 +39,11 @@ export function attachStructure(paragraphs: string[], structure: TemplateStructu
   return paragraphs;
 }
 
-export function structureOf(paragraphs: string[]): TemplateStructure | undefined {
+function structureOf(paragraphs: string[]): TemplateStructure | undefined {
   return STRUCTURES.get(paragraphs);
 }
 
-export const COLUMN_TYPES = ["text", "integer", "currency", "percent"] as const;
+const COLUMN_TYPES = ["text", "integer", "currency", "percent"] as const;
 
 export const proposalSchema = z.object({
   questions: z.array(
@@ -254,7 +254,7 @@ function sectionForHeading(heading: string | undefined, label: string, type: str
 
 const HEADING_PREFIX = /^\s*(?:section|part|module)\s+[0-9a-z]{1,4}\s*[:.\-–—]\s*/i;
 
-export function headingTitle(text: string): string {
+function headingTitle(text: string): string {
   const cleaned = collapse(text.replace(HEADING_PREFIX, "")).replace(/[:.\s]+$/, "");
   return cleaned.length > 80 ? cleaned.slice(0, 80).trim() : cleaned;
 }
@@ -407,7 +407,7 @@ export function parseWithRules(paragraphs: string[], structure?: TemplateStructu
   return fields;
 }
 
-export function toQuestion(definition: FormDefinition, field: ProposedField, extraKeys: string[]): Question {
+function toQuestion(definition: FormDefinition, field: ProposedField, extraKeys: string[]): Question {
   const question: Question = {
     key: uniqueKey(definition, field.label, extraKeys),
     label: field.label.trim(),
@@ -437,7 +437,7 @@ export function toQuestion(definition: FormDefinition, field: ProposedField, ext
   return question;
 }
 
-export type MergeOutcome = { definition: FormDefinition; added: string[]; linked: string[]; alreadyPresent: string[] };
+type MergeOutcome = { definition: FormDefinition; added: string[]; linked: string[]; alreadyPresent: string[] };
 
 export function mergeFields(definition: FormDefinition, fields: ProposedField[]): MergeOutcome {
   const next: FormDefinition = JSON.parse(JSON.stringify(definition));

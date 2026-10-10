@@ -4,11 +4,11 @@ import type { ReportRow } from "@/lib/finance/review/types";
 
 export type MapMode = "sponsor" | "location";
 
-export const DISTRICT_FUNDING = ["local", "delegation"];
+const DISTRICT_FUNDING = ["local", "delegation"];
 
 export type Tally = { due: number; missing: number; waiting: number; accepted: number };
 
-export type DistrictStat = Tally & { district: number; member: string | null; boroughs: string };
+type DistrictStat = Tally & { district: number; member: string | null; boroughs: string };
 
 export type DistrictStats = {
   mode: MapMode;

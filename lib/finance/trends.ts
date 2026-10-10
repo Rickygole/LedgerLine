@@ -1,6 +1,6 @@
 import type { Tx } from "@/lib/db";
 
-export type TrendFilters = { category: string; borough: string; period: string; compare: "category" | "borough" };
+type TrendFilters = { category: string; borough: string; period: string; compare: "category" | "borough" };
 
 export type MonthPoint = { month: string; label: string; onTime: number; late: number; total: number };
 export type GroupPoint = { name: string; due: number; submitted: number; accepted: number; share: number };

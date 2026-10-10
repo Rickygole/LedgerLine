@@ -3,7 +3,7 @@ import boroughs from "./boroughs.json";
 
 export type GeoBorough = "Manhattan" | "Bronx" | "Brooklyn" | "Queens" | "Staten Island";
 
-export type CouncilDistrictShape = {
+type CouncilDistrictShape = {
   district: number;
   borough: GeoBorough;
   path: string;
@@ -11,7 +11,7 @@ export type CouncilDistrictShape = {
   labelY: number;
 };
 
-export type BoroughShape = {
+type BoroughShape = {
   borough: GeoBorough;
   path: string;
 };

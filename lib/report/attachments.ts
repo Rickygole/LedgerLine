@@ -19,7 +19,7 @@ export function signPath(userId: string, submissionId: string, pathname: string,
   return `${expiresAt}.${mac}`;
 }
 
-export function signatureExpiry(signature: string): number | null {
+function signatureExpiry(signature: string): number | null {
   const match = /^(\d{1,12})\.[0-9a-f]{64}$/.exec(signature);
   return match ? Number(match[1]) : null;
 }

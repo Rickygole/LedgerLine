@@ -39,7 +39,7 @@ export const FUNDING_OPTIONS = FUNDING_SOURCES.map((f) => ({ value: f.value, lab
 export const CONTRACT_OPTIONS = CONTRACT_STATUSES.map((c) => ({ value: c.value, label: c.label }));
 
 export const QUERY_KEYS = ["period", "category", "initiative", "borough", "district", "member", "funding", "contract", "org_type", "bucket", "status", "award_min", "award_max", "flag"] as const;
-export type QueryKey = (typeof QUERY_KEYS)[number];
+type QueryKey = (typeof QUERY_KEYS)[number];
 export type QueryParams = Partial<Record<QueryKey, string>>;
 export type QueryErrors = Partial<Record<QueryKey, string>>;
 
@@ -196,7 +196,7 @@ export async function queryOptions(tx: Tx) {
   };
 }
 
-export type SavedQuery = { id: string; name: string; params: QueryParams; created_at: string };
+type SavedQuery = { id: string; name: string; params: QueryParams; created_at: string };
 
 export async function listSaved(tx: Tx): Promise<SavedQuery[]> {
   return tx.query<SavedQuery>("SELECT id, name, params, created_at::text FROM saved_query WHERE owner = app.uid() ORDER BY created_at DESC");

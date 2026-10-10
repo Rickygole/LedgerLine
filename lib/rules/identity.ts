@@ -1,13 +1,13 @@
 export const EIN_NOT_ON_LIST = "This EIN is not on the Council master list for this organization.";
 export const NAME_NOT_ON_LIST = "This legal name does not match the Council master list for this organization.";
 
-export type MasterOrg = { legalName: string; ein: string };
+type MasterOrg = { legalName: string; ein: string };
 
 export function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-export function normalizeName(value: string): string {
+function normalizeName(value: string): string {
   return value
     .toLowerCase()
     .replace(/&/g, " and ")

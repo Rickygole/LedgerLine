@@ -7,7 +7,7 @@ import { formatShortDate } from "@/lib/report/format";
 import type { Obligation } from "@/lib/portal/data";
 import type { ReportProgress } from "@/lib/portal/progress";
 
-export function nextActionLabel(o: Obligation): string {
+function nextActionLabel(o: Obligation): string {
   if (!o.submissionId) return "Start report";
   if (o.status === "returned") return "Make the requested changes";
   return "Continue report";

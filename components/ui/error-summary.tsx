@@ -4,7 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import { forwardRef } from "react";
 import { cn } from "@/lib/cn";
 
-export type SummaryItem = { target?: string; message: string };
+type SummaryItem = { target?: string; message: string };
 
 export function focusField(targetId: string) {
   const element = document.getElementById(targetId);

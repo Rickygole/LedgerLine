@@ -42,7 +42,7 @@ export function tableRows(question: Question, value: AnswerValue | undefined): s
     .filter((cells) => cells.some((cell) => cell !== ""));
 }
 
-export type SummaryInput = {
+type SummaryInput = {
   title: string;
   referenceNo: string;
   periodLabel: string;

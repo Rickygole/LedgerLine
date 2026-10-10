@@ -1,7 +1,7 @@
 import type { Certification } from "@/lib/rules/certify";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
 
-export type SnapshotAttachment = { path: string; filename: string; bytes: number; mime: string };
+type SnapshotAttachment = { path: string; filename: string; bytes: number; mime: string };
 
 export type Snapshot = {
   formVersionId: string;

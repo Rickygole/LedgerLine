@@ -11,7 +11,7 @@ export function percent(part: number, whole: number): number | null {
   return Math.round((part / whole) * 100);
 }
 
-export type UatEntry = { scenario: string; session_on: string; recorded_at: string; result: string };
+type UatEntry = { scenario: string; session_on: string; recorded_at: string; result: string };
 
 export function latestPerScenario(entries: UatEntry[]): UatEntry[] {
   const latest = new Map<string, UatEntry>();
@@ -39,8 +39,8 @@ export function trainedShare(users: { id: string; role: string }[], modules: Tra
   return { users: users.length, trained, percent: percent(trained, users.length) };
 }
 
-export type UatSession = { id: string; session_on: string; scenario: string; tester_name: string; tester_role: string; result: string; notes: string | null; recorded_at: string };
-export type UatDefect = { id: string; session_id: string; description: string; severity: string; status: string; fixed_on: string | null };
+type UatSession = { id: string; session_on: string; scenario: string; tester_name: string; tester_role: string; result: string; notes: string | null; recorded_at: string };
+type UatDefect = { id: string; session_id: string; description: string; severity: string; status: string; fixed_on: string | null };
 
 export async function loadReadiness(tx: Tx) {
   const modules = await tx.query<TrainingModule>("SELECT key, title, audience FROM training_module ORDER BY position");

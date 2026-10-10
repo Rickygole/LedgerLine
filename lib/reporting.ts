@@ -28,12 +28,3 @@ export const BUCKET_LABEL: Record<Bucket, string> = {
   returned: "Update requested",
   accepted: "Accepted",
 };
-
-export const BUCKET_DEFINITION: Record<Bucket, string> = {
-  outstanding: "Nothing submitted yet and the due date has not passed.",
-  missing: "Nothing submitted, or only a draft saved, and the due date has passed.",
-  submitted: "Submitted and waiting for review.",
-  in_review: "A Finance analyst is reviewing it.",
-  returned: "Finance asked the organization for an update.",
-  accepted: "Reviewed and accepted by Finance.",
-};

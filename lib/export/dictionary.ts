@@ -1,6 +1,6 @@
-export type TableDoc = { description: string; columns: Record<string, string> };
+type TableDoc = { description: string; columns: Record<string, string> };
 
-export const COMMON_COLUMNS: Record<string, string> = {
+const COMMON_COLUMNS: Record<string, string> = {
   id: "Unique identifier of the record.",
   created_at: "When the record was created.",
   created_by: "Identifier of the user who created the record (app_user.id).",

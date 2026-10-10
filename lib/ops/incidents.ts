@@ -49,7 +49,7 @@ export function remediationDeadline(input: { detectedAt: Date | string; complete
   return { state: delta <= 24 * 60 ? "due_soon" : "on_track", dueAt, minutes: delta };
 }
 
-export type IncidentStatus = "open" | "remediating" | "closed";
+type IncidentStatus = "open" | "remediating" | "closed";
 
 export function incidentStatus(latest: { completed_on: string | null } | null): IncidentStatus {
   if (!latest) return "open";
@@ -58,7 +58,7 @@ export function incidentStatus(latest: { completed_on: string | null } | null): 
 
 export const STATUS_LABEL: Record<IncidentStatus, string> = { open: "Awaiting remediation report", remediating: "Remediation in progress", closed: "Remediated" };
 
-export type IncidentRow = {
+type IncidentRow = {
   id: string;
   reference: string;
   detected_at: string;
@@ -94,7 +94,7 @@ export async function loadIncident(tx: Tx, id: string): Promise<IncidentRow | nu
   return tx.one<IncidentRow>(`${SELECT} WHERE i.id = $1`, [id]);
 }
 
-export type RemediationRow = { id: string; root_cause: string; actions: string; prevention: string; completed_on: string | null; recorded_by_name: string; recorded_at: string };
+type RemediationRow = { id: string; root_cause: string; actions: string; prevention: string; completed_on: string | null; recorded_by_name: string; recorded_at: string };
 
 export async function loadRemediations(tx: Tx, id: string): Promise<RemediationRow[]> {
   return tx.query<RemediationRow>(
@@ -104,7 +104,7 @@ export async function loadRemediations(tx: Tx, id: string): Promise<RemediationR
   );
 }
 
-export type EventRow = { id: string; at: string; actor_name: string; kind: string; detail: string | null };
+type EventRow = { id: string; at: string; actor_name: string; kind: string; detail: string | null };
 
 export async function loadEvents(tx: Tx, id: string): Promise<EventRow[]> {
   return tx.query<EventRow>(
@@ -113,7 +113,7 @@ export async function loadEvents(tx: Tx, id: string): Promise<EventRow[]> {
   );
 }
 
-export type ContactRow = { id: string; full_name: string; title: string; email: string; active: boolean };
+type ContactRow = { id: string; full_name: string; title: string; email: string; active: boolean };
 
 export async function listContacts(tx: Tx): Promise<ContactRow[]> {
   return tx.query<ContactRow>("SELECT id, full_name, title, email, active FROM incident_contact ORDER BY active DESC, created_at, id");

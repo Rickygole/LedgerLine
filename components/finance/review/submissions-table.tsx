@@ -10,7 +10,7 @@ import type { ReportRow } from "@/lib/finance/review/types";
 
 type DueNote = { text: string; tone: "bad" | "warn" | "muted" };
 
-export function dueNote(row: Pick<ReportRow, "status" | "daysPastDue" | "submittedAt" | "dueOn">): DueNote | null {
+function dueNote(row: Pick<ReportRow, "status" | "daysPastDue" | "submittedAt" | "dueOn">): DueNote | null {
   if (row.status === null || row.status === "draft" || row.status === "returned") {
     const days = Math.abs(row.daysPastDue);
     const unit = days === 1 ? "day" : "days";

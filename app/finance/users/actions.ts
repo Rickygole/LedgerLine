@@ -12,7 +12,7 @@ import { STAFF_ROLES } from "@/lib/finance/admin/users";
 
 export type UserActionState = { ok?: string; error?: string; link?: string } | undefined;
 
-export type CreateUserState = { ok?: string; link?: string; error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
+type CreateUserState = { ok?: string; link?: string; error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
 
 type Target = { id: string; full_name: string; role: string; active: boolean };
 

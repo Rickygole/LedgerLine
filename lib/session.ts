@@ -10,7 +10,7 @@ function key(name: "AUTH_SECRET" | "GATE_COOKIE_SECRET"): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
-export type SessionClaims = { sub: string; jti: string; version: number; expiresAt: Date };
+type SessionClaims = { sub: string; jti: string; version: number; expiresAt: Date };
 
 export async function signSession(sub: string, version: number): Promise<string> {
   return new SignJWT({ sv: version })

@@ -1,6 +1,6 @@
 import type { Tx } from "@/lib/db";
 
-export type YearSummary = {
+type YearSummary = {
   id: string;
   initiatives: number;
   organizations: number;
@@ -20,9 +20,7 @@ export type RolloverInitiative = {
 
 export type PlanAction = "carry" | "rename" | "combine" | "retire";
 
-export type PlanEntry = { initiative_id: string; action: PlanAction; new_name?: string; group?: string };
-
-export type RolloverResult = {
+type RolloverResult = {
   from: string;
   to: string;
   carried: number;
@@ -144,7 +142,7 @@ export async function lineageFor(tx: Tx, initiativeId: string): Promise<{ predec
   return { predecessors, successors };
 }
 
-export type LineageRow = {
+type LineageRow = {
   id: string;
   kind: "renamed" | "combined" | "carried" | "retired";
   fiscal_year_id: string;

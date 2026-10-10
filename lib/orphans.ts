@@ -2,7 +2,7 @@ import "server-only";
 import type { Tx } from "@/lib/db";
 import { deleteStoredFile, listStoredFiles } from "@/lib/storage";
 
-export const ORPHAN_AGE_HOURS = 24;
+const ORPHAN_AGE_HOURS = 24;
 
 export async function sweepOrphanFiles(tx: Tx, now: Date = new Date()): Promise<{ checked: number; deleted: number }> {
   const cutoff = now.getTime() - ORPHAN_AGE_HOURS * 60 * 60 * 1000;

@@ -8,7 +8,7 @@ export type OutboxStore = {
   finish(id: string, status: "sent" | "failed" | "held" | "recorded", providerId: string | null, reason: string | null): Promise<string | null>;
 };
 
-export type DispatchSummary = Record<"sent" | "held" | "recorded" | "retry" | "failed", number>;
+type DispatchSummary = Record<"sent" | "held" | "recorded" | "retry" | "failed", number>;
 
 const NEVER_EMAILED = new Set(["password_reset", "password_set"]);
 
@@ -43,7 +43,7 @@ export async function dispatch(
   return summary;
 }
 
-export function dbStore(tx: Tx): OutboxStore {
+function dbStore(tx: Tx): OutboxStore {
   return {
     claim: (submissionId, limit) =>
       tx.query<Claimed>("SELECT id, to_email, template, subject, body_text, attempts FROM app.claim_outbox($1, $2)", [submissionId, limit]),

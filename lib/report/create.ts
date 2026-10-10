@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { pgCode, withClaims } from "@/lib/db";
 
-export type StartResult = { status: "ok"; submissionId: string; created: boolean } | { status: "not_found" } | { status: "no_form" };
+type StartResult = { status: "ok"; submissionId: string; created: boolean } | { status: "not_found" } | { status: "no_form" };
 
 const OWED_PERIOD = `SELECT p.id FROM assignment a
   JOIN initiative i ON i.id = a.initiative_id
@@ -53,7 +53,7 @@ export async function startReport(userId: string, assignmentId: string, periodId
   throw new Error("Could not allocate a reference number");
 }
 
-export type ExistingReport = { status: "found"; submissionId: string } | { status: "none" } | { status: "not_found" };
+type ExistingReport = { status: "found"; submissionId: string } | { status: "none" } | { status: "not_found" };
 
 export async function findReport(userId: string, assignmentId: string, periodId: string): Promise<ExistingReport> {
   return withClaims(userId, async (tx): Promise<ExistingReport> => {

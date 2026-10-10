@@ -1,4 +1,4 @@
-import { bucketFor, BUCKET_LABEL, type Bucket } from "@/lib/reporting";
+import { bucketFor, type Bucket } from "@/lib/reporting";
 import { daysPastDue } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
 import { balanceMessage, blockingIssues, budgetTotals, validateSubmission, visibleAnswers } from "@/lib/rules/validate";
@@ -11,7 +11,7 @@ export const BUCKET_ORDER: Bucket[] = ["outstanding", "missing", "submitted", "i
 
 const SUBMITTED_STATUSES = ["submitted", "under_review", "returned", "accepted"];
 
-export function isSubmittedStatus(status: string | null): boolean {
+function isSubmittedStatus(status: string | null): boolean {
   return status !== null && SUBMITTED_STATUSES.includes(status);
 }
 
@@ -28,7 +28,7 @@ export function numberAnswer(answers: Answers, key: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function computeIssues(definition: FormDefinition | null, answers: Answers, budget: BudgetLine[], award: number): Issue[] {
+function computeIssues(definition: FormDefinition | null, answers: Answers, budget: BudgetLine[], award: number): Issue[] {
   if (!definition) return [];
   return blockingIssues(validateSubmission({ definition, answers, budget, awardAmount: award }));
 }
@@ -57,7 +57,7 @@ const KIND_TO_REASON: Record<string, FlagReason> = {
   spend_spike: "manual",
 };
 
-export function flagsForRow(input: {
+function flagsForRow(input: {
   status: string | null;
   bucket: Bucket;
   daysPastDue: number;
@@ -133,7 +133,7 @@ export function countBuckets(rows: Pick<ReportRow, "bucket">[]): Record<Bucket, 
   return counts;
 }
 
-export function statusKey(row: Pick<ReportRow, "status">): string {
+function statusKey(row: Pick<ReportRow, "status">): string {
   return row.status ?? "not_started";
 }
 
@@ -222,8 +222,4 @@ export function completionByCategory(rows: ReportRow[]) {
       return { category, expected: list.length, submitted: done, rate: list.length === 0 ? 0 : Math.round((done / list.length) * 1000) / 10 };
     })
     .sort((a, b) => b.rate - a.rate || a.category.localeCompare(b.category));
-}
-
-export function bucketLabel(bucket: Bucket): string {
-  return BUCKET_LABEL[bucket];
 }

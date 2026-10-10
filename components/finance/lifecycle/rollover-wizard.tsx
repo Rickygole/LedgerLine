@@ -16,7 +16,7 @@ import { RolloverSteps } from "@/components/finance/lifecycle/rollover-steps";
 
 type Choice = { action: PlanAction; name: string; group: string };
 
-export type RolloverForm = { initiativeId: string; version: number; questions: number };
+type RolloverForm = { initiativeId: string; version: number; questions: number };
 
 const ACTION_LABEL: Record<PlanAction, string> = {
   carry: "Carry forward",

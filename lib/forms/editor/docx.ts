@@ -20,7 +20,7 @@ function linesOf(fragment: string): string[] {
     .filter((line) => line.length > 0);
 }
 
-export function structureFromHtml(html: string): { lines: string[]; structure: TemplateStructure } {
+function structureFromHtml(html: string): { lines: string[]; structure: TemplateStructure } {
   const lines: string[] = [];
   const structure: TemplateStructure = { headings: [], tables: [], listItems: [] };
   const block = /<(h[1-6]|p|li|table)\b[^>]*>([\s\S]*?)<\/\1>/gi;

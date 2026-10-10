@@ -1,7 +1,7 @@
 import type { Tx } from "@/lib/db";
 import { daysBetween } from "@/lib/dates";
 
-export type PeriodOption = { id: string; label: string; due_on: string };
+type PeriodOption = { id: string; label: string; due_on: string };
 
 export type RuleRow = {
   id: string;
@@ -15,7 +15,7 @@ export type RuleRow = {
   last_sent: string | null;
 };
 
-export type TargetRow = {
+type TargetRow = {
   rule_id: string;
   offset_days: number;
   org_id: string;

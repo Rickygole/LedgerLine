@@ -64,22 +64,6 @@ export async function listAudit(tx: Tx, filters: { actor: string; entity: string
   return { rows, total: rows[0]?.full_count ?? 0 };
 }
 
-export async function recentActivity(tx: Tx, quiet: string[], limit = 10) {
-  return tx.query<AuditRow & { initiative_name: string | null }>(
-    `SELECT q.*, si.name AS initiative_name FROM (
-       ${SELECT_AUDIT}
-       WHERE e.action <> ALL ($1::text[]) AND (u.email IS NULL OR u.email <> 'system.scheduler@ledgerline.example')
-       ORDER BY e.at DESC, e.id DESC
-       LIMIT ${limit}
-     ) q
-     LEFT JOIN submission s2 ON q.entity = 'submission' AND s2.id::text = q.entity_id
-     LEFT JOIN assignment a2 ON a2.id = s2.assignment_id
-     LEFT JOIN initiative si ON si.id = a2.initiative_id
-     ORDER BY q.at DESC, q.id::bigint DESC`,
-    [quiet]
-  );
-}
-
 export async function orgActivity(tx: Tx, orgId: string, limit = 40) {
   return tx.query<AuditRow>(
     `${SELECT_AUDIT}

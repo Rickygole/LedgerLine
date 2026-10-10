@@ -4,7 +4,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { useRef } from "react";
 import { cn } from "@/lib/cn";
 
-export type StepState = "complete" | "error" | "todo";
+type StepState = "complete" | "error" | "todo";
 export type Step = { key: string; title: string; state: StepState; errors: number; optional?: boolean };
 
 function stepHref(key: string) {

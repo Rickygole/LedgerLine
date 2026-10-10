@@ -3,9 +3,9 @@ import type { Tx } from "@/lib/db";
 import { buildAiInput, completeSentences, noteText, templateSentences, validateSentences, type Concern, type NoteSentence } from "@/lib/finance/review/return-note-core";
 import { aiEnabled, callStructured, logAiAction, sha256 } from "@/lib/ai/model";
 
-export const RETURN_NOTE_PROMPT_VERSION = "return-note-v2";
+const RETURN_NOTE_PROMPT_VERSION = "return-note-v2";
 
-export type ReturnNoteDraft = {
+type ReturnNoteDraft = {
   sentences: NoteSentence[];
   text: string;
   mode: "live" | "fallback";

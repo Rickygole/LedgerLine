@@ -18,7 +18,7 @@ function connectionString(line: string): string {
   return value.trim().replace(/^["']|["']$/g, "");
 }
 
-export function hostOf(url: string): string {
+function hostOf(url: string): string {
   return new URL(url).host;
 }
 

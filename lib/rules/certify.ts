@@ -3,9 +3,9 @@ import type { Issue } from "./types";
 
 export const CERTIFICATION_STATEMENT = "I certify this report is accurate and complete.";
 
-export const CERT_RULE = "LL-CERT";
+const CERT_RULE = "LL-CERT";
 
-export type CertificationInput = {
+type CertificationInput = {
   accepted: boolean;
   name: string;
   title: string;

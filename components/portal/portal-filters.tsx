@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-export type FilterOption = { value: string; label: string; count?: number };
+type FilterOption = { value: string; label: string; count?: number };
 
 export function Segmented({ label, param, options, current, base }: { label: string; param: string; options: FilterOption[]; current: string; base: Record<string, string> }) {
   return (

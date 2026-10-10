@@ -1,6 +1,6 @@
 import type { Tx } from "@/lib/db";
 
-export type PlatformFacts = {
+type PlatformFacts = {
   revisions: number;
   auditEvents: number;
   firstAudit: string | null;

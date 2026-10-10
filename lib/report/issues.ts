@@ -6,7 +6,7 @@ import type { FormDefinition, Issue, ValidationInput } from "@/lib/rules/types";
 
 export { EIN_NOT_ON_LIST, digitsOnly, einMismatch };
 
-export type ReportIssueInput = ValidationInput & {
+type ReportIssueInput = ValidationInput & {
   orgEin: string | null;
   orgName?: string | null;
   period?: PeriodSpan;

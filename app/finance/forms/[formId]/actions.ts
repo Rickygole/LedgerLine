@@ -123,7 +123,7 @@ export async function analyzeTemplate(formId: string, formData: FormData): Promi
   }
 }
 
-export type SubmittedField = ProposedField & { id: number };
+type SubmittedField = ProposedField & { id: number };
 
 type OriginalOutput = { questions: ProposedField[]; paragraphs: string[] };
 

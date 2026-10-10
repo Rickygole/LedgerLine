@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-export function Bone({ className }: { className?: string }) {
+function Bone({ className }: { className?: string }) {
   return <span aria-hidden="true" className={cn("skeleton block h-3", className)} />;
 }
 
@@ -24,20 +24,6 @@ export function HeaderSkeleton({ crumbs = true, action = false }: { crumbs?: boo
         </div>
         {action ? <Bone className="h-10 w-36 rounded-md" /> : null}
       </div>
-    </div>
-  );
-}
-
-export function TilesSkeleton({ count = 4 }: { count?: number }) {
-  return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-      {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="rounded border border-l-4 border-line bg-white px-4 py-4 sm:px-5">
-          <Bone className="w-20" />
-          <Bone className="mt-4 h-6 w-16" />
-          <Bone className="mt-3 w-28" />
-        </div>
-      ))}
     </div>
   );
 }

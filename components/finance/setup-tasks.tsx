@@ -28,7 +28,7 @@ function nextDay(iso: string) {
   return d.toISOString().slice(0, 10);
 }
 
-export function setupTasks(s: SetupStatus, today: string): Task[] {
+function setupTasks(s: SetupStatus, today: string): Task[] {
   const fy = s.fiscalYear?.id ?? "";
   const prev = s.previousYear ?? "the prior year";
   const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;

@@ -51,7 +51,7 @@ export const MARIA_ORG = { ein: "13-4027118", name: "Mott Haven Youth Futures, I
 export const LATE_INITIATIVE = "Mentor Match Network";
 export const ACCEPTED_INITIATIVE = "Afterschool Studio Program";
 
-export const MARIA_DRAFT_BUDGET = [
+const MARIA_DRAFT_BUDGET = [
   ["PS", "Program Coordinator, 0.6 FTE", 24000],
   ["PS", "Mentor Recruitment Specialist, 0.4 FTE", 14400],
   ["PS", "Youth peer leader stipends", 9600],

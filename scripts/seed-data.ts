@@ -72,7 +72,7 @@ export const ORGS_PER_CATEGORY: Record<Category, number> = {
   "Parks and Environment": 6,
 };
 
-export type NamedInitiative = {
+type NamedInitiative = {
   name: string;
   category: Category;
   awards: [number, number];
@@ -168,7 +168,7 @@ export const BOROUGH_AREA_CODES: Record<Borough, string[]> = {
   "Staten Island": ["718", "347"],
 };
 
-export type Place = { zip: string; city: string; streets: string[] };
+type Place = { zip: string; city: string; streets: string[] };
 
 export const BOROUGH_PLACES: Record<Borough, Place[]> = {
   Manhattan: [

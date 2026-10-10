@@ -3,7 +3,7 @@ import { anonymous } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
 
 export type CalendarPeriod = { id: string; fiscalYearId: string; label: string; startsOn: string; endsOn: string; dueOn: string };
-export type FiscalCalendar = {
+type FiscalCalendar = {
   today: string;
   fiscalYear: { id: string; startsOn: string; endsOn: string };
   periods: CalendarPeriod[];
@@ -24,7 +24,7 @@ function fiscalYearFor(today: string): { id: string; startsOn: string; endsOn: s
   return { id: `FY${String((startYear + 1) % 100).padStart(2, "0")}`, startsOn: `${startYear}-07-01`, endsOn: `${startYear + 1}-06-30` };
 }
 
-export function fallbackCalendar(today: string = todayInNewYork()): FiscalCalendar {
+function fallbackCalendar(today: string = todayInNewYork()): FiscalCalendar {
   const fy = fiscalYearFor(today);
   const start = Number(fy.startsOn.slice(0, 4));
   const prior = `FY${String(start % 100).padStart(2, "0")}`;

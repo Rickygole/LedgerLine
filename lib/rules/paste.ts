@@ -1,12 +1,12 @@
 import { parseAmount } from "./money";
 
-export type PastedRow = {
+type PastedRow = {
   category: "PS" | "OTPS";
   description: string;
   amount: number;
 };
 
-export type PasteResult = {
+type PasteResult = {
   rows: PastedRow[];
   skipped: { line: number; reason: string }[];
 };

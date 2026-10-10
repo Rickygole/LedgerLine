@@ -14,7 +14,7 @@ export type SaveState =
   | { kind: "stale"; by: string | null; at: string }
   | { kind: "locked"; message: string };
 
-export type DrainOutcome = "saved" | "idle" | "retrying" | "signed_out" | "stale" | "locked";
+type DrainOutcome = "saved" | "idle" | "retrying" | "signed_out" | "stale" | "locked";
 
 const DEBOUNCE_MS = 1200;
 

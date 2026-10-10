@@ -1,7 +1,7 @@
 import type { Tx } from "@/lib/db";
 import { PAGE_SIZE, isUuid } from "./params";
 
-export type OutboxRow = {
+type OutboxRow = {
   id: string;
   to_email: string;
   template: string;

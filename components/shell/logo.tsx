@@ -15,7 +15,7 @@ export function Mark({ className = "h-8 w-8", tone = "light" }: { className?: st
   );
 }
 
-export const TAGLINE = "Initiative reporting for NYC Council Finance";
+const TAGLINE = "Initiative reporting for NYC Council Finance";
 
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean; subtitle?: string }) {
   return (

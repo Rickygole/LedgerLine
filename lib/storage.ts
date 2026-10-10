@@ -60,7 +60,7 @@ export async function getFile(pathname: string): Promise<Buffer> {
   return readFile(path.join(localRoot(), pathname));
 }
 
-export type StoredFile = { pathname: string; modifiedAt: Date; url?: string };
+type StoredFile = { pathname: string; modifiedAt: Date; url?: string };
 
 async function walk(root: string, dir: string, out: StoredFile[]): Promise<void> {
   let names: string[];
