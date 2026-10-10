@@ -858,6 +858,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     unbalanced?: boolean;
     draftAnswers?: Answers;
     draftBudget?: readonly (readonly [BudgetLine["category"], string, number])[];
+    draftKeys?: readonly string[];
     editedOn?: string;
   }) => {
     const initiative = assignmentSeed.get(opts.assignment.id)!;
@@ -881,7 +882,8 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       created_at: startedAt,
     };
     if (opts.status === "draft") {
-      const answers = opts.draftAnswers ?? partialAnswers(full);
+      const drafted = opts.draftAnswers ?? partialAnswers(full);
+      const answers = opts.draftKeys ? Object.fromEntries(Object.entries(drafted).filter(([key]) => opts.draftKeys!.includes(key))) : drafted;
       const editedAt = workTime(opts.editedOn ?? minDate(TODAY, addDays(startedOn, between(0, 20))));
       addAnswers(id, answers, submitter, editedAt);
       if (opts.draftBudget) addBudget(id, opts.draftBudget.map(([category, description, amount], index) => ({ rowId: randomUUID(), position: index + 1, category, description, amount })));
@@ -963,7 +965,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     createSubmission({ assignment: lateAssignment, period: "FY26-YE", status: "draft", submittedBy: ids.maria, draftAnswers: answers, draftBudget: MARIA_DRAFT_BUDGET, editedOn: "2026-09-22" });
   }
   for (const next of assignments.filter((a) => a.org_id === maria.id && assignmentSeed.get(a.id)!.fiscalYear === "FY27")) {
-    if (chance(0.5)) createSubmission({ assignment: next, period: "FY27-MY", status: "draft", submittedBy: ids.maria });
+    if (chance(0.5)) createSubmission({ assignment: next, period: "FY27-MY", status: "draft", submittedBy: ids.maria, draftKeys: ["org_legal_name", "org_ein", "contact_name", "contact_title", "contact_email", "contact_phone"] });
   }
 
   for (const assignment of assignments) {
