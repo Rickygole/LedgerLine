@@ -48,3 +48,4 @@ next-env.d.ts
 .mint.*
 .shots.*
 !.env.example
+/fixtures/demo-desk/
