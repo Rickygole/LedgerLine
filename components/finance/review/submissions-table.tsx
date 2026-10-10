@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { FlagBadge, StateBadge } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
-import { formatDate } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
-import { fundingLabel, sponsorShort } from "@/lib/finance/awards";
-import { ContractCell } from "@/components/finance/admin/award-cells";
+import { sponsorLabel, sponsorNames } from "@/lib/finance/awards";
 import type { ReportRow } from "@/lib/finance/review/types";
 
-function dueCell(row: ReportRow) {
+export function dueCell(row: Pick<ReportRow, "status" | "daysPastDue" | "submittedAt" | "dueOn">) {
   if (row.status === null || row.status === "draft" || row.status === "returned") {
     const days = Math.abs(row.daysPastDue);
     const unit = days === 1 ? "day" : "days";
@@ -32,85 +30,75 @@ function FlagsCell({ row }: { row: ReportRow }) {
     <div className="whitespace-nowrap" title={labels.join(", ")}>
       <FlagBadge label={labels[0]} />
       {more > 0 ? (
-        <span className="mt-1 block text-xs text-muted">
-          +{more} more<span className="sr-only">: {labels.slice(1).join(", ")}</span>
+        <span className="ml-1 text-[13px] text-muted">
+          +{more}
+          <span className="sr-only"> more: {labels.slice(1).join(", ")}</span>
         </span>
       ) : null}
     </div>
   );
 }
 
+export function orgMeta(row: Pick<ReportRow, "ein" | "borough" | "councilDistrict">) {
+  return [row.ein, row.borough, row.councilDistrict ? `District ${row.councilDistrict}` : null].filter(Boolean).join(" · ");
+}
+
 export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; emptyHref: string }) {
   return (
-    <Table density="compact" stack className="@container">
+    <Table density="compact" stack className="@container [&_td]:text-[15px]">
       <THead>
         <tr>
-          <TH>Reference</TH>
           <TH>Organization</TH>
           <TH>Initiative</TH>
-          <TH className="@max-[72rem]:hidden">Council Member</TH>
-          <TH>Contract</TH>
+          <TH className="@max-[64rem]:hidden">Sponsor</TH>
           <TH align="right">Award</TH>
-          <TH>State</TH>
+          <TH>Status</TH>
           <TH>Flags</TH>
+          <TH>Reference</TH>
         </tr>
       </THead>
       <tbody>
         {rows.length === 0 ? (
-          <EmptyRow colSpan={8}>
+          <EmptyRow colSpan={7}>
             No reports match these filters.{" "}
             <Link href={emptyHref} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-              Clear filters
+              Clear all filters
             </Link>
           </EmptyRow>
         ) : (
           rows.map((row) => (
-            <TR key={row.assignmentId} className={row.bucket === "missing" ? "bg-bad-bg/40" : undefined}>
-              <TD primary>
-                {row.submissionId ? (
-                  <Link href={`/finance/submissions/${row.submissionId}`} className="num whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-                    {row.referenceNo}
-                  </Link>
-                ) : (
-                  <span className="whitespace-nowrap text-[13px] text-muted">Not started</span>
-                )}
-                {row.updatedAt ? <span className="block text-xs text-muted">Updated {formatDate(row.updatedAt)}</span> : null}
-              </TD>
-              <TD className="min-w-44" label="Organization">
+            <TR key={row.assignmentId} className="lg:h-14">
+              <TD className="min-w-48" primary>
                 <div>
-                  <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                  <Link href={row.submissionId ? `/finance/submissions/${row.submissionId}` : `/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                     {row.orgName}
+                    {row.submissionId ? null : <span className="sr-only">, not started, open organization</span>}
                   </Link>
-                  <span className="block whitespace-nowrap text-xs text-muted">
-                    <span className="num font-mono">{row.ein}</span>, {row.borough}
-                  </span>
+                  <span className="num block text-[13px] text-muted">{orgMeta(row)}</span>
                 </div>
               </TD>
-              <TD className="min-w-36" stackHidden>
-                <Link href={`/finance/initiatives/${row.initiativeId}`} className="text-ink hover:text-link hover:underline">
-                  {row.initiativeName}
-                </Link>
-                <span className="block text-xs text-muted">{row.category}{row.agency ? `, ${row.agency}` : ""}</span>
-                <span className="hidden text-xs text-muted @max-[72rem]:block" title={row.sponsors.map((s) => s.name).join(", ")}>
-                  {row.sponsors.length > 0 ? `${sponsorShort(row.sponsors)}, ` : ""}{fundingLabel(row.fundingSource)}
-                </span>
+              <TD className="min-w-40" label="Initiative">
+                <div>
+                  <span className="text-ink">{row.initiativeName}</span>
+                  <span className="block text-[13px] text-muted">{[row.initiativeCode, row.category, row.agency].filter(Boolean).join(" · ")}</span>
+                  <span className="hidden text-[13px] text-muted @max-[64rem]:block">{sponsorLabel(row)}</span>
+                </div>
               </TD>
-              <TD className="min-w-28 @max-[72rem]:hidden" stackHidden>
-                <span title={row.sponsors.map((s) => s.name).join(", ")}>{sponsorShort(row.sponsors)}</span>
-                <span className="block text-xs text-muted">{fundingLabel(row.fundingSource)}</span>
-              </TD>
-              <TD stackHidden>
-                <ContractCell status={row.contractStatus} number={row.contractNumber} registeredOn={row.contractRegisteredOn} quiet />
+              <TD className="min-w-32 @max-[64rem]:hidden" stackHidden>
+                <span title={row.sponsors.length > 1 ? sponsorNames(row.sponsors) : undefined}>{sponsorLabel(row)}</span>
               </TD>
               <TD align="right" label="Award">{formatCurrency(row.award, { cents: false })}</TD>
-              <TD className="min-w-36" label="State">
+              <TD className="min-w-36" label="Status">
                 <div>
                   <StateBadge state={reportState(row.status, row.dueOn)} />
-                  <span className="mt-1 block text-xs">{dueCell(row)}</span>
+                  <span className="mt-1 block text-[13px]">{dueCell(row)}</span>
                 </div>
               </TD>
               <TD label="Flags">
                 <FlagsCell row={row} />
+              </TD>
+              <TD label="Reference">
+                <span className="whitespace-nowrap font-mono text-sm text-muted">{row.referenceNo ?? "Not started"}</span>
               </TD>
             </TR>
           ))
@@ -119,4 +107,3 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
     </Table>
   );
 }
-

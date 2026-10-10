@@ -43,7 +43,7 @@ test("[US-039][US-041] the dashboard loads and the submissions list filters down
   await page.goto("/finance");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.goto("/finance/submissions?q=13-4027118&period=FY26-YE");
-  const link = page.getByRole("link", { name: referenceNo });
+  const link = page.locator("tbody tr", { hasText: referenceNo }).getByRole("link").first();
   await expect(link).toBeVisible();
   const rows = page.locator("tbody tr");
   expect(await rows.count()).toBeGreaterThan(0);
