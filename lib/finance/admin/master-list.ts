@@ -70,8 +70,6 @@ const ALIASES: Record<string, MasterField> = {
   primary_contact_phone: "contact_phone",
 };
 
-export const SAMPLE_HEADER = MASTER_FIELDS.join(",");
-
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];

@@ -291,8 +291,10 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                 <ul className="mt-2 divide-y divide-line-soft rounded border border-line">
                   {changes.map((c) => (
                     <li key={c.id} className="px-4 py-2 text-sm text-ink">
-                      <span className="font-semibold">{c.kind === "renamed" ? "Renamed" : "Retired"}</span>
-                      {c.note ? `. ${c.note}` : ""}
+                      <Badge tone={c.kind === "renamed" ? "info" : "neutral"}>
+                        {c.kind === "renamed" ? "Renamed" : "Retired"}
+                      </Badge>
+                      {c.note ? <span className="ml-2">{c.note}</span> : null}
                       <span className="block text-[13px] text-muted">
                         {formatDateTime(c.created_at)}
                         {c.by_name ? ` by ${c.by_name}` : ""}

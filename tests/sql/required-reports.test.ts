@@ -1,6 +1,8 @@
 import type { Client } from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { appUrl, asUser, connect, ownerUrl, userId } from "./helpers";
+
+vi.mock("server-only", () => ({}));
 
 let owner: Client;
 let app: Client;
@@ -287,5 +289,54 @@ describe("[US-002] a custom-named report with its own due date", () => {
         (await app.query("SELECT count(*)::int AS n FROM reminder_rule WHERE period_id = $1", [id])).rows[0].n,
       ).toBe(0);
     });
+  });
+});
+
+describe("[US-002] the portal start flow follows the required reports", () => {
+  it("starts a custom report for an organization, and refuses a period the initiative does not require", async () => {
+    const { startReport, findReport } = await import("@/lib/report/create");
+    const customId = "FY27-XTESTCUS1";
+    await owner.query(
+      "INSERT INTO reporting_period (id, fiscal_year_id, label, starts_on, ends_on, due_on, initiative_id) VALUES ($1, 'FY27', 'Custom start check', '2026-07-01', '2027-03-31', '2027-03-31', $2)",
+      [customId, target.initiative],
+    );
+    await owner.query("INSERT INTO initiative_period_exclusion (initiative_id, period_id) VALUES ($1, 'FY27-YE')", [
+      target.initiative,
+    ]);
+    let created: string | null = null;
+    try {
+      expect(await findReport(target.submitter, target.assignment, "FY27-YE")).toEqual({ status: "not_found" });
+      expect(await startReport(target.submitter, target.assignment, "FY27-YE")).toEqual({ status: "not_found" });
+      const started = await startReport(target.submitter, target.assignment, customId);
+      expect(started.status).toBe("ok");
+      if (started.status === "ok") {
+        created = started.submissionId;
+        expect(started.created).toBe(true);
+        const row = (
+          await owner.query("SELECT period_id, reference_no, status FROM submission WHERE id = $1", [created])
+        ).rows[0];
+        expect(row.period_id).toBe(customId);
+        expect(row.status).toBe("draft");
+        expect(row.reference_no).toMatch(/\w/);
+      }
+      if (target.other) {
+        const otherAssignment = (
+          await owner.query(
+            "SELECT a.id FROM assignment a JOIN app_user u ON u.org_id = a.org_id WHERE a.initiative_id = $1 AND u.id = $2",
+            [target.other, target.submitter],
+          )
+        ).rows[0]?.id;
+        if (otherAssignment)
+          expect(await startReport(target.submitter, otherAssignment, customId)).toEqual({ status: "not_found" });
+      }
+    } finally {
+      if (created) {
+        await owner.query("DELETE FROM answer WHERE submission_id = $1", [created]);
+        await owner.query("DELETE FROM submission WHERE id = $1", [created]);
+      }
+      await owner.query("DELETE FROM initiative_period_exclusion WHERE initiative_id = $1", [target.initiative]);
+      await owner.query("DELETE FROM reference_counter WHERE period_id = $1", [customId]);
+      await owner.query("DELETE FROM reporting_period WHERE id = $1", [customId]);
+    }
   });
 });

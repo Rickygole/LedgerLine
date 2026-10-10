@@ -91,7 +91,6 @@ export default async function LibraryQuestionPage({
       ) : null}
       <div className="max-w-[860px] space-y-6">
         <LibraryQuestionForm
-          key={`${item.question.key}-${item.updatedAt}`}
           mode="update"
           initial={item.question}
           initialSection={item.templateSection}

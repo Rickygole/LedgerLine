@@ -132,7 +132,7 @@ describe("[US-011] an initiative can be renamed without losing its history", () 
     });
   });
 
-  it("can be renamed again, and the rename does not stop the initiative being carried into the next year", async () => {
+  it("[US-012] can be renamed again, and the rename does not stop the initiative being carried into the next year", async () => {
     await asUser(app, priya, async () => {
       await app.query("SELECT app.rename_initiative($1, 'First New Name', 'Sponsor request')", [target.id]);
       await app.query("SELECT app.rename_initiative($1, 'Second New Name', 'Second sponsor request')", [target.id]);

@@ -42,7 +42,12 @@ export function AddOrganizationForm() {
         </div>
         <div>
           <Label htmlFor="org-org_type">{FIELD_LABEL.org_type}</Label>
-          <Select {...field("org_type")} aria-required="true" defaultValue={values.org_type ?? ""}>
+          <Select
+            key={values.org_type ?? ""}
+            {...field("org_type")}
+            aria-required="true"
+            defaultValue={values.org_type ?? ""}
+          >
             <option value="" disabled>
               Choose a type
             </option>
@@ -57,7 +62,12 @@ export function AddOrganizationForm() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="org-borough">{FIELD_LABEL.borough}</Label>
-            <Select {...field("borough")} aria-required="true" defaultValue={values.borough ?? ""}>
+            <Select
+              key={values.borough ?? ""}
+              {...field("borough")}
+              aria-required="true"
+              defaultValue={values.borough ?? ""}
+            >
               <option value="" disabled>
                 Choose
               </option>
