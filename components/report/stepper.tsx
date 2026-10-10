@@ -44,6 +44,7 @@ function StepList({ steps, current, onSelect }: { steps: Step[]; current: string
             <a
               href={stepHref(step.key)}
               aria-current={active ? "step" : undefined}
+              aria-label={`Step ${index + 1}: ${step.title}, ${stateText(step)}`}
               onClick={(event) => {
                 if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
                 event.preventDefault();
@@ -54,12 +55,10 @@ function StepList({ steps, current, onSelect }: { steps: Step[]; current: string
                 active ? "bg-navy-50 font-bold text-ink" : step.state === "error" ? "font-semibold text-bad hover:bg-navy-50" : "text-ink hover:bg-navy-50"
               )}
             >
-              <Marker step={step} index={index} current={active} />
-              <span className="min-w-0">
-                <span className="sr-only">Step {index + 1}: </span>
-                {step.title}
-                <span className="sr-only">, {stateText(step)}</span>
+              <span aria-hidden="true" className="contents">
+                <Marker step={step} index={index} current={active} />
               </span>
+              <span className="min-w-0">{step.title}</span>
             </a>
           </li>
         );
