@@ -119,9 +119,9 @@ describe("[US-066] training records and the readiness summary", () => {
       const before = await loadReadiness(tx);
       const incomplete = before.users.find((u) => !before.records.some((r) => r.user_id === u.id) || before.modules.filter((m) => m.audience.includes(u.role)).some((m) => !before.records.some((r) => r.user_id === u.id && r.module_key === m.key)));
       expect(incomplete).toBeDefined();
-      for (const module of before.modules.filter((m) => m.audience.includes(incomplete!.role))) {
-        if (!before.records.some((r) => r.user_id === incomplete!.id && r.module_key === module.key)) {
-          await app.query(`SELECT app.record_training($1, $2, ${today})`, [incomplete!.id, module.key]);
+      for (const mod of before.modules.filter((m) => m.audience.includes(incomplete!.role))) {
+        if (!before.records.some((r) => r.user_id === incomplete!.id && r.module_key === mod.key)) {
+          await app.query(`SELECT app.record_training($1, $2, ${today})`, [incomplete!.id, mod.key]);
         }
       }
       const after = await loadReadiness(tx);

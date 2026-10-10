@@ -109,6 +109,10 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
             </li>
             <li className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
             <li>
+              <Link href="/finance/trends" className="text-link underline underline-offset-2 hover:text-link-hover">Trends and comparisons</Link>
+            </li>
+            <li className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
+            <li>
               <span className="num font-semibold text-ink">{formatCompactCurrency(awarded)}</span> awarded across <span className="num">{rows.length}</span> awards
             </li>
           </ul>

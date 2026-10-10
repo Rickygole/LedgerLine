@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { CheckCircle2, ClipboardCheck, GraduationCap } from "lucide-react";
 import { requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
@@ -10,7 +9,6 @@ import { fixUatDefect, recordTraining, recordUatSession } from "./actions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
-import { Stat } from "@/components/ui/stat";
 import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 
@@ -41,12 +39,17 @@ export default async function ReadinessPage() {
         description="Test sessions and training records for Council Finance staff ahead of the February 1, 2027 target. The formal test window runs January 4 to 15, 2027 and training runs January 11 to 22, 2027. Entries here are earlier rounds."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Go-live readiness" }]}
       />
-      <section aria-label="Readiness summary" className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Finance users trained" value={pct(data.training.percent)} icon={GraduationCap} tone={data.training.percent === 100 ? "ok" : "warn"} hint={`${data.training.trained} of ${data.training.users} have finished every module for their role`} />
-        <Stat label="Test scenarios passing" value={pct(data.uat.percent)} icon={ClipboardCheck} tone={data.uat.percent === 100 ? "ok" : "warn"} hint={`${data.uat.passed} of ${data.uat.scenarios} scenarios, latest session each`} />
-        <Stat label="Open defects" value={data.openDefects} tone={data.openDefects > 0 ? "bad" : "ok"} hint="Found in test sessions, not yet fixed" />
-        <Stat label="Test sessions held" value={data.sessions.length} icon={CheckCircle2} hint="All rounds" />
-      </section>
+      <ul className="mb-6 list-disc space-y-1 pl-5 text-sm">
+        <li>
+          Finance users trained: <span className="font-bold">{pct(data.training.percent)}</span> ({data.training.trained} of {data.training.users} have finished every module for their role).
+        </li>
+        <li>
+          Test scenarios passing: <span className="font-bold">{pct(data.uat.percent)}</span> ({data.uat.passed} of {data.uat.scenarios}, using the latest session of each).
+        </li>
+        <li>
+          Open defects: <span className="font-bold">{data.openDefects}</span>. Test sessions held: {data.sessions.length}.
+        </li>
+      </ul>
 
       <Card className="mb-6">
         <CardHeader title="Test sessions" description="One row per scenario run by one tester. The pass rate uses the most recent session of each scenario." />

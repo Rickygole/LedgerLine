@@ -8,7 +8,6 @@ import { ageMinutes, categoryLabel, formatDuration, listSupport, metTarget, resp
 import { SupportStateBadge } from "@/components/ops/support-parts";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
-import { Stat } from "@/components/ui/stat";
 import { Select, Label } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
@@ -38,13 +37,9 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
         description={`Help requests from every signed-in user, measured against the ${RESPONSE_TARGET_HOURS} hour first response target. A request is overdue when ${RESPONSE_TARGET_HOURS} hours pass with no reply.`}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Support queue" }]}
       />
-      <section aria-label="Response summary" className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <Stat label="Open" value={count("open")} tone="info" hint="Within the target" />
-        <Stat label="Overdue" value={count("overdue")} tone={count("overdue") > 0 ? "bad" : "neutral"} hint={`No reply after ${RESPONSE_TARGET_HOURS} hours`} />
-        <Stat label="Responded" value={count("responded")} tone="ok" hint="Not yet closed" />
-        <Stat label="Replied within target" value={share} hint={`First reply within ${RESPONSE_TARGET_HOURS} hours`} />
-        <Stat label="Median first reply" value={summary.medianMinutes === null ? "None yet" : formatDuration(summary.medianMinutes)} hint="Across replied requests" />
-      </section>
+      <p className="mb-4 text-sm">
+        {count("open")} open, {count("overdue")} overdue, {count("responded")} responded and waiting to be closed. First replies within the target: {share}. Median first reply: {summary.medianMinutes === null ? "none yet" : formatDuration(summary.medianMinutes)}.
+      </p>
       <Card>
         <form action="/finance/support" className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-4">
           <div>

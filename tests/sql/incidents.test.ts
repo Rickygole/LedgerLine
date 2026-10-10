@@ -21,10 +21,6 @@ afterAll(async () => {
   await owner?.end();
 });
 
-async function as(id: string) {
-  await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: id })]);
-}
-
 async function code(fn: () => Promise<unknown>): Promise<string | null> {
   await app.query("SAVEPOINT attempt");
   try {
