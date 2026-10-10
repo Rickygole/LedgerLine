@@ -1,5 +1,6 @@
 import type { Tx } from "@/lib/db";
 import { daysBetween } from "@/lib/dates";
+import { plural } from "@/lib/format";
 
 type PeriodOption = { id: string; label: string; due_on: string };
 
@@ -46,12 +47,12 @@ export function renderSubject(template: string, period: { label: string; dueOn: 
 export function describeOffset(days: number): string {
   if (days === 0) return "On the due date";
   const n = Math.abs(days);
-  return `${n} ${n === 1 ? "day" : "days"} ${days < 0 ? "before" : "after"} the due date`;
+  return `${n} ${plural(n, "day", "days")} ${days < 0 ? "before" : "after"} the due date`;
 }
 
 export function sendNowSummary(orgs: number, emails: number, date: string): string {
-  const org = `${orgs} ${orgs === 1 ? "organization" : "organizations"}`;
-  const mail = `${emails} ${emails === 1 ? "message" : "messages"}`;
+  const org = `${orgs} ${plural(orgs, "organization", "organizations")}`;
+  const mail = `${emails} ${plural(emails, "message", "messages")}`;
   return `This will add ${mail} to the outbox for ${org} for ${date}.`;
 }
 

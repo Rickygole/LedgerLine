@@ -8,6 +8,7 @@ import { dispatchFor } from "@/lib/outbox-dispatch";
 import { plainError } from "@/lib/finance/admin/errors";
 import { isoDate, isUuid } from "@/lib/finance/admin/params";
 import { todayInNewYork } from "@/lib/dates";
+import { plural } from "@/lib/format";
 
 export type ReminderState = { ok?: string; error?: string; fieldErrors?: Record<string, string> } | undefined;
 
@@ -97,7 +98,7 @@ export async function sendNow(_prev: ReminderState, formData: FormData): Promise
     await dispatchFor(admin.id, { limit: 100 });
     revalidatePath("/finance/outbox");
     revalidatePath("/finance/reminders");
-    return { ok: queued === 0 ? "Nothing new to send. Every organization that qualifies was already reminded for this date." : `${queued} ${queued === 1 ? "reminder" : "reminders"} added to the outbox.` };
+    return { ok: queued === 0 ? "Nothing new to send. Every organization that qualifies was already reminded for this date." : `${queued} ${plural(queued, "reminder", "reminders")} added to the outbox.` };
   } catch (error) {
     return { error: plainError(error) };
   }

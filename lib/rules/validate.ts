@@ -1,6 +1,7 @@
 import { amountBoundsProblem, numericProblem } from "./bounds";
 import { personNameProblem } from "./person-name";
-import { formatCurrency, sumAmounts, toCents } from "./money";
+import { sumAmounts, toCents } from "./money";
+import { formatCurrency } from "@/lib/format";
 import type { AnswerValue, Answers, BudgetLine, FormDefinition, Issue, Question, ValidationInput } from "./types";
 
 export const RULES = {

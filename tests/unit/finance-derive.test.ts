@@ -190,6 +190,13 @@ describe("[US-041] filters", () => {
     expect(applyFilters(rows, { status: "not_started" })).toHaveLength(1);
   });
 
+  it("[US-041] treats the Citywide borough option as citywide-funded reports", () => {
+    const citywide = rows.filter((r) => r.fundingSource === "citywide");
+    expect(citywide.length).toBeGreaterThan(0);
+    expect(applyFilters(rows, { borough: "Citywide" })).toHaveLength(citywide.length);
+    expect(applyFilters(rows, { borough: "Citywide", funding: "local" })).toHaveLength(0);
+  });
+
   it("matches initiative by name, code or id", () => {
     expect(applyFilters(rows, { initiative: "diabetes" })).toHaveLength(1);
     expect(applyFilters(rows, { initiative: "ci-004" })).toHaveLength(1);

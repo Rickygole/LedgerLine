@@ -5,10 +5,12 @@ import { todayInNewYork } from "@/lib/dates";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { applyFilters, isExportable, sortRows } from "@/lib/finance/review/derive";
 import { buildWorkbook, exportFilename, submissionsToCsv, workbookToBuffer, type ExportSubmission } from "@/lib/finance/review/export";
-import { FLAG_LABEL, filtersToParams, parseFilters, STATUS_OPTIONS } from "@/lib/finance/review/filters";
+import { STATUS_OPTIONS } from "@/lib/domain";
+import { FLAG_LABEL, filtersToParams, parseFilters } from "@/lib/finance/review/filters";
 import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { contractLabel, fundingLabel } from "@/lib/finance/awards";
+import { plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +55,7 @@ export async function GET(request: NextRequest) {
       "export",
       period.id,
       "export",
-      `${filename}: ${rows.length} ${rows.length === 1 ? "submission" : "submissions"}${filterLines.length ? `, filters: ${filterLines.join("; ")}` : ""}`,
+      `${filename}: ${rows.length} ${plural(rows.length, "submission", "submissions")}${filterLines.length ? `, filters: ${filterLines.join("; ")}` : ""}`,
       null,
       JSON.stringify({ format, rows: rows.length, filters: Object.fromEntries(filtersToParams(filters)) }),
       null,

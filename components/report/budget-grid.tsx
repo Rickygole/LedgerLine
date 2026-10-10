@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { actualProblem, amountProblem, emptyRow, formatAmountText, isBlankRow, linesFromRows, newRowId, type BudgetRow } from "@/lib/report/budget-rows";
-import { formatCurrency, parseAmount } from "@/lib/rules/money";
+import { parseAmount } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { balanceCopy, minusCurrency, signedDifference } from "./balance";
 import { BalanceMeter } from "./balance-meter";
 import { parseBudgetPaste } from "@/lib/rules/paste";
@@ -111,7 +112,7 @@ export function BudgetGrid({
       ...result.skipped.map((item) => `row ${item.line}: ${item.reason.toLowerCase()}`),
       ...(trimmed > 0 ? [`${trimmed} over the ${maxLines} line limit`] : []),
     ];
-    const summary = `${added.length} ${added.length === 1 ? "row" : "rows"} added${skipped > 0 ? `, ${skipped} skipped (${reasons.join("; ")})` : ""}`;
+    const summary = `${added.length} ${plural(added.length, "row", "rows")} added${skipped > 0 ? `, ${skipped} skipped (${reasons.join("; ")})` : ""}`;
     setToast({ tone: skipped > 0 ? "warn" : "ok", text: summary });
 
     onChange([...base, ...added]);

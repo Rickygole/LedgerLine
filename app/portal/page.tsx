@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
+import { plural } from "@/lib/format";
 import { formatShortDate } from "@/lib/report/format";
 import { actionFor, loadObligations, loadOrganization, type Obligation } from "@/lib/portal/data";
 import { reportProgress } from "@/lib/portal/progress";
@@ -17,10 +18,6 @@ export const dynamic = "force-dynamic";
 
 type Period = { id: string; label: string; ends_on: string; due_on: string };
 type Year = { id: string; starts_on: string; ends_on: string };
-
-function plural(n: number, one: string, many: string) {
-  return n === 1 ? one : many;
-}
 
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 

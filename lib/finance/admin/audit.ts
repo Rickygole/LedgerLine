@@ -3,7 +3,7 @@ import { roleLabel, type Role } from "@/lib/auth";
 import { PAGE_SIZE, isUuid } from "./params";
 import { actionVerb, entityLabel } from "@/lib/finance/audit-actions";
 import { describeOffset } from "@/lib/lifecycle/reminders";
-import { formatCount } from "@/lib/rules/money";
+import { formatCount, plural } from "@/lib/format";
 
 export { actionLabel, entityLabel } from "@/lib/finance/audit-actions";
 
@@ -130,7 +130,7 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
         return { actor, verb, subject: `the complete data package${detail}` };
       }
       const rows = typeof after.rows === "number" ? after.rows : null;
-      return { actor, verb, subject: `${row.entity_id} submissions${rows === null ? "" : ` (${formatCount(rows)} ${rows === 1 ? "row" : "rows"})`}` };
+      return { actor, verb, subject: `${row.entity_id} submissions${rows === null ? "" : ` (${formatCount(rows)} ${plural(rows, "row", "rows")})`}` };
     }
     default:
       return { actor, verb, subject: row.label ?? row.note ?? entityLabel(row.entity).toLowerCase() };

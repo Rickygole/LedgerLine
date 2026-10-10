@@ -1,5 +1,6 @@
 import type { Tx } from "@/lib/db";
 import { iso } from "./sql";
+import { plural } from "@/lib/format";
 
 export const RESPONSE_TARGET_HOURS = 24;
 const HOUR = 3_600_000;
@@ -43,12 +44,12 @@ export function ageMinutes(createdAt: Date | string, now: Date): number {
 }
 
 export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  if (minutes < 60) return `${minutes} ${plural(minutes, "minute", "minutes")}`;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (hours < 48) return rest === 0 ? `${hours} ${hours === 1 ? "hour" : "hours"}` : `${hours} h ${rest} min`;
+  if (hours < 48) return rest === 0 ? `${hours} ${plural(hours, "hour", "hours")}` : `${hours} h ${rest} min`;
   const days = Math.floor(hours / 24);
-  return `${days} ${days === 1 ? "day" : "days"}`;
+  return `${days} ${plural(days, "day", "days")}`;
 }
 
 export function targetSummary(rows: { createdAt: string; firstResponseAt: string | null }[]): { responded: number; metTarget: number; medianMinutes: number | null } {

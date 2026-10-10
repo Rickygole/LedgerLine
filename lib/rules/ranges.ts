@@ -1,4 +1,5 @@
 import type { Answers, FormDefinition, Issue } from "./types";
+import { formatCount } from "@/lib/format";
 
 const RANGE_RULES = {
   days: "LL-RANGE-DAYS",
@@ -49,7 +50,7 @@ export function rangeIssues(input: { definition: FormDefinition; answers: Answer
   const served = count(answers, "participants_actual");
   const target = count(answers, "participants_target");
   if (served !== null && target !== null && target > 0 && served > target * 2) {
-    issues.push({ field: "participants_actual", ruleId: RANGE_RULES.served, severity: "warn", message: `Participants served (${served.toLocaleString("en-US")}) is more than twice the number targeted (${target.toLocaleString("en-US")}). Check both numbers.` });
+    issues.push({ field: "participants_actual", ruleId: RANGE_RULES.served, severity: "warn", message: `Participants served (${formatCount(served)}) is more than twice the number targeted (${formatCount(target)}). Check both numbers.` });
   }
 
   const breakdown = answers.youth_breakdown;
@@ -63,7 +64,7 @@ export function rangeIssues(input: { definition: FormDefinition; answers: Answer
         field: "youth_breakdown",
         ruleId: RANGE_RULES.subcount,
         severity: "block",
-        message: `Participants under 18 add up to ${total.toLocaleString("en-US")}, which is more than the ${served.toLocaleString("en-US")} participants served.`,
+        message: `Participants under 18 add up to ${formatCount(total)}, which is more than the ${formatCount(served)} participants served.`,
       });
     }
   }
@@ -73,7 +74,7 @@ export function rangeIssues(input: { definition: FormDefinition; answers: Answer
     const part = count(answers, pair.part);
     const whole = count(answers, pair.whole);
     if (part !== null && whole !== null && part > whole) {
-      issues.push({ field: pair.part, ruleId: RANGE_RULES.pair, severity: "warn", message: `${pair.partLabel} (${part.toLocaleString("en-US")}) is more than ${pair.wholeLabel} (${whole.toLocaleString("en-US")}). Check both numbers.` });
+      issues.push({ field: pair.part, ruleId: RANGE_RULES.pair, severity: "warn", message: `${pair.partLabel} (${formatCount(part)}) is more than ${pair.wholeLabel} (${formatCount(whole)}). Check both numbers.` });
     }
   }
   return issues;

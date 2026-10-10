@@ -5,6 +5,7 @@ import { BOROUGH_SHAPES, COUNCIL_DISTRICT_SHAPES, GEO_VIEWBOX } from "@/lib/geo"
 import { boroughsForDistrict, districtInBorough, GEO_BOROUGHS } from "@/lib/geo/boroughs";
 import { AutoSelect } from "./auto-select";
 import { DistrictMapView, type MapDistrict } from "./district-map-view";
+import { plural } from "@/lib/format";
 
 const MAP_SOURCE = "Council district boundaries: NYC Department of City Planning, via NYC Open Data.";
 
@@ -22,7 +23,7 @@ function dashHref(params: Record<string, string>, hash = "") {
 }
 
 function reportsWord(n: number) {
-  return n === 1 ? "report" : "reports";
+  return plural(n, "report", "reports");
 }
 
 export function DistrictMapCard({ stats, borough, periodId, table, sort }: Common & { table: boolean; sort: "missing" | "district" }) {

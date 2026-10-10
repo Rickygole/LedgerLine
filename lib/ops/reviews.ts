@@ -1,4 +1,5 @@
 import type { Tx } from "@/lib/db";
+import { plural } from "@/lib/format";
 
 export const CHECKLIST = [
   { key: "initiatives", label: "Initiatives", detail: "Which initiatives to keep, rename, combine or retire." },
@@ -33,7 +34,7 @@ export function checklistDone(review: Pick<ReviewRow, "check_initiatives" | "che
 export function signOffBlockers(review: ReviewRow): string[] {
   const blockers: string[] = [];
   const open = CHECKLIST.length - checklistDone(review);
-  if (open > 0) blockers.push(`${open} checklist ${open === 1 ? "item is" : "items are"} not ticked.`);
+  if (open > 0) blockers.push(`${open} checklist ${plural(open, "item is", "items are")} not ticked.`);
   if (review.participants === 0) blockers.push("No participants are recorded.");
   if (review.decisions === 0) blockers.push("No decisions are recorded.");
   return blockers;

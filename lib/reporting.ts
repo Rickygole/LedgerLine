@@ -1,4 +1,4 @@
-import type { ReportState } from "@/components/ui/status-badge";
+import type { ReportState } from "@/lib/domain";
 import { daysPastDue } from "@/lib/dates";
 
 export type Bucket = "outstanding" | "missing" | "submitted" | "in_review" | "returned" | "accepted";

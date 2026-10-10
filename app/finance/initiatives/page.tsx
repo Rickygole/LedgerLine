@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
-import { formatCompactCurrency, formatCount, formatCurrency } from "@/lib/rules/money";
+import { formatCompactCurrency, formatCount, formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

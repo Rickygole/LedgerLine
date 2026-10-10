@@ -1,6 +1,7 @@
 import { daysPastDue } from "@/lib/dates";
 import type { OrgAward } from "@/lib/finance/admin/organizations";
 import { STATUS_COLOR } from "@/components/ui/status-colors";
+import { plural } from "@/lib/format";
 
 type Worst = { label: string; color: string; rank: number };
 
@@ -46,7 +47,7 @@ export function ReportingRecord({ awards }: { awards: OrgAward[] }) {
                 {p.worst.label}
                 <span className="text-muted">
                   {" "}
-                  · {p.count} {p.count === 1 ? "report" : "reports"}
+                  · {p.count} {plural(p.count, "report", "reports")}
                 </span>
               </span>
             </span>

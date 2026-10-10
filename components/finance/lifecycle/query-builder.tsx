@@ -4,7 +4,8 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { usePathname, useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 import { saveQuery, type QueryState } from "@/app/finance/queries/actions";
-import { BOROUGHS, BUCKET_OPTIONS, CONTRACT_OPTIONS, FLAG_OPTIONS, FUNDING_OPTIONS, ORG_TYPE_OPTIONS, QUERY_KEYS, STATUS_OPTIONS, type MemberOption, type QueryErrors, type QueryParams } from "@/lib/lifecycle/queries";
+import { ORG_TYPES, REPORT_BOROUGHS, STATUS_OPTIONS } from "@/lib/domain";
+import { BUCKET_OPTIONS, CONTRACT_OPTIONS, FLAG_OPTIONS, FUNDING_OPTIONS, QUERY_KEYS, type MemberOption, type QueryErrors, type QueryParams } from "@/lib/lifecycle/queries";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select } from "@/components/ui/field";
 
@@ -72,7 +73,7 @@ export function QueryBuilder({ params, errors, periods, categories, initiatives,
             ))}
           </datalist>
         </div>
-        {select("q-borough", "borough", "Borough", BOROUGHS.map((b) => ({ value: b, label: b })), "All boroughs")}
+        {select("q-borough", "borough", "Borough", REPORT_BOROUGHS.map((b) => ({ value: b, label: b })), "All boroughs")}
         <div>
           <Label htmlFor="q-district">Council district of the organization</Label>
           <Input id="q-district" type="text" inputMode="numeric" value={values.district ?? ""} onChange={(e) => set("district", e.target.value, 400)} placeholder="1 to 51" aria-invalid={errors.district ? true : undefined} aria-describedby={errors.district ? "q-district-error" : undefined} />
@@ -81,7 +82,7 @@ export function QueryBuilder({ params, errors, periods, categories, initiatives,
         {select("q-member", "member", "Sponsoring Council Member", members.map((m) => ({ value: String(m.district), label: `${m.name} (District ${m.district})` })), "All Council Members")}
         {select("q-funding", "funding", "Funding source", FUNDING_OPTIONS, "All funding sources")}
         {select("q-contract", "contract", "Contract status", CONTRACT_OPTIONS, "All contract statuses")}
-        {select("q-org-type", "org_type", "Organization type", ORG_TYPE_OPTIONS.map((o) => ({ ...o })), "All types")}
+        {select("q-org-type", "org_type", "Organization type", ORG_TYPES.map((o) => ({ ...o })), "All types")}
         {select("q-bucket", "bucket", "Reporting stage", BUCKET_OPTIONS, "All stages")}
         {select("q-status", "status", "Report status", STATUS_OPTIONS.map((o) => ({ ...o })), "All statuses")}
         {select("q-flag", "flag", "Flag type", FLAG_OPTIONS.map((o) => ({ ...o })), "No flag filter")}

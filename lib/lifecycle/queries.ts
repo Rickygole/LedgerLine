@@ -1,26 +1,11 @@
 import type { Tx } from "@/lib/db";
 import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
+import { ORG_TYPES, REPORT_BOROUGHS, STATUS_OPTIONS } from "@/lib/domain";
 import { applyFilters, BUCKET_ORDER } from "@/lib/finance/review/derive";
 import { defaultPeriodId, parseFilters } from "@/lib/finance/review/filters";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
-import { formatCurrency } from "@/lib/rules/money";
-
-export const BOROUGHS = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island", "Citywide"] as const;
-
-export const ORG_TYPE_OPTIONS = [
-  { value: "cbo", label: "Nonprofit" },
-  { value: "agency", label: "City agency" },
-] as const;
-
-export const STATUS_OPTIONS = [
-  { value: "not_started", label: "Not started" },
-  { value: "draft", label: "Draft" },
-  { value: "submitted", label: "Submitted" },
-  { value: "under_review", label: "In review" },
-  { value: "returned", label: "Update requested" },
-  { value: "accepted", label: "Accepted" },
-] as const;
+import { formatCurrency } from "@/lib/format";
 
 export const BUCKET_OPTIONS = BUCKET_ORDER.map((value) => ({ value, label: BUCKET_LABEL[value] }));
 
@@ -73,12 +58,12 @@ export function cleanParams(raw: Raw, periods: PeriodRef[]): QueryParams {
   };
   set("category", get("category").slice(0, 80));
   set("initiative", get("initiative").slice(0, 120));
-  set("borough", oneOf(get("borough"), BOROUGHS.map((value) => ({ value }))));
+  set("borough", oneOf(get("borough"), REPORT_BOROUGHS.map((value) => ({ value }))));
   set("district", wholeNumber(get("district"), 1, 51));
   set("member", wholeNumber(get("member"), 1, 51));
   set("funding", oneOf(get("funding"), FUNDING_OPTIONS));
   set("contract", oneOf(get("contract"), CONTRACT_OPTIONS));
-  set("org_type", oneOf(get("org_type"), ORG_TYPE_OPTIONS));
+  set("org_type", oneOf(get("org_type"), ORG_TYPES));
   set("bucket", oneOf(get("bucket"), BUCKET_OPTIONS));
   set("status", oneOf(get("status"), STATUS_OPTIONS));
   set("award_min", wholeNumber(get("award_min"), 0, MAX_AWARD));
@@ -113,10 +98,10 @@ export function validateParams(raw: Raw, periods: PeriodRef[]): QueryErrors {
     if (value && !wholeNumber(value, 0, MAX_AWARD)) errors[key] = "Enter a whole dollar amount from 0 to 1,000,000,000, with digits only.";
   };
   choice("period", periods.map((p) => ({ value: p.id })), "Choose one of the reporting periods.");
-  choice("borough", BOROUGHS.map((value) => ({ value })));
+  choice("borough", REPORT_BOROUGHS.map((value) => ({ value })));
   choice("funding", FUNDING_OPTIONS);
   choice("contract", CONTRACT_OPTIONS);
-  choice("org_type", ORG_TYPE_OPTIONS);
+  choice("org_type", ORG_TYPES);
   choice("bucket", BUCKET_OPTIONS);
   choice("status", STATUS_OPTIONS);
   choice("flag", FLAG_OPTIONS);
@@ -163,7 +148,7 @@ export function describe(params: QueryParams, members: MemberOption[] = []): str
   if (params.member) lines.push(`Sponsor ${members.find((m) => String(m.district) === params.member)?.name ?? `of district ${params.member}`}`);
   if (params.funding) lines.push(FUNDING_OPTIONS.find((o) => o.value === params.funding)?.label ?? params.funding);
   if (params.contract) lines.push(CONTRACT_OPTIONS.find((o) => o.value === params.contract)?.label ?? params.contract);
-  if (params.org_type) lines.push(ORG_TYPE_OPTIONS.find((o) => o.value === params.org_type)?.label ?? params.org_type);
+  if (params.org_type) lines.push(ORG_TYPES.find((o) => o.value === params.org_type)?.label ?? params.org_type);
   if (params.bucket) lines.push(BUCKET_LABEL[params.bucket as Bucket] ?? params.bucket);
   if (params.status) lines.push(STATUS_OPTIONS.find((o) => o.value === params.status)?.label ?? params.status);
   if (params.award_min) lines.push(`Award at least ${formatCurrency(Number(params.award_min))}`);

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireUser, FINANCE_ROLES } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
@@ -17,7 +17,7 @@ import { ORG_SORTS, listOrganizations, type OrgSort } from "@/lib/finance/admin/
 import { loadPeriods } from "@/lib/finance/review/data";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
 import { NoPeriods } from "@/components/finance/no-periods";
-import { BOROUGHS, ORG_TYPES, orgTypeLabel } from "@/lib/finance/admin/sql";
+import { BOROUGHS, ORG_TYPES, orgTypeLabel } from "@/lib/domain";
 import { one, pageNumber, pickOne, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
 
 export const runtime = "nodejs";

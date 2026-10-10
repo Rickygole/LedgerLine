@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 import { balanceMessage, budgetTotals } from "@/lib/rules/validate";
 import type { BudgetLine, FormDefinition, Issue } from "@/lib/rules/types";
 import { FLAG_LABEL } from "./filters";

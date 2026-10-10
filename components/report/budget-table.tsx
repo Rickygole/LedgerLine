@@ -1,6 +1,6 @@
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { cn } from "@/lib/cn";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 import { lineVariance, spendSummary, VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { budgetTotals } from "@/lib/rules/validate";
 import type { Answers, BudgetLine } from "@/lib/rules/types";

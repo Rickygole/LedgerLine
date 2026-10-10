@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { isUuid } from "@/lib/finance/admin/params";
 import { dbFailure, failure, firstIssue, isoDay, success, trimmed, type OpState } from "@/lib/ops/action-state";
+import { plural } from "@/lib/format";
 
 const sessionSchema = z.object({
   sessionOn: isoDay("the session date"),
@@ -48,7 +49,7 @@ export async function recordUatSession(_previous: OpState, formData: FormData): 
         JSON.stringify(defects),
       ])
     );
-    return success(`Session recorded as ${parsed.data.result}${defects.length ? ` with ${defects.length} ${defects.length === 1 ? "defect" : "defects"}` : ""}.`);
+    return success(`Session recorded as ${parsed.data.result}${defects.length ? ` with ${defects.length} ${plural(defects.length, "defect", "defects")}` : ""}.`);
   } catch (error) {
     return dbFailure(error, {
       "a passed session cannot list defects": "A passed session cannot list defects. Choose failed or blocked, or remove the defects.",

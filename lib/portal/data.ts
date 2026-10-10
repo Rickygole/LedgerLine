@@ -1,7 +1,7 @@
 import type { Tx } from "@/lib/db";
 import { daysPastDue } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
-import type { ReportState } from "@/components/ui/status-badge";
+import type { ReportState } from "@/lib/domain";
 
 export type Obligation = {
   assignmentId: string;
@@ -167,10 +167,3 @@ export async function loadOrganization(tx: Tx, orgId: string): Promise<OrgProfil
   };
 }
 
-export const STATUS_LABEL: Record<string, string> = {
-  draft: "In progress",
-  submitted: "Submitted",
-  under_review: "In review",
-  returned: "Changes requested",
-  accepted: "Accepted",
-};

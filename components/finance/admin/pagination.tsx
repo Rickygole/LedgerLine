@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { buildHref } from "@/lib/finance/admin/params";
 import { buttonClass } from "@/components/ui/button";
+import { formatCount } from "@/lib/format";
 
 export function Pagination({ base, params, page, pageSize, total }: { base: string; params: Record<string, string | undefined>; page: number; pageSize: number; total: number }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -10,7 +11,7 @@ export function Pagination({ base, params, page, pageSize, total }: { base: stri
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 text-sm text-muted">
       <p>
-        <span className="num">{from}</span> to <span className="num">{to}</span> of <span className="num">{total.toLocaleString("en-US")}</span>
+        <span className="num">{from}</span> to <span className="num">{to}</span> of <span className="num">{formatCount(total)}</span>
       </p>
       <nav aria-label="Pagination" className="flex items-center gap-2">
         {page > 1 ? (

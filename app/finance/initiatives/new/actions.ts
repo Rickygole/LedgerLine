@@ -7,7 +7,8 @@ import { pgCode, withClaims } from "@/lib/db";
 import { buildDefinition } from "@/lib/forms/standard";
 import { parseAmount } from "@/lib/rules/money";
 import { plainError } from "@/lib/finance/admin/errors";
-import { AGENCIES, type FormState } from "@/lib/finance/admin/form-state";
+import { AGENCIES } from "@/lib/domain";
+import type { FormState } from "@/lib/finance/admin/form-state";
 import { isUuid } from "@/lib/finance/admin/params";
 
 const createSchema = z.object({

@@ -15,7 +15,7 @@ import { withClaims } from "@/lib/db";
 import { loadSubmissionDetail } from "@/lib/finance/review/detail";
 import { buildConcerns, PRESET_CONCERNS } from "@/lib/finance/review/return-note-core";
 import { reportState } from "@/lib/reporting";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import { sponsorNames } from "@/lib/finance/awards";
 
@@ -84,8 +84,8 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     .join("\n\n");
   const checks = [
     ...(budgetText ? [{ ok: balance.balanced, text: budgetText, tab: "budget" }] : []),
-    { ok: row.issues.length === 0, text: row.issues.length === 0 ? "All required answers complete" : `${row.issues.length} required ${row.issues.length === 1 ? "answer fails" : "answers fail"} a rule`, tab: "report" },
-    { ok: row.openFlags.length === 0, text: `${row.openFlags.length} open ${row.openFlags.length === 1 ? "flag" : "flags"}`, tab: "flags" },
+    { ok: row.issues.length === 0, text: row.issues.length === 0 ? "All required answers complete" : `${row.issues.length} required ${plural(row.issues.length, "answer fails", "answers fail")} a rule`, tab: "report" },
+    { ok: row.openFlags.length === 0, text: `${row.openFlags.length} open ${plural(row.openFlags.length, "flag", "flags")}`, tab: "flags" },
   ];
 
   const lastOf = (action: string) => [...detail.audit].reverse().find((a) => a.action === action);

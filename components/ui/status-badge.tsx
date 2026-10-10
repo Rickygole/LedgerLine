@@ -1,6 +1,8 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
+import { STATE_LABEL, type Audience, type ReportState } from "@/lib/domain";
+import { plural } from "@/lib/format";
 
 export type Tone = "ok" | "bad" | "warn" | "info" | "neutral" | "ai_draft";
 
@@ -22,30 +24,30 @@ export function Badge({ tone = "neutral", icon: Icon, children, className }: { t
   );
 }
 
-export type ReportState = "not_started" | "draft" | "submitted" | "under_review" | "returned" | "accepted" | "missing";
+export type { ReportState };
 
-const STATE: Record<ReportState, { finance: string; cbo: string; tone: Tone; icon?: ComponentType<{ className?: string }> }> = {
-  not_started: { finance: "Not started", cbo: "Not started", tone: "neutral" },
-  draft: { finance: "Draft", cbo: "In progress", tone: "neutral" },
-  submitted: { finance: "Submitted", cbo: "Submitted", tone: "info" },
-  under_review: { finance: "In review", cbo: "In review", tone: "info" },
-  returned: { finance: "Update requested", cbo: "Changes requested", tone: "warn" },
-  accepted: { finance: "Accepted", cbo: "Accepted", tone: "ok", icon: CheckCircle2 },
-  missing: { finance: "Missing", cbo: "Overdue", tone: "bad", icon: AlertTriangle },
+const STATE_STYLE: Record<ReportState, { tone: Tone; icon?: ComponentType<{ className?: string }> }> = {
+  not_started: { tone: "neutral" },
+  draft: { tone: "neutral" },
+  submitted: { tone: "info" },
+  under_review: { tone: "info" },
+  returned: { tone: "warn" },
+  accepted: { tone: "ok", icon: CheckCircle2 },
+  missing: { tone: "bad", icon: AlertTriangle },
 };
 
-export function StateBadge({ state, audience = "finance" }: { state: ReportState; audience?: "finance" | "cbo" }) {
-  const s = STATE[state];
+export function StateBadge({ state, audience = "finance" }: { state: ReportState; audience?: Audience }) {
+  const style = STATE_STYLE[state];
   return (
-    <Badge tone={s.tone} icon={s.icon}>
-      {audience === "cbo" ? s.cbo : s.finance}
+    <Badge tone={style.tone} icon={style.icon}>
+      {STATE_LABEL[state][audience]}
     </Badge>
   );
 }
 
 export function DueBadge({ daysPastDue }: { daysPastDue: number }) {
-  if (daysPastDue > 0) return <Badge tone="bad" icon={AlertTriangle}>{daysPastDue} {daysPastDue === 1 ? "day" : "days"} past due</Badge>;
-  if (daysPastDue > -14) return <Badge tone="warn">Due in {Math.abs(daysPastDue)} {Math.abs(daysPastDue) === 1 ? "day" : "days"}</Badge>;
+  if (daysPastDue > 0) return <Badge tone="bad" icon={AlertTriangle}>{daysPastDue} {plural(daysPastDue, "day", "days")} past due</Badge>;
+  if (daysPastDue > -14) return <Badge tone="warn">Due in {Math.abs(daysPastDue)} {plural(Math.abs(daysPastDue), "day", "days")}</Badge>;
   return null;
 }
 

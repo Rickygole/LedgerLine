@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { ErrorSummary } from "@/components/finance/admin/error-summary";
-import { AGENCIES } from "@/lib/finance/admin/form-state";
+import { AGENCIES } from "@/lib/domain";
 
 type Org = { id: string; name: string; ein: string; borough: string };
 type Row = { orgId: string; amount: string; agency: string };

@@ -16,7 +16,7 @@ import { loadFilterOptions, loadPeriods, loadReportRows } from "@/lib/finance/re
 import { applyFilters, numberAnswer, paginate, sortRows } from "@/lib/finance/review/derive";
 import { FLAG_LABEL, FLAG_ORDER, hrefWith, parseFilters } from "@/lib/finance/review/filters";
 import type { FlagReason, ReportRow } from "@/lib/finance/review/types";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCount, formatCurrency, plural } from "@/lib/format";
 import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
 
 export const runtime = "nodejs";
@@ -79,7 +79,7 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
         <details className="group">
           <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
             <span className="font-semibold text-bad">
-              {n} required {n === 1 ? "answer" : "answers"} {reason === "incomplete" ? "missing or failing" : "failing a rule"}
+              {n} required {plural(n, "answer", "answers")} {reason === "incomplete" ? "missing or failing" : "failing a rule"}
             </span>{" "}
             <span className="text-sm font-semibold text-link underline underline-offset-2">
               <span className="group-open:hidden">Show</span>
@@ -105,7 +105,7 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
         <div className="space-y-1">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="num">
-              {actual.toLocaleString("en-US")} of {target.toLocaleString("en-US")} served ({Math.round((actual / target) * 100)} percent)
+              {formatCount(actual)} of {formatCount(target)} served ({Math.round((actual / target) * 100)} percent)
             </span>
             <Meter ratio={actual / target} tick={0.4} tone="warn" />
           </p>
@@ -160,7 +160,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
         <Breadcrumbs crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Flagged items" }]} />
         <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">Flagged items</h1>
         <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">
-          <span className="num">{total}</span> {total === 1 ? "report is" : "reports are"} flagged for {periods.find((p) => p.id === filters.period)?.label ?? "this period"}.
+          <span className="num">{total}</span> {plural(total, "report is", "reports are")} flagged for {periods.find((p) => p.id === filters.period)?.label ?? "this period"}.
         </p>
       </div>
 

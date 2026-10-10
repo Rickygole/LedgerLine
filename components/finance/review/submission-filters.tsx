@@ -4,7 +4,8 @@ import Form from "next/form";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
-import { BOROUGHS, FLAG_LABEL, FLAG_ORDER } from "@/lib/finance/review/filters";
+import { REPORT_BOROUGHS } from "@/lib/domain";
+import { FLAG_LABEL, FLAG_ORDER } from "@/lib/finance/review/filters";
 import type { Filters, PeriodInfo } from "@/lib/finance/review/types";
 
 type Field = "q" | "period" | "borough" | "district" | "member" | "initiative" | "category" | "funding" | "contract" | "agency" | "flag";
@@ -100,7 +101,7 @@ export function SubmissionFilters({
         {has("borough") ? (
           <Select id="f-borough" name="borough" label="Borough" value={filters.borough} onChange={submit}>
             <option value="">All boroughs</option>
-            {BOROUGHS.map((b) => (
+            {REPORT_BOROUGHS.map((b) => (
               <option key={b} value={b}>
                 {b}
               </option>

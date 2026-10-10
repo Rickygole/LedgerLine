@@ -14,7 +14,9 @@ import { activeFilterCount, filtersToParams, FLAG_LABEL, hrefWith, parseFilters 
 import { applyFilters, countBuckets, paginate, sortByUrgency } from "@/lib/finance/review/derive";
 import type { Filters } from "@/lib/finance/review/types";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
+import { orgTypeLabel, statusLabel } from "@/lib/domain";
 import { NoPeriods } from "@/components/finance/no-periods";
+import { formatCount, plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,8 +73,8 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
   if (filters.contract) chips.push({ key: "contract", label: contractLabel(filters.contract), href: remove({ contract: "" }) });
   if (filters.agency) chips.push({ key: "agency", label: filters.agency, href: remove({ agency: "" }) });
   if (filters.flag) chips.push({ key: "flag", label: filters.flag === "any" ? "Any flag" : (FLAG_LABEL[filters.flag] ?? filters.flag), href: remove({ flag: "" }) });
-  if (filters.status) chips.push({ key: "status", label: `Status: ${filters.status.replace(/_/g, " ")}`, href: remove({ status: "" }) });
-  if (filters.orgType) chips.push({ key: "orgType", label: filters.orgType === "agency" ? "City agency" : "Community organization", href: remove({ orgType: "" }) });
+  if (filters.status) chips.push({ key: "status", label: `Status: ${statusLabel(filters.status)}`, href: remove({ status: "" }) });
+  if (filters.orgType) chips.push({ key: "orgType", label: orgTypeLabel(filters.orgType), href: remove({ orgType: "" }) });
   if (filters.awardMin) chips.push({ key: "awardMin", label: `Award at least $${filters.awardMin}`, href: remove({ awardMin: "" }) });
   if (filters.awardMax) chips.push({ key: "awardMax", label: `Award at most $${filters.awardMax}`, href: remove({ awardMax: "" }) });
 
@@ -127,7 +129,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         <Pagination page={paged.page} pages={paged.pages} from={paged.from} to={paged.to} total={paged.total} hrefFor={(p) => hrefWith(base, filters, { page: p }, { page: true })} />
       </Card>
       <p className="mt-3 text-sm text-muted">
-        <span className="num">{matched.length.toLocaleString("en-US")}</span> {matched.length === 1 ? "report" : "reports"}
+        <span className="num">{formatCount(matched.length)}</span> {plural(matched.length, "report", "reports")}
       </p>
     </>
   );

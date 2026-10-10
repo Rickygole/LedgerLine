@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { submitReport } from "@/app/portal/reports/actions";
 import { Button } from "@/components/ui/button";
-import type { ReportState } from "@/components/ui/status-badge";
+import type { ReportState } from "@/lib/domain";
 import { FieldError, Hint, Input, Label } from "@/components/ui/field";
 import { formatTime } from "@/lib/dates";
 import { amountIssues, linesFromRows, rowsFromLines, type BudgetRow } from "@/lib/report/budget-rows";

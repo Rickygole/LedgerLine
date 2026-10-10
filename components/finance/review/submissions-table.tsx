@@ -3,7 +3,7 @@ import { FlagBadge, StateBadge } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { daysBetween, toIsoDate } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { sponsorLabel, sponsorNames } from "@/lib/finance/awards";
 import type { ReportRow } from "@/lib/finance/review/types";
@@ -13,14 +13,14 @@ type DueNote = { text: string; tone: "bad" | "warn" | "muted" };
 function dueNote(row: Pick<ReportRow, "status" | "daysPastDue" | "submittedAt" | "dueOn">): DueNote | null {
   if (row.status === null || row.status === "draft" || row.status === "returned") {
     const days = Math.abs(row.daysPastDue);
-    const unit = days === 1 ? "day" : "days";
+    const unit = plural(days, "day", "days");
     if (row.daysPastDue > 0) return { text: `${days} ${unit} past due`, tone: "bad" };
     if (row.daysPastDue === 0) return { text: "Due today", tone: "warn" };
     return { text: `Due in ${days} ${unit}`, tone: row.daysPastDue > -14 ? "warn" : "muted" };
   }
   if (row.submittedAt && row.daysPastDue > 0) {
     const late = daysBetween(row.dueOn, toIsoDate(new Date(row.submittedAt)));
-    if (late > 0) return { text: `Submitted ${late} ${late === 1 ? "day" : "days"} late`, tone: "muted" };
+    if (late > 0) return { text: `Submitted ${late} ${plural(late, "day", "days")} late`, tone: "muted" };
   }
   return null;
 }

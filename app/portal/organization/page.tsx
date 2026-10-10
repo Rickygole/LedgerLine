@@ -8,11 +8,11 @@ import { DistrictMiniMap } from "@/components/portal/district-mini-map";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 import { ContractCell } from "@/components/finance/admin/award-cells";
 import { todayInNewYork } from "@/lib/dates";
 import { currentFiscalYear, loadObligations, loadOrganization } from "@/lib/portal/data";
-import { orgTypeLabel } from "@/lib/finance/admin/sql";
+import { orgTypeLabel } from "@/lib/domain";
 
 export const metadata: Metadata = { title: "Organization" };
 export const runtime = "nodejs";

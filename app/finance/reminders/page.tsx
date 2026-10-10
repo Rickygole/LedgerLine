@@ -14,6 +14,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { RestoreDefaultsForm, RuleActions, RuleForm, SendNowForm } from "@/components/finance/lifecycle/reminder-forms";
+import { plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -143,7 +144,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                           <>
                             {formatDate(rule.last_sent)}
                             <span className="num block text-xs text-muted">
-                              {rule.sent} {rule.sent === 1 ? "message" : "messages"} queued
+                              {rule.sent} {plural(rule.sent, "message", "messages")} queued
                             </span>
                           </>
                         ) : (
@@ -178,7 +179,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             description={
               matching.length === 0
                 ? `No active rule fires on this date. For ${period.label} this date is ${describeOffset(offset).toLowerCase()}.`
-                : `${targets.length} ${targets.length === 1 ? "organization qualifies" : "organizations qualify"} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Add to outbox would queue.`
+                : `${targets.length} ${plural(targets.length, "organization qualifies", "organizations qualify")} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Add to outbox would queue.`
             }
           />
           {targets.length > 0 ? (

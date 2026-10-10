@@ -1,4 +1,5 @@
-import { formatCurrency, toCents } from "./money";
+import { toCents } from "./money";
+import { formatCurrency } from "@/lib/format";
 import type { Answers, BudgetLine, Issue } from "./types";
 
 export const VARIANCE_NOTE_KEY = "budget_variance_note";

@@ -1,6 +1,7 @@
+import { BOROUGHS } from "@/lib/domain";
 import type { GeoBorough } from "./index";
 
-export const GEO_BOROUGHS: GeoBorough[] = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"];
+export const GEO_BOROUGHS: GeoBorough[] = [...BOROUGHS];
 
 const RANGES: [GeoBorough, number, number][] = [
   ["Manhattan", 1, 10],

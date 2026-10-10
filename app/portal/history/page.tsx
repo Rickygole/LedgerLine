@@ -8,7 +8,7 @@ import { Segmented } from "@/components/portal/portal-filters";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { STATUS_LABEL } from "@/lib/portal/data";
+import { statusLabel } from "@/lib/domain";
 
 export const metadata: Metadata = { title: "Submission history" };
 export const runtime = "nodejs";
@@ -108,7 +108,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                   <TD primary>{r.initiative_name}</TD>
                   <TD label="Period">{r.period_label}</TD>
                   <TD label="Status">
-                    <Badge tone={TONE[r.status] ?? "neutral"}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                    <Badge tone={TONE[r.status] ?? "neutral"}>{statusLabel(r.status, "cbo")}</Badge>
                   </TD>
                   <TD align="right" label="Revision">{r.revision}</TD>
                   <TD label="Submitted by">{r.submitted_by_name ?? "Unknown"}</TD>

@@ -10,17 +10,6 @@ export function defaultPeriodId(periods: Pick<PeriodInfo, "id" | "dueOn">[], tod
   return (past.length > 0 ? past[past.length - 1] : sorted[0])?.id ?? "";
 }
 
-export const BOROUGHS = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island", "Citywide"];
-
-export const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "not_started", label: "Not started" },
-  { value: "draft", label: "Draft" },
-  { value: "submitted", label: "Submitted" },
-  { value: "under_review", label: "In review" },
-  { value: "returned", label: "Update requested" },
-  { value: "accepted", label: "Accepted" },
-];
-
 export const FLAG_LABEL: Record<string, string> = {
   unbalanced: "Unbalanced budget",
   incomplete: "Incomplete",

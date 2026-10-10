@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { lineageMeta } from "@/components/finance/lifecycle/lineage-note";
@@ -49,7 +49,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
   for (const f of funded) if (f.council_district) perDistrict.set(f.council_district, (perDistrict.get(f.council_district) ?? 0) + 1);
   const fills = Object.fromEntries([...perDistrict.entries()].map(([d, n]) => [d, n >= 3 ? "#173962" : n === 2 ? "#2b64a8" : "#9db8dc"]));
   const districtList = [...perDistrict.keys()].sort((a, b) => a - b);
-  const mapCaption = districtList.length === 0 ? "No funded organizations have a Council district on file." : `Funded organizations are located in ${districtList.length === 1 ? "District" : "Districts"} ${districtList.join(", ")}.`;
+  const mapCaption = districtList.length === 0 ? "No funded organizations have a Council district on file." : `Funded organizations are located in ${plural(districtList.length, "District", "Districts")} ${districtList.join(", ")}.`;
 
   return (
     <>
@@ -87,7 +87,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
       </ProfileHeader>
 
       <Card className="mb-6">
-        <CardHeader title="Funded organizations" description={`${funded.length} ${funded.length === 1 ? "organization receives" : "organizations receive"} funding through this initiative.`} />
+        <CardHeader title="Funded organizations" description={`${funded.length} ${plural(funded.length, "organization receives", "organizations receive")} funding through this initiative.`} />
         <Table density="compact">
           <THead>
             <tr>

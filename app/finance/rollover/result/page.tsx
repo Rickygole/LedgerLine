@@ -12,6 +12,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { Table, THead, TH, TR, TD } from "@/components/ui/table";
 import { RolloverSteps } from "@/components/finance/lifecycle/rollover-steps";
+import { plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +54,7 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
       <Card className="mb-6">
         <CardBody>
           <p className="flex items-center gap-2 text-sm font-semibold text-ok">
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {result.created} {result.created === 1 ? "initiative" : "initiatives"}, {result.assignments} {result.assignments === 1 ? "award" : "awards"} and {result.forms} forms now exist in {to}. Saved in one transaction.
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {result.created} {plural(result.created, "initiative", "initiatives")}, {result.assignments} {plural(result.assignments, "award", "awards")} and {result.forms} forms now exist in {to}. Saved in one transaction.
           </p>
           <dl className="mt-4 grid gap-4 sm:grid-cols-4 lg:grid-cols-7">
             {tiles.map(([label, value]) => (

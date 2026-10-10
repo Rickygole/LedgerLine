@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatCurrency, parseAmount, sumAmounts } from "@/lib/rules/money";
+import { parseAmount, sumAmounts } from "@/lib/rules/money";
+import { formatCount, formatCurrency } from "@/lib/format";
 
 describe("[US-025] amount parsing", () => {
   it("reads plain, dollar and comma formatted values", () => {

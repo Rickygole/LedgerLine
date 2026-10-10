@@ -1,7 +1,8 @@
 import { Breadcrumbs, PageHeader } from "@/components/ui/page-header";
-import { DueBadge, StateBadge, type ReportState } from "@/components/ui/status-badge";
+import { DueBadge, StateBadge } from "@/components/ui/status-badge";
+import type { ReportState } from "@/lib/domain";
 import { formatDate } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 import type { ReportHeader as Header } from "@/lib/report/types";
 
 export function ReportHeader({ header, daysLate, state, actions }: { header: Header; daysLate: number; state: ReportState; actions?: React.ReactNode }) {

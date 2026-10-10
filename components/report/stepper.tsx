@@ -3,6 +3,7 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useRef } from "react";
 import { cn } from "@/lib/cn";
+import { plural } from "@/lib/format";
 
 type StepState = "complete" | "error" | "todo";
 export type Step = { key: string; title: string; state: StepState; errors: number; optional?: boolean };
@@ -37,7 +38,7 @@ function Marker({ step, index, current }: { step: Step; index: number; current: 
 
 function stateText(step: Step) {
   if (step.state === "complete") return "complete";
-  if (step.state === "error") return `${step.errors} ${step.errors === 1 ? "problem" : "problems"}`;
+  if (step.state === "error") return `${step.errors} ${plural(step.errors, "problem", "problems")}`;
   return step.optional ? "optional" : "not complete";
 }
 

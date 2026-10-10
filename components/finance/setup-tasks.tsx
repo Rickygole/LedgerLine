@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/dates";
 import type { SetupStatus } from "@/lib/finance/admin/initiatives";
-import { formatCompactCurrency } from "@/lib/rules/money";
+import { counted, formatCompactCurrency } from "@/lib/format";
 import { buttonClass } from "@/components/ui/button";
 
 type Tone = "ok" | "info" | "warn" | "neutral";
@@ -31,35 +31,34 @@ function nextDay(iso: string) {
 function setupTasks(s: SetupStatus, today: string): Task[] {
   const fy = s.fiscalYear?.id ?? "";
   const prev = s.previousYear ?? "the prior year";
-  const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
   const opensOn = s.midYear ? nextDay(s.midYear.endsOn) : null;
   const ready = s.needForm === 0 && s.noOrgs === 0 && s.carried > 0;
   const formsHref = s.needForm === 1 && s.firstNeedForm ? `/finance/initiatives/${s.firstNeedForm}` : "/finance/initiatives?form=none#initiatives";
   const tasks: Task[] = [
     {
       title: `Carry over ${prev} initiatives`,
-      meta: s.carried > 0 ? `${plural(s.carried, "initiative", "initiatives")} carried over${s.carriedOn ? ` ${formatDate(s.carriedOn)}` : ""}` : `Nothing has been carried into ${fy} yet.`,
+      meta: s.carried > 0 ? `${counted(s.carried, "initiative", "initiatives")} carried over${s.carriedOn ? ` ${formatDate(s.carriedOn)}` : ""}` : `Nothing has been carried into ${fy} yet.`,
       status: s.carried > 0 ? "Completed" : "Not started",
       tone: s.carried > 0 ? "ok" : "neutral",
       link: s.carried > 0 && s.previousYear ? { href: `/finance/rollover/result?from=${s.previousYear}&to=${fy}`, label: "See what carried over" } : { href: "/finance/rollover", label: "Start the annual rollover" },
     },
     {
       title: `Add new ${fy} initiatives`,
-      meta: s.created > 0 ? `${plural(s.created, "new initiative", "new initiatives")}${s.createdWithoutOrgs > 0 ? `, ${s.createdWithoutOrgs} without organizations` : ""}` : "None added yet.",
+      meta: s.created > 0 ? `${counted(s.created, "new initiative", "new initiatives")}${s.createdWithoutOrgs > 0 ? `, ${s.createdWithoutOrgs} without organizations` : ""}` : "None added yet.",
       status: s.created === 0 ? "None added" : s.createdWithoutOrgs > 0 ? "In progress" : "Completed",
       tone: s.created === 0 ? "neutral" : s.createdWithoutOrgs > 0 ? "info" : "ok",
       link: { href: "/finance/initiatives/new", label: s.created > 0 ? "Add another initiative" : "Add an initiative" },
     },
     {
       title: "Build report forms",
-      meta: s.needForm > 0 ? `${plural(s.needForm, "active initiative has", "active initiatives have")} no published report form.` : "Every active initiative has a published report form.",
+      meta: s.needForm > 0 ? `${counted(s.needForm, "active initiative has", "active initiatives have")} no published report form.` : "Every active initiative has a published report form.",
       status: s.needForm > 0 ? `${s.needForm} need a form` : "Completed",
       tone: s.needForm > 0 ? "warn" : "ok",
       link: s.needForm > 0 ? undefined : { href: "/finance/initiatives?form=published#initiatives", label: "Review published forms" },
     },
     {
       title: "Assign organizations and awards",
-      meta: s.noOrgs > 0 ? `${plural(s.noOrgs, "active initiative has", "active initiatives have")} no funded organizations yet.` : `${plural(s.awards, "award", "awards")} totaling ${formatCompactCurrency(s.funding)}.`,
+      meta: s.noOrgs > 0 ? `${counted(s.noOrgs, "active initiative has", "active initiatives have")} no funded organizations yet.` : `${counted(s.awards, "award", "awards")} totaling ${formatCompactCurrency(s.funding)}.`,
       status: s.noOrgs > 0 ? `${s.noOrgs} without organizations` : "Completed",
       tone: s.noOrgs > 0 ? "warn" : "ok",
     },

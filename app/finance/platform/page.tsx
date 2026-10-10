@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { ButtonLink } from "@/components/ui/button";
-import { formatCount } from "@/lib/rules/money";
+import { formatCount } from "@/lib/format";
 import { Stat } from "@/components/ui/stat";
 import { Table, THead, TH, TR, TD } from "@/components/ui/table";
 import { Timeline, type Milestone } from "@/components/finance/lifecycle/timeline";

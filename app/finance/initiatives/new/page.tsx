@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Check } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { NewInitiativeForm } from "@/components/finance/admin/new-initiative-form";
@@ -103,7 +103,7 @@ export default async function NewInitiativePage({ searchParams }: { searchParams
 
       {step === 3 && data.initiative ? (
         <Card>
-          <CardHeader title="Step 3 of 3: Report form" description={`${data.initiative.code} ${data.initiative.name}, funded at ${formatCurrency(Number(data.initiative.total_funding))} across ${data.assigned.length} ${data.assigned.length === 1 ? "organization" : "organizations"}.`} />
+          <CardHeader title="Step 3 of 3: Report form" description={`${data.initiative.code} ${data.initiative.name}, funded at ${formatCurrency(Number(data.initiative.total_funding))} across ${data.assigned.length} ${plural(data.assigned.length, "organization", "organizations")}.`} />
           <CardBody>
             <TemplateChoiceForm initiativeId={data.initiative.id} />
           </CardBody>

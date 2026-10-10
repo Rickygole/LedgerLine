@@ -1,3 +1,4 @@
+import { formatCount } from "@/lib/format";
 const MAX_COUNT = 10_000_000;
 const MAX_CENTS = 99_999_999_999;
 const MAX_PERCENT = 100;
@@ -18,7 +19,7 @@ export function numericProblem(kind: NumericKind, raw: string, label: string): s
   if (kind === "percent") text = text.replace(/%$/, "").trim();
   if (/^-\s*[\d.]/.test(text)) return `${label} cannot be negative.`;
 
-  const countText = MAX_COUNT.toLocaleString("en-US");
+  const countText = formatCount(MAX_COUNT);
   if (kind === "integer") {
     if (!/^\d+$/.test(text)) return `${label} must be a whole number.`;
     if (significantDigits(text) > 8 || Number(text) > MAX_COUNT) return `${label} must be ${countText} or less.`;

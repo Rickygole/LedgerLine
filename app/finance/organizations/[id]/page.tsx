@@ -6,7 +6,7 @@ import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
 import { isMissing, reportState } from "@/lib/reporting";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { buttonClass } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import { AuditSentence } from "@/components/finance/admin/audit-line";
 import { loadOrganization, type OrgAward } from "@/lib/finance/admin/organizations";
 import { orgActivity } from "@/lib/finance/admin/audit";
 import { templateLabel } from "@/lib/finance/admin/outbox";
-import { orgTypeLabel } from "@/lib/finance/admin/sql";
+import { orgTypeLabel } from "@/lib/domain";
 import { isUuid, one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
 
 export const runtime = "nodejs";
@@ -53,7 +53,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
   const acceptedDue = allPeriods.filter((p) => daysPastDue(p.due_on) > 0 && p.status === "accepted").length;
   const sponsorDistricts = [...new Set(awards.flatMap((a) => (a.sponsors ?? []).map((s) => s.district)))].sort((a, b) => a - b);
   const mapFills: Record<number, string> = org.council_district ? { [org.council_district]: "#1f4e85" } : {};
-  const mapCaption = `${org.council_district ? `District ${org.council_district} (location).` : "No Council district on file."} ${sponsorDistricts.length ? `Funded by Council Members in ${sponsorDistricts.length === 1 ? "District" : "Districts"} ${sponsorDistricts.join(", ")}.` : "No sponsoring Council Members on file."}`;
+  const mapCaption = `${org.council_district ? `District ${org.council_district} (location).` : "No Council district on file."} ${sponsorDistricts.length ? `Funded by Council Members in ${plural(sponsorDistricts.length, "District", "Districts")} ${sponsorDistricts.join(", ")}.` : "No sponsoring Council Members on file."}`;
   const overdue = awards.flatMap((a) => a.periods ?? []).filter((p) => isMissing(p.status, p.due_on)).length;
   const primary = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
   const address = `${org.address_line}, ${org.city}, ${org.state} ${org.postal_code}`;
@@ -122,9 +122,9 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       {tab === "overview" ? (
         <>
           <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Stat label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} sub={`across ${awards.length} ${awards.length === 1 ? "award" : "awards"}${years.length ? ` (${years.join(" and ")})` : ""}`} />
+            <Stat label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} sub={`across ${awards.length} ${plural(awards.length, "award", "awards")}${years.length ? ` (${years.join(" and ")})` : ""}`} />
             <Stat label="Reports accepted" value={<>{acceptedDue} <span className="text-lg font-semibold tracking-normal text-ink-2">of {dueSoFar}</span></>} sub={dueSoFar === 0 ? "No reports due yet" : "of reports due so far"} />
-            <Stat label="Missing" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} sub="Past due, nothing submitted" action={overdue > 0 ? { href: `/finance/submissions?q=${encodeURIComponent(org.ein)}&bucket=missing`, label: overdue === 1 ? "See missing report" : "See missing reports" } : undefined} />
+            <Stat label="Missing" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} sub="Past due, nothing submitted" action={overdue > 0 ? { href: `/finance/submissions?q=${encodeURIComponent(org.ein)}&bucket=missing`, label: plural(overdue, "See missing report", "See missing reports") } : undefined} />
           </section>
           <div className="grid items-start gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">

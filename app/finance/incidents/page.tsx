@@ -12,6 +12,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { Input, Label, Select, Textarea, Hint } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
+import { plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export default async function IncidentsPage() {
       />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Record an incident" description={activeContacts.length === 0 ? "Add a designated contact before recording an incident." : `${activeContacts.length} designated ${activeContacts.length === 1 ? "contact" : "contacts"} will be notified.`} />
+          <CardHeader title="Record an incident" description={activeContacts.length === 0 ? "Add a designated contact before recording an incident." : `${activeContacts.length} designated ${plural(activeContacts.length, "contact", "contacts")} will be notified.`} />
           <CardBody>
             <ActionForm action={recordIncident} submitLabel="Record and notify" pendingLabel="Recording">
               <div>

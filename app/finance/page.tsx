@@ -19,6 +19,7 @@ import type { Filters, ReportRow } from "@/lib/finance/review/types";
 import { isGeoBorough } from "@/lib/geo/boroughs";
 import { cycleTimeline, dashboardHeadline, formatWholeDollars, periodEyebrow } from "@/lib/finance/dashboard";
 import { formatShortDate } from "@/lib/report/format";
+import { formatCount } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -117,7 +118,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           label="Accepted"
           value={
             <>
-              {counts.accepted.toLocaleString("en-US")} <span className="text-lg font-semibold tracking-normal text-ink-2">of {rows.length.toLocaleString("en-US")}</span>
+              {formatCount(counts.accepted)} <span className="text-lg font-semibold tracking-normal text-ink-2">of {formatCount(rows.length)}</span>
             </>
           }
           meter={{ value: counts.accepted, max: rows.length, label: `${acceptedPct} percent accepted` }}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronDown, Download, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { buttonClass } from "@/components/ui/button";
+import { formatCount } from "@/lib/format";
 
 export type Chip = { key: string; label: string; href: string };
 
@@ -39,7 +40,7 @@ export function UnderlineTabs({ label, tabs }: { label: string; tabs: Tab[] }) {
               )}
             >
               {tab.label}
-              <span className="num font-medium text-muted">{tab.count.toLocaleString("en-US")}</span>
+              <span className="num font-medium text-muted">{formatCount(tab.count)}</span>
             </Link>
           </li>
         ))}

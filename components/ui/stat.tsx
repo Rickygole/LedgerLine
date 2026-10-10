@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
+import { formatCount } from "@/lib/format";
 
 type Tone = "neutral" | "bad" | "warn" | "ok" | "info";
 
@@ -26,7 +27,7 @@ export function Stat({
   icon?: ComponentType<{ className?: string }>;
   className?: string;
 }) {
-  const shown = typeof value === "number" ? value.toLocaleString("en-US") : value;
+  const shown = typeof value === "number" ? formatCount(value) : value;
   const caption = sub ?? hint;
   const ratio = meter && meter.max > 0 ? Math.max(0, Math.min(1, meter.value / meter.max)) : 0;
   return (

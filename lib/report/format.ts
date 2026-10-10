@@ -1,5 +1,6 @@
 import { formatDate, formatDateTime, formatTime, isToday, todayInNewYork } from "@/lib/dates";
-import { formatCount, formatCurrency, parseAmount } from "@/lib/rules/money";
+import { parseAmount } from "@/lib/rules/money";
+import { formatCount, formatCurrency } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
 import type { Certification } from "@/lib/rules/certify";

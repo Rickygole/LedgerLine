@@ -3,7 +3,7 @@ import { ArrowRight, CalendarRange, Landmark, Layers, Users } from "lucide-react
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { fiscalYears, nextFiscalYear, validFiscalYear, yearSummary } from "@/lib/lifecycle/rollover";
 import { PageHeader } from "@/components/ui/page-header";
@@ -92,7 +92,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               {review ? (
                 <>
                   <p>
-                    {checklistDone(review)} of {CHECKLIST.length} checklist items ticked, {review.participants} {review.participants === 1 ? "participant" : "participants"}, {review.decisions} {review.decisions === 1 ? "decision" : "decisions"}.
+                    {checklistDone(review)} of {CHECKLIST.length} checklist items ticked, {review.participants} {plural(review.participants, "participant", "participants")}, {review.decisions} {plural(review.decisions, "decision", "decisions")}.
                   </p>
                   {decisions.length > 0 ? (
                     <ul className="list-disc space-y-1 pl-5">

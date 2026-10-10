@@ -2,7 +2,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/status-badge";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { displayScalar, questionLabel, tableRows } from "@/lib/report/format";
 import { formatBytes } from "@/lib/report/upload-rules";
 import type { AttachmentItem } from "@/lib/report/types";
@@ -117,7 +117,7 @@ export function CheckAnswers({
               {lines.length > 0 ? (
                 <details className="group border-b border-line-soft py-3">
                   <summary className="cursor-pointer text-[15px] font-semibold text-link underline underline-offset-2">
-                    <span className="group-open:hidden">Show all {lines.length} {lines.length === 1 ? "line" : "lines"}</span>
+                    <span className="group-open:hidden">Show all {lines.length} {plural(lines.length, "line", "lines")}</span>
                     <span className="hidden group-open:inline">Hide budget lines</span>
                   </summary>
                   <div className="mt-3 overflow-x-auto">

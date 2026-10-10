@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Lock } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { publishForm, saveDefinition } from "@/app/finance/forms/[formId]/actions";
+import { counted } from "@/lib/format";
 import { FormPreview } from "@/components/forms/form-preview";
 import { ImportPanel } from "@/components/forms/import-panel";
 import { QuestionEditor } from "@/components/forms/question-editor";
@@ -45,10 +46,6 @@ function changesSince(before: FormDefinition | null, after: FormDefinition) {
   for (const key of old.keys()) if (!now.has(key)) removed += 1;
   const budget = before !== null && JSON.stringify(before.budget) !== JSON.stringify(after.budget);
   return { added, changed, removed, budget, total: [...now.keys()].length };
-}
-
-function count(n: number, word: string) {
-  return `${n} ${n === 1 ? word : `${word}s`}`;
 }
 
 const BUDGET = "__budget";
@@ -233,11 +230,11 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           {(() => {
             const diff = changesSince(publishedDefinition, definition);
             const parts = publishedDefinition
-              ? [diff.added ? `${count(diff.added, "question")} added` : null, diff.changed ? `${diff.changed} changed` : null, diff.removed ? `${diff.removed} removed` : null, diff.budget ? "budget settings changed" : null].filter(Boolean)
+              ? [diff.added ? `${counted(diff.added, "question")} added` : null, diff.changed ? `${diff.changed} changed` : null, diff.removed ? `${diff.removed} removed` : null, diff.budget ? "budget settings changed" : null].filter(Boolean)
               : [];
             return (
               <p className="mt-2 text-[15px] leading-[22px]">
-                {publishedVersion ? `Changes since version ${publishedVersion}: ${parts.length ? parts.join(", ") : "no question changes"}.` : `This is the first version, with ${count(diff.total, "question")}.`}
+                {publishedVersion ? `Changes since version ${publishedVersion}: ${parts.length ? parts.join(", ") : "no question changes"}.` : `This is the first version, with ${counted(diff.total, "question")}.`}
               </p>
             );
           })()}
@@ -302,7 +299,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           Current form:{" "}
           {definition.sections
             .filter((s) => s.kind === "questions")
-            .map((s, i) => `${i === 0 ? count(s.questions.length, "question") : s.questions.length} in ${s.title}`)
+            .map((s, i) => `${i === 0 ? counted(s.questions.length, "question") : s.questions.length} in ${s.title}`)
             .join(", ")}
           .{" "}
           <button type="button" onClick={() => setShowBuilder(true)} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">

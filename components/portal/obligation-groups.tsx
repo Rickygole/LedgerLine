@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { StateBadge } from "@/components/ui/status-badge";
 import { formatDate } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { actionFor, type Obligation } from "@/lib/portal/data";
 
 function linkLabel(o: Obligation) {
@@ -16,7 +16,7 @@ function open(o: Obligation) {
 }
 
 function DueNote({ days }: { days: number }) {
-  if (days > 0) return <span className="whitespace-nowrap text-sm font-semibold text-bad">{days} {days === 1 ? "day" : "days"} past due</span>;
+  if (days > 0) return <span className="whitespace-nowrap text-sm font-semibold text-bad">{days} {plural(days, "day", "days")} past due</span>;
   if (days > -14) return <span className="whitespace-nowrap text-sm font-semibold text-warn">Due in {-days} {days === -1 ? "day" : "days"}</span>;
   return null;
 }
@@ -163,7 +163,7 @@ export function ObligationGroups({ obligations }: { obligations: Obligation[] })
         <details className="group">
           <summary className="cursor-pointer list-none text-[15px] font-bold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">
-              Show {done.length} completed {done.length === 1 ? "report" : "reports"}
+              Show {done.length} completed {plural(done.length, "report", "reports")}
             </span>
             <span className="hidden group-open:inline">Hide completed reports</span>
           </summary>

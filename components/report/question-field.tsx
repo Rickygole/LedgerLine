@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { wordCount } from "@/lib/rules/validate";
 import type { AnswerValue, Question } from "@/lib/rules/types";
 import { TableQuestion, type TableRow } from "./table-question";
+import { plural } from "@/lib/format";
 
 function asText(value: AnswerValue | undefined): string {
   if (value === null || value === undefined || Array.isArray(value)) return "";
@@ -80,7 +81,7 @@ export function QuestionField({
           rows={6}
         />
         <p id={`${id}-count`} className={cn("mt-1.5 text-xs", over ? "font-semibold text-bad" : "text-muted")}>
-          {words} {words === 1 ? "word" : "words"}
+          {words} {plural(words, "word", "words")}
           {question.maxWords ? ` of ${question.maxWords} allowed` : ""}
           {over ? `. Remove ${words - (question.maxWords ?? 0)} to continue.` : ""}
         </p>

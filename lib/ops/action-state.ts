@@ -2,6 +2,7 @@ import { nowMs } from "@/lib/dates";
 import { z } from "zod";
 import { pgCode } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
+import { formatCount } from "@/lib/format";
 
 export type OpState = { ok?: string; error?: string; at?: number } | undefined;
 
@@ -25,6 +26,6 @@ export function dbFailure(error: unknown, friendly: Record<string, string> = {})
 }
 
 export const trimmed = (label: string, max: number) =>
-  z.string().trim().min(1, `Enter ${label}.`).max(max, `Use ${max.toLocaleString("en-US")} characters or fewer for ${label}.`);
+  z.string().trim().min(1, `Enter ${label}.`).max(max, `Use ${formatCount(max)} characters or fewer for ${label}.`);
 
 export const isoDay = (label: string) => z.string().regex(/^\d{4}-\d{2}-\d{2}$/, `Enter ${label} as a date.`);

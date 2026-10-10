@@ -8,6 +8,7 @@ import { PLACEHOLDERS, sendNowSummary, type RuleRow } from "@/lib/lifecycle/remi
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
+import { plural } from "@/lib/format";
 
 function Status({ state }: { state: ReminderState }) {
   if (state?.error) return <p role="alert" className="text-sm font-semibold text-bad">{state.error}</p>;
@@ -116,7 +117,7 @@ export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs
         <div role="alertdialog" aria-label="Confirm adding reminders to the outbox" className="flex w-full flex-wrap items-center gap-3 rounded-md border border-line bg-surface px-3 py-2">
           <p className="text-sm font-semibold text-ink">{sendNowSummary(orgs, fresh, dateLabel)} Add them to the outbox?</p>
           <Button type="submit" disabled={pending}>
-            <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Adding" : `Yes, add for ${orgs} ${orgs === 1 ? "organization" : "organizations"}`}
+            <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Adding" : `Yes, add for ${orgs} ${plural(orgs, "organization", "organizations")}`}
           </Button>
           <Button type="button" variant="secondary" disabled={pending} onClick={() => setConfirming(false)}>
             Cancel

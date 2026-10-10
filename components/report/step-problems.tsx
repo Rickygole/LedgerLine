@@ -4,11 +4,12 @@ import { AlertTriangle } from "lucide-react";
 import { forwardRef } from "react";
 import { cn } from "@/lib/cn";
 import type { Issue } from "@/lib/rules/types";
+import { plural } from "@/lib/format";
 
 function problemsHeading(count: number, scope: "report" | "step") {
-  const noun = count === 1 ? "problem" : "problems";
-  if (scope === "step") return `There ${count === 1 ? "is" : "are"} ${count} ${noun} to fix in this section`;
-  return `There ${count === 1 ? "is" : "are"} ${count} ${noun} to fix before you submit`;
+  const noun = plural(count, "problem", "problems");
+  if (scope === "step") return `There ${plural(count, "is", "are")} ${count} ${noun} to fix in this section`;
+  return `There ${plural(count, "is", "are")} ${count} ${noun} to fix before you submit`;
 }
 
 export const StepProblems = forwardRef<HTMLDivElement, { issues: Issue[]; onSelect: (field: string) => void; scope: "report" | "step"; alert?: boolean }>(function StepProblems({ issues, onSelect, scope, alert = false }, ref) {

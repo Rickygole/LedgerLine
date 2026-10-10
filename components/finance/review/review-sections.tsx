@@ -10,7 +10,7 @@ import type { AttachmentRow, AuditRecord, FlagRecord, RevisionRecord, Submission
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
-import { formatCount, formatCurrency } from "@/lib/rules/money";
+import { formatCount, formatCurrency } from "@/lib/format";
 import { cellText } from "@/lib/report/format";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
 

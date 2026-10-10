@@ -2,7 +2,7 @@
 
 import { AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 import { balanceCopy } from "./balance";
 
 const TONE = {

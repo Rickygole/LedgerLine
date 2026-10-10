@@ -1,4 +1,5 @@
-import { formatCurrency, toCents } from "@/lib/rules/money";
+import { toCents } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 
 type BalanceTone = "ok" | "warn" | "bad";
 

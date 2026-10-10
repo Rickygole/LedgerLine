@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { Input, Label, Textarea, Hint } from "@/components/ui/field";
+import { plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,7 +59,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
                 { label: "What happened", value: <span className="whitespace-pre-wrap">{incident.description}</span> },
                 { label: "Data affected", value: <span className="whitespace-pre-wrap">{incident.affected_data}</span> },
                 { label: "Council notice due", value: formatDateTime(incident.notify_due_at) },
-                { label: "Council notified", value: `${formatDateTime(incident.notified_at)}, ${incident.contacts_notified} ${incident.contacts_notified === 1 ? "contact" : "contacts"}` },
+                { label: "Council notified", value: `${formatDateTime(incident.notified_at)}, ${incident.contacts_notified} ${plural(incident.contacts_notified, "contact", "contacts")}` },
                 { label: "Remediation report due", value: formatDateTime(incident.remediation_due_at) },
                 { label: "Recorded by", value: `${incident.recorded_by_name}, ${formatDateTime(incident.recorded_at)}` },
               ]}

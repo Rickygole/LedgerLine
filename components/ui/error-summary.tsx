@@ -3,6 +3,7 @@
 import { AlertTriangle } from "lucide-react";
 import { forwardRef } from "react";
 import { cn } from "@/lib/cn";
+import { plural } from "@/lib/format";
 
 type SummaryItem = { target?: string; message: string };
 
@@ -15,7 +16,7 @@ export function focusField(targetId: string) {
 }
 
 export function problemsTitle(count: number, before = "you submit") {
-  return `Fix ${count} ${count === 1 ? "problem" : "problems"} before ${before}`;
+  return `Fix ${count} ${plural(count, "problem", "problems")} before ${before}`;
 }
 
 export const ErrorSummary = forwardRef<HTMLDivElement, { title: string; items: SummaryItem[]; className?: string }>(function ErrorSummary({ title, items, className }, ref) {

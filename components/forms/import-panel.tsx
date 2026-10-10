@@ -14,6 +14,7 @@ import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
 import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
 import type { FieldType } from "@/lib/rules/types";
 import { formatDate, nowIso } from "@/lib/dates";
+import { plural } from "@/lib/format";
 
 type Mode = "live" | "replay" | "fallback";
 
@@ -294,7 +295,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
             <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-line bg-white px-5 py-3 sm:-mx-6 sm:px-6">
               <p className="text-[15px] text-ink-2" aria-live="polite">
                 <span className="num">{kept.length}</span> accepted{left > 0 ? `, ${left} not reviewed yet (they will not be added)` : ""}.
-                {blocked > 0 ? ` ${blocked} accepted ${blocked === 1 ? "question needs" : "questions need"} fixing.` : ""}
+                {blocked > 0 ? ` ${blocked} accepted ${plural(blocked, "question needs", "questions need")} fixing.` : ""}
               </p>
               <div className="flex flex-wrap items-center gap-4">
                 <Button variant="ghost" className="px-0" onClick={discard} disabled={pending}>

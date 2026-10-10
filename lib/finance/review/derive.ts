@@ -1,6 +1,7 @@
+import { CITYWIDE } from "@/lib/domain";
 import { bucketFor, type Bucket } from "@/lib/reporting";
 import { daysPastDue } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { balanceMessage, blockingIssues, budgetTotals, validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 import type { Answers, BudgetLine, FormDefinition, Issue } from "@/lib/rules/types";
 import { matchesDistrict } from "@/lib/finance/district-stats";
@@ -89,19 +90,19 @@ function flagsForRow(input: {
     const more = input.issues.length - shown.length;
     flags.push({
       reason: "incomplete",
-      evidence: `${input.issues.length} required ${input.issues.length === 1 ? "item" : "items"} failing, ${input.daysPastDue} days past due: ${shown.join("; ")}${more > 0 ? `; and ${more} more` : ""}`,
+      evidence: `${input.issues.length} required ${plural(input.issues.length, "item", "items")} failing, ${input.daysPastDue} days past due: ${shown.join("; ")}${more > 0 ? `; and ${more} more` : ""}`,
     });
   }
 
   if (input.bucket === "missing") {
     const state = status === null ? "Not started" : "Draft saved but not submitted";
-    flags.push({ reason: "missing", evidence: `${state}, ${input.daysPastDue} ${input.daysPastDue === 1 ? "day" : "days"} past due` });
+    flags.push({ reason: "missing", evidence: `${state}, ${input.daysPastDue} ${plural(input.daysPastDue, "day", "days")} past due` });
   }
 
   if (status === "submitted" || status === "under_review" || status === "accepted") {
     if (input.issues.length > 0) {
       const shown = input.issues.slice(0, 2).map((issue) => issue.message.replace(/\.$/, ""));
-      flags.push({ reason: "validation", evidence: `${input.issues.length} ${input.issues.length === 1 ? "rule fails" : "rules fail"}: ${shown.join("; ")}` });
+      flags.push({ reason: "validation", evidence: `${input.issues.length} ${plural(input.issues.length, "rule fails", "rules fail")}: ${shown.join("; ")}` });
     }
   }
 
@@ -157,7 +158,7 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
       } else if (!row.initiativeName.toLowerCase().includes(initiative) && !row.initiativeCode.toLowerCase().includes(initiative)) return false;
     }
     if (use("category") && row.category !== filters.category) return false;
-    if (use("borough") && row.borough !== filters.borough) return false;
+    if (use("borough") && !(filters.borough === CITYWIDE ? row.fundingSource === "citywide" : row.borough === filters.borough)) return false;
     if (use("district") && !matchesDistrict(row, filters.district!, filters.by ?? "")) return false;
     if (use("member") && !row.sponsors.some((s) => String(s.district) === filters.member)) return false;
     if (use("funding") && row.fundingSource !== filters.funding) return false;
