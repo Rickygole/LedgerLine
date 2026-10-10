@@ -54,7 +54,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
       />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Checklist" description="Tick each area once it has been reviewed." />
+          <CardHeader title="Checklist" />
           <CardBody>
             <ul className="divide-y divide-line border-y border-line">
               {CHECKLIST.map((item) => (
@@ -82,7 +82,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
           </CardBody>
         </Card>
         <Card>
-          <CardHeader title="Participants" description="Who took part in the review." />
+          <CardHeader title="Participants" />
           <CardBody className="space-y-4">
             {participants.length === 0 ? <p className="text-sm text-muted">No participants recorded.</p> : null}
             <ul className="divide-y divide-line border-y border-line">

@@ -36,7 +36,6 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
     <>
       <PageHeader
         title="Trends and comparisons"
-        description="See how submissions move over time and how groups compare. Filters apply to both charts, and each chart has a table of the same numbers."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Trends and comparisons" }]}
       />
       <div className="mb-6 overflow-hidden rounded border border-line bg-white">

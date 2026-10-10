@@ -189,7 +189,7 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
   return (
     <Card>
-      <CardHeader title="Budget" description="Personal services (PS) and other than personal services (OTPS) lines as reported, with actual spent and variance." />
+      <CardHeader title="Budget" />
       <CardBody>
         {row.budget.length === 0 ? (
           <p className="text-sm text-muted">No budget has been entered yet.</p>
@@ -209,7 +209,7 @@ function formatBytes(bytes: number) {
 export function AttachmentsTab({ submissionId, attachments }: { submissionId: string; attachments: AttachmentRow[] }) {
   return (
     <Card>
-      <CardHeader title="Attachments" description="Supporting files uploaded by the organization." />
+      <CardHeader title="Attachments" />
       <Table>
         <THead>
           <tr>
@@ -292,7 +292,7 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
         )}
       </Card>
       <Card>
-        <CardHeader title={`Open flags (${open.length})`} description="Flags added by Finance staff." />
+        <CardHeader title={`Open flags (${open.length})`} />
         {open.length === 0 ? <p className="px-5 py-6 text-sm text-muted">There are no open flags on this report.</p> : <ul className="divide-y divide-line">{open.map(item)}</ul>}
       </Card>
       {closed.length > 0 ? (
@@ -308,7 +308,7 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
 export function AuditTab({ audit, labels }: { audit: AuditRecord[]; labels: Record<string, string> }) {
   return (
     <Card>
-      <CardHeader title="Audit timeline" description="Every recorded action on this report, oldest first. Entries cannot be changed or deleted." />
+      <CardHeader title="Audit timeline" description="Oldest first. Entries cannot be changed or deleted." />
       <CardBody className="py-5">
         {audit.length === 0 ? <p className="py-8 text-center text-sm text-muted">No actions have been recorded.</p> : <AuditTimeline events={audit} labels={labels} />}
       </CardBody>

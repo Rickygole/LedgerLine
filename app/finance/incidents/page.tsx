@@ -127,7 +127,7 @@ export default async function IncidentsPage() {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Incident history" description="Newest first." />
+        <CardHeader title="Incident history" />
         <Table density="compact">
           <THead>
             <tr>

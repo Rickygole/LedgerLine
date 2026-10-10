@@ -51,7 +51,6 @@ export default async function NewInitiativePage({ searchParams }: { searchParams
     <>
       <PageHeader
         title="New initiative"
-        description="Create an initiative, fund organizations and choose how they report."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: "New initiative" }]}
       />
       <ol className="mb-6 flex flex-wrap gap-3" aria-label="Progress">

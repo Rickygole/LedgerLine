@@ -39,7 +39,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader title="Users" description="Manage who can use LedgerLine. Changes are written to the audit log." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Users" }]} />
       <Card className="mb-6">
-        <CardHeader title="Add a user" description="Create a Finance account or an account for a funded organization." />
+        <CardHeader title="Add a user" />
         <CreateUserForm orgs={orgs} />
       </Card>
       <Card>

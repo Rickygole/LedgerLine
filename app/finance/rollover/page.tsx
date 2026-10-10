@@ -57,7 +57,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
       <RolloverSteps current={1} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <Card>
-          <CardHeader title="Choose the source year" description="Pick the year to copy from and the new year to create." />
+          <CardHeader title="Choose the source year" />
           <CardBody>
             <form action="/finance/rollover" className="space-y-4">
               <div>

@@ -335,7 +335,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           <div className="min-w-0 space-y-4">
             {section?.kind === "budget" ? (
               <Card>
-                <CardHeader title="Budget settings" description="How funded organizations report spending in this form." />
+                <CardHeader title="Budget settings" />
                 <CardBody className="space-y-4">
                   <label className="flex items-center gap-2 text-sm font-semibold text-ink">
                     <input type="checkbox" className="h-4 w-4 rounded border-line" checked={definition.budget.enabled} disabled={!editable} onChange={(e) => setDefinition({ ...definition, budget: { ...definition.budget, enabled: e.target.checked } })} />
