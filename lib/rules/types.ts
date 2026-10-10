@@ -13,11 +13,17 @@ export type FieldType =
   | "yesno"
   | "table";
 
-type TableColumn = {
+export type TableColumn = {
   key: string;
   label: string;
-  type: "text" | "integer" | "currency" | "percent";
+  type: "text" | "number" | "integer" | "currency" | "percent";
 };
+
+export type SumTarget = number | "award";
+
+export type ColumnSumRule = { column: string; target: SumTarget };
+
+export type GroupSumRule = { key: string; fields: string[]; target: SumTarget };
 
 export type Citation = {
   quote: string;
@@ -37,6 +43,7 @@ export type Question = {
   visibleWhen?: { key: string; equals: string };
   columns?: TableColumn[];
   maxRows?: number;
+  sumRule?: ColumnSumRule;
   citation?: Citation;
 };
 
@@ -51,6 +58,7 @@ export type Section = {
 export type FormDefinition = {
   title: string;
   sections: Section[];
+  sumRules?: GroupSumRule[];
   budget: {
     enabled: boolean;
     mustEqualAward: boolean;

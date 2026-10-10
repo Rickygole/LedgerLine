@@ -1,50 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { dbErrorMessage, type ErrorOverrides } from "@/lib/actions";
 import { withClaims } from "@/lib/db";
 import { logError } from "@/lib/ops/log";
 import { draftFormFromDocx, type DraftResult } from "@/lib/ai/form-draft";
-import { FIELD_TYPES, validateDefinition } from "@/lib/forms/editor/definition";
+import { validateDefinition } from "@/lib/forms/editor/definition";
+import { definitionSchema } from "@/lib/forms/editor/schema";
 import { checkField, mergeFields, type ProposedField } from "@/lib/forms/editor/draft-core";
 import { readTemplate } from "@/lib/forms/editor/docx";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
 import type { FormDefinition } from "@/lib/rules/types";
 import { writeAudit } from "@/lib/audit";
-
-const questionSchema = z.object({
-  key: z.string(),
-  label: z.string(),
-  help: z.string().optional(),
-  type: z.enum(FIELD_TYPES),
-  required: z.boolean(),
-  scope: z.enum(["standard", "initiative"]),
-  options: z.array(z.string()).optional(),
-  maxLength: z.number().optional(),
-  maxWords: z.number().optional(),
-  visibleWhen: z.object({ key: z.string(), equals: z.string() }).optional(),
-  columns: z
-    .array(z.object({ key: z.string(), label: z.string(), type: z.enum(["text", "integer", "currency", "percent"]) }))
-    .optional(),
-  maxRows: z.number().optional(),
-  citation: z.object({ quote: z.string(), paragraph: z.number() }).optional(),
-});
-
-const definitionSchema = z.object({
-  title: z.string(),
-  sections: z.array(
-    z.object({
-      key: z.string(),
-      title: z.string(),
-      description: z.string().optional(),
-      kind: z.enum(["questions", "budget"]),
-      questions: z.array(questionSchema),
-    }),
-  ),
-  budget: z.object({ enabled: z.boolean(), mustEqualAward: z.boolean(), maxLines: z.number() }),
-});
 
 type Failure = { ok: false; errors: string[] };
 
