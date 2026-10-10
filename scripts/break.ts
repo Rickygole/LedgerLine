@@ -364,7 +364,7 @@ async function main() {
     }
     console.log(
       failed === 0
-        ? `\nAll ${attacks.length} attempts on ${rule} were refused.`
+        ? `\n${attacks.length === 1 ? `The attempt on ${rule} was refused.` : `All ${attacks.length} attempts on ${rule} were refused.`}`
         : `\n${failed} attempt${failed > 1 ? "s" : ""} on ${rule} got through.`,
     );
     process.exitCode = failed === 0 ? 0 : 1;
