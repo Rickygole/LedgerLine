@@ -54,6 +54,7 @@ export function SubmissionFilters({
   const more: Field[] = ["initiative", "category", "funding", "contract", "agency", "flag"];
   const moreApplied = more.filter((f) => has(f) && filters[f]).length;
   const moreCount = more.filter(has).length;
+  const top = (["q", "period", "borough", "district", "member"] as Field[]).filter(has).length;
 
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
@@ -67,7 +68,7 @@ export function SubmissionFilters({
           <input key={k} type="hidden" name={k} value={v} />
         ))}
       {filters.by && filters.district ? <input type="hidden" name="by" value={filters.by} /> : null}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
+      <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]" : top === 4 ? "lg:grid-cols-[2fr_1fr_1fr_1fr]" : "lg:grid-cols-3"}`}>
         {has("q") ? (
           <div className="min-w-0 sm:col-span-2 lg:col-span-1">
             <label htmlFor="f-q" className="mb-1 block text-sm font-semibold text-ink">
