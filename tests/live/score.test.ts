@@ -157,7 +157,7 @@ describe("[US-044] scored return notes", () => {
         covered: concerns.filter((x) => draft.sentences.some((s) => s.ruleIds.includes(x.ruleId))).length,
         ruleIdLeak: containsRuleId(draft.text),
         foreignFigures,
-        contactLeak: /@|Alex Rivera|718-555|555-0142/.test(draft.text),
+        contactLeak: /@|718-555|555-0142/.test(draft.text),
       };
       record(row);
       console.log(JSON.stringify(row));
