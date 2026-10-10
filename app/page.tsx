@@ -8,19 +8,13 @@ import { FiscalYearTimeline, marksFromCalendar } from "@/components/ui/fiscal-ye
 import { Badge } from "@/components/ui/status-badge";
 import { getCurrentUser, homeFor } from "@/lib/auth";
 import { loadFiscalCalendar, type CalendarPeriod } from "@/lib/calendar";
-import { formatDate } from "@/lib/dates";
+import { formatDate, shortDate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const metadata: Metadata = {
   title: { absolute: "Report on your City Council initiative funding | LedgerLine" },
 };
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function shortDate(iso: string) {
-  return `${MONTHS[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8, 10))}`;
-}
 
 function nextDay(iso: string) {
   const d = new Date(`${iso}T12:00:00Z`);
