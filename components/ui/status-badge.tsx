@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, CircleDashed, Clock, Eye, FileText, Flag, RotateCcw, Send, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDashed, Clock, Eye, FileText, Flag, RotateCcw, Send } from "lucide-react";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
 
@@ -9,13 +9,13 @@ const tones: Record<Tone, string> = {
   bad: "bg-bad-bg text-bad ring-bad/20",
   warn: "bg-warn-bg text-warn ring-warn/25",
   info: "bg-info-bg text-info ring-info/20",
-  neutral: "bg-surface text-muted ring-line",
-  ai_draft: "bg-[#f1ecfb] text-[#5b3fa0] ring-[#5b3fa0]/20",
+  neutral: "bg-white text-ink-2 ring-line-strong",
+  ai_draft: "bg-info-bg text-info ring-info/20",
 };
 
 export function Badge({ tone = "neutral", icon: Icon, children, className }: { tone?: Tone; icon?: ComponentType<{ className?: string }>; children: React.ReactNode; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs font-semibold leading-5 ring-1 ring-inset whitespace-nowrap", tones[tone], className)}>
+    <span className={cn("inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[13px] font-semibold leading-5 ring-1 ring-inset whitespace-nowrap", tones[tone], className)}>
       {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : null}
       {children}
     </span>
@@ -54,5 +54,5 @@ export function FlagBadge({ label }: { label: string }) {
 }
 
 export function AiDraftBadge({ label = "AI draft" }: { label?: string }) {
-  return <Badge tone="ai_draft" icon={Sparkles}>{label}</Badge>;
+  return <Badge tone="info" icon={FileText}>{label}</Badge>;
 }
