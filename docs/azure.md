@@ -12,7 +12,7 @@ Every Azure Government availability statement below is marked "verify". Service 
 | Database | Postgres 16 (Neon in the hosted copy, a local container in development) |
 | Sign-in | Shared passcode gate, then email and password, signed session cookie (8 hour lifetime) |
 | Files | Vercel Blob in production, a local folder in development |
-| Email | A database outbox table. Messages are written in the same transaction as the action that caused them. A dispatcher (`lib/outbox-dispatch.ts`, transport in `lib/email.ts`) delivers them through the Resend HTTP API when `RESEND_API_KEY` and `EMAIL_FROM` are set. Otherwise they stay in the outbox with the status Recorded. The hosted copy is configured for recorded mode unless stated otherwise |
+| Email | A database outbox table. Messages are written in the same transaction as the action that caused them. A dispatcher (`lib/outbox-dispatch.ts`, transport in `lib/email.ts`) delivers them through the Resend HTTP API when `RESEND_API_KEY` and `EMAIL_FROM` are set. Otherwise they stay in the outbox with the status Recorded. |
 | AI model | A local model through Ollama (evaluated in `docs/ai-eval.md`) or the Anthropic API (not evaluated), behind one adapter (`lib/ai/model.ts`). The hosted copy has no model configured and uses the saved replays and the rule-based fallback |
 | Scheduled work | A daily Vercel cron calling `/api/cron/reminders` |
 
@@ -104,7 +104,7 @@ Dates assume award and contract registration in time to start on Monday, Novembe
 | Oct 20, 2026 | Proposal due | Submission |
 | Oct 26 to Nov 13 | Orals and award; contract registration | Not under ECI control |
 | Nov 16 to Dec 4 | Confirm requirements with Council Finance. Load the real initiative, organization and award lists into a mapping sheet. Settle open questions on who signs in with what | Signed requirements baseline, data mapping, Azure subscription and Entra tenant access |
-| Dec 7 to Dec 31 | Build on Azure: infrastructure as code, database, application hosting, Entra sign-in, Blob storage, mail worker, model adapter. Holiday week is reduced capacity | Staging environment running the full test suite |
+| Dec 7 to Dec 31 | Build on Azure: infrastructure as code, database, application hosting, Entra sign-in, Blob storage, mail transport, model adapter. Holiday week is reduced capacity | Staging environment running the full test suite |
 | Jan 4 to Jan 15 | User acceptance testing with Finance staff and a pilot group of funded organizations. Accessibility review. Security review and penetration test. Load test | Defect list closed or accepted, test report |
 | Jan 18 to Jan 22 | Load production data, create accounts, send invitations, training sessions and a short guide for organizations | Production environment populated |
 | Jan 25 to Jan 29 | Dress rehearsal, go or no-go meeting, change freeze | Signed go decision |
