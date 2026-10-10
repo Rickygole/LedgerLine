@@ -16,7 +16,7 @@ export function FilterBar({ action, clearHref, applied = 0, keep = 1, children }
         </FilterDisclosure>
       ) : null}
       <div className="flex items-center gap-2">
-        <Button type="submit" size="md">
+        <Button type="submit" size="md" variant="secondary">
           Apply filters
         </Button>
         <Link href={clearHref} className={buttonClass("ghost", "md")}>

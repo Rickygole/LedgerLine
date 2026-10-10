@@ -43,7 +43,7 @@ test("[US-039][US-041] the dashboard loads and the submissions list filters down
   await page.goto("/finance");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.goto("/finance/submissions?q=13-4027118&period=FY26-YE");
-  const link = page.getByRole("link", { name: referenceNo });
+  const link = page.locator("tbody tr", { hasText: referenceNo }).getByRole("link").first();
   await expect(link).toBeVisible();
   const rows = page.locator("tbody tr");
   expect(await rows.count()).toBeGreaterThan(0);
@@ -65,12 +65,14 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
 
 test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({ page, browser }) => {
   await page.goto(`/finance/submissions/${submissionId}`);
-  await page.getByRole("button", { name: "Request update" }).click();
-  await page.getByRole("button", { name: "Send to organization" }).click();
+  await page.getByRole("button", { name: "Request an update" }).click();
+  await expect(page.getByRole("dialog", { name: /Request an update/ })).toBeVisible();
+  await page.getByLabel("Note to the organization").fill("");
+  await page.getByRole("button", { name: "Send request" }).click();
   await expect(page.getByText(/Write a note before sending/)).toBeVisible();
   await page.getByLabel("Note to the organization").fill(NOTE);
-  await page.getByRole("button", { name: "Send to organization" }).click();
-  await expect(page.getByText("Update request sent. The organization will see the note above its report.")).toBeVisible();
+  await page.getByRole("button", { name: "Send request" }).click();
+  await expect(page.getByText(/Update requested\. .+ was emailed at \d{1,2}:\d{2} [AP]M\./)).toBeVisible();
 
   const [row] = await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]);
   expect(row.status).toBe("returned");
@@ -140,6 +142,8 @@ test("[US-049][US-051] the dashboard draws its charts from the current reports",
   await page.goto("/finance");
   const charts = page.locator("svg.recharts-surface");
   await expect(charts.first()).toBeVisible();
-  expect(await charts.count()).toBeGreaterThanOrEqual(2);
   expect(await page.locator(".recharts-bar-rectangle, .recharts-sector").count()).toBeGreaterThan(0);
+  const map = page.getByRole("group", { name: /Map of the 51 New York City Council districts/ });
+  await expect(map.locator("path").first()).toBeVisible();
+  await expect(map.getByRole("link")).toHaveCount(51);
 });

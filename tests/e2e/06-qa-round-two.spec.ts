@@ -158,10 +158,11 @@ test("[US-003][US-007] a Word file imported without a model keeps its headings, 
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     buffer,
   });
-  await page.getByRole("button", { name: "Draft the form" }).click();
+  await page.getByRole("button", { name: "Suggest questions" }).click();
   await expect(page.getByText("0 of 4 reviewed").first()).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("AI draft", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Drafted from the rules").first()).toBeVisible();
+  await expect(page.getByText(/No model was used/).first()).toBeVisible();
+  await expect(page.getByText("Suggested", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/Columns: Location \(Short text\), Sessions held \(Whole number\)/)).toBeVisible();
   await expect(page.getByText("Which tool types were lent most?", { exact: true })).toBeVisible();
   await expect(page.getByText("Lending").first()).toBeVisible();

@@ -3,6 +3,7 @@ import { daysPastDue } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
 import { balanceMessage, blockingIssues, budgetTotals, validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 import type { Answers, BudgetLine, FormDefinition, Issue } from "@/lib/rules/types";
+import { matchesDistrict } from "@/lib/finance/district-stats";
 import { PAGE_SIZE } from "./filters";
 import type { Filters, FlagReason, OpenFlag, ReportRow, RowFlag } from "./types";
 
@@ -157,7 +158,7 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
     }
     if (use("category") && row.category !== filters.category) return false;
     if (use("borough") && row.borough !== filters.borough) return false;
-    if (use("district") && String(row.councilDistrict ?? "") !== filters.district) return false;
+    if (use("district") && !matchesDistrict(row, filters.district!, filters.by ?? "")) return false;
     if (use("member") && !row.sponsors.some((s) => String(s.district) === filters.member)) return false;
     if (use("funding") && row.fundingSource !== filters.funding) return false;
     if (use("contract") && row.contractStatus !== filters.contract) return false;

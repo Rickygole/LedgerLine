@@ -325,7 +325,7 @@ export function RevisionsTab({ revisions, submissionId, fileIds }: { revisions: 
   );
 }
 
-export function TabNav({ id, current, counts }: { id: string; current: string; counts: Record<string, number | undefined> }) {
+export function TabNav({ id, current, counts, query = "" }: { id: string; current: string; counts: Record<string, number | undefined>; query?: string }) {
   const tabs = [
     ["report", "Report"],
     ["budget", "Budget"],
@@ -341,12 +341,12 @@ export function TabNav({ id, current, counts }: { id: string; current: string; c
         return (
           <Link
             key={key}
-            href={`/finance/submissions/${id}?tab=${key}`}
+            href={`/finance/submissions/${id}?tab=${key}${query}`}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium ${active ? "border-navy-800 font-semibold text-navy-900" : "border-transparent text-muted hover:border-line-strong hover:text-ink"}`}
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-[3px] px-3 py-3 text-[15px] font-semibold ${active ? "border-action text-harbor-900" : "border-transparent text-ink-2 hover:border-line-strong hover:text-ink"}`}
           >
             {label}
-            {counts[key] !== undefined ? <span className={`num rounded-sm px-1.5 text-xs font-semibold ${active ? "bg-navy-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
+            {counts[key] !== undefined ? <span className={`num rounded-sm px-1.5 text-xs font-semibold ${active ? "bg-harbor-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
           </Link>
         );
       })}

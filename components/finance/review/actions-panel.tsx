@@ -1,12 +1,11 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { CheckCircle2, Eye, Flag, Pencil } from "lucide-react";
+import { CheckCircle2, Flag, Pencil } from "lucide-react";
 import { addFlagAction, correctionAction, transitionAction, type ActionResult } from "@/app/finance/submissions/[id]/actions";
 import { RequestUpdate } from "@/components/finance/review/request-update";
 import { StaleNotice, isStale } from "@/components/finance/review/stale-notice";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody } from "@/components/ui/card";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
 import type { Concern } from "@/lib/finance/review/return-note-core";
 
@@ -22,19 +21,18 @@ function Message({ state }: { state: ActionResult | undefined }) {
   );
 }
 
-function TransitionButton({ submissionId, lockVersion, action, label, icon: Icon, variant, onDone }: { submissionId: string; lockVersion: number; action: "start_review" | "accept"; label: string; icon: typeof Eye; variant: "primary" | "secondary"; onDone: (message: string) => void }) {
+function TransitionButton({ submissionId, lockVersion, action, label, variant, onDone }: { submissionId: string; lockVersion: number; action: "start_review" | "accept"; label: string; variant: "primary" | "secondary" | "ghost"; onDone: (message: string) => void }) {
   const [state, formAction, pending] = useActionState(async (previous: ActionResult | undefined, formData: FormData) => {
     const result = await transitionAction(previous, formData);
     if (result.ok) onDone(result.message);
     return result;
   }, undefined);
   return (
-    <form action={formAction} className="space-y-2">
+    <form action={formAction} className={variant === "ghost" ? "inline-flex flex-col" : "space-y-2"}>
       <input type="hidden" name="submissionId" value={submissionId} />
       <input type="hidden" name="lockVersion" value={lockVersion} />
       <input type="hidden" name="action" value={action} />
-      <Button type="submit" variant={variant} className="w-full" disabled={pending}>
-        <Icon className="h-4 w-4" aria-hidden="true" />
+      <Button type="submit" variant={variant} className={variant === "ghost" ? "px-0" : "h-11 w-full text-base"} disabled={pending}>
         {pending ? "Working" : label}
       </Button>
       {state?.ok ? null : <Message state={state} />}
@@ -157,6 +155,10 @@ export function ActionsPanel({
   concerns,
   questions,
   badge,
+  orgName,
+  contactName,
+  prefill,
+  since,
 }: {
   submissionId: string;
   status: string;
@@ -164,41 +166,59 @@ export function ActionsPanel({
   concerns: Concern[];
   questions: CorrectableQuestion[];
   badge?: React.ReactNode;
+  orgName: string;
+  contactName: string | null;
+  prefill: string;
+  since: string | null;
 }) {
   const [notice, setNotice] = useState<string | null>(null);
-  const reviewable = status === "submitted" || status === "under_review";
-  const correctable = reviewable || status === "accepted";
+  const correctable = status === "submitted" || status === "under_review" || status === "accepted";
+  const common = { submissionId, lockVersion, onDone: setNotice };
   return (
-    <Card>
-      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
-        <h2 className="text-[15px] font-semibold text-ink">Actions</h2>
+    <section aria-labelledby="decision-title" className="rounded border border-line bg-white">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 pb-4 pt-5">
+        <h2 id="decision-title" className="text-xl font-bold leading-7 text-ink">
+          Your decision
+        </h2>
         {badge}
       </div>
-      <CardBody className="space-y-4">
+      <div className="space-y-4 px-5 py-5">
         <div aria-live="polite">
           {notice ? (
-            <p role="status" className="flex items-start gap-2 rounded-md border border-ok/25 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">
+            <p role="status" className="flex items-start gap-2 rounded border border-ok/25 bg-ok-bg px-3 py-2 text-[15px] font-semibold text-ok">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               {notice}
             </p>
           ) : null}
         </div>
-        {reviewable ? (
-          <div className="space-y-2.5">
-            {status === "submitted" ? <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="start_review" label="Start review" icon={Eye} variant="primary" onDone={setNotice} /> : null}
-            <TransitionButton submissionId={submissionId} lockVersion={lockVersion} action="accept" label="Accept report" icon={CheckCircle2} variant={status === "under_review" ? "primary" : "secondary"} onDone={setNotice} />
-            <RequestUpdate submissionId={submissionId} lockVersion={lockVersion} concerns={concerns} onDone={setNotice} />
+        {status === "submitted" ? (
+          <div className="space-y-3">
+            <TransitionButton {...common} action="start_review" label="Start review" variant="primary" />
+            <p className="text-sm text-ink-2">Starting review tells the organization their report is being reviewed.</p>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line-soft pt-3 text-sm">
+              <span className="w-full text-muted">Or decide now:</span>
+              <TransitionButton {...common} action="accept" label="Accept report" variant="ghost" />
+              <RequestUpdate {...common} concerns={concerns} contactName={contactName} prefill={prefill} variant="ghost" />
+            </div>
+          </div>
+        ) : status === "under_review" ? (
+          <div className="space-y-3">
+            <TransitionButton {...common} action="accept" label="Accept report" variant="primary" />
+            <RequestUpdate {...common} concerns={concerns} contactName={contactName} prefill={prefill} />
           </div>
         ) : (
-          <p className="rounded-md bg-surface px-3 py-2.5 text-sm text-muted">
-            {status === "accepted" ? "This report is accepted. You can still correct an answer or add a flag." : status === "returned" ? "Waiting on the organization to update and resubmit." : "This report has not been submitted yet."}
+          <p className="rounded bg-surface px-3 py-2.5 text-[15px] text-ink-2">
+            {status === "accepted"
+              ? `This report is accepted${since ? `. ${since}` : ""}. You can still correct an answer or add a flag.`
+              : status === "returned"
+                ? `Waiting on ${orgName}${since ? ` since ${since}` : ""} to update and resubmit.`
+                : "This report has not been submitted yet."}
           </p>
         )}
-        <p className="text-xs text-muted">Every action is recorded in the audit timeline under your name.</p>
         {status !== "draft" ? (
-          <details className="group border-t border-line pt-3">
-            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-              <Flag className="h-4 w-4 text-muted" aria-hidden="true" />
+          <details className="group border-t border-line-soft pt-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-[15px] font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+              <Flag className="h-4 w-4" aria-hidden="true" />
               Add a manual flag
             </summary>
             <div className="mt-3">
@@ -207,18 +227,19 @@ export function ActionsPanel({
           </details>
         ) : null}
         {correctable ? (
-          <details className="group border-t border-line pt-3">
-            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-              <Pencil className="h-4 w-4 text-muted" aria-hidden="true" />
+          <details className="group border-t border-line-soft pt-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-[15px] font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+              <Pencil className="h-4 w-4" aria-hidden="true" />
               Correct an answer
             </summary>
-            <p className="mt-2 text-[13px] text-muted">Creates a new revision under your name. The status does not change.</p>
+            <p className="mt-2 text-sm text-muted">Creates a new revision under your name. The status does not change.</p>
             <div className="mt-3">
               <CorrectionForm submissionId={submissionId} lockVersion={lockVersion} questions={questions} />
             </div>
           </details>
         ) : null}
-      </CardBody>
-    </Card>
+        <p className="border-t border-line-soft pt-3 text-[13px] text-muted">Every action is recorded in the audit timeline under your name.</p>
+      </div>
+    </section>
   );
 }

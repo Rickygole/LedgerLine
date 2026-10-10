@@ -63,7 +63,8 @@ export const FINANCE_ROLES: Role[] = ["finance_viewer", "finance_analyst", "fina
 export const REVIEW_ROLES: Role[] = ["finance_analyst", "finance_admin"];
 
 export function homeFor(role: Role): string {
-  return role === "cbo_submitter" ? "/portal" : "/finance";
+  if (role === "cbo_submitter") return "/portal";
+  return role === "finance_admin" ? "/finance/initiatives" : "/finance";
 }
 
 export function roleLabel(role: Role): string {

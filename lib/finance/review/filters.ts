@@ -50,7 +50,8 @@ export function parseFilters(raw: Raw, periods: PeriodInfo[]): Filters {
     initiative: one(raw, "initiative").slice(0, 120),
     category: one(raw, "category").slice(0, 80),
     borough: one(raw, "borough").slice(0, 40),
-    district: /^\d{1,2}$/.test(one(raw, "district")) ? one(raw, "district") : "",
+    district: /^\d{1,2}$/.test(one(raw, "district")) && Number(one(raw, "district")) >= 1 && Number(one(raw, "district")) <= 51 ? String(Number(one(raw, "district"))) : "",
+    by: one(raw, "by") === "sponsor" ? "sponsor" : one(raw, "by") === "location" ? "location" : "",
     orgType: ["cbo", "agency"].includes(one(raw, "org_type")) ? one(raw, "org_type") : "",
     awardMin: /^\d{1,10}(\.\d{1,2})?$/.test(one(raw, "award_min")) ? one(raw, "award_min") : "",
     awardMax: /^\d{1,10}(\.\d{1,2})?$/.test(one(raw, "award_max")) ? one(raw, "award_max") : "",
@@ -68,7 +69,7 @@ export function parseFilters(raw: Raw, periods: PeriodInfo[]): Filters {
 
 export function filtersToParams(filters: Partial<Filters>, include: { page?: boolean } = {}): URLSearchParams {
   const params = new URLSearchParams();
-  const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "district", "member", "funding", "contract", "agency", "orgType", "awardMin", "awardMax", "period", "bucket", "status", "flag"];
+  const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "district", "by", "member", "funding", "contract", "agency", "orgType", "awardMin", "awardMax", "period", "bucket", "status", "flag"];
   const names: Partial<Record<keyof Filters, string>> = { orgType: "org_type", awardMin: "award_min", awardMax: "award_max" };
   for (const key of keys) {
     const value = filters[key];
