@@ -51,8 +51,31 @@ export const MARIA_ORG = { ein: "13-4027118", name: "Mott Haven Youth Futures, I
 export const LATE_INITIATIVE = "Mentor Match Network";
 export const ACCEPTED_INITIATIVE = "Afterschool Studio Program";
 
+export const MARIA_DRAFT_BUDGET = [
+  ["PS", "Program Coordinator, 0.6 FTE", 24000],
+  ["PS", "Mentor Recruitment Specialist, 0.4 FTE", 14400],
+  ["PS", "Youth peer leader stipends", 9600],
+  ["PS", "Fringe benefits", 7632],
+  ["OTPS", "MetroCards for participants", 3960],
+  ["OTPS", "Space rental for Saturday sessions", 3600],
+  ["OTPS", "Program supplies and curriculum", 2875],
+  ["OTPS", "Mentor background checks", 1890],
+  ["OTPS", "Family events and meals", 1744],
+  ["OTPS", "Printing and outreach", 1150],
+  ["OTPS", "Mentor training workshop", 550],
+] as const;
+
+export const MARIA_REMAINING_BUDGET = [
+  ["PS", "Program evaluation consultant", 7349],
+  ["OTPS", "Summer career exposure trips", 6250],
+] as const;
+
 const TODAY = "2026-10-08";
 const SPEAKER_DISTRICT = 9;
+const SOURCE_MIX = { citywide: 40, speaker: 10, delegation: 50 };
+const MISSING_RATE: Record<"local" | "citywide" | "speaker" | "delegation", number> = { citywide: 0.04, speaker: 0.08, local: 0.13, delegation: 0.13 };
+const HIGH_RISK_DISTRICTS = new Set([8, 15, 16, 17, 37, 42]);
+const HIGH_RISK_FACTOR = 3.5;
 const EIN_PREFIXES = ["11", "13", "13", "13", "14", "20", "26", "27", "45", "46", "47", "81", "82", "83", "84", "85", "86", "87", "88", "92"];
 
 function rng(seed: number) {
@@ -139,6 +162,11 @@ function nameMaker(pool: Names, used: Set<string>) {
     }
     throw new Error("name pool exhausted");
   };
+}
+
+function homeDistrictIn(borough: Borough): number {
+  const options = BOROUGH_DISTRICTS[borough];
+  return Number(weighted(Object.fromEntries(options.map((d) => [String(d), HIGH_RISK_DISTRICTS.has(d) && !(borough === "Manhattan" && d === 8) ? (borough === "Brooklyn" ? 4 : 3) : 1]))));
 }
 
 function award(kind: "named" | "local", range: [number, number]): number {
@@ -380,7 +408,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
 
     const id = randomUUID();
     const place = pick(BOROUGH_PLACES[borough]);
-    const district = isMaria ? 8 : pick(BOROUGH_DISTRICTS[borough]);
+    const district = isMaria ? 8 : homeDistrictIn(borough);
     const contactName = isMaria ? PERSONAS.maria.name : isTomas ? PERSONAS.tomas.name : orgName();
     const [contactFirst, ...contactRest] = contactName.split(" ");
     const contactEmail = isMaria ? PERSONAS.maria.email : isTomas ? PERSONAS.tomas.email : `${slug(contactFirst)}.${slug(contactRest.join(""))}@${domain}`;
@@ -468,16 +496,16 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   const initiativeRows: Record<string, unknown>[] = [];
   const formRows: Record<string, unknown>[] = [];
   const lineageRows: Record<string, unknown>[] = [];
-  let initiativeSeq = 0;
+  const serials = { FY26: 0, FY27: 0 };
 
   const addInitiative = (spec: { name: string; category: Category; kind: "named" | "local"; awards: [number, number]; amount: [number, number]; description: string; retired?: boolean; open?: boolean; renamedTo?: string }, fiscalYear: "FY26" | "FY27", source?: SeedInitiative) => {
     const id = randomUUID();
     const formId = randomUUID();
-    initiativeSeq++;
+    const serial = source ? Number(source.code.slice(-3)) : ++serials[fiscalYear];
     const definition = buildDefinition(`${spec.name} report`, CATEGORY_METRICS[spec.category]);
     const row: SeedInitiative = {
       id,
-      code: `CI-${String(initiativeSeq).padStart(3, "0")}`,
+      code: `CI-${fiscalYear.slice(2)}-${String(serial).padStart(3, "0")}`,
       name: spec.name,
       category: spec.category,
       fiscalYear,
@@ -556,6 +584,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       created_at: "2026-06-22T10:30:00-04:00",
     });
   }
+  serials.FY27 = serials.FY26;
   const fy27New = fy27Only.map((spec) => addInitiative(spec, "FY27"));
   fy27.push(...fy27New);
   for (const prior of fy26.filter((p) => p.retired)) {
@@ -599,10 +628,11 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   };
 
   const sponsorsFor = (org: OrgRow, source: AssignmentRow["funding_source"], amount: number) => {
-    const homeDistrict = chance(0.75) ? org.district : pick(BOROUGH_DISTRICTS[org.borough]);
+    const homeDistrict = org.id === maria.id || chance(0.75) ? org.district : pick(BOROUGH_DISTRICTS[org.borough]);
     if (source === "speaker") return [{ district: SPEAKER_DISTRICT, amount }];
     if (source === "delegation") {
-      const districts = shuffle(BOROUGH_DISTRICTS[org.borough]).slice(0, between(2, Math.min(4, BOROUGH_DISTRICTS[org.borough].length)));
+      const others = shuffle(BOROUGH_DISTRICTS[org.borough].filter((d) => d !== org.district));
+      const districts = [org.district, ...others.slice(0, between(1, Math.min(2, others.length)))];
       const cents = Math.round(amount * 100);
       const each = Math.floor(cents / districts.length);
       return districts.map((district, index) => ({ district, amount: (index === 0 ? cents - each * (districts.length - 1) : each) / 100 }));
@@ -622,7 +652,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     if (pairs.has(key)) return null;
     pairs.add(key);
     load.set(loadKey(org, initiative.fiscalYear), loadOf(org, initiative.fiscalYear) + 1);
-    const source: AssignmentRow["funding_source"] = forcedSource ?? (initiative.kind === "local" ? "local" : weighted({ citywide: 70, speaker: 15, delegation: 15 }));
+    const source: AssignmentRow["funding_source"] = forcedSource ?? (initiative.kind === "local" ? "local" : weighted(SOURCE_MIX));
     const row: AssignmentRow = { id: randomUUID(), initiative_id: initiative.id, org_id: org.id, award_amount: amount, sponsoring_agency: initiative.agency, funding_source: source, ...contractFor(initiative.fiscalYear, initiative.agency) };
     assignments.push(row);
     assignmentSeed.set(row.id, initiative);
@@ -666,8 +696,8 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     }
   };
 
-  assign(late, maria, 85000, "citywide");
-  assign(accepted, maria, 62500, "citywide");
+  assign(late, maria, 85000, "local");
+  assign(accepted, maria, 62500, "local");
   const smallFirst = [...fy26].sort((a, b) => Number(a.kind === "local" || a.open) - Number(b.kind === "local" || b.open));
   for (const initiative of smallFirst) fillAwards(initiative, between(initiative.awards[0], initiative.awards[1]));
   ensureAwarded(fy26);
@@ -827,6 +857,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     submittedOn?: string;
     unbalanced?: boolean;
     draftAnswers?: Answers;
+    draftBudget?: readonly (readonly [BudgetLine["category"], string, number])[];
     editedOn?: string;
   }) => {
     const initiative = assignmentSeed.get(opts.assignment.id)!;
@@ -853,7 +884,8 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       const answers = opts.draftAnswers ?? partialAnswers(full);
       const editedAt = workTime(opts.editedOn ?? minDate(TODAY, addDays(startedOn, between(0, 20))));
       addAnswers(id, answers, submitter, editedAt);
-      if (opts.unbalanced) addBudget(id, skewedBudget(opts.assignment.award_amount));
+      if (opts.draftBudget) addBudget(id, opts.draftBudget.map(([category, description, amount], index) => ({ rowId: randomUUID(), position: index + 1, category, description, amount })));
+      else if (opts.unbalanced) addBudget(id, skewedBudget(opts.assignment.award_amount));
       else if (chance(0.3)) addBudget(id, balancedBudget(opts.assignment.award_amount).slice(0, between(2, 4)));
       submissions.push({ ...base, status: "draft", revision: 0, lock_version: between(1, 9), submitted_by: null, submitted_at: null, updated_by: submitter, updated_at: editedAt });
       return id;
@@ -927,10 +959,8 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   createSubmission({ assignment: lateAssignment, period: "FY26-MY", status: "accepted", submittedBy: ids.maria, submittedOn: "2026-01-27" });
   createSubmission({ assignment: acceptedAssignment, period: "FY26-YE", status: "accepted", submittedBy: ids.james, submittedOn: "2026-09-18" });
   if (options.lateDraft === "half") {
-    const full = fullAnswers(lateAssignment, "FY26-YE", "normal");
-    const half: Answers = {};
-    for (const key of ["org_legal_name", "org_ein", "contact_name", "contact_title", "contact_email", "contact_phone", "participants_target", "accomplishments", "challenges"]) half[key] = full[key];
-    createSubmission({ assignment: lateAssignment, period: "FY26-YE", status: "draft", submittedBy: ids.maria, draftAnswers: half, editedOn: "2026-09-22" });
+    const answers = fullAnswers(lateAssignment, "FY26-YE", "normal");
+    createSubmission({ assignment: lateAssignment, period: "FY26-YE", status: "draft", submittedBy: ids.maria, draftAnswers: answers, draftBudget: MARIA_DRAFT_BUDGET, editedOn: "2026-09-22" });
   }
   for (const next of assignments.filter((a) => a.org_id === maria.id && assignmentSeed.get(a.id)!.fiscalYear === "FY27")) {
     if (chance(0.5)) createSubmission({ assignment: next, period: "FY27-MY", status: "draft", submittedBy: ids.maria });
@@ -948,13 +978,18 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     else if (mid < 0.975) createSubmission({ assignment, period: "FY26-MY", status: "returned" });
     else if (mid < 0.985) createSubmission({ assignment, period: "FY26-MY", status: "draft" });
 
-    const year = random();
+    const homeOrg = orgById.get(assignment.org_id)!;
+    const risk = MISSING_RATE[assignment.funding_source] * (HIGH_RISK_DISTRICTS.has(homeOrg.district) ? HIGH_RISK_FACTOR : 1);
+    if (chance(risk)) {
+      if (chance(0.55)) createSubmission({ assignment, period: "FY26-YE", status: "draft", unbalanced: chance(0.5) });
+      continue;
+    }
+    const year = random() * 0.84;
     const lateSubmitDate = chance(0.1) ? dateBetween("2026-10-01", TODAY) : undefined;
     if (year < 0.66) createSubmission({ assignment, period: "FY26-YE", status: "accepted", quality: chance(0.03) ? "low" : "normal", submittedOn: lateSubmitDate && lateSubmitDate <= "2026-10-03" ? lateSubmitDate : undefined });
     else if (year < 0.75) createSubmission({ assignment, period: "FY26-YE", status: "submitted", quality: chance(0.08) ? "zero" : chance(0.12) ? "low" : "normal", submittedOn: dateBetween("2026-09-24", TODAY) });
     else if (year < 0.81) createSubmission({ assignment, period: "FY26-YE", status: "under_review", submittedOn: dateBetween("2026-09-15", "2026-10-04") });
-    else if (year < 0.84) createSubmission({ assignment, period: "FY26-YE", status: "returned", submittedOn: dateBetween("2026-08-20", "2026-09-28") });
-    else if (year < 0.93) createSubmission({ assignment, period: "FY26-YE", status: "draft", unbalanced: chance(0.5) });
+    else createSubmission({ assignment, period: "FY26-YE", status: "returned", submittedOn: dateBetween("2026-08-20", "2026-09-28") });
   }
 
   auditRows.push({
