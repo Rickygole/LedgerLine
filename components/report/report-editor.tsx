@@ -16,6 +16,7 @@ import type { AnswerValue, Answers, Issue } from "@/lib/rules/types";
 import { CERTIFICATION_STATEMENT, certificationIssues } from "@/lib/rules/certify";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { blockingIssues, isVisible } from "@/lib/rules/validate";
+import { cn } from "@/lib/cn";
 import { Attachments } from "./attachments";
 import { BudgetGrid } from "./budget-grid";
 import { CheckAnswers } from "./check-answers";
@@ -350,7 +351,14 @@ export function ReportEditor({
         </p>
       ) : null}
 
-      <div className="lg:grid lg:grid-cols-[260px_minmax(0,760px)] lg:items-start lg:gap-10">
+      <div
+        className={cn(
+          "lg:grid lg:items-start lg:gap-10",
+          section?.kind === "budget"
+            ? "lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1100px)]"
+            : "lg:grid-cols-[260px_minmax(0,760px)]",
+        )}
+      >
         <aside className="no-print mb-5 lg:sticky lg:top-6 lg:mb-0">
           <Stepper steps={steps} current={step} onSelect={(key) => go(key)} />
           <div className="mt-3 px-1 lg:mt-4 lg:border-t lg:border-line-soft lg:px-3 lg:pt-4">

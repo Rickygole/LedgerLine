@@ -101,7 +101,11 @@ export async function seedOperations(client: Client) {
       body: "We submitted the year-end report with 212 participants served. The correct number is 221. How do we correct it?",
       agoHours: 31,
       atHour: 14.25,
-      replyAfterHours: null,
+      replyAfterHours: 6,
+      reply:
+        "A Finance analyst can correct it. Reply with the report reference and the right number, and we will record it as a correction with your reason.",
+      closeAfterHours: 8,
+      responder: priya,
     },
     {
       requester: paloma,
@@ -110,7 +114,7 @@ export async function seedOperations(client: Client) {
       body: "Our staff use a mix of browsers. Is there a list of the ones LedgerLine supports?",
       agoHours: 29,
       atHour: 10,
-      replyAfterHours: 27,
+      replyAfterHours: 9,
       reply: "Current versions of Chrome, Edge, Firefox and Safari work. Please avoid Internet Explorer.",
       responder: priya,
     },
@@ -121,7 +125,10 @@ export async function seedOperations(client: Client) {
       body: "Our finance manager needs her own login so she can submit the mid-year report. What do we need to send you?",
       agoHours: 52,
       atHour: 9.33,
-      replyAfterHours: null,
+      replyAfterHours: 4,
+      reply: "Send us the name and work email of the second person. We will add the login and send a password link.",
+      closeAfterHours: 20,
+      responder: winston,
     },
     {
       requester: tomas,
@@ -224,121 +231,6 @@ export async function seedOperations(client: Client) {
     );
   }
 
-  const incidents = [
-    {
-      detected: "2026-08-19T14:20:00-04:00",
-      notified: "2026-08-19T15:05:00-04:00",
-      severity: "moderate",
-      description:
-        "A Finance staff member's work email and password appeared in a public list of leaked credentials. The account was signed out everywhere and the password was reset within the hour.",
-      affected:
-        "One Finance analyst account. The sign-in record shows no use of the leaked password. No reports or organization data were opened from outside the Council network.",
-      report: {
-        at: "2026-08-21T11:30:00-04:00",
-        rootCause:
-          "The staff member had reused their LedgerLine password on an unrelated personal service that was later breached.",
-        actions:
-          "Revoked all sessions for the account, forced a new password, reviewed 90 days of sign-in and audit records for the account, and notified the staff member's manager.",
-        prevention:
-          "Added a password check against known leaked passwords at sign-in, shortened the session lifetime for Finance roles, and added a reminder about password reuse to staff training.",
-        completedOn: "2026-08-24",
-      },
-    },
-    {
-      detected: "2026-10-05T08:30:00-04:00",
-      notified: "2026-10-05T10:05:00-04:00",
-      severity: "low",
-      description:
-        "A routine scan found that links used for uploaded supporting documents stayed valid for 24 hours, longer than the 15 minutes the security plan allows.",
-      affected:
-        "Supporting documents uploaded since September 21. The access log shows no requests to those links from outside the organizations that uploaded them.",
-      report: {
-        at: "2026-10-06T16:10:00-04:00",
-        rootCause:
-          "A configuration change on September 21 raised the link lifetime for large files and was not reviewed against the security plan.",
-        actions:
-          "Reduced the lifetime to 15 minutes, invalidated the existing links, and reviewed the access log for the period.",
-        prevention:
-          "Adding a check to every release that compares link lifetimes with the security plan before the change goes live.",
-        completedOn: null,
-      },
-    },
-  ];
-  for (const incident of incidents) {
-    const { rows } = await client.query<{ id: string; reference: string }>(
-      `INSERT INTO security_incident (detected_at, description, affected_data, severity, notify_due_at, remediation_due_at, notified_at, contacts_notified, recorded_by, recorded_at)
-       VALUES ($1::timestamptz, $2, $3, $4, $1::timestamptz + interval '24 hours', $1::timestamptz + interval '7 days', $5::timestamptz, $6, $7, $5::timestamptz) RETURNING id, reference`,
-      [
-        incident.detected,
-        incident.description,
-        incident.affected,
-        incident.severity,
-        incident.notified,
-        contacts.length,
-        priya,
-      ],
-    );
-    const { id, reference } = rows[0];
-    await client.query(
-      "INSERT INTO incident_event (incident_id, at, actor, kind, detail) VALUES ($1, $2, $3, 'recorded', $4), ($1, $2, $3, 'notified', $5)",
-      [id, incident.notified, priya, incident.severity, `${contacts.length} designated contacts`],
-    );
-    await audit(
-      client,
-      incident.notified,
-      priya,
-      "security_incident",
-      id,
-      "incident_recorded",
-      `${reference}: ${incident.description}`,
-      { severity: incident.severity, contacts_notified: contacts.length, on_time: true },
-    );
-    for (const contact of contacts) {
-      await client.query(
-        "INSERT INTO outbox (to_email, template, subject, body_text, status, created_by, created_at) VALUES ($1, 'security_incident', $2, $3, 'recorded', $4, $5)",
-        [
-          contact.email,
-          `Security incident ${reference} (${incident.severity} severity)`,
-          `Hello ${contact.name},\n\nA security incident was recorded in LedgerLine.\n\nReference: ${reference}\nSeverity: ${incident.severity}\n\nWhat happened:\n${incident.description}\n\nData affected:\n${incident.affected}\n\nA written remediation report and a plan to reduce the risk of a repeat will follow within 7 days of detection.\n\nLedgerLine`,
-          priya,
-          incident.notified,
-        ],
-      );
-    }
-    await client.query(
-      "INSERT INTO incident_remediation (incident_id, root_cause, actions, prevention, completed_on, recorded_by, recorded_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-      [
-        id,
-        incident.report.rootCause,
-        incident.report.actions,
-        incident.report.prevention,
-        incident.report.completedOn,
-        priya,
-        incident.report.at,
-      ],
-    );
-    await client.query(
-      "INSERT INTO incident_event (incident_id, at, actor, kind) VALUES ($1, $2, $3, 'remediation_reported')",
-      [id, incident.report.at, priya],
-    );
-    if (incident.report.completedOn) {
-      await client.query(
-        "INSERT INTO incident_event (incident_id, at, actor, kind, detail) VALUES ($1, $2, $3, 'remediation_completed', $4)",
-        [id, incident.report.at, priya, incident.report.completedOn],
-      );
-    }
-    await audit(
-      client,
-      incident.report.at,
-      priya,
-      "security_incident",
-      id,
-      "incident_remediation_reported",
-      reference,
-      { completed_on: incident.report.completedOn },
-    );
-  }
-
   const review26 = (
     await client.query<{ id: string }>(
       `INSERT INTO annual_review (fiscal_year_id, review_date, check_initiatives, check_forms, check_periods, check_users, check_rules, status, signed_off_by, signed_off_on, created_by, created_at)
@@ -400,177 +292,36 @@ export async function seedOperations(client: Client) {
     review_date: "2026-10-06",
   });
 
-  const finance = (
-    await client.query<{ id: string; role: string; email: string }>(
-      "SELECT id, role, email FROM app_user WHERE role <> 'cbo_submitter' AND email <> 'system.scheduler@ledgerline.example' ORDER BY full_name",
-    )
-  ).rows;
-  const modules = (
-    await client.query<{ key: string; audience: string[] }>(
-      "SELECT key, audience FROM training_module ORDER BY position",
-    )
-  ).rows;
-  const skip = new Set<string>([winston]);
-  const analysts = finance.filter((u) => u.role === "finance_analyst");
-  analysts.slice(-4).forEach((u) => skip.add(u.id));
-  let day = 0;
-  for (const user of finance) {
-    const required = modules.filter((m) => m.audience.includes(user.role));
-    const partial = skip.has(user.id);
-    const done = partial ? required.slice(0, Math.max(1, required.length - 2)) : required;
-    for (const entry of done) {
-      const date = new Date(Date.UTC(2026, 8, 28 + (day % 8)));
-      day += 1;
-      await client.query(
-        "INSERT INTO training_record (user_id, module_key, completed_on, recorded_by, recorded_at) VALUES ($1, $2, $3, $4, $5)",
-        [user.id, entry.key, date.toISOString().slice(0, 10), priya, `${date.toISOString().slice(0, 10)}T20:00:00Z`],
-      );
-    }
-  }
-
-  const sessions = [
-    {
-      on: "2026-09-22",
-      scenario: "Organization submits a mid-year report with a balanced budget",
-      tester: "Maria Santos",
-      role: "Program Director, Mott Haven Youth Futures",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-09-22",
-      scenario: "Organization saves a draft and returns to it on another day",
-      tester: "Maria Santos",
-      role: "Program Director, Mott Haven Youth Futures",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-09-23",
-      scenario: "A report cannot be submitted while the budget total differs from the award",
-      tester: "James Okafor",
-      role: "Finance Manager, Mott Haven Youth Futures",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-09-24",
-      scenario: "Organization uploads a 25 MB Excel supporting document",
-      tester: "Maria Santos",
-      role: "Program Director, Mott Haven Youth Futures",
-      result: "failed",
-      notes: "Upload finished but the progress bar stayed at 100 percent until the page was reloaded.",
-      defects: [
-        {
-          description: "Upload progress bar does not clear for files over 20 MB",
-          severity: "major",
-          fixed: "2026-10-02",
-        },
-      ],
-    },
-    {
-      on: "2026-10-05",
-      scenario: "Organization uploads a 25 MB Excel supporting document",
-      tester: "Maria Santos",
-      role: "Program Director, Mott Haven Youth Futures",
-      result: "passed",
-      notes: "Retest after the fix.",
-      defects: [],
-    },
-    {
-      on: "2026-09-28",
-      scenario: "Analyst starts a review and returns a report with a note",
-      tester: "Daniel Cho",
-      role: "Budget Analyst, Council Finance",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-09-28",
-      scenario: "Analyst flags a submission and it appears under Flagged items",
-      tester: "Daniel Cho",
-      role: "Budget Analyst, Council Finance",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-09-29",
-      scenario: "View-only user cannot change a report or a form",
-      tester: "Grace Chen",
-      role: "Policy Analyst, Council Finance",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-09-30",
-      scenario: "Administrator adds a Finance user and sends a password link",
-      tester: "Priya Raman",
-      role: "Deputy Director, Council Finance",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-10-01",
-      scenario: "Administrator rolls FY27 forms and awards into FY28",
-      tester: "Winston Kellerman",
-      role: "Finance Administrator, Council Finance",
-      result: "blocked",
-      notes: "The review table stayed empty after choosing the new year.",
-      defects: [
-        { description: "Rollover preview is empty until the page is reloaded", severity: "major", fixed: null },
-      ],
-    },
-    {
-      on: "2026-10-02",
-      scenario: "Analyst exports a filtered list to Excel and CSV",
-      tester: "Daniel Cho",
-      role: "Budget Analyst, Council Finance",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
-    {
-      on: "2026-10-06",
-      scenario: "Reminder email is queued for organizations with a missing report",
-      tester: "Winston Kellerman",
-      role: "Finance Administrator, Council Finance",
-      result: "failed",
-      notes: null,
-      defects: [
-        { description: "Reminder preview shows the due date in year-first format", severity: "minor", fixed: null },
-      ],
-    },
-    {
-      on: "2026-10-07",
-      scenario: "Organization prints a submitted report to PDF",
-      tester: "Tomas Rivera",
-      role: "Executive Director, Harborview Youth Alliance",
-      result: "passed",
-      notes: null,
-      defects: [],
-    },
+  const schedule: [string, string, string, string][] = [
+    [
+      "test",
+      "2027-01-04",
+      "Organizations submit a report, save a draft and upload a supporting document",
+      "Pilot organizations and Council Finance",
+    ],
+    [
+      "test",
+      "2027-01-06",
+      "Finance reviews, flags and returns a report, then corrects a submitted answer",
+      "Finance analysts",
+    ],
+    ["test", "2027-01-08", "Budget balancing, pasting from Excel and the submitted PDF copy", "Pilot organizations"],
+    ["test", "2027-01-12", "Administrators add users, change forms and set reminder rules", "Finance administrators"],
+    ["test", "2027-01-14", "Exports, saved queries and the full data package", "Finance analysts and administrators"],
+    ["test", "2027-01-15", "Retest of every defect found in the earlier sessions", "Everyone who took part"],
+    ["training", "2027-01-11", "Orientation and signing in", "All Finance users"],
+    ["training", "2027-01-13", "Reading submitted reports", "All Finance users"],
+    ["training", "2027-01-15", "Reviewing and returning reports", "Finance analysts and administrators"],
+    ["training", "2027-01-19", "Exports and saved queries", "Finance analysts and administrators"],
+    ["training", "2027-01-20", "Initiatives and report forms", "Finance administrators"],
+    ["training", "2027-01-21", "Users, roles and password resets", "Finance administrators"],
+    ["training", "2027-01-22", "Annual rollover and reminders", "Finance administrators"],
   ];
-  for (const session of sessions) {
-    const { rows } = await client.query<{ id: string }>(
-      "INSERT INTO uat_session (session_on, scenario, tester_name, tester_role, result, notes, recorded_by, recorded_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $1::date + time '20:00') RETURNING id",
-      [session.on, session.scenario, session.tester, session.role, session.result, session.notes, priya],
-    );
-    for (const defect of session.defects) {
-      await client.query(
-        "INSERT INTO uat_defect (session_id, description, severity, status, fixed_on, created_at) VALUES ($1, $2, $3, $4, $5, $6::date + time '20:00')",
-        [rows[0].id, defect.description, defect.severity, defect.fixed ? "fixed" : "open", defect.fixed, session.on],
-      );
-    }
-    await audit(client, `${session.on}T20:00:00Z`, priya, "uat_session", rows[0].id, "uat_recorded", session.scenario, {
-      result: session.result,
-      defects: session.defects.length,
-    });
-  }
+  for (const [kind, on, title, audience] of schedule)
+    await client.query("INSERT INTO readiness_schedule (kind, scheduled_on, title, audience) VALUES ($1, $2, $3, $4)", [
+      kind,
+      on,
+      title,
+      audience,
+    ]);
 }

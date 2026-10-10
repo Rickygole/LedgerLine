@@ -14,6 +14,7 @@ import type {
   RevisionRecord,
   SubmissionDetail,
 } from "@/lib/finance/review/detail";
+import { correctionValueInWords } from "@/lib/finance/review/audit-words";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
@@ -55,7 +56,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
     );
   }
   if (question.type === "currency")
-    return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")))}</span>;
+    return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")), { cents: "auto" })}</span>;
   if (question.type === "percent") return <span className="num">{String(value)}%</span>;
   if (question.type === "integer" || question.type === "number")
     return <span className="num">{formatCount(String(value))}</span>;
@@ -85,7 +86,7 @@ function CorrectionNote({ fix }: { fix: Correction | undefined }) {
       {fix.original !== undefined && fix.original !== null && fix.original !== "" ? (
         <>
           {". Was "}
-          <del>{String(fix.original)}</del>
+          <del>{correctionValueInWords(fix.original)}</del>
         </>
       ) : (
         ". Was blank"

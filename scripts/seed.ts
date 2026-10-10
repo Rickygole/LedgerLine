@@ -45,7 +45,7 @@ export const PERSONAS = {
   daniel: { email: "daniel.cho@finance.example.gov", name: "Daniel Cho", title: "Budget Analyst" },
   priya: { email: "priya.raman@finance.example.gov", name: "Priya Raman", title: "Deputy Director, Council Finance" },
   tomas: { email: "tomas.rivera@harborview.example.org", name: "Tomas Rivera", title: "Executive Director" },
-  grace: { email: "grace.chen@finance.example.gov", name: "Grace Chen", title: "Policy Analyst" },
+  grace: { email: "grace.chen@finance.example.gov", name: "Grace Chen", title: "Policy Advisor" },
 };
 
 export const MARIA_ORG = { ein: "13-4027118", name: "Mott Haven Youth Futures, Inc." };
@@ -158,6 +158,12 @@ function dateBetween(start: string, end: string): string {
   const a = Date.parse(start);
   const b = Date.parse(end);
   return new Date(a + random() * (b - a)).toISOString().slice(0, 10);
+}
+
+function rampDate(start: string, end: string, steepness: number): string {
+  const a = Date.parse(start);
+  const b = Date.parse(end);
+  return new Date(a + Math.pow(random(), 1 / steepness) * (b - a)).toISOString().slice(0, 10);
 }
 
 function nthSunday(year: number, month: number, n: number): number {
@@ -688,9 +694,22 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     ...Array.from({ length: 8 }, () => "finance_analyst" as const),
     ...Array.from({ length: 5 }, () => "finance_viewer" as const),
   ];
+  const takenSurnames = new Set<string>(
+    [PERSONAS.priya.name, PERSONAS.daniel.name, PERSONAS.grace.name].map((name) => name.split(" ").slice(1).join(" ")),
+  );
   for (const role of staffPlan) {
-    const full = financeName();
-    const [f, ...r] = full.split(" ");
+    const drawn = financeName();
+    const [f, ...drawnLast] = drawn.split(" ");
+    let surname = drawnLast.join(" ");
+    if (takenSurnames.has(surname)) {
+      const fresh = FINANCE_LAST_NAMES.find((last) => !takenSurnames.has(last) && !usedNames.has(`${f} ${last}`));
+      if (!fresh) throw new Error("finance surname pool exhausted");
+      surname = fresh;
+      usedNames.add(`${f} ${surname}`);
+    }
+    takenSurnames.add(surname);
+    const full = `${f} ${surname}`;
+    const r = [surname];
     const id = randomUUID();
     if (role !== "finance_viewer") reviewerIds.push(id);
     financeRows.push({
@@ -1264,7 +1283,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     refCounters[opts.period] = (refCounters[opts.period] ?? 0) + 1;
     const submitter = opts.submittedBy ?? org.submitterId;
     const full = fullAnswers(opts.assignment, opts.period, opts.quality ?? "normal");
-    const startFrom = period.kind === "MY" ? (period.fy === "FY26" ? "2026-01-02" : "2026-10-01") : "2026-07-20";
+    const startFrom = period.kind === "MY" ? (period.fy === "FY26" ? "2026-01-02" : "2026-10-01") : "2026-07-01";
     const startTo = period.kind === "MY" ? (period.fy === "FY26" ? "2026-01-25" : TODAY) : "2026-09-20";
     const startedOn = dateBetween(startFrom, startTo);
     const startedAt = workTime(startedOn);
@@ -1314,10 +1333,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     addBudget(id, lines);
     const submittedDate =
       opts.submittedOn ??
-      dateBetween(
-        period.kind === "MY" ? "2026-01-06" : "2026-07-24",
-        period.kind === "MY" ? "2026-01-30" : "2026-09-29",
-      );
+      (period.kind === "MY" ? rampDate("2026-01-02", "2026-01-31", 2.2) : rampDate("2026-07-01", "2026-09-30", 2));
     const submittedAt = isoAt(submittedDate, between(9, 18), between(0, 59));
     const snapshot = buildSnapshot({ formVersionId: initiative.formId, answers: full, budget: lines, attachments: [] });
     revisionRows.push({
@@ -1414,6 +1430,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     }
     submissions.push({
       ...base,
+      created_at: startedOn < submittedDate ? startedAt : isoAt(addDays(submittedDate, -1), 10, 0),
       status: opts.status,
       revision: 1,
       lock_version: between(3, 12),
@@ -1488,7 +1505,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
         period: "FY26-MY",
         status: "accepted",
         quality: chance(0.03) ? "low" : "normal",
-        submittedOn: chance(0.1) ? dateBetween("2026-02-01", "2026-02-20") : undefined,
+        submittedOn: chance(0.1) ? rampDate("2026-02-01", "2026-03-14", 0.55) : undefined,
       });
     else if (mid < 0.975) createSubmission({ assignment, period: "FY26-MY", status: "returned" });
     else if (mid < 0.985) createSubmission({ assignment, period: "FY26-MY", status: "draft" });
@@ -1545,8 +1562,15 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     after: { from: "FY26", to: "FY27", created: fy27.length, retired: fy26.filter((p) => p.retired).length },
   });
 
+  const unopened = new Set(submissions.filter((row) => row.period_id === "FY27-MY").map((row) => row.id));
+  const keepOpened = <T extends { submission_id?: unknown }>(rows: T[]) =>
+    rows.filter((row) => !unopened.has(row.submission_id));
+  const openedSubmissions = submissions.filter((row) => !unopened.has(row.id));
+  const openedAnswers = keepOpened(answerRows);
+  const openedBudget = keepOpened(budgetRows);
+
   auditRows.sort((a, b) => String(a.at).localeCompare(String(b.at)));
-  await insertRows(client, "submission", submissions, [
+  await insertRows(client, "submission", openedSubmissions, [
     "id",
     "reference_no",
     "assignment_id",
@@ -1562,14 +1586,14 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     "updated_at",
     "created_at",
   ]);
-  await insertRows(client, "answer", answerRows, [
+  await insertRows(client, "answer", openedAnswers, [
     "submission_id",
     "question_key",
     "value",
     "updated_by",
     "updated_at",
   ]);
-  await insertRows(client, "budget_line", budgetRows, [
+  await insertRows(client, "budget_line", openedBudget, [
     "submission_id",
     "row_id",
     "position",
@@ -1621,7 +1645,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     orgs: orgs.length,
     initiatives: initiatives.length,
     assignments: assignments.length,
-    submissions: submissions.length,
+    submissions: openedSubmissions.length,
     council: councilRows.length,
   };
 }

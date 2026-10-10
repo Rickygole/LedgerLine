@@ -16,6 +16,8 @@ import {
 } from "@/lib/report/budget-rows";
 import { parseAmount } from "@/lib/rules/money";
 import { formatCurrency, plural } from "@/lib/format";
+import { NoValue } from "./no-value";
+import { NumericInput } from "./numeric-input";
 import { balanceCopy, minusCurrency, signedDifference } from "./balance";
 import { BalanceMeter } from "./balance-meter";
 import { parseBudgetPaste } from "@/lib/rules/paste";
@@ -29,7 +31,7 @@ import {
 import { budgetTotals } from "@/lib/rules/validate";
 
 const COLS =
-  "@min-[720px]:grid @min-[720px]:grid-cols-[2.5rem_6.5rem_minmax(0,1fr)_8.5rem_7.5rem_7rem_2.5rem] @min-[720px]:items-stretch";
+  "@min-[720px]:grid @min-[720px]:grid-cols-[2.5rem_5.5rem_minmax(16rem,1fr)_8rem_8rem_7.5rem_2.5rem] @min-[720px]:items-stretch";
 
 const cell =
   "block h-10 @min-[720px]:h-full w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-harbor-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-harbor-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
@@ -366,6 +368,7 @@ export function BudgetGrid({
                           <input
                             id={`budget-desc-${row.rowId}`}
                             value={row.description}
+                            title={row.description || undefined}
                             aria-invalid={error && !badAmount ? true : undefined}
                             aria-describedby={error ? errorId : undefined}
                             onChange={(event) => update(row.rowId, { description: event.target.value })}
@@ -389,13 +392,14 @@ export function BudgetGrid({
                             >
                               $
                             </span>
-                            <input
+                            <NumericInput
+                              bare
+                              kind="currency"
                               id={`budget-amt-${row.rowId}`}
-                              inputMode="decimal"
                               value={row.amountText}
                               aria-invalid={badAmount || undefined}
                               aria-describedby={badAmount || error ? errorId : undefined}
-                              onChange={(event) => update(row.rowId, { amountText: event.target.value })}
+                              onValueChange={(next) => update(row.rowId, { amountText: next })}
                               onBlur={() => {
                                 const parsed = parseAmount(row.amountText);
                                 if (parsed !== null) update(row.rowId, { amountText: formatAmountText(parsed) });
@@ -420,13 +424,14 @@ export function BudgetGrid({
                             >
                               $
                             </span>
-                            <input
+                            <NumericInput
+                              bare
+                              kind="currency"
                               id={`budget-act-${row.rowId}`}
-                              inputMode="decimal"
                               value={row.actualText}
                               aria-invalid={badActual || undefined}
                               aria-describedby={badActual || error ? errorId : undefined}
-                              onChange={(event) => update(row.rowId, { actualText: event.target.value })}
+                              onValueChange={(next) => update(row.rowId, { actualText: next })}
                               onBlur={() => {
                                 const parsed = parseAmount(row.actualText);
                                 if (parsed !== null) update(row.rowId, { actualText: formatAmountText(parsed) });
@@ -443,7 +448,7 @@ export function BudgetGrid({
                               variance === null ? "text-muted" : variance < 0 ? "font-semibold text-bad" : "text-ink",
                             )}
                           >
-                            {variance === null ? "Not entered" : minusCurrency(variance)}
+                            {variance === null ? <NoValue /> : minusCurrency(variance)}
                           </span>
                         </div>
                         <div className="hidden items-center justify-center @min-[720px]:flex">
@@ -481,16 +486,16 @@ export function BudgetGrid({
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
                     <dt className="text-muted">{label}</dt>
-                    <dd className="num text-ink">{formatCurrency(value as number)}</dd>
+                    <dd className="num text-ink">{formatCurrency(value as number, { cents: true })}</dd>
                   </div>
                 ))}
                 <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4 lg:px-6">
                   <dt className="font-semibold text-ink">Approved budget total</dt>
-                  <dd className="num font-bold text-ink">{formatCurrency(totals.total)}</dd>
+                  <dd className="num font-bold text-ink">{formatCurrency(totals.total, { cents: true })}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
                   <dt className="text-muted">Award</dt>
-                  <dd className="num text-muted">{formatCurrency(award)}</dd>
+                  <dd className="num text-muted">{formatCurrency(award, { cents: true })}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
                   <dt className="font-semibold text-ink">Difference (budget total minus award)</dt>
@@ -506,19 +511,19 @@ export function BudgetGrid({
                 <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4 lg:px-6">
                   <dt className="font-semibold text-ink">Actual spent total</dt>
                   <dd className="num font-bold text-ink">
-                    {spend.entered ? formatCurrency(spend.actual) : "Not entered"}
+                    {spend.entered ? formatCurrency(spend.actual, { cents: true }) : "Not entered"}
                   </dd>
                 </div>
                 {spend.entered ? (
                   <>
                     <div className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
                       <dt className="text-muted">Variance (approved budget minus actual spent)</dt>
-                      <dd className="num text-ink">{formatCurrency(spend.variance)}</dd>
+                      <dd className="num text-ink">{formatCurrency(spend.variance, { cents: true })}</dd>
                     </div>
                     <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
                       <dt className="text-muted">Unspent balance (award minus actual spent)</dt>
                       <dd className={cn("num font-semibold", explainVariance ? "text-warn" : "text-ink")}>
-                        {formatCurrency(spend.unspent)}{" "}
+                        {formatCurrency(spend.unspent, { cents: true })}{" "}
                         <span className="font-normal text-muted">
                           ({spend.unspentPercent.toFixed(1)}% of the award)
                         </span>

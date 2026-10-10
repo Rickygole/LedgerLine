@@ -13,7 +13,7 @@ export function displayScalar(question: Question, value: AnswerValue | undefined
   if (text === "") return "";
   if (question.type === "currency") {
     const amount = parseAmount(text);
-    return amount === null ? text : formatCurrency(amount);
+    return amount === null ? text : formatCurrency(amount, { cents: "auto" });
   }
   if (question.type === "percent") return text.endsWith("%") ? text : `${text}%`;
   if (question.type === "date") return formatDate(text);
@@ -29,7 +29,7 @@ export function cellText(type: string, raw: unknown): string {
   if (text === "" || type === "text") return text;
   if (type === "currency") {
     const amount = parseAmount(text);
-    return amount === null ? text : formatCurrency(amount);
+    return amount === null ? text : formatCurrency(amount, { cents: "auto" });
   }
   if (type === "percent") return text.endsWith("%") ? text : `${text}%`;
   return formatCount(text);
@@ -73,22 +73,26 @@ export function plainTextReport(input: SummaryInput): string {
       const totals = budgetTotals(input.budget.map((line) => ({ ...line, rowId: String(line.position) })));
       for (const line of input.budget) {
         const spent =
-          line.actual === null || line.actual === undefined ? "" : `, actual spent ${formatCurrency(line.actual)}`;
-        lines.push(`${line.position}. [${line.category}] ${line.description}: ${formatCurrency(line.amount)}${spent}`);
+          line.actual === null || line.actual === undefined
+            ? ""
+            : `, actual spent ${formatCurrency(line.actual, { cents: true })}`;
+        lines.push(
+          `${line.position}. [${line.category}] ${line.description}: ${formatCurrency(line.amount, { cents: true })}${spent}`,
+        );
       }
-      lines.push(`Personal services (PS) subtotal: ${formatCurrency(totals.ps)}`);
-      lines.push(`Other than personal services (OTPS) subtotal: ${formatCurrency(totals.otps)}`);
-      lines.push(`Total: ${formatCurrency(totals.total)}`);
-      lines.push(`Award: ${formatCurrency(input.awardAmount)}`);
+      lines.push(`Personal services (PS) subtotal: ${formatCurrency(totals.ps, { cents: true })}`);
+      lines.push(`Other than personal services (OTPS) subtotal: ${formatCurrency(totals.otps, { cents: true })}`);
+      lines.push(`Total: ${formatCurrency(totals.total, { cents: true })}`);
+      lines.push(`Award: ${formatCurrency(input.awardAmount, { cents: true })}`);
       lines.push(balanceMessage(totals.total, input.awardAmount).message);
       const spend = spendSummary(
         input.budget.map((line) => ({ ...line, rowId: String(line.position) })),
         input.awardAmount,
       );
       if (spend.entered) {
-        lines.push(`Actual spent: ${formatCurrency(spend.actual)}`);
+        lines.push(`Actual spent: ${formatCurrency(spend.actual, { cents: true })}`);
         lines.push(
-          `Unspent balance: ${formatCurrency(spend.unspent)} (${spend.unspentPercent.toFixed(1)}% of the award)`,
+          `Unspent balance: ${formatCurrency(spend.unspent, { cents: true })} (${spend.unspentPercent.toFixed(1)}% of the award)`,
         );
         const note = input.answers[VARIANCE_NOTE_KEY];
         if (typeof note === "string" && note.trim() !== "") lines.push(`Variance explanation: ${note.trim()}`);

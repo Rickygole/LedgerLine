@@ -252,6 +252,7 @@ function OffMapLink({ label, tally, href }: { label: string; tally: Tally; href:
 
 export function DistrictRanking({ stats, borough, periodId }: Common) {
   const ranked = rankDistricts(stats.districts, borough, 8);
+  const peak = Math.max(1, ...ranked.map((d) => d.missing));
   const mode = stats.mode;
   const shared =
     borough === ""
@@ -301,7 +302,7 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
               <div className="min-w-0">
                 <Link
                   href={districtHref(periodId, d.district, mode, d.missing)}
-                  className="text-[17px] font-bold leading-6 text-link underline underline-offset-2 hover:text-link-hover"
+                  className="text-[17px] font-semibold leading-6 text-link underline-offset-2 hover:text-link-hover hover:underline"
                 >
                   District {d.district}
                 </Link>
@@ -313,10 +314,7 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
                 aria-hidden="true"
                 className="col-span-2 row-start-2 block h-2 overflow-hidden rounded-sm bg-geo-0 sm:col-span-1 sm:col-start-2 sm:row-start-1"
               >
-                <span
-                  className="block h-full bg-geo-4"
-                  style={{ width: `${d.due === 0 ? 0 : Math.round((d.missing / d.due) * 100)}%` }}
-                />
+                <span className="block h-full bg-geo-4" style={{ width: `${Math.round((d.missing / peak) * 100)}%` }} />
               </span>
               <p className="num whitespace-nowrap text-right text-[15px] text-ink sm:col-start-3 sm:row-start-1">
                 <span className="font-bold">{d.missing}</span> of {d.due}

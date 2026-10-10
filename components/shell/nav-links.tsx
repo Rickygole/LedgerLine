@@ -306,7 +306,7 @@ export function TopTabs({ role }: { role: Role }) {
   const pathname = usePathname();
   const items = groupsFor(role).flatMap((group) => group.items);
   return (
-    <nav aria-label="Main" className="-mb-px flex gap-7 overflow-x-auto">
+    <nav aria-label="Main" className="-mb-px flex flex-wrap gap-x-7">
       {items.map((item) => {
         const active = item.match(pathname);
         return (
@@ -316,7 +316,7 @@ export function TopTabs({ role }: { role: Role }) {
             prefetch={false}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative whitespace-nowrap border-b-[3px] py-3.5 text-[15px] font-semibold focus-visible:-outline-offset-4",
+              "relative whitespace-nowrap border-b-[3px] py-3.5 text-[15px] font-semibold",
               active
                 ? "border-action text-harbor-900"
                 : "border-transparent text-ink-2 hover:border-line-strong hover:text-link",

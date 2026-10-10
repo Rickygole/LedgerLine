@@ -1,30 +1,38 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { GroupPoint, MonthPoint } from "@/lib/finance/trends";
 import { AXIS, ChartFrame, GRID } from "./chart-frame";
 
 const ON_TIME = "#0072B2";
 const LATE = "#B84F00";
 
+function monthTick(d: MonthPoint): string {
+  return d.partial ? `${d.label} (${d.partial})` : d.label;
+}
+
 export function MonthlyTrendChart({
   data,
+  periodLabel,
   description,
   source,
 }: {
   data: MonthPoint[];
+  periodLabel: string;
   description: string;
   source: string;
 }) {
   const total = data.reduce((sum, d) => sum + d.total, 0);
+  const rows = data.map((d) => ({ ...d, tick: monthTick(d) }));
+  const partial = data.find((d) => d.partial);
   return (
     <ChartFrame
-      title="Reports submitted each month"
+      title={`${periodLabel} reports submitted each month`}
       description={description}
       source={source}
       table={
         <table className="w-full min-w-[28rem] text-left text-sm">
-          <caption className="sr-only">Reports submitted each month, on time and late.</caption>
+          <caption className="sr-only">{periodLabel} reports submitted each month, on time and late.</caption>
           <thead className="bg-surface">
             <tr className="text-[13px] text-muted">
               <th scope="col" className="px-3 py-2 font-semibold">
@@ -45,7 +53,7 @@ export function MonthlyTrendChart({
             {data.map((d) => (
               <tr key={d.month} className="border-t border-line">
                 <th scope="row" className="whitespace-nowrap px-3 py-2 font-medium">
-                  {d.label}
+                  {monthTick(d)}
                 </th>
                 <td className="num px-3 py-2 text-right">{d.onTime}</td>
                 <td className="num px-3 py-2 text-right">{d.late}</td>
@@ -62,11 +70,11 @@ export function MonthlyTrendChart({
         <>
           <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted" aria-hidden="true">
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-0.5 w-4" style={{ background: ON_TIME }} />
+              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: ON_TIME }} />
               <span className="text-ink">On time</span>
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <span className="h-0.5 w-4" style={{ background: LATE }} />
+              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: LATE }} />
               <span className="text-ink">Late</span>
             </li>
             <li>
@@ -75,41 +83,38 @@ export function MonthlyTrendChart({
           </ul>
           <div
             role="img"
-            aria-label="Line chart of reports submitted each month, on time and late. Open View as table for the numbers."
+            aria-label={`Bar chart of ${periodLabel} reports submitted each month, on time and late. Open View as table for the numbers.`}
           >
             <ResponsiveContainer width="100%" height={280} initialDimension={{ width: 640, height: 280 }}>
-              <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+              <BarChart data={rows} margin={{ top: 20, right: 16, bottom: 8, left: 0 }} barCategoryGap="22%">
                 <CartesianGrid vertical={false} stroke={GRID} />
-                <XAxis
-                  dataKey="label"
+                <XAxis dataKey="tick" tick={AXIS} tickLine={false} axisLine={{ stroke: GRID }} interval={0} />
+                <YAxis
+                  allowDecimals={false}
+                  domain={[0, "auto"]}
                   tick={AXIS}
                   tickLine={false}
-                  axisLine={{ stroke: GRID }}
-                  interval="preserveStartEnd"
+                  axisLine={false}
+                  width={40}
                 />
-                <YAxis allowDecimals={false} tick={AXIS} tickLine={false} axisLine={false} width={40} />
-                <Tooltip contentStyle={{ borderRadius: 4, borderColor: GRID, fontSize: 12 }} />
-                <Line
-                  type="monotone"
-                  dataKey="onTime"
-                  name="On time"
-                  stroke={ON_TIME}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  isAnimationActive={false}
+                <Tooltip
+                  cursor={{ fill: "rgba(36,73,124,0.06)" }}
+                  contentStyle={{ borderRadius: 4, borderColor: GRID, fontSize: 12 }}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="late"
-                  name="Late"
-                  stroke={LATE}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  isAnimationActive={false}
-                />
-              </LineChart>
+                <Bar dataKey="onTime" name="On time" fill={ON_TIME} isAnimationActive={false}>
+                  <LabelList dataKey="onTime" position="top" fontSize={12} fill="#1c2430" />
+                </Bar>
+                <Bar dataKey="late" name="Late" fill={LATE} isAnimationActive={false}>
+                  <LabelList dataKey="late" position="top" fontSize={12} fill="#1c2430" />
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
+          {partial ? (
+            <p className="mt-2 text-xs text-muted">
+              {partial.label} is not over yet. It counts {partial.partial?.replace(" to ", " through ")} only.
+            </p>
+          ) : null}
         </>
       )}
     </ChartFrame>

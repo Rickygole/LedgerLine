@@ -159,23 +159,38 @@ describe("[US-058][BR-025] security incidents notify the Council and track remed
   });
 
   it("keeps the history append only, even for the database owner", async () => {
-    const id = (await owner.query("SELECT id FROM security_incident LIMIT 1")).rows[0].id;
-    for (const sql of [
-      ["UPDATE security_incident SET severity = 'low' WHERE id = $1", [id]],
-      ["DELETE FROM security_incident WHERE id = $1", [id]],
-      ["UPDATE incident_event SET detail = 'x' WHERE incident_id = $1", [id]],
-      ["DELETE FROM incident_event WHERE incident_id = $1", [id]],
-      ["UPDATE incident_remediation SET actions = 'x' WHERE incident_id = $1", [id]],
-      ["DELETE FROM incident_remediation WHERE incident_id = $1", [id]],
-      ["TRUNCATE security_incident CASCADE", []],
-    ] as [string, unknown[]][]) {
-      let failed: string | null = null;
-      try {
-        await owner.query(sql[0], sql[1]);
-      } catch (error) {
-        failed = (error as { code?: string }).code ?? "unknown";
+    await owner.query("BEGIN");
+    try {
+      await owner.query("SET LOCAL ROLE app_server");
+      await owner.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: priya })]);
+      const id = (
+        await owner.query(
+          "SELECT app.record_incident(now() - interval '1 hour', 'Sign-in tokens were exposed.', 'One account.', 'low') AS id",
+        )
+      ).rows[0].id as string;
+      await owner.query("SELECT app.record_remediation($1, 'Cause.', 'Actions.', 'Prevention.', NULL)", [id]);
+      await owner.query("RESET ROLE");
+      for (const sql of [
+        ["UPDATE security_incident SET severity = 'low' WHERE id = $1", [id]],
+        ["DELETE FROM security_incident WHERE id = $1", [id]],
+        ["UPDATE incident_event SET detail = 'x' WHERE incident_id = $1", [id]],
+        ["DELETE FROM incident_event WHERE incident_id = $1", [id]],
+        ["UPDATE incident_remediation SET actions = 'x' WHERE incident_id = $1", [id]],
+        ["DELETE FROM incident_remediation WHERE incident_id = $1", [id]],
+        ["TRUNCATE security_incident CASCADE", []],
+      ] as [string, unknown[]][]) {
+        await owner.query("SAVEPOINT attempt");
+        let failed: string | null = null;
+        try {
+          await owner.query(sql[0], sql[1]);
+        } catch (error) {
+          failed = (error as { code?: string }).code ?? "unknown";
+          await owner.query("ROLLBACK TO SAVEPOINT attempt");
+        }
+        expect(failed, sql[0]).toBe("42501");
       }
-      expect(failed, sql[0]).toBe("42501");
+    } finally {
+      await owner.query("ROLLBACK");
     }
   });
 
@@ -222,16 +237,16 @@ describe("[US-058][BR-025] security incidents notify the Council and track remed
   });
 
   it("hides incident notices from Finance staff who are not administrators", async () => {
-    await asUser(app, daniel, async () => {
+    await asUser(app, priya, async () => {
+      await record("now() - interval '1 hour'", "low");
+      expect(
+        (await app.query("SELECT count(*)::int AS n FROM outbox WHERE template LIKE 'security\\_%'")).rows[0].n,
+      ).toBeGreaterThan(0);
+      await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
       expect(
         (await app.query("SELECT count(*)::int AS n FROM outbox WHERE template LIKE 'security\\_%'")).rows[0].n,
       ).toBe(0);
       expect((await app.query("SELECT count(*)::int AS n FROM outbox")).rows[0].n).toBeGreaterThan(0);
-    });
-    await asUser(app, priya, async () => {
-      expect(
-        (await app.query("SELECT count(*)::int AS n FROM outbox WHERE template LIKE 'security\\_%'")).rows[0].n,
-      ).toBeGreaterThan(0);
     });
   });
 

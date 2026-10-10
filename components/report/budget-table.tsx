@@ -4,6 +4,7 @@ import { formatCurrency } from "@/lib/format";
 import { lineVariance, spendSummary, VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { budgetTotals } from "@/lib/rules/validate";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
+import { NoValue } from "./no-value";
 import { balanceCopy } from "./balance";
 
 type Line = Omit<BudgetLine, "rowId">;
@@ -51,16 +52,16 @@ export function BudgetTable({
                   </TD>
                   <TD className="whitespace-nowrap">{line.category}</TD>
                   <TD>{line.description || <span className="text-muted">No description</span>}</TD>
-                  <TD align="right">{formatCurrency(line.amount)}</TD>
+                  <TD align="right">{formatCurrency(line.amount, { cents: true })}</TD>
                   <TD align="right">
                     {line.actual === null || line.actual === undefined ? (
-                      <span className="text-muted">Not entered</span>
+                      <NoValue />
                     ) : (
-                      formatCurrency(line.actual)
+                      formatCurrency(line.actual, { cents: true })
                     )}
                   </TD>
                   <TD align="right" className={cn(variance !== null && variance < 0 && "font-semibold text-warn")}>
-                    {variance === null ? <span className="text-muted">Not entered</span> : formatCurrency(variance)}
+                    {variance === null ? <NoValue /> : formatCurrency(variance, { cents: true })}
                   </TD>
                 </TR>
               );
@@ -71,33 +72,33 @@ export function BudgetTable({
               <td colSpan={span} className="px-4 py-2 text-right font-semibold">
                 Personal services (PS) subtotal
               </td>
-              <td className="num px-4 py-2 text-right">{formatCurrency(totals.ps)}</td>
+              <td className="num px-4 py-2 text-right">{formatCurrency(totals.ps, { cents: true })}</td>
               <td colSpan={2} />
             </tr>
             <tr>
               <td colSpan={span} className="px-4 py-2 text-right font-semibold">
                 Other than personal services (OTPS) subtotal
               </td>
-              <td className="num px-4 py-2 text-right">{formatCurrency(totals.otps)}</td>
+              <td className="num px-4 py-2 text-right">{formatCurrency(totals.otps, { cents: true })}</td>
               <td colSpan={2} />
             </tr>
             <tr>
               <td colSpan={span} className="px-4 py-2 text-right font-semibold">
                 {totalLabel}
               </td>
-              <td className="num px-4 py-2 text-right font-bold">{formatCurrency(totals.total)}</td>
+              <td className="num px-4 py-2 text-right font-bold">{formatCurrency(totals.total, { cents: true })}</td>
               <td className="num px-4 py-2 text-right font-bold">
-                {spend.entered ? formatCurrency(spend.actual) : ""}
+                {spend.entered ? formatCurrency(spend.actual, { cents: true }) : ""}
               </td>
               <td className="num px-4 py-2 text-right font-bold">
-                {spend.entered ? formatCurrency(spend.variance) : ""}
+                {spend.entered ? formatCurrency(spend.variance, { cents: true }) : ""}
               </td>
             </tr>
             <tr>
               <td colSpan={span} className="px-4 py-2 text-right font-semibold">
                 Award
               </td>
-              <td className="num px-4 py-2 text-right">{formatCurrency(award)}</td>
+              <td className="num px-4 py-2 text-right">{formatCurrency(award, { cents: true })}</td>
               <td colSpan={2} />
             </tr>
             {spend.entered ? (
@@ -106,7 +107,7 @@ export function BudgetTable({
                   Unspent balance (award minus actual spent)
                 </td>
                 <td colSpan={3} className="num px-4 py-2 text-right">
-                  {formatCurrency(spend.unspent)} ({spend.unspentPercent.toFixed(1)}% of the award)
+                  {formatCurrency(spend.unspent, { cents: true })} ({spend.unspentPercent.toFixed(1)}% of the award)
                 </td>
               </tr>
             ) : null}

@@ -91,7 +91,7 @@ export function spendIssues(input: {
       field: "budget",
       ruleId: SPEND_RULES.actual,
       severity: "warn",
-      message: `Actual spent ${formatCurrency(summary.actual)} is more than the award ${formatCurrency(award)}.`,
+      message: `Actual spent ${formatCurrency(summary.actual, { cents: true })} is more than the award ${formatCurrency(award, { cents: true })}.`,
     });
   }
 

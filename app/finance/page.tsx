@@ -17,9 +17,9 @@ import { countBuckets, groupBy } from "@/lib/finance/review/derive";
 import { hrefWith, parseFilters } from "@/lib/finance/review/filters";
 import type { Filters, ReportRow } from "@/lib/finance/review/types";
 import { isGeoBorough } from "@/lib/geo/boroughs";
-import { cycleTimeline, dashboardHeadline, formatWholeDollars, periodEyebrow } from "@/lib/finance/dashboard";
+import { cycleTimeline, dashboardHeadline, periodEyebrow } from "@/lib/finance/dashboard";
 import { formatShortDate } from "@/lib/report/format";
-import { formatCount } from "@/lib/format";
+import { formatCount, formatCurrency } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -122,7 +122,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
 
       <section
         aria-label="Key figures"
-        className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line-soft xl:grid-cols-4"
+        className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line-soft xl:grid-cols-5"
       >
         <Stat
           className="rounded-none border-0"
@@ -138,10 +138,17 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           value={counts.submitted}
           sub={
             next?.submittedAt
-              ? `Oldest ${formatShortDate(next.submittedAt)} · ${counts.in_review} already in review`
-              : `${counts.in_review} already in review`
+              ? `Oldest submitted ${formatShortDate(next.submittedAt)}`
+              : "Submitted, review not started"
           }
           action={{ href: list({ bucket: "submitted" }), label: "Open review queue" }}
+        />
+        <Stat
+          className="rounded-none border-0"
+          label="In review"
+          value={counts.in_review}
+          sub="Review started, no decision yet"
+          action={{ href: list({ bucket: "in_review" }), label: "Continue reviews" }}
         />
         <Stat
           className="rounded-none border-0"
@@ -151,7 +158,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           action={{ href: list({ bucket: "returned" }), label: "See requests" }}
         />
         <Stat
-          className="rounded-none border-0"
+          className="col-span-2 rounded-none border-0 xl:col-span-1"
           label="Accepted"
           value={
             <>
@@ -202,7 +209,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
                     </p>
                   </div>
                   <span className="num shrink-0 text-right text-[15px] font-semibold text-ink">
-                    {formatWholeDollars(row.award)}
+                    {formatCurrency(row.award)}
                   </span>
                 </li>
               ))}

@@ -112,6 +112,10 @@ describe("[US-065] user acceptance test sessions", () => {
 
   it("marks a defect fixed once, with a date inside the session-to-today window", async () => {
     await asUser(app, priya, async () => {
+      await app.query(
+        `SELECT app.record_uat_session(${today} - 3, 'Organization uploads a large file', 'Maria Santos', 'Program Director', 'failed', NULL,
+           '[{"description":"Progress bar does not clear","severity":"major"}]'::jsonb)`,
+      );
       const open = (
         await app.query(
           "SELECT d.id, s.session_on::text AS on FROM uat_defect d JOIN uat_session s ON s.id = d.session_id WHERE d.status = 'open' ORDER BY d.created_at LIMIT 1",
@@ -145,18 +149,28 @@ describe("[US-065] user acceptance test sessions", () => {
 });
 
 describe("[US-066] training records and the readiness summary", () => {
-  it("reports the share of Finance users trained and the scenario pass rate from the records on file", async () => {
+  it("starts with nothing held, then reports the trained share and the pass rate from the records on file", async () => {
     await asUser(app, priya, async () => {
+      const empty = await loadReadiness(tx);
+      expect(empty.users.length).toBe(17);
+      expect(empty.training).toEqual({ users: 17, trained: 0, percent: 0 });
+      expect(empty.uat).toEqual({ scenarios: 0, passed: 0, percent: null });
+      expect(empty.sessions).toEqual([]);
+      expect(empty.schedule.length).toBeGreaterThan(0);
+      expect(empty.schedule.every((s) => s.scheduled_on >= "2027-01-04")).toBe(true);
+
+      const analyst = empty.users.find((u) => u.role === "finance_analyst")!;
+      for (const mod of empty.modules.filter((m) => m.audience.includes(analyst.role)))
+        await app.query(`SELECT app.record_training($1, $2, ${today})`, [analyst.id, mod.key]);
+      await app.query(`SELECT app.record_uat_session(${today}, 'Scenario A', 'T', 'R', 'passed', NULL, '[]'::jsonb)`);
+      await app.query(
+        `SELECT app.record_uat_session(${today}, 'Scenario B', 'T', 'R', 'failed', NULL, '[{"description":"x","severity":"minor"}]'::jsonb)`,
+      );
       const summary = await loadReadiness(tx);
-      expect(summary.users.length).toBe(17);
-      expect(summary.training.users).toBe(17);
-      expect(summary.training.trained).toBeGreaterThan(0);
-      expect(summary.training.trained).toBeLessThan(17);
-      expect(summary.training.percent).toBe(Math.round((summary.training.trained / 17) * 100));
-      expect(summary.uat.scenarios).toBeGreaterThanOrEqual(12);
-      expect(summary.uat.passed).toBeGreaterThanOrEqual(10);
-      expect(summary.uat.percent).toBe(Math.round((summary.uat.passed / summary.uat.scenarios) * 100));
-      expect(summary.openDefects).toBeGreaterThanOrEqual(2);
+      expect(summary.training.trained).toBe(1);
+      expect(summary.training.percent).toBe(Math.round((1 / 17) * 100));
+      expect(summary.uat).toEqual({ scenarios: 2, passed: 1, percent: 50 });
+      expect(summary.openDefects).toBe(1);
     });
   });
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FlagBadge, StateBadge } from "@/components/ui/status-badge";
+import { AlertTriangle } from "lucide-react";
+import { Badge, FlagBadge, StateBadge } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { daysBetween, toIsoDate } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
@@ -34,11 +35,18 @@ const NOTE_TONE: Record<DueNote["tone"], string> = {
 function FlagsCell({ row }: { row: ReportRow }) {
   const flags = row.bucket === "missing" ? row.flags.filter((flag) => flag.reason !== "missing") : row.flags;
   if (flags.length === 0) return <span className="text-muted">None</span>;
-  const labels = flags.map((flag) => FLAG_LABEL[flag.reason]);
+  const draftOnly = row.bucket === "missing";
+  const labels = flags.map((flag) => (draftOnly ? `Draft: ${FLAG_LABEL[flag.reason]}` : FLAG_LABEL[flag.reason]));
   const more = labels.length - 1;
   return (
-    <div className="whitespace-nowrap" title={labels.join(", ")}>
-      <FlagBadge label={labels[0]} />
+    <div className={draftOnly ? undefined : "whitespace-nowrap"} title={labels.join(", ")}>
+      {draftOnly ? (
+        <Badge tone="neutral" className="whitespace-normal">
+          {labels[0]}
+        </Badge>
+      ) : (
+        <FlagBadge label={labels[0]} />
+      )}
       {more > 0 ? (
         <span className="ml-1 text-[13px] text-muted">
           +{more}
@@ -128,7 +136,13 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
               </TD>
               <TD className="min-w-36" label="Status">
                 <div>
-                  <StateBadge state={reportState(row.status, row.dueOn)} />
+                  {row.bucket === "missing" && row.status === "draft" ? (
+                    <Badge tone="bad" icon={AlertTriangle} className="whitespace-normal">
+                      Missing, draft started
+                    </Badge>
+                  ) : (
+                    <StateBadge state={reportState(row.status, row.dueOn)} />
+                  )}
                   {shown(row) ? (
                     <span className={`mt-1 block text-[13px] ${NOTE_TONE[shown(row)!.tone]}`}>{shown(row)!.text}</span>
                   ) : null}

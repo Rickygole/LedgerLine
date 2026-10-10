@@ -787,9 +787,9 @@ export const TITLES = [
 ];
 
 export const FINANCE_TITLES = {
-  finance_admin: ["Deputy Director", "Unit Head"],
+  finance_admin: ["Deputy Director, Council Finance", "Unit Head, Council Finance"],
   finance_analyst: ["Budget Analyst", "Senior Budget Analyst", "Financial Analyst"],
-  finance_viewer: ["Policy Analyst", "Research Associate", "Program Evaluator"],
+  finance_viewer: ["Policy Advisor", "Research Associate", "Program Evaluator"],
 };
 
 export const PS_LINES = [

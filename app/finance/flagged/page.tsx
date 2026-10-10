@@ -71,11 +71,11 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
       <div className="space-y-1">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="num">
-            {formatCurrency(total)} of {formatCurrency(row.award)} award
+            {formatCurrency(total, { cents: true })} of {formatCurrency(row.award, { cents: true })} award
           </span>
           <Meter ratio={row.award === 0 ? 0 : total / row.award} tone={diff < 0 ? "bad" : "warn"} />
           <span className={cn("num font-semibold", diff < 0 ? "text-bad" : "text-warn")}>
-            {diff < 0 ? "Under" : "Over"} by {formatCurrency(Math.abs(diff))}
+            {diff < 0 ? "Under" : "Over"} by {formatCurrency(Math.abs(diff), { cents: true })}
           </span>
         </p>
         {note ? <p className="text-[13px] text-muted">{note}</p> : null}

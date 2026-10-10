@@ -81,3 +81,27 @@ test("[US-018] reopening a report lands on the section edited last", async ({ br
   await expect(page.locator("#q-accomplishments")).toHaveValue("Participants completed the curriculum.");
   await context.close();
 });
+
+test("[US-029] number, whole-number and percent fields refuse letters as typed and normalize a pasted amount", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+  });
+  const page = await context.newPage();
+  await openAnyDraft(page);
+  await gotoStep(page, "Program performance");
+  const whole = page.locator("#q-participants_target");
+  await whole.fill("");
+  await whole.pressSequentially("1a2b3");
+  await expect(whole).toHaveValue("123");
+  const percent = page.locator("#q-youth_completion_rate");
+  await percent.fill("");
+  await percent.pressSequentially("4x5.5%");
+  await expect(percent).toHaveValue("45.5");
+  const hours = page.locator("#q-youth_program_hours");
+  await hours.fill("$1,250.00");
+  await expect(hours).toHaveValue("1250");
+  await context.close();
+});

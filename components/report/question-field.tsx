@@ -5,6 +5,7 @@ import { questionLabel } from "@/lib/report/format";
 import { cn } from "@/lib/cn";
 import { wordCount } from "@/lib/rules/validate";
 import type { AnswerValue, Question } from "@/lib/rules/types";
+import { NumericInput } from "./numeric-input";
 import { TableQuestion, type TableRow } from "./table-question";
 import { plural } from "@/lib/format";
 
@@ -173,24 +174,35 @@ export function QuestionField({
             $
           </span>
         ) : null}
-        <Input
-          id={id}
-          type={spec.type}
-          inputMode={spec.inputMode}
-          autoComplete={spec.autoComplete}
-          value={asText(value)}
-          aria-invalid={error ? true : undefined}
-          aria-required={required}
-          aria-describedby={describedBy}
-          disabled={disabled}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          className={cn(
-            numeric && "num",
-            question.type === "currency" && "pl-7",
-            question.type === "percent" && "pr-8",
-          )}
-        />
+        {numeric ? (
+          <NumericInput
+            id={id}
+            kind={question.type as "integer" | "number" | "currency" | "percent"}
+            inputMode={spec.inputMode as "numeric" | "decimal"}
+            value={asText(value)}
+            aria-invalid={error ? true : undefined}
+            aria-required={required}
+            aria-describedby={describedBy}
+            disabled={disabled}
+            onValueChange={onChange}
+            onBlur={onBlur}
+            className={cn("num", question.type === "currency" && "pl-7", question.type === "percent" && "pr-8")}
+          />
+        ) : (
+          <Input
+            id={id}
+            type={spec.type}
+            inputMode={spec.inputMode}
+            autoComplete={spec.autoComplete}
+            value={asText(value)}
+            aria-invalid={error ? true : undefined}
+            aria-required={required}
+            aria-describedby={describedBy}
+            disabled={disabled}
+            onChange={(event) => onChange(event.target.value)}
+            onBlur={onBlur}
+          />
+        )}
         {question.type === "percent" ? (
           <span
             className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted"

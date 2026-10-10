@@ -1,8 +1,16 @@
 import type { Tx } from "@/lib/db";
+import { todayInNewYork } from "@/lib/dates";
 
 type TrendFilters = { category: string; borough: string; period: string; compare: "category" | "borough" };
 
-export type MonthPoint = { month: string; label: string; onTime: number; late: number; total: number };
+export type MonthPoint = {
+  month: string;
+  label: string;
+  onTime: number;
+  late: number;
+  total: number;
+  partial?: string;
+};
 export type GroupPoint = { name: string; due: number; submitted: number; accepted: number; share: number };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -12,7 +20,18 @@ export function monthLabel(month: string): string {
   return `${MONTHS[Number(number) - 1]} ${year}`;
 }
 
-export function fillMonths(points: { month: string; onTime: number; late: number }[]): MonthPoint[] {
+export function partialMonthNote(month: string, today: string): string | undefined {
+  if (today.slice(0, 7) !== month) return undefined;
+  const day = Number(today.slice(8, 10));
+  const last = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate();
+  if (day >= last) return undefined;
+  return `${MONTHS[Number(month.slice(5, 7)) - 1]} 1 to ${day}`;
+}
+
+export function fillMonths(
+  points: { month: string; onTime: number; late: number }[],
+  today: string = todayInNewYork(),
+): MonthPoint[] {
   if (points.length === 0) return [];
   const byMonth = new Map(points.map((p) => [p.month, p]));
   const first = points[0].month;
@@ -28,6 +47,7 @@ export function fillMonths(points: { month: string; onTime: number; late: number
       onTime: point?.onTime ?? 0,
       late: point?.late ?? 0,
       total: (point?.onTime ?? 0) + (point?.late ?? 0),
+      partial: partialMonthNote(key, today),
     });
     if (key === last) break;
     month += 1;
@@ -45,7 +65,7 @@ export function sharePercent(part: number, whole: number): number {
 
 export async function monthlySubmissions(
   tx: Tx,
-  filters: Pick<TrendFilters, "category" | "borough">,
+  filters: Pick<TrendFilters, "category" | "borough"> & { period?: string },
 ): Promise<MonthPoint[]> {
   const rows = await tx.query<{ month: string; on_time: number; late: number }>(
     `SELECT to_char(s.submitted_at AT TIME ZONE 'America/New_York', 'YYYY-MM') AS month,
@@ -56,9 +76,9 @@ export async function monthlySubmissions(
      JOIN initiative i ON i.id = a.initiative_id
      JOIN organization o ON o.id = a.org_id
      JOIN reporting_period rp ON rp.id = s.period_id
-     WHERE s.submitted_at IS NOT NULL AND ($1 = '' OR i.category = $1) AND ($2 = '' OR o.borough = $2)
+     WHERE s.submitted_at IS NOT NULL AND ($1 = '' OR i.category = $1) AND ($2 = '' OR o.borough = $2) AND ($3 = '' OR s.period_id = $3)
      GROUP BY 1 ORDER BY 1`,
-    [filters.category, filters.borough],
+    [filters.category, filters.borough, filters.period ?? ""],
   );
   return fillMonths(rows.map((r) => ({ month: r.month, onTime: r.on_time, late: r.late })));
 }

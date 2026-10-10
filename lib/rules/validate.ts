@@ -221,11 +221,15 @@ export function budgetTotals(lines: BudgetLine[]) {
 
 export function balanceMessage(total: number, award: number): { balanced: boolean; message: string } {
   const diff = (toCents(total) - toCents(award)) / 100;
-  if (diff === 0) return { balanced: true, message: `Balanced: total equals the award of ${formatCurrency(award)}.` };
+  if (diff === 0)
+    return {
+      balanced: true,
+      message: `Balanced: total equals the award of ${formatCurrency(award, { cents: true })}.`,
+    };
   const direction = diff > 0 ? "over" : "under";
   return {
     balanced: false,
-    message: `Total ${formatCurrency(total)} must equal award ${formatCurrency(award)} (${direction} by ${formatCurrency(Math.abs(diff))}).`,
+    message: `Total ${formatCurrency(total, { cents: true })} must equal award ${formatCurrency(award, { cents: true })} (${direction} by ${formatCurrency(Math.abs(diff), { cents: true })}).`,
   };
 }
 

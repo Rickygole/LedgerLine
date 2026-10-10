@@ -9,8 +9,22 @@ import type { ActionResult, ActionState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
 import type { Concern } from "@/lib/finance/review/return-note-core";
+import {
+  BudgetEditor,
+  TableEditor,
+  type BudgetLineDraft,
+  type CorrectableQuestion,
+  type TableRowDraft,
+} from "@/components/finance/review/correction-editors";
 
-export type CorrectableQuestion = { key: string; label: string; current: string };
+export type { CorrectableQuestion };
+
+function draftFor(question: CorrectableQuestion | undefined): string {
+  if (!question) return "";
+  if (question.kind === "value") return question.current;
+  if (question.kind === "table") return JSON.stringify(question.rows);
+  return JSON.stringify(question.lines);
+}
 
 function Message({ state }: { state: ActionState }) {
   if (!state) return <div aria-live="polite" />;
@@ -123,6 +137,7 @@ function CorrectionForm({
   const [value, setValue] = useState("");
   const [reason, setReason] = useState("");
   const { state, pending, submit } = useGuardedAction((fd) => correctionAction(undefined, fd));
+  const selected = questions.find((q) => q.key === question);
   return (
     <form
       className="space-y-2"
@@ -149,7 +164,7 @@ function CorrectionForm({
           value={question}
           onChange={(event) => {
             setQuestion(event.target.value);
-            setValue(questions.find((q) => q.key === event.target.value)?.current ?? "");
+            setValue(draftFor(questions.find((q) => q.key === event.target.value)));
           }}
         >
           <option value="" disabled>
@@ -162,10 +177,36 @@ function CorrectionForm({
           ))}
         </Select>
       </div>
-      <div>
-        <Label htmlFor="corr-value">New value</Label>
-        <Input id="corr-value" aria-required="true" value={value} onChange={(event) => setValue(event.target.value)} />
-      </div>
+      {selected && selected.kind === "table" ? (
+        <div>
+          <p className="mb-1 text-sm font-semibold text-ink">Rows</p>
+          <TableEditor
+            columns={selected.columns}
+            rows={JSON.parse(value || "[]") as TableRowDraft[]}
+            maxRows={selected.maxRows}
+            onChange={(rows) => setValue(JSON.stringify(rows))}
+          />
+        </div>
+      ) : selected && selected.kind === "budget" ? (
+        <div>
+          <p className="mb-1 text-sm font-semibold text-ink">Budget lines</p>
+          <BudgetEditor
+            lines={JSON.parse(value || "[]") as BudgetLineDraft[]}
+            maxLines={selected.maxLines}
+            onChange={(lines) => setValue(JSON.stringify(lines))}
+          />
+        </div>
+      ) : (
+        <div>
+          <Label htmlFor="corr-value">New value</Label>
+          <Input
+            id="corr-value"
+            aria-required="true"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+          />
+        </div>
+      )}
       <div>
         <Label htmlFor="corr-reason">Reason</Label>
         <Textarea

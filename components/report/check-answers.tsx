@@ -10,6 +10,7 @@ import type { Answers, BudgetLine, FormDefinition, Question } from "@/lib/rules/
 import { VARIANCE_NOTE_KEY, spendSummary } from "@/lib/rules/spend";
 import { budgetTotals, isVisible } from "@/lib/rules/validate";
 import { balanceCopy } from "./balance";
+import { NoValue } from "./no-value";
 
 const ROW = "grid gap-x-6 gap-y-1 border-b border-line-soft py-3 sm:grid-cols-[40%_minmax(0,1fr)_auto]";
 
@@ -102,7 +103,7 @@ export function CheckAnswers({
                 <div className={ROW}>
                   <dt className="font-semibold text-ink">Budget total</dt>
                   <dd className="num flex flex-wrap items-center gap-2 text-ink">
-                    {formatCurrency(totals.total)} of {formatCurrency(award)}
+                    {formatCurrency(totals.total, { cents: true })} of {formatCurrency(award, { cents: true })}
                     {lines.length > 0 ? (
                       <Badge tone={balance.tone} icon={balance.tone === "ok" ? CheckCircle2 : undefined}>
                         {balance.text}
@@ -115,18 +116,22 @@ export function CheckAnswers({
                 </div>
                 <div className={ROW}>
                   <dt className="font-semibold text-ink">Personal services (PS)</dt>
-                  <dd className="num text-ink">{formatCurrency(totals.ps)}</dd>
+                  <dd className="num text-ink">{formatCurrency(totals.ps, { cents: true })}</dd>
                   <dd />
                 </div>
                 <div className={ROW}>
                   <dt className="font-semibold text-ink">Other than personal services (OTPS)</dt>
-                  <dd className="num text-ink">{formatCurrency(totals.otps)}</dd>
+                  <dd className="num text-ink">{formatCurrency(totals.otps, { cents: true })}</dd>
                   <dd />
                 </div>
                 <div className={ROW}>
                   <dt className="font-semibold text-ink">Actual spent</dt>
                   <dd className="num text-ink">
-                    {spend.entered ? formatCurrency(spend.actual) : <span className="text-muted">Not entered</span>}
+                    {spend.entered ? (
+                      formatCurrency(spend.actual, { cents: true })
+                    ) : (
+                      <span className="text-muted">Not entered</span>
+                    )}
                   </dd>
                   <dd />
                 </div>
@@ -180,11 +185,13 @@ export function CheckAnswers({
                             <td className="num px-3 py-2 text-right text-muted">{index + 1}</td>
                             <td className="px-3 py-2">{line.category}</td>
                             <td className="px-3 py-2">{line.description}</td>
-                            <td className="num px-3 py-2 text-right">{formatCurrency(line.amount)}</td>
+                            <td className="num px-3 py-2 text-right">{formatCurrency(line.amount, { cents: true })}</td>
                             <td className="num px-3 py-2 text-right">
-                              {line.actual === null || line.actual === undefined
-                                ? "Not entered"
-                                : formatCurrency(line.actual)}
+                              {line.actual === null || line.actual === undefined ? (
+                                <NoValue />
+                              ) : (
+                                formatCurrency(line.actual, { cents: true })
+                              )}
                             </td>
                           </tr>
                         ))}

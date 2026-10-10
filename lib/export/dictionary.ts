@@ -386,6 +386,15 @@ export const TABLES: Record<string, TableDoc> = {
       closed_at: "When the request was closed.",
     },
   },
+  readiness_schedule: {
+    description: "Scheduled go-live test sessions and training sessions that have not been held yet.",
+    columns: {
+      kind: "test or training.",
+      scheduled_on: "Date the session is scheduled for.",
+      title: "What the session covers.",
+      audience: "Who attends.",
+    },
+  },
   training_module: {
     description: "Training modules and the roles each one is required for.",
     columns: {

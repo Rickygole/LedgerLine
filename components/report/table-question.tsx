@@ -3,6 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
+import { NumericInput } from "./numeric-input";
 import type { Question } from "@/lib/rules/types";
 
 export type TableRow = Record<string, string | number | null>;
@@ -67,15 +68,25 @@ export function TableQuestion({
                       {column.label}
                       <span className="sr-only">, row {rowIndex + 1}</span>
                     </label>
-                    <Input
-                      id={id}
-                      value={cellValue(row[column.key])}
-                      inputMode={numeric ? (column.type === "integer" ? "numeric" : "decimal") : undefined}
-                      aria-invalid={invalid || undefined}
-                      onChange={(event) => update(rowIndex, column.key, event.target.value)}
-                      onBlur={onBlur}
-                      className={numeric ? "num text-right" : undefined}
-                    />
+                    {numeric ? (
+                      <NumericInput
+                        id={id}
+                        kind={column.type as "integer" | "currency" | "percent"}
+                        value={cellValue(row[column.key])}
+                        aria-invalid={invalid || undefined}
+                        onValueChange={(next) => update(rowIndex, column.key, next)}
+                        onBlur={onBlur}
+                        className="num text-right"
+                      />
+                    ) : (
+                      <Input
+                        id={id}
+                        value={cellValue(row[column.key])}
+                        aria-invalid={invalid || undefined}
+                        onChange={(event) => update(rowIndex, column.key, event.target.value)}
+                        onBlur={onBlur}
+                      />
+                    )}
                   </div>
                 );
               })}

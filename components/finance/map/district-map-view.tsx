@@ -98,7 +98,7 @@ export function DistrictMapView({
               <li key={label} className="flex items-center gap-2">
                 <span
                   aria-hidden="true"
-                  className="inline-block h-3 w-4 border border-line"
+                  className="inline-block h-3 w-4 border border-line-strong"
                   style={{ background: GEO_FILL[bin] }}
                 />
                 {label}

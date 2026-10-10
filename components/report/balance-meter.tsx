@@ -35,8 +35,8 @@ export function BalanceMeter({ total, award, lines }: { total: number; award: nu
   return (
     <div className={cn("flex flex-wrap items-center gap-x-4 gap-y-3 rounded border p-4", tone.box)}>
       <p className="num text-[15px] leading-[22px] text-ink">
-        Budget total <strong className="font-bold">{formatCurrency(total)}</strong> of{" "}
-        <strong className="font-bold">{formatCurrency(award)}</strong> award
+        Budget total <strong className="font-bold">{formatCurrency(total, { cents: true })}</strong> of{" "}
+        <strong className="font-bold">{formatCurrency(award, { cents: true })}</strong> award
       </p>
       <div className="relative h-2.5 min-w-[120px] flex-1 overflow-visible rounded-sm bg-harbor-100" aria-hidden="true">
         <div
