@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-10-10T16:17:32.620Z",
-  "commit": "0c4f59580ae7ccd56f8d3211709d52ada5de6e93",
+  "generatedAt": "2026-10-10T18:43:39.556Z",
+  "commit": "2c1fe4473f38d1295c7c0442e8b3da0611801cd1",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
     "tests": 591,
-    "passed": 588,
-    "failed": 3,
+    "passed": 591,
+    "failed": 0,
     "skipped": 0
   },
   "suites": {
@@ -19,11 +19,11 @@
   },
   "summary": {
     "verified": {
-      "stories": 61,
+      "stories": 64,
       "rules": 27
     },
     "failing": {
-      "stories": 3,
+      "stories": 0,
       "rules": 0
     },
     "demonstrated": {
@@ -417,14 +417,14 @@
       "area": "Annual rollover",
       "summary": "Copy the prior fiscal year's structure into a new year",
       "route": "/finance/rollover",
-      "state": "failing",
-      "reason": "1 failing test",
+      "state": "verified",
+      "reason": null,
       "note": "The fiscal year rollover copies forms and assignments into the new year. Finance administrators run it.",
       "tests": [
         {
           "title": "award fields carries funding source and sponsors through a rollover",
           "file": "tests/sql/fiscal-year.test.ts",
-          "status": "failed",
+          "status": "passed",
           "suite": "sql"
         },
         {
@@ -458,14 +458,14 @@
       "area": "Annual rollover",
       "summary": "Questions and layouts carry forward automatically",
       "route": "/finance/initiatives",
-      "state": "failing",
-      "reason": "1 failing test",
+      "state": "verified",
+      "reason": null,
       "note": null,
       "tests": [
         {
           "title": "award fields carries funding source and sponsors through a rollover",
           "file": "tests/sql/fiscal-year.test.ts",
-          "status": "failed",
+          "status": "passed",
           "suite": "sql"
         },
         {
@@ -521,14 +521,14 @@
       "area": "Access",
       "summary": "Each person has their own account",
       "route": "/login",
-      "state": "failing",
-      "reason": "1 failing test",
+      "state": "verified",
+      "reason": null,
       "note": null,
       "tests": [
         {
           "title": "sessions can be revoked rejects a session after sign out and keeps other sessions",
           "file": "tests/sql/accounts.test.ts",
-          "status": "failed",
+          "status": "passed",
           "suite": "sql"
         },
         {
