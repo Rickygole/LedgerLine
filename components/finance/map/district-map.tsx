@@ -217,7 +217,9 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
         {borough ? <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{borough} only</p> : null}
       </div>
       {ranked.length === 0 ? (
-        <p className="px-6 py-8 text-[15px] text-muted">No reports were due in {borough ? `${borough} districts` : "any district"} for this period.</p>
+        <p className="px-5 py-8 text-[15px] text-muted sm:px-6">No reports were due in {borough ? `${borough} districts` : "any district"} for this period.</p>
+      ) : !ranked.some((d) => d.missing > 0) ? (
+        <p className="px-5 py-8 text-[15px] text-muted sm:px-6">Nothing is past due in {borough ? `${borough} districts` : "any district"} for this period.</p>
       ) : (
         <ol className="divide-y divide-line-soft">
           {ranked.map((d) => (
