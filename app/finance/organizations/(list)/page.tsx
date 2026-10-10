@@ -6,6 +6,7 @@ import { todayInNewYork } from "@/lib/dates";
 import { formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
+import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/status-badge";
 import { Input, Select } from "@/components/ui/field";
 import { Table, THead, TR, TD, EmptyRow } from "@/components/ui/table";
@@ -63,6 +64,16 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
         title="Organizations"
         description={`Every organization funded through Council initiatives. Awards and compliance count the ${period.label} reports that fall due for ${period.fiscalYearId} awards.`}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations" }]}
+        actions={
+          user.role === "finance_admin" ? (
+            <>
+              <ButtonLink variant="secondary" href="/finance/organizations/import">
+                Import master list
+              </ButtonLink>
+              <ButtonLink href="/finance/organizations/new">Add organization</ButtonLink>
+            </>
+          ) : null
+        }
       />
       <Card>
         <FilterBar
