@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "@/components/shell/info-page";
 
-export const metadata: Metadata = { title: "Help" };
+export const metadata: Metadata = { title: "Help and contact" };
 
 export default function HelpPage() {
   return (
     <InfoPage
-      title="Help"
+      title="Help and contact"
       updated="October 2026"
       intro={
         <>
@@ -62,6 +62,9 @@ export default function HelpPage() {
       <p>Contact Council Finance. LedgerLine shows the award amounts and reporting periods Finance has set up, but it cannot change them.</p>
 
       <h2 id="contact">Contact and support hours</h2>
+      <p>
+        <Link href="/get-help">Send a help request</Link>. You need to be signed in. Your request gets a reference number, and you can follow the answer from the same page.
+      </p>
       <ul>
         <li>
           <strong>Funded organizations:</strong> contact your LedgerLine administrator first, or Council Finance.

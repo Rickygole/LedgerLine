@@ -9,7 +9,7 @@ export function ResetForm({ token, email }: { token: string; email: string }) {
   const [state, action, pending] = useActionState(setPassword, undefined);
   const error = state?.fieldErrors?.password;
   return (
-    <form action={action} className="mt-6 space-y-5" noValidate>
+    <form action={action} className="mt-8 space-y-6" noValidate>
       <input type="hidden" name="token" value={token} />
       <input type="email" name="username" value={email} autoComplete="username" readOnly hidden />
       {state?.error ? (
@@ -18,14 +18,14 @@ export function ResetForm({ token, email }: { token: string; email: string }) {
         </div>
       ) : null}
       <div>
-        <Label htmlFor="password">New password</Label>
+        <Label htmlFor="password" className="text-base">New password</Label>
         <Hint id="password-hint">At least 12 characters. It cannot be your email address.</Hint>
-        <Input id="password" name="password" type="password" autoComplete="new-password" minLength={12} required aria-invalid={error ? true : undefined} aria-describedby={error ? "password-hint password-error" : "password-hint"} />
+        <Input className="h-12 sm:text-base" id="password" name="password" type="password" autoComplete="new-password" minLength={12} required aria-invalid={error ? true : undefined} aria-describedby={error ? "password-hint password-error" : "password-hint"} />
         <FieldError id="password-error">{error}</FieldError>
       </div>
       <div>
-        <Label htmlFor="confirm">Confirm new password</Label>
-        <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
+        <Label htmlFor="confirm" className="text-base">Confirm new password</Label>
+        <Input className="h-12 sm:text-base" id="confirm" name="confirm" type="password" autoComplete="new-password" required />
       </div>
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Saving" : "Save password"}
