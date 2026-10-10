@@ -35,10 +35,10 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/login" || pathname === "/reset" || pathname.startsWith("/api")) return next();
 
   const sub = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-  if (!sub && (pathname.startsWith("/portal") || pathname.startsWith("/finance") || pathname === "/")) {
+  if (!sub && (pathname.startsWith("/portal") || pathname.startsWith("/finance"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(`${pathname}${request.nextUrl.search}`)}`;
+    url.search = `?next=${encodeURIComponent(`${pathname}${request.nextUrl.search}`)}`;
     return redirect(url);
   }
   return next();

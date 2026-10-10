@@ -23,6 +23,8 @@ export async function signIn(page: Page, email: string) {
   await page.goto("/gate");
   await page.getByLabel("Passcode").fill(PASSCODE);
   await page.getByRole("button", { name: "Continue" }).click();
+  await page.waitForURL((url) => url.pathname === "/");
+  await page.getByRole("link", { name: "Start now" }).click();
   await page.waitForURL(/\/login/);
   await page.getByLabel("Work email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);

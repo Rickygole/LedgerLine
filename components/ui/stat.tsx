@@ -2,26 +2,59 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
 
-export function Stat({ label, value, hint, href, tone = "neutral", icon: Icon }: { label: string; value: React.ReactNode; hint?: React.ReactNode; href?: string; tone?: "neutral" | "bad" | "warn" | "ok" | "info"; icon?: ComponentType<{ className?: string }> }) {
-  const accent = { neutral: "text-muted", bad: "text-bad", warn: "text-warn", ok: "text-ok", info: "text-navy-700" }[tone];
-  const edge = { neutral: "border-l-line-strong", bad: "border-l-bad", warn: "border-l-warn", ok: "border-l-ok", info: "border-l-navy-600" }[tone];
+type Tone = "neutral" | "bad" | "warn" | "ok" | "info";
+
+export function Stat({
+  label,
+  value,
+  hint,
+  sub,
+  href,
+  action,
+  meter,
+  tone = "neutral",
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  hint?: React.ReactNode;
+  sub?: React.ReactNode;
+  href?: string;
+  action?: { href: string; label: string };
+  meter?: { value: number; max: number; label?: string };
+  tone?: Tone;
+  icon?: ComponentType<{ className?: string }>;
+  className?: string;
+}) {
   const shown = typeof value === "number" ? value.toLocaleString("en-US") : value;
+  const caption = sub ?? hint;
+  const ratio = meter && meter.max > 0 ? Math.max(0, Math.min(1, meter.value / meter.max)) : 0;
   return (
-    <div className={cn("relative flex h-full flex-col rounded border border-l-4 border-line bg-white px-4 py-4 sm:px-5", edge, href && "hover:border-line-strong hover:bg-navy-50/40")}>
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-ink">
-          {href ? (
-            <Link href={href} className="text-link underline underline-offset-2 after:absolute after:inset-0 hover:text-link-hover">
-              {label}
-            </Link>
-          ) : (
-            label
-          )}
+    <div className={cn("flex h-full min-w-0 flex-col rounded border border-line bg-white p-5", className)}>
+      <p className="flex items-center gap-2 text-sm font-semibold leading-5 text-ink-2">
+        {tone === "bad" ? <span className="h-2 w-2 shrink-0 rounded-full bg-bad" aria-hidden="true" /> : null}
+        {href && !action ? (
+          <Link href={href} className="text-link underline underline-offset-2 hover:text-link-hover">
+            {label}
+          </Link>
+        ) : (
+          label
+        )}
+      </p>
+      <p className="num mt-1.5 text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-ink">{shown}</p>
+      {meter ? (
+        <div className="mt-2.5 h-2 overflow-hidden rounded-sm bg-harbor-100" role="img" aria-label={meter.label ?? `${Math.round(ratio * 100)} percent`}>
+          <div className="h-full bg-ok" style={{ width: `${ratio * 100}%` }} />
+        </div>
+      ) : null}
+      {caption ? <p className="mt-1.5 text-sm leading-5 text-muted">{caption}</p> : null}
+      {action ? (
+        <p className="mt-auto pt-3">
+          <Link href={action.href} className="text-sm font-bold text-link underline underline-offset-2 hover:text-link-hover">
+            {action.label}
+          </Link>
         </p>
-        {Icon ? <Icon className={cn("h-4 w-4 shrink-0", accent)} aria-hidden="true" /> : null}
-      </div>
-      <p className="num mt-2 text-2xl font-bold leading-8 text-ink sm:text-[1.75rem]">{shown}</p>
-      <p className="mt-1 min-h-4 text-xs text-muted">{hint}</p>
+      ) : null}
     </div>
   );
 }

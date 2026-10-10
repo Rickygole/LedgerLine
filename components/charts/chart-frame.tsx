@@ -3,16 +3,16 @@ import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { cn } from "@/lib/cn";
 
 export const CHART_COLORS: Record<Bucket, string> = {
-  accepted: "#009E73",
-  in_review: "#0072B2",
-  submitted: "#56B4E9",
-  returned: "#E69F00",
-  missing: "#B42318",
-  outstanding: "#BFC5CE",
+  accepted: "#1a7f37",
+  in_review: "#1f4e85",
+  submitted: "#6cb4ee",
+  returned: "#c98a0b",
+  missing: "#b42318",
+  outstanding: "#d5dae1",
 };
 
 export const LABEL_ON_DARK: Record<Bucket, boolean> = {
-  accepted: false,
+  accepted: true,
   in_review: true,
   submitted: false,
   returned: false,

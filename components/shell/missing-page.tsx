@@ -54,7 +54,7 @@ export function MissingPage({ role, roleText }: { role: Role | null; roleText: s
         <>
           If a link inside LedgerLine brought you here, let your LedgerLine administrator know. Contact details are on the{" "}
           <Link href="/help" className="text-link underline underline-offset-2 hover:text-link-hover">
-            Help
+            Help and contact
           </Link>{" "}
           page.
         </>

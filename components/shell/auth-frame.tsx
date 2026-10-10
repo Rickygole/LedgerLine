@@ -1,17 +1,17 @@
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
-export function AuthFrame({ children }: { children: React.ReactNode }) {
+export function AuthFrame({ children, signInLink = false }: { children: React.ReactNode; signInLink?: boolean }) {
   return (
-    <div className="flex min-h-screen flex-col bg-surface">
+    <div className="flex min-h-screen flex-col bg-white">
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
-      <SiteHeader />
-      <main id="main" tabIndex={-1} className="flex-1 px-4 py-8 focus:outline-none sm:py-14">
-        <div className="mx-auto w-full max-w-[30rem] rounded border border-line bg-white px-5 py-7 sm:px-10 sm:py-9">{children}</div>
+      <SiteHeader signIn={signInLink} />
+      <main id="main" tabIndex={-1} className="flex-1 px-4 pb-16 pt-10 focus:outline-none sm:pt-12">
+        <div className="mx-auto w-full max-w-[480px]">{children}</div>
       </main>
-      <SiteFooter className="mt-0" />
+      <SiteFooter className="mt-0" signedIn />
     </div>
   );
 }

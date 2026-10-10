@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import {
   BellRing,
+  ChevronDown,
   Settings,
   Bookmark,
   Building2,
@@ -16,6 +17,7 @@ import {
   History,
   Inbox,
   LayoutDashboard,
+  LineChart,
   Mail,
   Menu,
   PanelLeftClose,
@@ -30,11 +32,11 @@ import {
 import { cn } from "@/lib/cn";
 import type { Role } from "@/lib/auth";
 import { Logo } from "./logo";
-import { NAV_COOKIE } from "./nav-cookie";
+import { NAV_COOKIE, NAV_MORE_COOKIE } from "./nav-cookie";
 
 type Icon = ComponentType<{ className?: string }>;
 type NavItem = { href: string; label: string; icon: Icon; match: (path: string) => boolean; roles?: Role[] };
-type NavGroup = { label?: string; items: NavItem[] };
+type NavGroup = { label?: string; items: NavItem[]; more?: boolean };
 
 const under = (...prefixes: string[]) => (path: string) => prefixes.some((p) => path === p || path.startsWith(`${p}/`));
 const exactly = (href: string) => (path: string) => path === href;
@@ -46,7 +48,6 @@ const FINANCE: NavGroup[] = [
       { href: "/finance", label: "Dashboard", icon: LayoutDashboard, match: exactly("/finance") },
       { href: "/finance/submissions", label: "Submissions", icon: Inbox, match: under("/finance/submissions") },
       { href: "/finance/flagged", label: "Flagged items", icon: Flag, match: under("/finance/flagged") },
-      { href: "/finance/queries", label: "Saved queries", icon: Bookmark, match: under("/finance/queries") },
     ],
   },
   {
@@ -58,14 +59,15 @@ const FINANCE: NavGroup[] = [
   },
   {
     label: "Communications",
-    items: [
-      { href: "/finance/reminders", label: "Reminders", icon: BellRing, match: under("/finance/reminders") },
-      { href: "/finance/outbox", label: "Outbox", icon: Send, match: under("/finance/outbox") },
-    ],
+    items: [{ href: "/finance/reminders", label: "Reminders", icon: BellRing, match: under("/finance/reminders") }],
   },
   {
-    label: "Administration",
+    label: "More",
+    more: true,
     items: [
+      { href: "/finance/queries", label: "Saved queries", icon: Bookmark, match: under("/finance/queries") },
+      { href: "/finance/trends", label: "Trends", icon: LineChart, match: under("/finance/trends") },
+      { href: "/finance/outbox", label: "Outbox", icon: Send, match: under("/finance/outbox") },
       { href: "/finance/audit", label: "Audit log", icon: ScrollText, match: under("/finance/audit") },
       { href: "/finance/rollover", label: "Annual rollover", icon: RefreshCw, match: (p) => under("/finance/rollover")(p) && !under("/finance/rollover/lineage")(p), roles: ["finance_admin"] },
       { href: "/finance/rollover/lineage", label: "Lineage", icon: GitBranch, match: under("/finance/rollover/lineage") },
@@ -81,7 +83,7 @@ const PORTAL: NavGroup[] = [
     items: [
       { href: "/portal", label: "My reports", icon: FileText, match: (p) => p === "/portal" || under("/portal/reports")(p) },
       { href: "/portal/history", label: "Submission history", icon: History, match: under("/portal/history") },
-      { href: "/portal/organization", label: "Organization profile", icon: Building2, match: under("/portal/organization") },
+      { href: "/portal/organization", label: "Organization", icon: Building2, match: under("/portal/organization") },
       { href: "/portal/messages", label: "Messages", icon: Mail, match: under("/portal/messages") },
     ],
   },
@@ -94,47 +96,80 @@ function groupsFor(role: Role): NavGroup[] {
     .filter((group) => group.items.length > 0);
 }
 
-function NavList({ role, onNavigate, compact = false }: { role: Role; onNavigate?: () => void; compact?: boolean }) {
-  const pathname = usePathname();
+function NavLinkItem({ item, active, compact, onNavigate }: { item: NavItem; active: boolean; compact: boolean; onNavigate?: () => void }) {
+  const Icon = item.icon;
   return (
-    <div className={compact ? "space-y-3" : "space-y-6"}>
-      {groupsFor(role).map((group, index) => (
-        <div key={group.label ?? index}>
-          {group.label && !compact ? <p className="mb-1 px-3 text-xs font-bold text-muted">{group.label}</p> : null}
-          {group.label && compact && index > 0 ? <hr className="mx-2 mb-3 border-line" /> : null}
-          <ul className="divide-y divide-line border-y border-line">
-            {group.items.map((item) => {
-              const active = item.match(pathname);
-              const Icon = item.icon;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    prefetch={false}
-                    onClick={onNavigate}
-                    title={compact ? item.label : undefined}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "group/nav relative flex h-10 items-center gap-2.5 text-sm",
-                      compact ? "justify-center px-0" : "px-3",
-                      active ? "bg-navy-50 font-bold text-link" : "text-ink hover:bg-surface hover:text-link hover:underline"
-                    )}
-                  >
-                    {active ? <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-action" /> : null}
-                    <Icon className={cn("h-4 w-4 shrink-0", active ? "text-link" : "text-muted group-hover/nav:text-link")} />
-                    <span className={compact ? "sr-only" : "truncate"}>{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
+    <li>
+      <Link
+        href={item.href}
+        prefetch={false}
+        onClick={onNavigate}
+        title={compact ? item.label : undefined}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "group/nav relative flex h-10 items-center gap-3 rounded-sm text-[15px]",
+          compact ? "justify-center px-0" : "px-3",
+          active ? "bg-harbor-50 font-bold text-harbor-900" : "text-ink-2 hover:bg-surface hover:text-link hover:underline"
+        )}
+      >
+        {active ? <span aria-hidden="true" className="absolute inset-y-1 left-0 w-1 rounded-sm bg-action" /> : null}
+        <Icon className={cn("h-5 w-5 shrink-0", active ? "text-action" : "text-muted group-hover/nav:text-link")} />
+        <span className={compact ? "sr-only" : "truncate"}>{item.label}</span>
+      </Link>
+    </li>
+  );
+}
+
+function NavList({ role, onNavigate, compact = false, moreOpen = false }: { role: Role; onNavigate?: () => void; compact?: boolean; moreOpen?: boolean }) {
+  const pathname = usePathname();
+  const groups = groupsFor(role);
+  return (
+    <div className={compact ? "space-y-3" : "space-y-5"}>
+      {groups.map((group, index) => {
+        const list = (
+          <ul className="space-y-0.5">
+            {group.items.map((item) => (
+              <NavLinkItem key={item.href} item={item} active={item.match(pathname)} compact={compact} onNavigate={onNavigate} />
+            ))}
           </ul>
-        </div>
-      ))}
+        );
+        if (group.more && !compact) {
+          const holdsCurrent = group.items.some((item) => item.match(pathname));
+          return <MoreGroup key="more" label={group.label ?? "More"} initialOpen={moreOpen || holdsCurrent} count={group.items.length}>{list}</MoreGroup>;
+        }
+        return (
+          <div key={group.label ?? index}>
+            {group.label && !compact ? <p className="mb-1 px-3 text-sm font-semibold text-muted">{group.label}</p> : null}
+            {group.label && compact && index > 0 ? <hr className="mx-2 mb-3 border-line" /> : null}
+            {list}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-export function SideNav({ role, initialCollapsed = false }: { role: Role; initialCollapsed?: boolean }) {
+function MoreGroup({ label, initialOpen, count, children }: { label: string; initialOpen: boolean; count: number; children: React.ReactNode }) {
+  return (
+    <details
+      open={initialOpen}
+      className="group/more border-t border-line-soft pt-4"
+      onToggle={(event) => {
+        document.cookie = `${NAV_MORE_COOKIE}=${event.currentTarget.open ? "open" : "closed"}; path=/; max-age=31536000; samesite=lax`;
+      }}
+    >
+      <summary className="flex h-10 cursor-pointer list-none items-center justify-between rounded-sm px-3 text-sm font-semibold text-muted hover:bg-surface hover:text-link [&::-webkit-details-marker]:hidden">
+        <span>
+          {label} <span className="font-normal">({count})</span>
+        </span>
+        <ChevronDown className="h-4 w-4 group-open/more:rotate-180" aria-hidden="true" />
+      </summary>
+      <div className="mt-1">{children}</div>
+    </details>
+  );
+}
+
+export function SideNav({ role, initialCollapsed = false, moreOpen = false }: { role: Role; initialCollapsed?: boolean; moreOpen?: boolean }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const toggle = () => {
     const next = !collapsed;
@@ -145,21 +180,22 @@ export function SideNav({ role, initialCollapsed = false }: { role: Role; initia
   return (
     <aside className={cn("no-print hidden shrink-0 border-r border-line bg-white lg:block", collapsed ? "w-16" : "w-56")}>
       <div className="sticky top-0 flex max-h-dvh flex-col">
-        <nav aria-label="Main" className={cn("flex-1 overflow-y-auto py-6", collapsed ? "px-2" : "px-3")}>
-          <NavList role={role} compact={collapsed} />
-        </nav>
-        <div className={cn("border-t border-line py-3", collapsed ? "px-2" : "px-3")}>
+        <div className={cn("flex items-center pt-5", collapsed ? "justify-center px-2" : "justify-between pl-6 pr-3")}>
+          {collapsed ? null : <p className="text-sm font-semibold text-ink-2">Finance workspace</p>}
           <button
             type="button"
             onClick={toggle}
             aria-expanded={!collapsed}
-            title={collapsed ? "Expand menu" : undefined}
-            className={cn("flex h-9 w-full items-center gap-2.5 rounded-sm text-sm text-link underline underline-offset-2 hover:bg-surface hover:text-link-hover", collapsed ? "justify-center" : "px-3")}
+            aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+            title={collapsed ? "Expand navigation" : "Collapse navigation"}
+            className="flex h-9 w-9 items-center justify-center rounded-sm text-muted hover:bg-surface hover:text-link"
           >
-            <Toggle className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className={collapsed ? "sr-only" : undefined}>{collapsed ? "Expand menu" : "Collapse menu"}</span>
+            <Toggle className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
+        <nav aria-label="Main" className={cn("flex-1 overflow-y-auto pb-6 pt-3", collapsed ? "px-2" : "px-3")}>
+          <NavList role={role} compact={collapsed} moreOpen={moreOpen} />
+        </nav>
       </div>
     </aside>
   );
@@ -169,7 +205,7 @@ export function TopTabs({ role }: { role: Role }) {
   const pathname = usePathname();
   const items = groupsFor(role).flatMap((group) => group.items);
   return (
-    <nav aria-label="Main" className="-mb-px flex gap-0.5">
+    <nav aria-label="Main" className="-mb-px flex gap-7 overflow-x-auto">
       {items.map((item) => {
         const active = item.match(pathname);
         return (
@@ -179,8 +215,8 @@ export function TopTabs({ role }: { role: Role }) {
             prefetch={false}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative whitespace-nowrap border-b-4 px-3 py-3 text-sm focus-visible:-outline-offset-4",
-              active ? "border-action font-bold text-link" : "border-transparent text-ink hover:border-line-strong hover:text-link hover:underline"
+              "relative whitespace-nowrap border-b-[3px] py-3.5 text-[15px] font-semibold focus-visible:-outline-offset-4",
+              active ? "border-action text-harbor-900" : "border-transparent text-ink-2 hover:border-line-strong hover:text-link"
             )}
           >
             {item.label}
@@ -206,7 +242,7 @@ export function NavDrawer({ role, subtitle, className }: { role: Role; subtitle:
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
-        className={cn("-ml-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded text-white hover:bg-navy-800", className)}
+        className={cn("-ml-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded text-white hover:bg-harbor-800", className)}
         aria-label="Open menu"
         aria-haspopup="dialog"
       >
@@ -221,14 +257,15 @@ export function NavDrawer({ role, subtitle, className }: { role: Role; subtitle:
         }}
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-14 shrink-0 items-center justify-between gap-3 bg-navy-900 px-4">
-            <Logo subtitle={subtitle} />
-            <button type="button" onClick={close} className="flex h-9 w-9 items-center justify-center rounded text-white hover:bg-navy-800" aria-label="Close menu">
+          <div className="flex h-[72px] shrink-0 items-center justify-between gap-3 border-b-4 border-harbor-600 bg-harbor-900 px-4">
+            <Logo compact />
+            <button type="button" onClick={close} className="flex h-10 w-10 items-center justify-center rounded text-white hover:bg-harbor-800" aria-label="Close menu">
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
-          <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-5">
-            <NavList role={role} onNavigate={close} />
+          <p className="px-6 pt-5 text-sm font-semibold text-ink-2">{subtitle}</p>
+          <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 pb-5 pt-3">
+            <NavList role={role} onNavigate={close} moreOpen />
           </nav>
         </div>
       </dialog>
