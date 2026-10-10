@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, Plus } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
@@ -37,14 +35,15 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
 
   const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const period = periods.find((p) => p.id === one(params, "period")) ?? periods.find((p) => p.id === defaultPeriodId(periods))!;
+    const setup = admin ? await setupStatus(tx, today) : null;
+    const setupPeriod = setup?.fiscalYear ? periods.find((p) => p.fiscalYearId === setup.fiscalYear!.id) : undefined;
+    const period = periods.find((p) => p.id === one(params, "period")) ?? setupPeriod ?? periods.find((p) => p.id === defaultPeriodId(periods))!;
     const categories = await listCategories(tx);
     const agencies = await listAgencies(tx);
     const category = categories.includes(one(params, "category")) ? one(params, "category") : "";
     const agency = agencies.includes(one(params, "agency")) ? one(params, "agency") : "";
     const list = await listInitiatives(tx, today, period.id, { q, category, status, agency, page, form });
     const summary = await categorySummary(tx, today, period.id);
-    const setup = admin ? await setupStatus(tx, today) : null;
     return { periods, period, categories, agencies, category, agency, summary, setup, ...list };
   });
 
@@ -53,81 +52,14 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     (t, c) => ({ funding: t.funding + Number(c.funding), initiatives: t.initiatives + c.initiatives, accepted: t.accepted + c.accepted, assignments: t.assignments + c.assignments, missing: t.missing + c.missing }),
     { funding: 0, initiatives: 0, accepted: 0, assignments: 0, missing: 0 }
   );
-  const maxFunding = Math.max(0, ...data.summary.map((c) => Number(c.funding)));
+  const notDue = data.period.dueOn > today;
   const kept = { q, category: data.category, status, agency: data.agency, period: data.period.id, form };
 
   return (
     <>
-      <PageHeader
-        title="Initiatives"
-        description={admin ? "Set up this year's initiatives and report forms, and see how reporting is going." : `Council initiatives funded in ${data.period.fiscalYearId} and how ${data.period.label} reporting is going.`}
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives" }]}
-      />
+      <PageHeader title="Initiatives" crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives" }]} />
 
       {data.setup ? <SetupTaskList status={data.setup} today={today} /> : null}
-
-      <Card className="mb-6">
-        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-t-xl border-b border-line bg-line lg:grid-cols-4">
-          {[
-            { label: "Total funding", value: formatCurrency(totals.funding, { cents: false }), hint: `${data.summary.length} categories` },
-            { label: "Initiatives", value: totals.initiatives, hint: `${totals.assignments} organization awards` },
-            { label: "Reports accepted", value: `${formatCount(totals.accepted)} of ${formatCount(totals.assignments)}`, hint: data.period.label },
-            { label: "Missing reports", value: totals.missing, hint: `${data.period.label}, nothing submitted and past due`, bad: totals.missing > 0 },
-          ].map((tile) => (
-            <div key={tile.label} className="min-w-0 bg-white px-4 py-4 sm:px-5">
-              <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-muted">
-                {tile.bad ? <AlertTriangle className="h-3.5 w-3.5 text-bad" aria-hidden="true" /> : null}
-                {tile.label}
-              </dt>
-              <dd className="num mt-1.5 text-xl font-bold tracking-tight text-ink sm:text-2xl">{tile.value}</dd>
-              <dd className="mt-0.5 text-xs text-muted">{tile.hint}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="px-4 py-4 sm:px-5">
-          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-ink">
-              Funding by category <span className="font-normal text-muted">(total and number of initiatives)</span>
-            </h2>
-            {data.category ? (
-              <Link href={buildHref(base, { q, status, agency: data.agency, period: data.period.id })} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-                Show all categories
-              </Link>
-            ) : (
-              <span className="text-xs text-muted">Choose a category to filter the list below</span>
-            )}
-          </div>
-          <ul className="grid gap-x-8 gap-y-1 sm:grid-cols-2 xl:grid-cols-3">
-            {data.summary.map((c) => {
-              const selected = data.category === c.category;
-              const share = maxFunding > 0 ? Math.max(2, Math.round((Number(c.funding) / maxFunding) * 100)) : 0;
-              return (
-                <li key={c.category}>
-                  <Link
-                    href={buildHref(base, { q, status, agency: data.agency, period: data.period.id, category: selected ? undefined : c.category })}
-                    aria-current={selected ? "true" : undefined}
-                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 hover:bg-harbor-50", selected && "bg-harbor-50 ring-1 ring-harbor-600/30")}
-                  >
-                    <span className="flex items-baseline justify-between gap-3 text-sm">
-                      <span className={cn("truncate", selected ? "font-semibold text-harbor-900" : "text-ink")}>{c.category}</span>
-                      <span className="num shrink-0 text-muted">
-                        {formatCompactCurrency(Number(c.funding))}
-                        <span className="ml-2 text-xs">
-                          {c.initiatives}
-                          <span className="sr-only"> initiatives</span>
-                        </span>
-                      </span>
-                    </span>
-                    <span className="mt-1 block h-1 overflow-hidden rounded-full bg-harbor-100" aria-hidden="true">
-                      <span className={cn("block h-full rounded-full", selected ? "bg-harbor-800" : "bg-harbor-600/70 group-hover:bg-harbor-600")} style={{ width: `${share}%` }} />
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </Card>
 
       <Card id="initiatives">
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 pb-4 pt-5 sm:px-6">
@@ -141,7 +73,6 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
           </div>
           {admin ? (
             <ButtonLink href="/finance/initiatives/new" variant="secondary">
-              <Plus className="h-4 w-4" aria-hidden="true" />
               Create initiative
             </ButtonLink>
           ) : null}
@@ -242,7 +173,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                       <Badge tone="warn">No form</Badge>
                     )}
                   </TD>
-                  <TD label={data.period.label}>{row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>
+                  <TD label={data.period.label}>{row.orgs > 0 && notDue ? <span className="num text-muted">{row.accepted} of {row.orgs} accepted</span> : row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>
                   <TD align="right" label="Missing">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">None</span>}</TD>
                 </TR>
               ))
