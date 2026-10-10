@@ -90,9 +90,7 @@ test("[US-016] an overdue report carries one red signal on My reports and in the
   await expect(header.getByText("Overdue", { exact: true })).toHaveCount(0);
 });
 
-test("[US-017] report labels mark only optional fields and required fields say so to assistive tech", async ({
-  page,
-}) => {
+test("report labels mark only optional fields and required fields say so to assistive tech", async ({ page }) => {
   await openOverdueDraft(page);
   await gotoStep(page, "Organization and contact");
   await expect(page.getByText("(required)")).toHaveCount(0);

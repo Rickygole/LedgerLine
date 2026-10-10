@@ -19,6 +19,8 @@ import {
   type Concern,
 } from "@/lib/finance/review/return-note-core";
 import { buildSnapshot } from "@/lib/snapshot";
+import { isUuid } from "@/lib/ids";
+import { introducedBlockingIssues } from "@/lib/rules/correction";
 import { identityProblem } from "@/lib/rules/identity";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
@@ -71,7 +73,9 @@ export async function transitionAction(_prev: ActionState, formData: FormData): 
   const id = String(formData.get("submissionId") ?? "");
   const action = String(formData.get("action") ?? "");
   const lock = lockField.safeParse(formData.get("lockVersion"));
-  if (!["start_review", "accept"].includes(action) || !lock.success) return failure("That action is not available.");
+  if (!isUuid(id) || !["start_review", "accept"].includes(action) || !lock.success) {
+    return failure("That action is not available.");
+  }
   try {
     const problem = await withClaims(user.id, async (tx) => {
       if (action === "accept") {
@@ -283,6 +287,14 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
         awardAmount: row.award,
       }).filter((i) => i.field === key && i.severity === "block");
       if (issues.length > 0) return issues[0].message;
+      const introduced = introducedBlockingIssues(
+        { definition: row.definition!, answers: row.answers, budget: row.budget, awardAmount: row.award },
+        key,
+        value,
+      );
+      if (introduced.length > 0) {
+        return `This correction would leave the report incomplete. ${introduced[0].message}`;
+      }
       const identity = identityProblem(key, value, { legalName: row.orgName, ein: row.ein });
       if (identity) return identity;
       const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>(

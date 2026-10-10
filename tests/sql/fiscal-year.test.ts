@@ -225,7 +225,7 @@ describe("[US-001] initiative names are unique within a fiscal year", () => {
   });
 });
 
-describe("[US-003][US-004] a form made from an imported Word file records where it came from", () => {
+describe("[US-004] a form made from an imported Word file records where it came from", () => {
   it("lets the app record the draft source and refuses values outside the allowed list", async () => {
     const result = await asUser(app, priya, async () => {
       const target = (

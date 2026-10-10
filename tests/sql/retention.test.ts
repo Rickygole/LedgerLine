@@ -9,7 +9,7 @@ let owner: Client;
 let app: Client;
 let maria: string;
 let daniel: string;
-let target: { assignment: string; form: string };
+let target: { assignment: string; form: string; award: string };
 let ein: string;
 
 beforeAll(async () => {
@@ -21,7 +21,7 @@ beforeAll(async () => {
   ein = (await owner.query("SELECT ein FROM organization WHERE id = $1", [orgId])).rows[0].ein;
   target = (
     await owner.query(
-      `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
+      `SELECT a.id AS assignment, f.id AS form, a.award_amount::text AS award FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
        WHERE a.org_id = $1 AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY') LIMIT 1`,
       [orgId],
     )
@@ -65,10 +65,21 @@ async function startDraft(): Promise<string> {
      VALUES ($1, $2, $3, 'FY27-MY', $4, 'draft', app.uid(), app.uid())`,
     [id, `LL-TEST-${id.slice(0, 8)}`, target.assignment, target.form],
   );
+  await app.query(
+    "INSERT INTO budget_line (submission_id, row_id, position, category, description, amount) VALUES ($1, gen_random_uuid(), 1, 'PS', 'Coordinator', $2)",
+    [id, target.award],
+  );
   return id;
 }
 
-const SNAPSHOT = JSON.stringify({ formVersionId: "f", answers: {}, budget: [], attachments: [] });
+function snapshot() {
+  return JSON.stringify({
+    formVersionId: "f",
+    answers: {},
+    budget: [{ position: 1, category: "PS", description: "Coordinator", amount: Number(target.award) }],
+    attachments: [],
+  });
+}
 
 async function submit(id: string) {
   await as(maria);
@@ -76,7 +87,7 @@ async function submit(id: string) {
   await app.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, NULL, NULL)", [
     id,
     lock,
-    SNAPSHOT,
+    snapshot(),
   ]);
 }
 
@@ -86,10 +97,6 @@ describe("[BR-019][US-056] submitted data is kept and cannot be removed or edite
       const id = await startDraft();
       await app.query(
         "INSERT INTO answer (submission_id, question_key, value, updated_by) VALUES ($1, 'contact_name', '\"Maria\"', app.uid())",
-        [id],
-      );
-      await app.query(
-        "INSERT INTO budget_line (submission_id, row_id, position, category, description, amount) VALUES ($1, gen_random_uuid(), 1, 'PS', 'Coordinator', 100)",
         [id],
       );
       await submit(id);

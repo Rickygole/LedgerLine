@@ -1,7 +1,8 @@
-import "dotenv/config";
+import "../lib/load-env";
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
+import { sslFor } from "../lib/db-ssl";
 import * as XLSX from "xlsx";
 import { MARIA_REMAINING_BUDGET } from "./seed";
 
@@ -17,7 +18,7 @@ function argument(name: string): string | undefined {
 async function mariaAward(): Promise<{ award: number; initiative: string }> {
   const url = process.env.DB_OWNER_URL;
   if (!url) throw new Error("DB_OWNER_URL is not set. Pass --award <dollars> instead.");
-  const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : true });
+  const client = new Client({ connectionString: url, ssl: sslFor(url) });
   await client.connect();
   try {
     const { rows } = await client.query(

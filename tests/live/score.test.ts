@@ -127,7 +127,7 @@ function concernsFor(c: Case): Concern[] {
   ];
 }
 
-describe("[US-003] scored form drafting", () => {
+describe("scored form drafting", () => {
   it("warms the model", async () => {
     await draftFormFromDocx({
       tx,

@@ -4,7 +4,7 @@ import { certificationIssues } from "@/lib/rules/certify";
 import { validateSubmission } from "@/lib/rules/validate";
 import type { FormDefinition } from "@/lib/rules/types";
 
-describe("[US-035] person names accept real names and refuse markup and symbols", () => {
+describe("person names accept real names and refuse markup and symbols", () => {
   it.each([
     "Maria Santos",
     "Zoë Ñúñez",

@@ -10,7 +10,7 @@ let tomas: string;
 let daniel: string;
 let grace: string;
 let priya: string;
-let target: { assignment: string; form: string };
+let target: { assignment: string; form: string; award: string };
 
 beforeAll(async () => {
   owner = await connect(ownerUrl());
@@ -24,11 +24,12 @@ beforeAll(async () => {
   const orgId = (await owner.query("SELECT org_id FROM app_user WHERE id = $1", [maria])).rows[0].org_id;
   target = (
     await owner.query(
-      `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
+      `SELECT a.id AS assignment, f.id AS form, a.award_amount::text AS award FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
        WHERE a.org_id = $1 AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY') LIMIT 1`,
       [orgId],
     )
   ).rows[0];
+  SNAPSHOT = snapshotWith(target.award);
 });
 
 afterAll(async () => {
@@ -57,15 +58,27 @@ async function startDraft(user: string): Promise<string> {
      VALUES ($1, $2, $3, 'FY27-MY', $4, 'draft', app.uid(), app.uid())`,
     [id, `LL-TEST-${id.slice(0, 8)}`, target.assignment, target.form],
   );
+  await addBudget(id, target.award);
   return id;
 }
 
-const SNAPSHOT = JSON.stringify({
-  formVersionId: "f",
-  answers: { contact_name: "Maria Santos" },
-  budget: [],
-  attachments: [],
-});
+async function addBudget(id: string, amount: string) {
+  await app.query(
+    "INSERT INTO budget_line (submission_id, row_id, position, category, description, amount) VALUES ($1, gen_random_uuid(), 1, 'PS', 'Staff', $2)",
+    [id, amount],
+  );
+}
+
+function snapshotWith(amount: string) {
+  return JSON.stringify({
+    formVersionId: "f",
+    answers: { contact_name: "Maria Santos" },
+    budget: [{ position: 1, category: "PS", description: "Staff", amount: Number(amount) }],
+    attachments: [],
+  });
+}
+
+let SNAPSHOT = "";
 
 async function transition(
   user: string,
@@ -110,6 +123,68 @@ describe("[US-019] a submitter submits a completed report", () => {
       await transition(maria, id, "submit");
       await app.query("SAVEPOINT again");
       const code = await errorCode(() => transition(maria, id, "submit"));
+      expect(code).toBe("23514");
+    });
+  });
+});
+
+describe("[BR-022] the database refuses a submit that does not balance", () => {
+  it("refuses a direct submit whose saved budget is short of the award", async () => {
+    await inTransaction(async () => {
+      const id = await startDraft(maria);
+      await app.query("UPDATE budget_line SET amount = amount - 1 WHERE submission_id = $1", [id]);
+      await app.query("SAVEPOINT short");
+      const code = await errorCode(() =>
+        app.query("SELECT * FROM app.transition_submission($1, 'submit', 0, $2::jsonb, NULL, NULL, NULL)", [
+          id,
+          snapshotWith(String(Number(target.award) - 1)),
+        ]),
+      );
+      expect(code).toBe("23514");
+      await app.query("ROLLBACK TO SAVEPOINT short");
+      expect((await app.query("SELECT status FROM submission WHERE id = $1", [id])).rows[0].status).toBe("draft");
+    });
+  });
+
+  it("refuses a snapshot whose budget total differs from the saved budget lines", async () => {
+    await inTransaction(async () => {
+      const id = await startDraft(maria);
+      const code = await errorCode(() =>
+        app.query("SELECT * FROM app.transition_submission($1, 'submit', 0, $2::jsonb, NULL, NULL, NULL)", [
+          id,
+          snapshotWith(String(Number(target.award) + 500)),
+        ]),
+      );
+      expect(code).toBe("23514");
+    });
+  });
+
+  it("refuses a submit that carries no lock version", async () => {
+    await inTransaction(async () => {
+      const id = await startDraft(maria);
+      const code = await errorCode(() =>
+        app.query("SELECT * FROM app.transition_submission($1, 'submit', NULL, $2::jsonb, NULL, NULL, NULL)", [
+          id,
+          SNAPSHOT,
+        ]),
+      );
+      expect(code).toBe("40001");
+    });
+  });
+
+  it("refuses a resubmit with an unbalanced budget", async () => {
+    await inTransaction(async () => {
+      const id = await startDraft(maria);
+      await transition(maria, id, "submit");
+      await transition(daniel, id, "request_update", "Fix it");
+      await as(maria);
+      await app.query("UPDATE budget_line SET amount = amount + 10 WHERE submission_id = $1", [id]);
+      const code = await errorCode(() =>
+        app.query("SELECT * FROM app.transition_submission($1, 'submit', 2, $2::jsonb, NULL, NULL, NULL)", [
+          id,
+          snapshotWith(String(Number(target.award) + 10)),
+        ]),
+      );
       expect(code).toBe("23514");
     });
   });

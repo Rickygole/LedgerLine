@@ -6,6 +6,7 @@ import { FlagBadge } from "@/components/ui/status-badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
+import { formatBytes } from "@/lib/report/upload-rules";
 import type {
   AttachmentRow,
   AuditRecord,
@@ -240,11 +241,6 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
       </CardBody>
     </Card>
   );
-}
-
-function formatBytes(bytes: number) {
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 export function AttachmentsTab({ submissionId, attachments }: { submissionId: string; attachments: AttachmentRow[] }) {

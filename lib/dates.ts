@@ -73,3 +73,9 @@ export function nowMs(): number {
 export function nowDate(): Date {
   return new Date(nowMs());
 }
+
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function shortDate(isoDate: string): string {
+  return `${SHORT_MONTHS[Number(isoDate.slice(5, 7)) - 1]} ${Number(isoDate.slice(8, 10))}`;
+}

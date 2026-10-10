@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { savedAtLabel } from "@/lib/report/format";
 
-describe("[US-018] last saved label", () => {
+describe("last saved label", () => {
   const today = "2026-10-09";
 
   it("shows only the time for a save made today in New York", () => {

@@ -244,6 +244,8 @@ export function ReportEditor({
       );
     else if (outcome === "retrying")
       setMessage("Your latest changes are not saved yet. Keep this tab open and try again in a moment.");
+    else if (outcome === "rejected")
+      setMessage("Your latest changes were not saved. Fix what the save message says, then choose Save and exit.");
   }
 
   function saveAndContinue() {
@@ -265,7 +267,7 @@ export function ReportEditor({
     try {
       const outcome = await flushNow();
       if (outcome === "stale" || outcome === "locked") return;
-      if (outcome === "signed_out" || outcome === "retrying") {
+      if (outcome === "signed_out" || outcome === "retrying" || outcome === "rejected") {
         setMessage(
           "Your latest changes could not be saved, so the report was not submitted. Keep this tab open and try again.",
         );

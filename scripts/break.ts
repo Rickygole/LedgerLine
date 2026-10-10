@@ -1,6 +1,7 @@
-import "dotenv/config";
+import "../lib/load-env";
 import { chromium, type Browser, type Page } from "@playwright/test";
 import { Client } from "pg";
+import { sslFor } from "../lib/db-ssl";
 import { startReport } from "../lib/report/create";
 import { checkUpload } from "../lib/storage";
 import { fillRequiredAnswers, gotoStep, PEOPLE, setBudget, signIn } from "../tests/e2e/support/app";
@@ -18,7 +19,7 @@ function url(name: string): string {
 }
 
 async function connect(connection: string): Promise<Client> {
-  const client = new Client({ connectionString: connection, ssl: connection.includes("localhost") ? undefined : true });
+  const client = new Client({ connectionString: connection, ssl: sslFor(connection) });
   await client.connect();
   return client;
 }
@@ -148,15 +149,36 @@ async function main() {
           }),
       });
       attacks.push({
-        label: "Mark the report accepted with a direct database update",
+        label: "Call the database's submit function directly with a budget short of the award",
         run: async () => {
-          const raw = await asUser(app, maria, () =>
-            refusedBy(() => app.query("UPDATE submission SET status = 'accepted' WHERE id = $1", [draft.id])),
-          );
+          const short = Math.round(draft.award * 0.5);
+          const raw = await asUser(app, maria, async () => {
+            await app.query("DELETE FROM budget_line WHERE submission_id = $1", [draft.id]);
+            await app.query(
+              "INSERT INTO budget_line (submission_id, row_id, position, category, description, amount) VALUES ($1, gen_random_uuid(), 1, 'PS', 'Staff', $2)",
+              [draft.id, short],
+            );
+            const lock = (await app.query("SELECT lock_version FROM submission WHERE id = $1", [draft.id])).rows[0]
+              .lock_version;
+            const snapshot = {
+              formVersionId: "break",
+              answers: {},
+              budget: [{ position: 1, category: "PS", description: "Staff", amount: short }],
+              attachments: [],
+            };
+            return refusedBy(() =>
+              app.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, NULL, NULL)", [
+                draft.id,
+                lock,
+                JSON.stringify(snapshot),
+              ]),
+            );
+          });
           return {
-            refused: raw !== null,
-            plain: "A direct status change by the organization's own account was refused by the database.",
-            raw: raw ?? "update succeeded",
+            refused: raw !== null && raw.includes("must equal the award"),
+            plain:
+              "A submit sent straight to the database with a short budget was refused by the database itself, with no application code involved.",
+            raw: raw ?? "submit succeeded",
           };
         },
       });

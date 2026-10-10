@@ -28,7 +28,7 @@ describe("confirmation email body", () => {
     expect(body).toContain("roster.pdf (2 KB)");
   });
 
-  it("[BR-021][US-031] leaves out blank table rows and formats counts", () => {
+  it("[US-020] the email copy leaves out blank table rows and formats counts", () => {
     const body = plainTextReport({
       title: "Youth Mentoring Networks",
       referenceNo: "LL-26YE-12345",

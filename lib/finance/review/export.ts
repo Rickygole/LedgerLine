@@ -71,7 +71,7 @@ export function guardFormula(text: string): string {
 }
 
 function textCell(value: string): XLSX.CellObject {
-  return { t: "s", v: guardFormula(value) };
+  return { t: "s", v: value };
 }
 
 function numberCell(value: number, format?: string): XLSX.CellObject {
@@ -223,7 +223,7 @@ function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
     ["Generated on", meta.generatedOn],
     [
       "Notes",
-      "EIN values are stored as text. Text that begins with = + - or @ has a leading apostrophe added so spreadsheets do not run it as a formula.",
+      "EIN values are stored as text. Text cells are never read as formulas in this workbook. In the CSV export, text that begins with = + - or @ has a leading apostrophe added so spreadsheets do not run it as a formula.",
     ],
   ];
   const sheet: XLSX.WorkSheet = {};
@@ -261,7 +261,9 @@ export function submissionsToCsv(book: XLSX.WorkBook): string {
     sheet[address] =
       typed.t === "n" && typeof typed.z === "string" && /y/.test(typed.z)
         ? { t: "s", v: XLSX.SSF.format(typed.z, typed.v as number) }
-        : typed;
+        : typed.t === "s" && typeof typed.v === "string"
+          ? { t: "s", v: guardFormula(typed.v) }
+          : typed;
   }
   return XLSX.utils.sheet_to_csv(sheet, { forceQuotes: false, rawNumbers: true });
 }

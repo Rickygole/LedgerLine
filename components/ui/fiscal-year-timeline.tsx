@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { shortDate } from "@/lib/dates";
 
 export type TimelineMark = {
   date: Date | string;
@@ -27,10 +28,6 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 function longDate(isoDate: string): string {
   return `${MONTHS[Number(isoDate.slice(5, 7)) - 1]} ${Number(isoDate.slice(8, 10))}, ${isoDate.slice(0, 4)}`;
-}
-
-function shortDate(isoDate: string): string {
-  return `${MONTHS[Number(isoDate.slice(5, 7)) - 1]} ${Number(isoDate.slice(8, 10))}`;
 }
 
 function yearBounds(fiscalYear: string): { startsOn: string; endsOn: string } {

@@ -1,5 +1,6 @@
-import "dotenv/config";
+import "../../lib/load-env";
 import { Client } from "pg";
+import { sslFor } from "../../lib/db-ssl";
 
 export function ownerUrl(): string {
   const url = process.env.TEST_DB_OWNER_URL ?? process.env.DB_OWNER_URL;
@@ -14,7 +15,7 @@ export function appUrl(): string {
 }
 
 export async function connect(url: string): Promise<Client> {
-  const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : true });
+  const client = new Client({ connectionString: url, ssl: sslFor(url) });
   await client.connect();
   return client;
 }

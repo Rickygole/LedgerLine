@@ -89,7 +89,7 @@ describe("[BR-010][US-014] organizations see only their own reports", () => {
   });
 });
 
-describe("[BR-022] status can only change through the workflow function", () => {
+describe("status can only change through the workflow function", () => {
   it("denies a direct status update even for the reporting organization", async () => {
     const code = await asUser(app, maria, () =>
       errorCode(() => app.query("UPDATE submission SET status = 'accepted'")),

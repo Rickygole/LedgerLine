@@ -98,12 +98,13 @@ describe("workbook", () => {
     expect(cell.v).toBeCloseTo(46283.4201, 3);
   });
 
-  it("adds one column per answered question and guards formulas", () => {
+  it("adds one column per answered question and keeps formula-looking text unchanged in the workbook", () => {
     const columns = questionColumns([sample()]);
     expect(columns).toEqual(["accomplishments", "participants_actual", "youth_breakdown"]);
     const sheet = book.Sheets["Submissions"];
     expect(sheet["S1"].v).toBe("accomplishments");
-    expect(sheet["S2"].v.startsWith("'=")).toBe(true);
+    expect(sheet["S2"].v.startsWith("=")).toBe(true);
+    expect(sheet["S2"].t).toBe("s");
     expect(sheet["T2"].t).toBe("n");
     expect(sheet["T2"].v).toBe(120);
     expect(sheet["U2"].v).toBe("Under 10 5");
@@ -127,6 +128,14 @@ describe("workbook", () => {
     expect(header.startsWith("reference_no,ein,organization")).toBe(true);
     expect(csv).toContain("2026-09-18 10:05");
     expect(csv).not.toContain("README");
+  });
+
+  it("[US-047] guards formula-looking text in the CSV only", () => {
+    const csv = submissionsToCsv(book);
+    expect(csv).toContain("'=");
+    const reread = XLSX.read(workbookToBuffer(book), { type: "buffer" });
+    expect(reread.Sheets["Submissions"]["S2"].v.startsWith("=")).toBe(true);
+    expect(reread.Sheets["Submissions"]["S2"].f).toBeUndefined();
   });
 
   it("[US-047] writes award and budget total as plain numbers, not formatted text", () => {

@@ -1,5 +1,6 @@
-import "dotenv/config";
+import "../lib/load-env";
 import { Client } from "pg";
+import { sslFor } from "../lib/db-ssl";
 import { applyPreset, SCENES, type Scene } from "./presets";
 import { confirmHost, liveTarget, localTarget } from "./target";
 
@@ -23,7 +24,7 @@ async function main() {
     console.log(await runSeed(target.url, "fresh"));
     return;
   }
-  const client = new Client({ connectionString: target.url, ssl: target.url.includes("localhost") ? undefined : true });
+  const client = new Client({ connectionString: target.url, ssl: sslFor(target.url) });
   await client.connect();
   try {
     console.log(await applyPreset(client, scene));
