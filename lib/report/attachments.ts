@@ -1,8 +1,11 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { NextResponse } from "next/server";
 import { ooxmlProblem } from "./ooxml";
-import type { Tx } from "@/lib/db";
-import { ALLOWED_TYPES, extensionOf } from "@/lib/storage";
+import { contentDisposition } from "./upload-rules";
+import { withClaims, type Tx } from "@/lib/db";
+import { isUuid } from "@/lib/ids";
+import { ALLOWED_TYPES, extensionOf, getFile } from "@/lib/storage";
 import type { AttachmentItem } from "./types";
 
 const PATH_KEY_LABEL = "ledgerline:attachment-path:v1";
@@ -108,4 +111,26 @@ export async function removeAttachmentRow(tx: Tx, submissionId: string, attachme
     await tx.query("SELECT app.write_audit('submission', $1, 'attachment_removed', $2, NULL, NULL, NULL)", [submissionId, rows[0].filename]);
   }
   return rows.length;
+}
+
+export async function serveAttachment(user: { id: string }, submissionId: string, attachmentId: string): Promise<NextResponse> {
+  if (!isUuid(submissionId) || !isUuid(attachmentId)) return NextResponse.json({ error: "File not found." }, { status: 404 });
+  const attachment = await withClaims(user.id, (tx) =>
+    tx.one<{ path: string; filename: string; mime: string }>("SELECT path, filename, mime FROM attachment WHERE id = $1 AND submission_id = $2", [attachmentId, submissionId])
+  );
+  if (!attachment) return NextResponse.json({ error: "File not found." }, { status: 404 });
+  try {
+    const body = await getFile(attachment.path);
+    return new NextResponse(new Uint8Array(body), {
+      headers: {
+        "content-type": attachment.mime,
+        "content-length": String(body.length),
+        "content-disposition": contentDisposition(attachment.filename),
+        "cache-control": "private, no-store",
+        "x-content-type-options": "nosniff",
+      },
+    });
+  } catch {
+    return NextResponse.json({ error: "This file is no longer available." }, { status: 404 });
+  }
 }

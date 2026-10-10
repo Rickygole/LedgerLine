@@ -1,37 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { FINANCE_ROLES, getCurrentUser } from "@/lib/auth";
-import { withClaims } from "@/lib/db";
-import { contentDisposition } from "@/lib/report/upload-rules";
-import { getFile } from "@/lib/storage";
-import { isUuid } from "@/lib/ids";
+import { serveAttachment } from "@/lib/report/attachments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string; attachmentId: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in to download files." }, { status: 401 });
   if (!FINANCE_ROLES.includes(user.role)) return NextResponse.json({ error: "Only Council Finance staff can download files here." }, { status: 403 });
   const { id, attachmentId } = await params;
-  if (!isUuid(id) || !isUuid(attachmentId)) return NextResponse.json({ error: "File not found." }, { status: 404 });
-
-  const attachment = await withClaims(user.id, (tx) =>
-    tx.one<{ path: string; filename: string; mime: string }>("SELECT path, filename, mime FROM attachment WHERE id = $1 AND submission_id = $2", [attachmentId, id])
-  );
-  if (!attachment) return NextResponse.json({ error: "File not found." }, { status: 404 });
-
-  try {
-    const body = await getFile(attachment.path);
-    return new NextResponse(new Uint8Array(body), {
-      headers: {
-        "Content-Type": attachment.mime,
-        "Content-Disposition": contentDisposition(attachment.filename),
-        "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff",
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: "The file could not be read from storage." }, { status: 404 });
-  }
+  return serveAttachment(user, id, attachmentId);
 }
