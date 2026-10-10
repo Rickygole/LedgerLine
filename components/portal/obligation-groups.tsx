@@ -33,28 +33,7 @@ function ActionLink({ o }: { o: Obligation }) {
   );
 }
 
-type Code = { code: string; fiscalYearId: string };
-
-function currentCodes(obligations: Obligation[]): Map<string, Code> {
-  const codes = new Map<string, Code>();
-  for (const o of obligations) {
-    const known = codes.get(o.initiativeName);
-    if (!known || o.fiscalYearId > known.fiscalYearId) codes.set(o.initiativeName, { code: o.initiativeCode, fiscalYearId: o.fiscalYearId });
-  }
-  return codes;
-}
-
-function InitiativeCode({ o, codes }: { o: Obligation; codes: Map<string, Code> }) {
-  const current = codes.get(o.initiativeName);
-  if (!current || current.code === o.initiativeCode) return <>{o.initiativeCode}</>;
-  return (
-    <abbr title={`${o.fiscalYearId} code ${o.initiativeCode}, carried forward as ${current.code}`} className="no-underline">
-      {current.code}
-    </abbr>
-  );
-}
-
-function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> }) {
+function Rows({ rows }: { rows: Obligation[] }) {
   return (
     <>
       <ul className="divide-y divide-line-soft border-y border-line-soft md:hidden">
@@ -66,7 +45,7 @@ function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> })
                 <p className="text-sm text-muted">
                   {o.periodLabel} <span aria-hidden="true">·</span>
                   <span className="sr-only">,</span> <span className="font-mono">
-                    <InitiativeCode o={o} codes={codes} />
+                    {o.initiativeCode}
                   </span>
                 </p>
               </div>
@@ -103,7 +82,7 @@ function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> })
                 <td className="px-4 py-3">
                   <p className="font-semibold text-ink">{o.initiativeName}</p>
                   <p className="font-mono text-[13px] text-muted">
-                    <InitiativeCode o={o} codes={codes} />
+                    {o.initiativeCode}
                     {o.referenceNo ? `, ${o.referenceNo}` : ""}
                   </p>
                 </td>
@@ -133,14 +112,14 @@ function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> })
   );
 }
 
-function Group({ id, title, rows, codes }: { id: string; title: string; rows: Obligation[]; codes: Map<string, Code> }) {
+function Group({ id, title, rows }: { id: string; title: string; rows: Obligation[] }) {
   if (rows.length === 0) return null;
   return (
     <section aria-labelledby={id}>
       <h3 id={id} className="mb-3 text-[17px] font-bold leading-6 text-ink">
         {title} <span className="num font-semibold text-muted">({rows.length})</span>
       </h3>
-      <Rows rows={rows} codes={codes} />
+      <Rows rows={rows} />
     </section>
   );
 }
@@ -149,7 +128,6 @@ export function ObligationGroups({ obligations }: { obligations: Obligation[] })
   const needs = obligations.filter((o) => o.state === "missing" || o.state === "returned" || o.state === "draft");
   const coming = obligations.filter((o) => o.state === "not_started");
   const done = obligations.filter((o) => o.state === "submitted" || o.state === "under_review" || o.state === "accepted");
-  const codes = currentCodes(obligations);
 
   if (obligations.length === 0) {
     return <p className="py-6 text-[15px] text-muted">No reports are assigned to your organization yet. Council Finance assigns initiatives and reporting periods each fiscal year.</p>;
@@ -157,8 +135,8 @@ export function ObligationGroups({ obligations }: { obligations: Obligation[] })
 
   return (
     <div className="space-y-8">
-      <Group id="group-needs" title="Needs action" rows={needs} codes={codes} />
-      <Group id="group-coming" title="Coming up" rows={coming} codes={codes} />
+      <Group id="group-needs" title="Needs action" rows={needs} />
+      <Group id="group-coming" title="Coming up" rows={coming} />
       {done.length > 0 ? (
         <details className="group">
           <summary className="cursor-pointer list-none text-[15px] font-bold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
@@ -168,7 +146,7 @@ export function ObligationGroups({ obligations }: { obligations: Obligation[] })
             <span className="hidden group-open:inline">Hide completed reports</span>
           </summary>
           <div className="mt-4">
-            <Group id="group-done" title="Done" rows={done} codes={codes} />
+            <Group id="group-done" title="Done" rows={done} />
           </div>
         </details>
       ) : null}
