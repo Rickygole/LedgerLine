@@ -65,7 +65,7 @@ export async function AppShell({ user, children }: { user: CurrentUser; children
       <div className="flex flex-1">
         <SideNav role={user.role} initialCollapsed={collapsed} moreOpen={moreOpen} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1376px] flex-1 px-4 pb-8 pt-6 focus:outline-none sm:px-8 sm:pt-8">
+          <main id="main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1376px] flex-1 px-4 pb-8 pt-6 focus:outline-none sm:px-6 sm:pt-8">
             {children}
           </main>
           <SiteFooter signedIn />

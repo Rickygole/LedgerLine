@@ -178,7 +178,7 @@ export function SideNav({ role, initialCollapsed = false, moreOpen = false }: { 
   };
   const Toggle = collapsed ? PanelLeftOpen : PanelLeftClose;
   return (
-    <aside className={cn("no-print hidden shrink-0 border-r border-line bg-white lg:block", collapsed ? "w-16" : "w-60")}>
+    <aside className={cn("no-print hidden shrink-0 border-r border-line bg-white lg:block", collapsed ? "w-16" : "w-56")}>
       <div className="sticky top-0 flex max-h-dvh flex-col">
         <div className={cn("flex items-center pt-5", collapsed ? "justify-center px-2" : "justify-between pl-6 pr-3")}>
           {collapsed ? null : <p className="text-sm font-semibold text-ink-2">Finance workspace</p>}
