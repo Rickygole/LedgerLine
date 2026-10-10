@@ -52,7 +52,7 @@ export function SiteFooter({ className, signedIn = false, width = "max-w-[1376px
           </nav>
         </div>
         <div className="mt-7 flex flex-col gap-2 border-t border-harbor-800 pt-4 text-[13px] leading-5 sm:flex-row sm:justify-between sm:gap-6">
-          <p>LedgerLine is not an official City of New York website.</p>
+          <p>LedgerLine is not an official City of New York website. Dates and times are Eastern Time.</p>
           <p>Support: Monday to Friday, 9 AM to 5 PM ET</p>
         </div>
       </div>

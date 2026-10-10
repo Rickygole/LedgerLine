@@ -29,11 +29,11 @@ export function SaveStatus({ state, lastSavedAt, today }: { state: SaveState; la
     tone = "text-bad";
     icon = <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
   } else if (lastSavedAt) {
-    text = `Last saved ${savedAtLabel(lastSavedAt, today)}`;
+    text = `Saved ${savedAtLabel(lastSavedAt, today)}`;
   }
 
   return (
-    <p role="status" aria-live="polite" className={cn("inline-flex items-center gap-2 text-sm font-semibold", tone)}>
+    <p role="status" aria-live="polite" data-save-state={state.kind} className={cn("inline-flex items-center gap-2 text-sm font-semibold", tone)}>
       {icon}
       <span>{text}</span>
       {state.kind === "signed_out" ? (

@@ -13,10 +13,10 @@ import { parseBudgetPaste } from "@/lib/rules/paste";
 import { lineVariance, needsVarianceNote, spendSummary, VARIANCE_NOTE_MAX, VARIANCE_THRESHOLD_PERCENT } from "@/lib/rules/spend";
 import { budgetTotals } from "@/lib/rules/validate";
 
-const COLS = "@min-[720px]:grid @min-[720px]:grid-cols-[3rem_6.5rem_minmax(0,1fr)_9.5rem_9.5rem_8.5rem_2.75rem] @min-[720px]:items-stretch";
+const COLS = "@min-[720px]:grid @min-[720px]:grid-cols-[2.5rem_6.5rem_minmax(0,1fr)_8.5rem_7.5rem_7rem_2.5rem] @min-[720px]:items-stretch";
 
 const cell =
-  "block h-10 w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-harbor-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-harbor-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
+  "block h-10 @min-[720px]:h-full w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-harbor-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-harbor-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
 
 type Toast = { tone: "ok" | "warn"; text: string };
 
@@ -148,16 +148,19 @@ export function BudgetGrid({
       </div>
 
       {rows.length > 0 ? (
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-          {toolbar}
-          <span className="num ml-auto text-sm font-medium text-muted">
-            {rows.length} of {maxLines} lines
-          </span>
-        </div>
+        <>
+          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            {toolbar}
+            <span className="num ml-auto text-sm font-medium text-muted">
+              {rows.length} of {maxLines} lines
+            </span>
+          </div>
+          <details className="mb-4 text-sm leading-5">
+            <summary className="cursor-pointer font-semibold text-link underline underline-offset-2 hover:text-link-hover">What PS and OTPS mean</summary>
+            <p className="mt-2 max-w-[70ch] text-ink-2">PS is personal services: salaries and fringe. OTPS is other than personal services: supplies, rent and contracts.</p>
+          </details>
+        </>
       ) : null}
-      <p className="mb-4 max-w-[70ch] text-sm leading-5 text-muted">
-        PS is personal services (salaries and fringe). OTPS is other than personal services (supplies, rent, contracts). Up to {maxLines} lines. You can also paste rows straight into the table.
-      </p>
 
       {pasteOpen ? (
         <div id="budget-paste-panel" className="mb-4 rounded border border-line bg-harbor-50 px-4 py-4">
@@ -204,8 +207,18 @@ export function BudgetGrid({
 
       {gridError ? <p className="mb-3 text-sm font-semibold text-bad">{gridError}</p> : null}
 
-      <div className="rounded border border-line">
-      <div className={cn("hidden h-11 rounded-t border-b border-line bg-harbor-50 @min-[720px]:items-center text-sm font-semibold text-ink-2", COLS)}>
+      {rows.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded border border-dashed border-line-strong px-6 py-10 text-center">
+          <p className="text-[17px] font-bold leading-6 text-ink">No budget lines yet</p>
+          <p className="max-w-[46ch] text-[15px] leading-[22px] text-ink-2">Paste rows from Excel (Category, Description, Amount) or add lines one at a time.</p>
+          <div className="mt-1 flex flex-wrap justify-center gap-3">{toolbar}</div>
+        </div>
+      ) : (
+      <>
+      <div className="overflow-x-auto lg:-mx-6">
+      <div className="@container lg:min-w-[720px]">
+      <div className="@min-[720px]:rounded @min-[720px]:border @min-[720px]:border-line lg:rounded-none lg:border-x-0">
+      <div className={cn("hidden h-11 border-b border-line bg-harbor-50 text-[13px] font-semibold text-ink-2", COLS, "@min-[720px]:items-center")}>
         <span className="px-3 text-right">#</span>
         <span className="px-3">Category</span>
         <span className="px-3">Description</span>
@@ -215,13 +228,6 @@ export function BudgetGrid({
         <span className="sr-only">Actions</span>
       </div>
 
-      {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
-          <p className="text-[17px] font-bold leading-6 text-ink">No budget lines yet</p>
-          <p className="max-w-[46ch] text-[15px] leading-[22px] text-ink-2">Paste rows from Excel (Category, Description, Amount) or add lines one at a time.</p>
-          <div className="mt-1 flex flex-wrap justify-center gap-3">{toolbar}</div>
-        </div>
-      ) : (
         <ul>
           {rows.map((row, index) => {
             const n = index + 1;
@@ -234,7 +240,7 @@ export function BudgetGrid({
               <li
                 key={row.rowId}
                 className={cn(
-                  "transition-colors hover:bg-harbor-50/60 @max-[719px]:m-3 @max-[719px]:grid @max-[719px]:grid-cols-[6.5rem_minmax(0,1fr)] @max-[719px]:gap-3 @max-[719px]:rounded-md @max-[719px]:border @max-[719px]:border-line @max-[719px]:p-3 @min-[720px]:min-h-[52px] @min-[720px]:border-b @min-[720px]:border-line-soft",
+                  "transition-colors hover:bg-harbor-50/60 @max-[719px]:mb-3 @max-[719px]:grid @max-[719px]:grid-cols-[6.5rem_minmax(0,1fr)] @max-[719px]:gap-3 @max-[719px]:rounded-md @max-[719px]:border @max-[719px]:border-line @max-[719px]:p-3 @min-[720px]:min-h-[52px] @min-[720px]:border-b @min-[720px]:border-line-soft",
                   COLS,
                   highlight.has(row.rowId) && "bg-info-bg"
                 )}
@@ -280,7 +286,7 @@ export function BudgetGrid({
                     <span className="sr-only">Line {n} </span>
                     Approved budget
                   </label>
-                  <div className="relative">
+                  <div className="relative @min-[720px]:h-full">
                     <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
                       $
                     </span>
@@ -305,7 +311,7 @@ export function BudgetGrid({
                     <span className="sr-only">Line {n} </span>
                     Actual spent
                   </label>
-                  <div className="relative">
+                  <div className="relative @min-[720px]:h-full">
                     <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
                       $
                     </span>
@@ -343,44 +349,47 @@ export function BudgetGrid({
             );
           })}
         </ul>
-      )}
+      </div>
+      </div>
+      </div>
 
-      <div className={cn("bg-harbor-50/50 text-[15px] leading-[22px]", rows.length > 0 && "border-t border-line", !explainVariance && "rounded-b")}>
+      <div className="mt-4 rounded border border-line lg:-mx-6 lg:rounded-none lg:border-x-0 lg:border-b-0">
+      <div className="bg-harbor-50/50 text-[15px] leading-[22px]">
       <dl>
         {[
           ["Personal services (PS) subtotal", totals.ps],
           ["Other than personal services (OTPS) subtotal", totals.otps],
         ].map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4">
+          <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
             <dt className="text-muted">{label}</dt>
             <dd className="num text-ink">{formatCurrency(value as number)}</dd>
           </div>
         ))}
-        <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4">
+        <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4 lg:px-6">
           <dt className="font-semibold text-ink">Approved budget total</dt>
           <dd className="num font-bold text-ink">{formatCurrency(totals.total)}</dd>
         </div>
-        <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4">
+        <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
           <dt className="text-muted">Award</dt>
           <dd className="num text-muted">{formatCurrency(award)}</dd>
         </div>
-        <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4">
+        <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
           <dt className="font-semibold text-ink">Difference (budget total minus award)</dt>
           <dd className={cn("num font-bold", balance.tone === "ok" ? "text-ok" : balance.tone === "warn" ? "text-warn" : "text-bad")}>
             {signedDifference(totals.total, award)}
           </dd>
         </div>
-        <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4">
+        <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4 lg:px-6">
           <dt className="font-semibold text-ink">Actual spent total</dt>
           <dd className="num font-bold text-ink">{spend.entered ? formatCurrency(spend.actual) : "Not entered"}</dd>
         </div>
         {spend.entered ? (
           <>
-            <div className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4">
+            <div className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
               <dt className="text-muted">Variance (approved budget minus actual spent)</dt>
               <dd className="num text-ink">{formatCurrency(spend.variance)}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4">
+            <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
               <dt className="text-muted">Unspent balance (award minus actual spent)</dt>
               <dd className={cn("num font-semibold", explainVariance ? "text-warn" : "text-ink")}>
                 {formatCurrency(spend.unspent)} <span className="font-normal text-muted">({spend.unspentPercent.toFixed(1)}% of the award)</span>
@@ -389,11 +398,11 @@ export function BudgetGrid({
           </>
         ) : null}
       </dl>
-      {spend.entered ? null : <p className="px-3 pb-2.5 text-muted sm:px-4">Enter what was actually spent on each line to see the variance and the unspent balance. Actual spent does not have to equal the approved budget.</p>}
+      {spend.entered ? null : <p className="px-3 pb-2.5 text-muted sm:px-4 lg:px-6">Enter what was actually spent on each line to see the variance and the unspent balance. Actual spent does not have to equal the approved budget.</p>}
       </div>
 
       {explainVariance ? (
-        <div className="rounded-b border-t border-line px-3 py-4 sm:px-4">
+        <div className="rounded-b border-t border-line px-3 py-4 sm:px-4 lg:px-6">
           <label htmlFor="budget-variance-note" className="block text-sm font-semibold text-ink">
             Variance explanation
           </label>
@@ -418,6 +427,8 @@ export function BudgetGrid({
         </div>
       ) : null}
       </div>
+      </>
+      )}
     </div>
   );
 }

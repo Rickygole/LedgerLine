@@ -15,7 +15,7 @@ const SPOKEN = { ok: "Budget is balanced with the award.", warn: "Budget is unde
 
 export function BalanceMeter({ total, award, lines }: { total: number; award: number; lines: number }) {
   const balance = balanceCopy(total, award);
-  const tone = TONE[balance.tone];
+  const tone = TONE[lines === 0 ? "warn" : balance.tone];
   const Icon = tone.icon;
   const ratio = award > 0 ? Math.max(0, Math.min(1, total / award)) : 0;
   return (
@@ -27,10 +27,12 @@ export function BalanceMeter({ total, award, lines }: { total: number; award: nu
         <div className={cn("h-full w-full origin-left rounded-sm transition-transform duration-200 ease-out motion-reduce:transition-none", tone.fill)} style={{ transform: `scaleX(${ratio})` }} />
         {balance.tone === "bad" ? <span className="absolute -top-1 right-0 h-[18px] w-0.5 bg-ink" /> : null}
       </div>
-      <p className={cn("num inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-sm font-bold", tone.badge)}>
-        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-        {lines === 0 ? `Lines must add up to ${formatCurrency(award)}` : balance.text}
-      </p>
+      {lines === 0 ? null : (
+        <p className={cn("num inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-sm font-bold", tone.badge)}>
+          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {balance.text}
+        </p>
+      )}
       <p aria-live="polite" className="sr-only">
         {lines === 0 ? "" : SPOKEN[balance.tone]}
       </p>

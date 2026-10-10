@@ -44,7 +44,7 @@ export function StateBadge({ state, audience = "finance" }: { state: ReportState
 }
 
 export function DueBadge({ daysPastDue }: { daysPastDue: number }) {
-  if (daysPastDue > 0) return <Badge tone="bad">{daysPastDue} {daysPastDue === 1 ? "day" : "days"} past due</Badge>;
+  if (daysPastDue > 0) return <Badge tone="bad" icon={AlertTriangle}>{daysPastDue} {daysPastDue === 1 ? "day" : "days"} past due</Badge>;
   if (daysPastDue > -14) return <Badge tone="warn">Due in {Math.abs(daysPastDue)} {Math.abs(daysPastDue) === 1 ? "day" : "days"}</Badge>;
   return null;
 }

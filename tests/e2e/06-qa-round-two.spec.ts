@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow, WidthType } from "docx";
 import type { Page } from "@playwright/test";
-import { authFile, gotoStep, PEOPLE, SAVED_LABEL, stepLink } from "./support/app";
+import { authFile, gotoStep, PEOPLE, savedNow, stepLink } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -55,7 +55,7 @@ test("[US-018] reopening a report lands on the section edited last", async ({ br
   const id = await openAnyDraft(page);
   await gotoStep(page, "Narrative");
   await page.locator("#q-accomplishments").fill("Participants completed the curriculum.");
-  await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
+  await expect(savedNow(page)).toBeVisible({ timeout: 20_000 });
   await gotoStep(page, "Organization and contact");
   await page.goto(`/portal/reports/${id}`);
   await expect(page.locator("#step-heading")).toHaveText("Narrative");

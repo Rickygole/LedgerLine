@@ -3,7 +3,7 @@
 import { CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/status-badge";
 import { formatCurrency } from "@/lib/rules/money";
-import { displayScalar, tableRows } from "@/lib/report/format";
+import { displayScalar, questionLabel, tableRows } from "@/lib/report/format";
 import { formatBytes } from "@/lib/report/upload-rules";
 import type { AttachmentItem } from "@/lib/report/types";
 import type { Answers, BudgetLine, FormDefinition, Question } from "@/lib/rules/types";
@@ -44,7 +44,7 @@ function AnswerValue({ question, answers }: { question: Question; answers: Answe
     );
   }
   const text = displayScalar(question, value);
-  if (text === "") return <span className="text-muted">{question.required ? "Not answered" : "Not answered (optional)"}</span>;
+  if (text === "") return <span className="text-muted">Not answered</span>;
   return <span className="whitespace-pre-wrap break-words">{text}</span>;
 }
 
@@ -153,12 +153,12 @@ export function CheckAnswers({
                 .filter((question) => isVisible(question, answers))
                 .map((question) => (
                   <div key={question.key} className={ROW}>
-                    <dt className="font-semibold text-ink">{question.label}</dt>
+                    <dt className="font-semibold text-ink">{questionLabel(question.label)}</dt>
                     <dd className="text-ink">
                       <AnswerValue question={question} answers={answers} />
                     </dd>
                     <dd>
-                      <ChangeLink step={section.key} target={`q-${question.key}`} label={question.label.toLowerCase()} onChange={onChange} />
+                      <ChangeLink step={section.key} target={`q-${question.key}`} label={questionLabel(question.label).toLowerCase()} onChange={onChange} />
                     </dd>
                   </div>
                 ))}

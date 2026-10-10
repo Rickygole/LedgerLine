@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authFile, fillRequiredAnswers, gotoStep, openOverdueDraft, PEOPLE, REPORT_URL, setBudget, signIn, SAVED_LABEL } from "./support/app";
+import { authFile, fillRequiredAnswers, gotoStep, openOverdueDraft, PEOPLE, REPORT_URL, setBudget, signIn, savedNow } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -49,11 +49,64 @@ test("[BR-021][US-031] submitting the seeded draft lists the two things left to 
   await expect(summary).toContainText("There are 2 problems to fix before you submit");
   await expect(summary).toContainText("Total $71,401.00 must equal award $85,000.00 (under by $13,599.00).");
   await expect(summary).toContainText("Check the box to certify that this report is accurate and complete.");
-  await expect(summary).toBeFocused();
-  await expect(page).toHaveURL(REPORT_URL);
   await summary.getByRole("link", { name: /under by \$13,599\.00/ }).click();
   await expect(page.locator("#step-heading")).toHaveText("Budget");
   await expect(page).toHaveURL(/step=budget/);
+});
+
+test("[US-016] an overdue report carries one red signal on My reports and in the report header", async ({ page }) => {
+  await page.goto("/portal");
+  const row = page.locator("table tbody tr").filter({ hasText: /days? past due/ }).first();
+  await expect(row).toBeVisible();
+  await expect(row.getByText("Overdue", { exact: true })).toHaveCount(1);
+  await expect(row.getByText(/\d+ days? past due/)).toHaveCount(1);
+  await openOverdueDraft(page);
+  const header = page.locator("main");
+  await expect(header.getByText(/^\d+ days? past due$/).first()).toBeVisible();
+  await expect(header.getByText("Overdue", { exact: true })).toHaveCount(0);
+});
+
+test("[US-017] report labels mark only optional fields and required fields say so to assistive tech", async ({ page }) => {
+  await openOverdueDraft(page);
+  await gotoStep(page, "Organization and contact");
+  await expect(page.getByText("(required)")).toHaveCount(0);
+  await expect(page.locator("#q-contact_name")).toHaveAttribute("aria-required", "true");
+  await gotoStep(page, "Narrative");
+  await expect(page.getByText("(required)")).toHaveCount(0);
+  await expect(page.getByText(/\(optional\)/).first()).toBeVisible();
+  await expect(page.getByText(/Up to \d+ characters/)).toHaveCount(0);
+  await gotoStep(page, "Review and submit");
+  await expect(page.getByText("(required)")).toHaveCount(0);
+  await expect(page.getByText("Not answered (optional)")).toHaveCount(0);
+});
+
+test("[US-028] the budget step shows no totals until there is a line", async ({ page }) => {
+  await openOverdueDraft(page);
+  await setBudget(page, []);
+  await expect(page.getByText("No budget lines yet")).toBeVisible();
+  await expect(page.getByText("Approved budget total")).toHaveCount(0);
+  await page.getByRole("button", { name: "Add line" }).first().click();
+  await expect(page.getByText("Approved budget total")).toBeVisible();
+  await expect(page.getByText("What PS and OTPS mean")).toBeVisible();
+});
+
+test("[BR-021][US-031] submitting with required answers missing lists each one", async ({ page }) => {
+  await openOverdueDraft(page);
+  await gotoStep(page, "Program performance");
+  await page.locator("#q-participants_actual").fill("");
+  await gotoStep(page, "Review and submit");
+  await page.getByRole("button", { name: "Submit report" }).click();
+  const summary = page.getByRole("alert").filter({ hasText: /problems? to fix before you submit/ }).first();
+  await expect(summary).toBeVisible();
+  await expect(summary).toContainText("Enter the number of participants served this period.");
+  await expect(summary).toContainText(/Add at least one budget line\.|must equal award/);
+  await expect(summary).toContainText("Check the box to certify that this report is accurate and complete.");
+  await expect(summary).toBeFocused();
+  await expect(page).toHaveURL(REPORT_URL);
+  await summary.getByRole("link", { name: "Enter the number of participants served this period." }).click();
+  await expect(page.locator("#step-heading")).toHaveText("Program performance");
+  await expect(page).toHaveURL(/step=performance/);
+  await expect(page.locator("#q-participants_actual")).toBeFocused();
 });
 
 test("[US-017][US-018] answers save automatically and are still there after reload", async ({ page }) => {
@@ -62,7 +115,7 @@ test("[US-017][US-018] answers save automatically and are still there after relo
   await gotoStep(page, "Program performance");
   await page.locator("#q-participants_target").fill("120");
   await page.locator("#q-sites_count").fill("3");
-  await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
+  await expect(savedNow(page)).toBeVisible({ timeout: 20_000 });
   await page.reload();
   await expect(page.locator("#step-heading")).toHaveText("Program performance");
   await expect(page.locator("#q-participants_target")).toHaveValue("120");
@@ -131,7 +184,7 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
   await page.getByLabel("Line 2 Approved budget").fill("25000");
   await page.getByLabel("Line 2 Approved budget").blur();
   await expect(page.getByText(/Balanced|equals the award/).first()).toBeVisible();
-  await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
+  await expect(savedNow(page)).toBeVisible({ timeout: 20_000 });
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
   await page.waitForURL(/\/submitted$/);
@@ -164,6 +217,15 @@ test("[US-019][US-020][BR-014] a submission is locked and a copy with the full c
   await page.goto("/portal/messages");
   await expect(page.getByText("Email delivery is not turned on in this environment. Each message is recorded here.")).toBeVisible();
   await expect(page.getByText(/Report received/).first()).toBeVisible();
+  const addresses = await ownerQuery<{ to_email: string }>(
+    "SELECT DISTINCT o.to_email FROM outbox o WHERE o.org_id = (SELECT org_id FROM app_user WHERE email = $1)",
+    [PEOPLE.maria]
+  );
+  if (addresses.length === 1) {
+    await expect(page.getByText(`Addressed to ${addresses[0].to_email}.`)).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "To", exact: true })).toHaveCount(0);
+  }
+  await expect(page.getByRole("columnheader", { name: "Delivery" })).toHaveCount(0);
 });
 
 test("[US-021] the submitted copy prints without the site chrome and saves as a PDF", async ({ page }) => {

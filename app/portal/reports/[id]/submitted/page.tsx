@@ -37,7 +37,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
         <p className="num mt-1 break-all font-mono text-[24px] font-bold tracking-wide sm:text-[28px]">{header.referenceNo}</p>
       </div>
 
-      <div className="max-w-[70ch] space-y-4 text-base leading-7 text-ink">
+      <div className="space-y-4 text-base leading-7 text-ink">
         <p>
           A copy of this report is in{" "}
           <Link href="/portal/messages" className="text-link underline underline-offset-2 hover:text-link-hover">
@@ -66,7 +66,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
         </dl>
       </div>
 
-      <section aria-labelledby="next-heading" className="max-w-[70ch]">
+      <section aria-labelledby="next-heading">
         <h2 id="next-heading" className="text-xl font-bold leading-7 text-ink">
           What happens next
         </h2>
@@ -84,7 +84,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
       </section>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-        <ButtonLink href={`/portal/reports/${id}`} variant="secondary" >
+        <ButtonLink href={`/portal/reports/${id}`} variant="secondary">
           View or print the submitted report
         </ButtonLink>
         <Link href="/portal" className="text-base font-semibold text-link underline underline-offset-2 hover:text-link-hover">
