@@ -42,6 +42,8 @@ test("[BR-021][US-031] a required table with only an empty row is refused", asyn
   await openAnyDraft(page);
   await gotoStep(page, "Program performance");
   await page.getByRole("radio", { name: "Yes", exact: true }).first().check();
+  const filled = page.getByRole("button", { name: /^Remove row 1 from / });
+  while ((await filled.count()) > 0) await filled.first().click();
   await page.getByRole("button", { name: "Add row" }).first().click();
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();

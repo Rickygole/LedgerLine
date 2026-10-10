@@ -58,5 +58,7 @@ test("District 8 ranks in the top three, the map is shaded by share missing, and
   await expect(d8).toHaveCSS("outline-style", "none");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/district=8&by=sponsor&bucket=missing/);
-  await expect(page.getByRole("link", { name: /^Mott Haven Youth Futures/ })).toBeVisible();
+  await page.getByRole("navigation", { name: "Filter by bucket" }).getByRole("link", { name: /^All/ }).click();
+  await expect(page).toHaveURL(/district=8&by=sponsor/);
+  await expect(page.getByRole("link", { name: /^Mott Haven Youth Futures/ }).first()).toBeVisible();
 });
