@@ -29,19 +29,19 @@ export function UserMenu({ name, initials, email, roleText, orgText }: { name: s
 
   return (
     <details ref={ref} className="group relative">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded px-2 py-1 text-left hover:bg-navy-800 [&::-webkit-details-marker]:hidden" aria-label={`Account menu for ${name}`} title={initials}>
+      <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded px-2 py-1 text-left hover:bg-harbor-800 [&::-webkit-details-marker]:hidden" aria-label={`Account menu for ${name}`} title={initials}>
         <CircleUser className="h-6 w-6 shrink-0 text-white sm:hidden" aria-hidden="true" />
-        <span className="hidden min-w-0 sm:block">
-          <span className="block max-w-[14rem] truncate text-sm font-semibold leading-tight text-white">{name}</span>
-          <span className="block max-w-[14rem] truncate text-xs leading-tight text-navy-200">{orgText ?? roleText}</span>
+        <span className="hidden min-w-0 text-right sm:block">
+          <span className="block max-w-[16rem] truncate text-sm font-semibold leading-5 text-white">{name}</span>
+          <span className="block max-w-[16rem] truncate text-[12.5px] leading-4 text-harbor-200">{orgText ?? roleText}</span>
         </span>
-        <ChevronDown className="h-4 w-4 text-navy-200 group-open:rotate-180" aria-hidden="true" />
+        <ChevronDown className="h-4 w-4 text-harbor-200 group-open:rotate-180" aria-hidden="true" />
       </summary>
-      <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded border border-line-strong bg-white text-ink shadow-raised">
+      <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded border border-line-strong bg-white text-ink shadow-[0_4px_16px_rgba(10,26,48,0.16)]">
         <div className="border-b border-line bg-surface px-4 py-3">
           <p className="truncate text-sm font-semibold">{name}</p>
           <p className="truncate text-xs text-muted">{email}</p>
-          <p className="mt-2 inline-flex rounded-sm bg-navy-100 px-1.5 py-0.5 text-xs font-semibold text-navy-800">{roleText}</p>
+          <p className="mt-2 inline-flex rounded-sm bg-harbor-100 px-2 py-0.5 text-[13px] font-semibold text-harbor-800">{roleText}</p>
           {orgText ? <p className="mt-1.5 truncate text-xs text-muted">{orgText}</p> : null}
         </div>
         <form action={signOut} className="py-1">
