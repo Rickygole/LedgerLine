@@ -149,7 +149,7 @@ test.describe("organization", () => {
 
 test("[US-021] the PDF routes need a signed-in user", async ({ browser }) => {
   const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
-  const response = await context.request.get(`/portal/reports/${mariaReportId}/pdf`);
-  expect([307, 401, 403]).toContain(response.status());
+  const response = await context.request.get(`/portal/reports/${mariaReportId}/pdf`, { maxRedirects: 0 });
+  expect([302, 307, 308, 401]).toContain(response.status());
   await context.close();
 });

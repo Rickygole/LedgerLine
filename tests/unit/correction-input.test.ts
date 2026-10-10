@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { budgetAudit, parseBudgetCorrection, parseTableCorrection } from "@/lib/finance/review/correction-input";
+import {
+  budgetAudit,
+  parseBudgetCorrection,
+  parseTableCorrection,
+  tableAsText,
+} from "@/lib/finance/review/correction-input";
 import { correctionChanges, correctionValueInWords } from "@/lib/finance/review/audit-words";
 import { introducedBlockingIssuesFor } from "@/lib/rules/correction";
 import type { BudgetLine, FormDefinition, Question } from "@/lib/rules/types";
@@ -130,5 +135,16 @@ describe("[US-045] audit wording for budget and table corrections", () => {
       "Added line 2: PS Stipend, $50.00",
       "Removed line 2: OTPS Supplies, $400.00",
     ]);
+  });
+});
+
+describe("[US-045] table values compare as text", () => {
+  it("treats stored numbers and typed text as the same value and ignores blank rows", () => {
+    const stored = [
+      { age_group: "Under 10", count: 1 },
+      { age_group: "", count: null },
+    ];
+    expect(tableAsText(stored, table)).toEqual([{ age_group: "Under 10", count: "1" }]);
+    expect(tableAsText(undefined, table)).toEqual([]);
   });
 });

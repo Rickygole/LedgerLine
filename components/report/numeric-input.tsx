@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { Input } from "@/components/ui/field";
-import { sanitizeNumeric, typedCharsAllowed, type NumericKind } from "@/lib/rules/numeric-input";
+import { sanitizeNumeric, typedTextAccepted, type NumericKind } from "@/lib/rules/numeric-input";
 
 type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "type"> & {
   kind: NumericKind;
@@ -21,7 +21,7 @@ export const NumericInput = forwardRef<HTMLInputElement, Props>(function Numeric
     if (!element) return;
     const block = (event: InputEvent) => {
       if (event.inputType !== "insertText" || event.data === null) return;
-      if (!typedCharsAllowed(kind, event.data)) event.preventDefault();
+      if (!typedTextAccepted(kind, event.data)) event.preventDefault();
     };
     element.addEventListener("beforeinput", block);
     return () => element.removeEventListener("beforeinput", block);

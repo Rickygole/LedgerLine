@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeNumeric, typedCharsAllowed } from "@/lib/rules/numeric-input";
+import { sanitizeNumeric, typedTextAccepted } from "@/lib/rules/numeric-input";
 
 describe("[US-029] numeric fields filter what is typed and normalize what is pasted", () => {
   it("drops letters from every numeric kind", () => {
@@ -26,9 +26,10 @@ describe("[US-029] numeric fields filter what is typed and normalize what is pas
   });
 
   it("blocks typed letters and, for whole numbers, typed decimal points", () => {
-    expect(typedCharsAllowed("currency", "a")).toBe(false);
-    expect(typedCharsAllowed("currency", "7")).toBe(true);
-    expect(typedCharsAllowed("currency", ".")).toBe(true);
-    expect(typedCharsAllowed("integer", ".")).toBe(false);
+    expect(typedTextAccepted("currency", "a")).toBe(false);
+    expect(typedTextAccepted("currency", "$1,250.00")).toBe(true);
+    expect(typedTextAccepted("currency", "7")).toBe(true);
+    expect(typedTextAccepted("currency", ".")).toBe(true);
+    expect(typedTextAccepted("integer", ".")).toBe(false);
   });
 });

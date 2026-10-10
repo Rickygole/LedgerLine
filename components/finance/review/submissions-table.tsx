@@ -39,8 +39,14 @@ function FlagsCell({ row }: { row: ReportRow }) {
   const labels = flags.map((flag) => (draftOnly ? `Draft: ${FLAG_LABEL[flag.reason]}` : FLAG_LABEL[flag.reason]));
   const more = labels.length - 1;
   return (
-    <div className="whitespace-nowrap" title={labels.join(", ")}>
-      {draftOnly ? <Badge tone="neutral">{labels[0]}</Badge> : <FlagBadge label={labels[0]} />}
+    <div className={draftOnly ? undefined : "whitespace-nowrap"} title={labels.join(", ")}>
+      {draftOnly ? (
+        <Badge tone="neutral" className="whitespace-normal">
+          {labels[0]}
+        </Badge>
+      ) : (
+        <FlagBadge label={labels[0]} />
+      )}
       {more > 0 ? (
         <span className="ml-1 text-[13px] text-muted">
           +{more}
@@ -131,7 +137,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
               <TD className="min-w-36" label="Status">
                 <div>
                   {row.bucket === "missing" && row.status === "draft" ? (
-                    <Badge tone="bad" icon={AlertTriangle}>
+                    <Badge tone="bad" icon={AlertTriangle} className="whitespace-normal">
                       Missing, draft started
                     </Badge>
                   ) : (

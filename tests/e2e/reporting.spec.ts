@@ -254,7 +254,7 @@ test("[US-019][US-020][BR-014] a submission is locked and a copy with the full c
   );
   expect(sub).toEqual({ status: "submitted", revision: 1 });
   const [mail] = await ownerQuery<{ to_email: string; body_text: string; template: string; status: string }>(
-    "SELECT to_email, body_text, template, status FROM outbox WHERE submission_id = $1",
+    "SELECT to_email, body_text, template, status FROM outbox WHERE submission_id = $1 AND template = 'submission_confirmation'",
     [submittedId],
   );
   expect(mail.to_email).toBe(PEOPLE.maria);

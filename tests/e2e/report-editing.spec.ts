@@ -102,6 +102,6 @@ test("[US-029] number, whole-number and percent fields refuse letters as typed a
   await expect(percent).toHaveValue("45.5");
   const hours = page.locator("#q-youth_program_hours");
   await hours.fill("$1,250.00");
-  await expect(hours).toHaveValue("1250.00");
+  await expect(hours).toHaveValue("1250");
   await context.close();
 });
