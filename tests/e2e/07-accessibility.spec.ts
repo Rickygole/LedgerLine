@@ -33,11 +33,22 @@ test.describe("automated accessibility checks", () => {
     const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
     await context.addCookies(cookies);
     const login = await context.newPage();
+    await check(login, "/", async () => {
+      await login.getByRole("heading", { name: "Report on your City Council initiative funding" }).waitFor();
+    });
+    await login.setViewportSize({ width: 390, height: 844 });
+    await check(login, "/", async () => {
+      await login.getByRole("heading", { name: "Report on your City Council initiative funding" }).waitFor();
+    });
+    await login.setViewportSize({ width: 1280, height: 720 });
     await check(login, "/login", async () => {
       await login.getByLabel("Work email").waitFor();
     });
     await check(login, "/accessibility");
     await check(login, "/help");
+    await check(login, "/privacy");
+    await check(login, "/terms");
+    await check(login, "/this-page-does-not-exist");
     await gate.close();
     await context.close();
   });

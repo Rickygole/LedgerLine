@@ -19,8 +19,11 @@ test("[BR-011] finance staff see the sidebar in labelled groups and submitters s
   const staff = await finance.newPage();
   await staff.goto("/finance");
   const nav = staff.getByRole("navigation", { name: "Main" });
-  for (const group of ["Review", "Programs", "Communications", "Administration"]) await expect(nav.getByText(group, { exact: true })).toBeVisible();
-  for (const link of ["Dashboard", "Submissions", "Flagged items", "Initiatives", "Organizations", "Outbox", "Audit log"]) await expect(nav.getByRole("link", { name: link })).toBeVisible();
+  for (const group of ["Review", "Programs", "Communications"]) await expect(nav.getByText(group, { exact: true })).toBeVisible();
+  for (const link of ["Dashboard", "Submissions", "Flagged items", "Initiatives", "Organizations", "Reminders"]) await expect(nav.getByRole("link", { name: link })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Outbox" })).toBeHidden();
+  await nav.getByText(/^More/).click();
+  for (const link of ["Saved queries", "Trends", "Outbox", "Audit log", "Lineage", "Platform"]) await expect(nav.getByRole("link", { name: link })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Users" })).toHaveCount(0);
   await finance.close();
 
@@ -28,8 +31,32 @@ test("[BR-011] finance staff see the sidebar in labelled groups and submitters s
   const portal = await org.newPage();
   await portal.goto("/portal");
   const links = portal.getByRole("navigation", { name: "Main" });
-  for (const link of ["My reports", "Submission history", "Organization profile", "Messages"]) await expect(links.getByRole("link", { name: link })).toBeVisible();
+  for (const link of ["My reports", "Submission history", "Organization", "Messages"]) await expect(links.getByRole("link", { name: link })).toBeVisible();
   await org.close();
+});
+
+test("[BR-011] after the passcode the start page shows the fiscal year calendar from the database and Start now opens sign in", async ({ browser }) => {
+  const [period] = await ownerQuery<{ label: string; due: string }>(
+    "SELECT label, to_char(due_on, 'Mon FMDD, YYYY') AS due FROM reporting_period WHERE fiscal_year_id = 'FY27' ORDER BY due_on LIMIT 1"
+  );
+  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+  const page = await context.newPage();
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/gate$/);
+  await page.getByLabel("Passcode").fill(process.env.GATE_PASSCODE ?? "ledger-demo");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.waitForURL((url) => url.pathname === "/");
+  await expect(page.getByRole("heading", { name: "Report on your City Council initiative funding", level: 1 })).toBeVisible();
+  const calendar = page.getByRole("list", { name: "FY27 reporting calendar" }).first();
+  await expect(calendar).toContainText(`${period.label} due`);
+  const keyDates = page.getByRole("complementary", { name: "Key dates" });
+  await expect(keyDates).toContainText(`${period.label} report`);
+  await expect(keyDates).toContainText(`Due ${period.due}`);
+  await expect(page.getByText(/email copy/i)).toHaveCount(0);
+  await page.getByRole("link", { name: "Start now" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Sign in to LedgerLine", level: 1 })).toBeVisible();
+  await context.close();
 });
 
 test("[US-016] starting a report is a POST from a button and opens the new draft", async ({ browser }) => {
@@ -77,7 +104,7 @@ test("[BR-011] the ninth failed sign-in for one email within 15 minutes is refus
   await page.goto("/gate");
   await page.getByLabel("Passcode").fill(process.env.GATE_PASSCODE ?? "ledger-demo");
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.waitForURL(/\/login/);
+  await page.waitForURL((url) => url.pathname === "/");
   for (let attempt = 1; attempt <= 8; attempt++) {
     await page.goto("/login");
     await page.getByLabel("Work email").fill("nobody@motthavenyouth.example.org");
