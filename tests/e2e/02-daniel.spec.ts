@@ -72,7 +72,7 @@ test("[US-044] an analyst requests an update with a note, the organization resub
   await expect(page.getByText(/Write a note before sending/)).toBeVisible();
   await page.getByLabel("Note to the organization").fill(NOTE);
   await page.getByRole("button", { name: "Send request" }).click();
-  await expect(page.getByText(/Update requested\. .+ was emailed at \d{1,2}:\d{2} [AP]M\./)).toBeVisible();
+  await expect(page.getByText(/Update requested at \d{1,2}:\d{2} [AP]M\. .+ will see the note in Messages/)).toBeVisible();
 
   const [row] = await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]);
   expect(row.status).toBe("returned");
