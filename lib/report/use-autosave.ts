@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveDraft } from "@/app/portal/reports/actions";
+import { sessionIsAlive } from "./session-probe";
 import { newRowId } from "./budget-rows";
 import type { SaveInput, SaveResult } from "./types";
 
@@ -17,15 +18,6 @@ export type SaveState =
 type DrainOutcome = "saved" | "idle" | "retrying" | "signed_out" | "stale" | "locked";
 
 const DEBOUNCE_MS = 1200;
-
-async function sessionAlive(): Promise<boolean> {
-  try {
-    const response = await fetch("/api/upload/session", { cache: "no-store" });
-    return response.ok;
-  } catch {
-    return true;
-  }
-}
 
 export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "expectedLock" | "submissionId" | "saveId">, submissionId: string) {
   const [state, setState] = useState<SaveState>({ kind: "idle" });
@@ -55,7 +47,7 @@ export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "e
         try {
           result = await saveDraft({ submissionId, expectedLock: lockRef.current, saveId: saveId.current, ...buildRef.current() });
         } catch {
-          result = (await sessionAlive()) ? { status: "error", message: "network" } : { status: "signed_out" };
+          result = (await sessionIsAlive()) ? { status: "error", message: "network" } : { status: "signed_out" };
         }
         if (result.status === "saved") {
           lockRef.current = result.lockVersion;

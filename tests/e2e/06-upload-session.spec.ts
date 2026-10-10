@@ -10,7 +10,7 @@ async function cookieFor(browser: Browser, email: string) {
 
 test("[US-013] a signed-out session can no longer reach the upload endpoints", async ({ browser }) => {
   const { context, page } = await cookieFor(browser, PEOPLE.maria);
-  const alive = await page.request.get("/api/upload/session");
+  const alive = await page.request.get("/api/session");
   expect(alive.status()).toBe(200);
   expect(await alive.json()).toEqual({ signedIn: true });
 
@@ -22,7 +22,7 @@ test("[US-013] a signed-out session can no longer reach the upload endpoints", a
   await page.getByRole("button", { name: "Sign out" }).click();
   await page.waitForURL(/\/login/);
 
-  const replay = await page.request.get("/api/upload/session", { headers: { cookie: stale } });
+  const replay = await page.request.get("/api/session", { headers: { cookie: stale } });
   expect(replay.status()).toBe(401);
   expect(await replay.json()).toEqual({ signedIn: false });
 
@@ -37,7 +37,7 @@ test("[US-013] a signed-out session can no longer reach the upload endpoints", a
 
 test("[US-023] finance staff cannot mint upload sessions", async ({ browser }) => {
   const { context, page } = await cookieFor(browser, PEOPLE.daniel);
-  const response = await page.request.get("/api/upload/session");
+  const response = await page.request.get("/api/session");
   expect(response.status()).toBe(401);
   await context.close();
 });

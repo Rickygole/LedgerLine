@@ -2,9 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, type CurrentUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
 import { nowEpochSeconds, nowIso, toIsoTimestamp } from "@/lib/dates";
+import { logError } from "@/lib/ops/log";
 import { dispatchFor } from "@/lib/outbox-dispatch";
 import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
@@ -21,6 +22,15 @@ import { CERTIFICATION_STATEMENT, certificationIssues, certificationNote, type C
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { blockingIssues, isVisible } from "@/lib/rules/validate";
 import { plural } from "@/lib/format";
+
+async function lookupUser(event: string): Promise<CurrentUser | null | undefined> {
+  try {
+    return await getCurrentUser();
+  } catch (error) {
+    await logError(event, error);
+    return undefined;
+  }
+}
 
 const cell = z.union([z.string().max(2000), z.number(), z.null()]);
 
@@ -50,15 +60,18 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
   if (!parsed.success) return { status: "error", message: "Some entries could not be saved. Check for very long text." };
   const input = parsed.data;
 
-  const user = await getCurrentUser().catch(() => null);
+  const user = await lookupUser("save_draft_session_failed");
+  if (user === undefined) return { status: "error", message: "Couldn't save. Keep this tab open." };
   if (!user) return { status: "signed_out" };
 
   try {
     return await withClaims(user.id, async (tx): Promise<SaveResult> => {
-      const form = await loadReport(tx, input.submissionId);
-      if (form && input.budget.length > form.definition.budget.maxLines) {
-        const over = input.budget.length - form.definition.budget.maxLines;
-        return { status: "error", message: `A budget can have at most ${form.definition.budget.maxLines} lines. This one has ${input.budget.length}. Remove ${over} ${plural(over, "line", "lines")} and your changes will save.` };
+      const report = await loadReport(tx, input.submissionId);
+      if (!report) return { status: "error", message: "This report could not be found." };
+      const maxLines = report.definition.budget.maxLines;
+      if (input.budget.length > maxLines) {
+        const over = input.budget.length - maxLines;
+        return { status: "error", message: `A budget can have at most ${maxLines} lines. This one has ${input.budget.length}. Remove ${over} ${plural(over, "line", "lines")} and your changes will save.` };
       }
       const touched = await tx.one<{ lock_version: number; updated_at: string }>(
         `UPDATE submission SET lock_version = lock_version + 1, updated_at = now(), updated_by = app.uid(), last_save_id = $3
@@ -77,8 +90,6 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
         }
         return { status: "stale", by: current.full_name, at: toIsoTimestamp(current.updated_at) };
       }
-      const report = await loadReport(tx, input.submissionId);
-      if (!report) return { status: "error", message: "This report could not be found." };
       const allowedKeys = new Set([...report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)), VARIANCE_NOTE_KEY]);
       await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget, allowedKeys });
       return { status: "saved", lockVersion: touched.lock_version, savedAt: toIsoTimestamp(touched.updated_at) };
@@ -87,6 +98,7 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
     const code = pgCode(error);
     if (code === "42501") return { status: "locked", message: "You do not have permission to change this report." };
     if (code === "40001") return { status: "stale", by: null, at: nowIso() };
+    await logError("save_draft_failed", error);
     return { status: "error", message: "Couldn't save. Keep this tab open." };
   }
 }
@@ -103,7 +115,8 @@ export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> 
   const problem = checkUpload(filename, bytes);
   if (problem) return { status: "rejected", message: problem };
 
-  const user = await getCurrentUser().catch(() => null);
+  const user = await lookupUser("prepare_upload_session_failed");
+  if (user === undefined) return { status: "error", message: "The upload could not start. Try again." };
   if (!user) return { status: "signed_out" };
   try {
     if (!(await allowedWithin(`upload:${user.id}`, 60, UPLOADS_PER_HOUR))) return { status: "rejected", message: "You have started a lot of uploads in the last hour. Wait a while and try again." };
@@ -117,7 +130,8 @@ export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> 
     const expiresAt = nowEpochSeconds() + UPLOAD_TICKET_SECONDS;
     await withClaims(user.id, (tx) => tx.query("SELECT app.issue_upload_ticket($1, $2, to_timestamp($3))", [pathname, submissionId, expiresAt]));
     return { status: "ok", pathname, signature: signPath(user.id, submissionId, pathname, expiresAt), contentType: mimeFor(filename) };
-  } catch {
+  } catch (error) {
+    await logError("prepare_upload_failed", error);
     return { status: "error", message: "The upload could not start. Try again." };
   }
 }
@@ -125,7 +139,8 @@ export async function prepareUpload(raw: unknown): Promise<PrepareUploadResult> 
 export async function recordBlobUpload(raw: unknown): Promise<UploadActionResult> {
   const parsed = z.object({ submissionId: z.uuid(), pathname: z.string().min(3).max(300), signature: z.string().min(10).max(200), filename: z.string().min(1).max(400) }).safeParse(raw);
   if (!parsed.success) return { status: "rejected", message: "That upload could not be confirmed." };
-  const user = await getCurrentUser().catch(() => null);
+  const user = await lookupUser("record_blob_upload_session_failed");
+  if (user === undefined) return { status: "error", message: "The upload could not be confirmed. Try again." };
   if (!user) return { status: "signed_out" };
   const { submissionId, pathname, signature } = parsed.data;
   const refused: UploadActionResult = { status: "rejected", message: "That upload could not be confirmed." };
@@ -138,7 +153,8 @@ export async function recordBlobUpload(raw: unknown): Promise<UploadActionResult
   let redeemed: boolean;
   try {
     redeemed = (await withClaims(user.id, (tx) => tx.one<{ ok: boolean }>("SELECT app.redeem_upload_ticket($1, $2) AS ok", [pathname, submissionId])))?.ok === true;
-  } catch {
+  } catch (error) {
+    await logError("redeem_upload_ticket_failed", error);
     return { status: "error", message: "The upload could not be confirmed. Try again." };
   }
   if (!redeemed) return refused;
@@ -148,7 +164,8 @@ export async function recordBlobUpload(raw: unknown): Promise<UploadActionResult
   let meta: Awaited<ReturnType<typeof blob.head>>;
   try {
     meta = await blob.head(pathname);
-  } catch {
+  } catch (error) {
+    await logError("blob_head_failed", error);
     return { status: "error", message: "The uploaded file could not be found. Try again." };
   }
   const problem = checkUpload(signedName, meta.size);
@@ -180,6 +197,7 @@ export async function recordBlobUpload(raw: unknown): Promise<UploadActionResult
   } catch (error) {
     await discard(meta.url);
     if (pgCode(error) === "42501") return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    await logError("record_blob_upload_failed", error);
     return { status: "error", message: "The file uploaded but could not be saved to the report. Try again." };
   }
 }
@@ -192,7 +210,8 @@ export async function uploadLocalAttachment(formData: FormData): Promise<UploadA
   const problem = checkUpload(filename, file.size);
   if (problem) return { status: "rejected", message: problem };
 
-  const user = await getCurrentUser().catch(() => null);
+  const user = await lookupUser("upload_local_session_failed");
+  if (user === undefined) return { status: "error", message: "The file could not be uploaded. Try again." };
   if (!user) return { status: "signed_out" };
   try {
     const target = await withClaims(user.id, async (tx) => {
@@ -210,6 +229,7 @@ export async function uploadLocalAttachment(formData: FormData): Promise<UploadA
     return { status: "ok", attachment };
   } catch (error) {
     if (pgCode(error) === "42501") return { status: "rejected", message: "Files can only be added to a report that is still open for editing." };
+    await logError("upload_local_attachment_failed", error);
     return { status: "error", message: "The file could not be uploaded. Try again." };
   }
 }
@@ -217,13 +237,15 @@ export async function uploadLocalAttachment(formData: FormData): Promise<UploadA
 export async function removeAttachment(raw: unknown): Promise<{ status: "ok" } | { status: "signed_out" } | { status: "error"; message: string }> {
   const parsed = z.object({ submissionId: z.uuid(), attachmentId: z.uuid() }).safeParse(raw);
   if (!parsed.success) return { status: "error", message: "That file could not be found." };
-  const user = await getCurrentUser().catch(() => null);
+  const user = await lookupUser("remove_attachment_session_failed");
+  if (user === undefined) return { status: "error", message: "The file could not be removed. Try again." };
   if (!user) return { status: "signed_out" };
   try {
     const removed = await withClaims(user.id, (tx) => removeAttachmentRow(tx, parsed.data.submissionId, parsed.data.attachmentId));
     if (removed === 0) return { status: "error", message: "That file is already gone or the report is no longer open for editing." };
     return { status: "ok" };
-  } catch {
+  } catch (error) {
+    await logError("remove_attachment_failed", error);
     return { status: "error", message: "The file could not be removed. Try again." };
   }
 }
@@ -237,7 +259,8 @@ const submitSchema = z.object({
 export async function submitReport(raw: unknown): Promise<SubmitResult> {
   const parsed = submitSchema.safeParse(raw);
   if (!parsed.success) return { status: "error", message: "This report could not be submitted. Reload the page and try again." };
-  const user = await getCurrentUser().catch(() => null);
+  const user = await lookupUser("submit_report_session_failed");
+  if (user === undefined) return { status: "error", message: "The report could not be submitted. Your answers are saved. Try again." };
   if (!user) return { status: "signed_out" };
 
   let outcome: SubmitResult | "done";
@@ -254,7 +277,6 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
         return { status: "stale", by: header.updatedByName, at: header.updatedAt };
       }
 
-      const allowed = new Set(definition.sections.flatMap((section) => section.questions.map((q) => q.key)));
       const stored = await loadAnswers(tx, header.id);
       const budget = await loadBudget(tx, header.id);
       const files = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>(
@@ -265,7 +287,7 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
       const answers: Answers = {};
       for (const section of definition.sections) {
         for (const question of section.questions) {
-          if (!allowed.has(question.key) || !isVisible(question, stored.answers)) continue;
+          if (!isVisible(question, stored.answers)) continue;
           const value = stored.answers[question.key];
           if (value !== undefined) answers[question.key] = value;
         }
@@ -327,6 +349,7 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
     if (code === "40001") return { status: "stale", by: null, at: nowIso() };
     if (code === "42501") return { status: "error", message: "Only your organization can submit this report." };
     if (code === "23514") return { status: "error", message: "This report can no longer be submitted. It may already have been sent." };
+    await logError("submit_report_failed", error);
     return { status: "error", message: "The report could not be submitted. Your answers are saved. Try again." };
   }
   if (outcome !== "done") return outcome;

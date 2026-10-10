@@ -8,18 +8,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/dates";
 import type { AttachmentItem, UploadActionResult } from "@/lib/report/types";
+import { sessionIsAlive } from "@/lib/report/session-probe";
 import { ACCEPT_ATTRIBUTE, MAX_UPLOAD_BYTES, clientCheckUpload, formatBytes } from "@/lib/report/upload-rules";
 
 type Pending = { key: string; name: string; bytes: number; state: "uploading" | "rejected"; reason?: string; progress?: number };
-
-async function sessionIsAlive(): Promise<boolean> {
-  try {
-    const response = await fetch("/api/upload/session", { cache: "no-store" });
-    return response.ok;
-  } catch {
-    return true;
-  }
-}
 
 export function Attachments({
   submissionId,
