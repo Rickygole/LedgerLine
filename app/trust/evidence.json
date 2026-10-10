@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-10-10T18:43:39.556Z",
-  "commit": "2c1fe4473f38d1295c7c0442e8b3da0611801cd1",
+  "generatedAt": "2026-10-10T20:01:04.731Z",
+  "commit": "a3186d3256516280a4ecafbea89329db417edabb",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 591,
-    "passed": 591,
+    "tests": 617,
+    "passed": 617,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 309,
-    "sql": 183,
+    "unit": 320,
+    "sql": 198,
     "eval": 32,
     "e2e": 67
   },
@@ -98,72 +98,6 @@
       "note": "Standard questions come from one shared library in the application. Every form version on file embeds those same questions, and a change to the library reaches every form built afterwards. Each published version keeps its own copy, so a published form never changes underneath a report.",
       "tests": [
         {
-          "title": "form draft evaluation has labels for three templates",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation senior-digital-literacy-report.docx has a replay fixture keyed by the hash of the extracted text",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation senior-digital-literacy-report.docx replay output is schema valid, matches the labels and has fully valid citations",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation senior-digital-literacy-report.docx fallback parser has high recall and precision with valid citations",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation youth-sports-league-report.docx has a replay fixture keyed by the hash of the extracted text",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation youth-sports-league-report.docx replay output is schema valid, matches the labels and has fully valid citations",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation youth-sports-league-report.docx fallback parser has high recall and precision with valid citations",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation food-pantry-report-injected.docx has a replay fixture keyed by the hash of the extracted text",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation food-pantry-report-injected.docx replay output is schema valid, matches the labels and has fully valid citations",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation food-pantry-report-injected.docx fallback parser has high recall and precision with valid citations",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
-          "title": "form draft evaluation injection is not obeyed by the replay or the fallback parser",
-          "file": "tests/eval/form-draft.test.ts",
-          "status": "passed",
-          "suite": "eval"
-        },
-        {
           "title": "standard questions come from one shared library embeds the same library questions in every form version on file, across both fiscal years",
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
@@ -180,60 +114,6 @@
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
-        },
-        {
-          "title": "a form made from an imported Word file records where it came from lets the app record the draft source and refuses values outside the allowed list",
-          "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
-        {
-          "title": "Word import without a model reads headings, tables, choice lists and yes or no lines from a fresh file",
-          "file": "tests/unit/docx-import.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "Word import without a model puts each question under its heading and builds a valid table question",
-          "file": "tests/unit/docx-import.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "Word import without a model cleans yes or no and option text out of the labels",
-          "file": "tests/unit/docx-import.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "Word import without a model still handles plain text with section lines when no structure is available",
-          "file": "tests/unit/docx-import.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "the AI switch covers form drafting never calls the model and drafts by rules when the switch is off",
-          "file": "tests/unit/form-draft-switch.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "the AI switch covers form drafting calls the model when the switch is on",
-          "file": "tests/unit/form-draft-switch.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "the AI switch covers form drafting treats a missing setting as on, like note drafting",
-          "file": "tests/unit/form-draft-switch.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "a Word file imported without a model keeps its headings, table and choices and is not labelled AI",
-          "file": "tests/e2e/form-import.spec.ts",
-          "status": "passed",
-          "suite": "e2e"
         }
       ]
     },
@@ -726,12 +606,6 @@
       "note": null,
       "tests": [
         {
-          "title": "report labels mark only optional fields and required fields say so to assistive tech",
-          "file": "tests/e2e/reporting.spec.ts",
-          "status": "passed",
-          "suite": "e2e"
-        },
-        {
           "title": "answers save automatically and are still there after reload",
           "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
@@ -749,26 +623,50 @@
       "note": null,
       "tests": [
         {
-          "title": "last saved label shows only the time for a save made today in New York",
-          "file": "tests/unit/saved-label.test.ts",
+          "title": "autosave takes the draft lock and refuses stale or replayed writes correctly advances the lock by one for each save made from the current lock",
+          "file": "tests/sql/autosave.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "autosave takes the draft lock and refuses stale or replayed writes correctly reports a stale copy, with who saved last, when the lock is behind",
+          "file": "tests/sql/autosave.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "autosave takes the draft lock and refuses stale or replayed writes correctly accepts a replay of the same save id once without advancing the lock a second time",
+          "file": "tests/sql/autosave.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "autosave takes the draft lock and refuses stale or replayed writes correctly refuses a save once the report has been submitted",
+          "file": "tests/sql/autosave.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "autosave takes the draft lock and refuses stale or replayed writes correctly reports a report that does not exist or is not visible as missing",
+          "file": "tests/sql/autosave.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "autosave retries only problems that can clear on their own retries a dropped connection, a server error and a signed out session",
+          "file": "tests/unit/save-retry.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "last saved label includes the date without the year for an earlier day this year",
-          "file": "tests/unit/saved-label.test.ts",
+          "title": "autosave retries only problems that can clear on their own does not retry a validation, schema or over-limit refusal",
+          "file": "tests/unit/save-retry.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "last saved label keeps the year for a save made in another year",
-          "file": "tests/unit/saved-label.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "last saved label uses the New York day, not the UTC day",
-          "file": "tests/unit/saved-label.test.ts",
+          "title": "autosave retries only problems that can clear on their own does not retry a stale or locked report",
+          "file": "tests/unit/save-retry.test.ts",
           "status": "passed",
           "suite": "unit"
         },
@@ -929,6 +827,12 @@
         {
           "title": "the outbox dispatcher never emails a password link template",
           "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "confirmation email body the email copy leaves out blank table rows and formats counts",
+          "file": "tests/unit/report-format.test.ts",
           "status": "passed",
           "suite": "unit"
         },
@@ -1570,12 +1474,6 @@
       "note": null,
       "tests": [
         {
-          "title": "confirmation email body leaves out blank table rows and formats counts",
-          "file": "tests/unit/report-format.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
           "title": "required fields blocks every missing required field",
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
@@ -1740,126 +1638,6 @@
           "suite": "unit"
         },
         {
-          "title": "person names accept real names and refuse markup and symbols accepts Maria Santos",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts Zoë Ñúñez",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts Siobhan O'Brien-Smith",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts Dr. J. R. Cho",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts Marie-Claire D’Souza",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts José Ángel García Márquez",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts Li",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts Nguyễn Thị Hạnh",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols accepts Anna Maria von Trapp Jr.",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses <script>alert(1)</script> Zoë Ñúñez 🎉",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses Robert'); DROP TABLE users;--",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses Maria 2nd",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses R2D2",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses ...",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses - -",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses a@b.org",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses Maria\u0000Santos",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols refuses an empty, one character or overlong name with a plain message",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols applies to the person certifying a report",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "person names accept real names and refuse markup and symbols applies to the report contact name",
-          "file": "tests/unit/person-name.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
           "title": "an unbalanced budget is refused with the amount, then submits once fixed",
           "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
@@ -1941,7 +1719,7 @@
       "note": null,
       "tests": [
         {
-          "title": "password reset tokens emails a link, stores only a hash, and sets the password once",
+          "title": "password reset tokens queues a reset link in the outbox, stores only a hash, and sets the password once",
           "file": "tests/sql/accounts.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -2302,6 +2080,12 @@
           "suite": "sql"
         },
         {
+          "title": "manual flags keep their notes out of the organization's view of the audit history",
+          "file": "tests/sql/manual-flag.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "an analyst flags a submission and it appears in the flagged items view",
           "file": "tests/e2e/review.spec.ts",
           "status": "passed",
@@ -2438,6 +2222,30 @@
           "suite": "sql"
         },
         {
+          "title": "a correction may not leave the report with a new blocking problem refuses a change that makes a required, empty question visible",
+          "file": "tests/unit/correction-validity.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a correction may not leave the report with a new blocking problem allows a change that introduces no new blocking problem",
+          "file": "tests/unit/correction-validity.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a correction may not leave the report with a new blocking problem does not blame the correction for a problem the report already had",
+          "file": "tests/unit/correction-validity.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a correction may not leave the report with a new blocking problem allows a change that removes a requirement",
+          "file": "tests/unit/correction-validity.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "a correction after acceptance needs a reason and leaves an audit record",
           "file": "tests/e2e/review.spec.ts",
           "status": "passed",
@@ -2491,6 +2299,12 @@
       "tests": [
         {
           "title": "workbook builds a CSV of the Submissions sheet only",
+          "file": "tests/unit/finance-export.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "workbook guards formula-looking text in the CSV only",
           "file": "tests/unit/finance-export.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -2709,6 +2523,36 @@
         {
           "title": "reminder history and wording greets by name in a live preview too",
           "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a missed daily run still sends the reminder, once does not send before the send date",
+          "file": "tests/sql/reminder-catch-up.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a missed daily run still sends the reminder, once sends a missed reminder on the next days within the catch-up window",
+          "file": "tests/sql/reminder-catch-up.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a missed daily run still sends the reminder, once keys the message to the send date so a late run uses the same key as an on-time run",
+          "file": "tests/sql/reminder-catch-up.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a missed daily run still sends the reminder, once never sends the same reminder twice across consecutive catch-up days",
+          "file": "tests/sql/reminder-catch-up.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a missed daily run still sends the reminder, once marks a reminder already sent in the preview once it is queued",
+          "file": "tests/sql/reminder-catch-up.test.ts",
           "status": "passed",
           "suite": "sql"
         },
@@ -3809,6 +3653,12 @@
           "suite": "sql"
         },
         {
+          "title": "manual flags keep their notes out of the organization's view of the audit history",
+          "file": "tests/sql/manual-flag.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "login throttle holds under concurrency allows exactly 8 of 40 parallel attempts on one key",
           "file": "tests/sql/throttle.test.ts",
           "status": "passed",
@@ -3968,18 +3818,6 @@
       "reason": null,
       "note": null,
       "tests": [
-        {
-          "title": "orphan uploads are swept after 24 hours deletes old files with no attachment row and keeps referenced and recent ones",
-          "file": "tests/sql/orphans.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
-        {
-          "title": "orphan uploads are swept after 24 hours is a no-op the second time",
-          "file": "tests/sql/orphans.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
         {
           "title": "a signed upload can be recorded once re-checks the file count inside the recording transaction",
           "file": "tests/sql/uploads.test.ts",
@@ -4446,12 +4284,6 @@
       "note": null,
       "tests": [
         {
-          "title": "confirmation email body leaves out blank table rows and formats counts",
-          "file": "tests/unit/report-format.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
           "title": "required field messages read as plain instructions asks yes or no questions without folding them into a sentence",
           "file": "tests/unit/required-message.test.ts",
           "status": "passed",
@@ -4553,20 +4385,26 @@
       "note": null,
       "tests": [
         {
-          "title": "status can only change through the workflow function denies a direct status update even for the reporting organization",
-          "file": "tests/sql/access.test.ts",
+          "title": "the database refuses a submit that does not balance refuses a direct submit whose saved budget is short of the award",
+          "file": "tests/sql/workflow.test.ts",
           "status": "passed",
           "suite": "sql"
         },
         {
-          "title": "status can only change through the workflow function denies a direct status update for a finance analyst",
-          "file": "tests/sql/access.test.ts",
+          "title": "the database refuses a submit that does not balance refuses a snapshot whose budget total differs from the saved budget lines",
+          "file": "tests/sql/workflow.test.ts",
           "status": "passed",
           "suite": "sql"
         },
         {
-          "title": "status can only change through the workflow function refuses submit from a different organization through the function",
-          "file": "tests/sql/access.test.ts",
+          "title": "the database refuses a submit that does not balance refuses a submit that carries no lock version",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the database refuses a submit that does not balance refuses a resubmit with an unbalanced budget",
+          "file": "tests/sql/workflow.test.ts",
           "status": "passed",
           "suite": "sql"
         },
