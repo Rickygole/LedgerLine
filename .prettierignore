@@ -1,0 +1,14 @@
+.next
+node_modules
+reports
+test-results
+.storage
+fixtures
+vendor
+patches
+pnpm-lock.yaml
+app/trust/evidence.json
+lib/geo/*.json
+lib/ai/replays
+db/migrations
+*.md

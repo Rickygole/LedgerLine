@@ -45,18 +45,19 @@ jobs:
       - run: pnpm db:migrate
       - run: pnpm db:role
       - run: pnpm db:seed
+      - run: pnpm format:check
       - run: pnpm lint
-      - run: npx tsc --noEmit
+      - run: pnpm typecheck
       - name: Unit, SQL and eval tests
-        run: npx vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json
+        run: pnpm test --reporter=default --reporter=json --outputFile.json=reports/vitest.json
       - run: pnpm build
       - name: Install the browser
         run: npx playwright install --with-deps chromium
       - name: End to end tests
-        run: npx playwright test
+        run: pnpm e2e
       - name: Requirements evidence
         if: always()
-        run: npx tsx scripts/trust.ts
+        run: pnpm tsx scripts/trust.ts
       - uses: actions/upload-artifact@v5
         if: always()
         with:
