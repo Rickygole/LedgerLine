@@ -82,6 +82,8 @@ describe("[US-038] password reset tokens", () => {
       ).rows[0];
       expect(body.body_text).toContain(`${ORIGIN}/reset?token=[withheld]`);
       expect(body.body_text).not.toContain(token);
+      expect(body.body_text).not.toContain("Use the link below");
+      expect(body.body_text).toContain("give you the link directly");
       expect(body.org_id).toBeNull();
       const stored = await owner.query("SELECT 1 FROM password_token WHERE token_hash = $1 OR token_hash = $2", [
         token,
