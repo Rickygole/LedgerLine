@@ -4,6 +4,7 @@ import { withClaims } from "@/lib/db";
 import { nowDate, todayInNewYork } from "@/lib/dates";
 import { buildPackage, type CatalogColumn, type PackageRows } from "@/lib/export/package";
 import { buildZip } from "@/lib/export/zip";
+import { writeAudit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,15 +24,13 @@ export async function GET() {
       rows[table] = result.map((r) => r.row);
     }
     const total = Object.values(rows).reduce((sum, list) => sum + list.length, 0);
-    await tx.query("SELECT app.write_audit($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7)", [
-      "export",
-      "data_package",
-      "export_all",
-      `${filename}: ${Object.keys(rows).length} tables, ${total} rows`,
-      null,
-      JSON.stringify({ tables: Object.keys(rows).length, rows: total }),
-      null,
-    ]);
+    await writeAudit(tx, {
+      entity: "export",
+      entityId: "data_package",
+      action: "export_all",
+      note: `${filename}: ${Object.keys(rows).length} tables, ${total} rows`,
+      after: { tables: Object.keys(rows).length, rows: total },
+    });
     return { catalog, rows };
   });
 

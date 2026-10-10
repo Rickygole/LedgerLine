@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { pgCode, withClaims } from "@/lib/db";
+import { writeAudit } from "@/lib/audit";
 
 type StartResult = { status: "ok"; submissionId: string; created: boolean } | { status: "not_found" } | { status: "no_form" };
 
@@ -41,7 +42,7 @@ export async function startReport(userId: string, assignmentId: string, periodId
            VALUES ($1, 'org_legal_name', to_jsonb($2::text), app.uid()), ($1, 'org_ein', to_jsonb($3::text), app.uid())`,
           [created.id, assignment.legal_name, assignment.ein]
         );
-        await tx.query("SELECT app.write_audit('submission', $1, 'start', $2, NULL, NULL, NULL)", [created.id, `${assignment.legal_name}, ${periodId}`]);
+        await writeAudit(tx, { entity: "submission", entityId: created.id, action: "start", note: `${assignment.legal_name}, ${periodId}` });
         return { status: "ok", submissionId: created.id, created: true };
       });
       return result;

@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { actionFailure, type ActionState } from "@/lib/actions";
 import { isUuid } from "@/lib/ids";
+import { writeAudit } from "@/lib/audit";
 
 export async function createDraftFromPublished(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser(["finance_admin"]);
@@ -26,11 +27,13 @@ export async function createDraftFromPublished(_prev: ActionState, formData: For
          VALUES ($1, $2, 'draft', $3::jsonb, 'manual', $4) RETURNING id`,
         [initiativeId, next!.next, JSON.stringify(source.definition), user.id]
       );
-      await tx.query(`SELECT app.write_audit('form_version', $1, 'create_draft', $2, NULL, $3::jsonb, NULL)`, [
-        created!.id,
-        `Copied from version ${source.version}`,
-        JSON.stringify({ initiative_id: initiativeId, version: next!.next, copied_from: source.version }),
-      ]);
+      await writeAudit(tx, {
+        entity: "form_version",
+        entityId: created!.id,
+        action: "create_draft",
+        note: `Copied from version ${source.version}`,
+        after: { initiative_id: initiativeId, version: next!.next, copied_from: source.version },
+      });
       return created!.id;
     });
   } catch (error) {

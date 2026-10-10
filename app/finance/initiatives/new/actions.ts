@@ -9,6 +9,7 @@ import { parseAmount } from "@/lib/rules/money";
 import { actionFailure, type ActionState } from "@/lib/actions";
 import { AGENCIES } from "@/lib/domain";
 import { isUuid } from "@/lib/ids";
+import { writeAudit } from "@/lib/audit";
 
 const createSchema = z.object({
   name: z.string().trim().min(3, "Enter a name of at least 3 characters.").max(120, "Use 120 characters or fewer."),
@@ -40,10 +41,7 @@ export async function createInitiative(_prev: ActionState, formData: FormData): 
            VALUES ($1, $2, $3, $4, 'FY27', 0, $5) RETURNING id`,
           [code, parsed.data.name, parsed.data.category, parsed.data.description, user.id]
         );
-        await tx.query(`SELECT app.write_audit('initiative', $1, 'create', NULL, NULL, $2::jsonb, NULL)`, [
-          row!.id,
-          JSON.stringify({ code, name: parsed.data.name, category: parsed.data.category, fiscal_year: "FY27" }),
-        ]);
+        await writeAudit(tx, { entity: "initiative", entityId: row!.id, action: "create", after: { code, name: parsed.data.name, category: parsed.data.category, fiscal_year: "FY27" } });
         return row!.id;
       });
     } catch (error) {
@@ -89,20 +87,19 @@ export async function assignOrganizations(_prev: ActionState, formData: FormData
           `INSERT INTO assignment (initiative_id, org_id, award_amount, sponsoring_agency) VALUES ($1, $2, $3, nullif($4, '')) RETURNING id`,
           [parsed.data.initiativeId, row.orgId, row.amount, row.agency]
         );
-        await tx.query(`SELECT app.write_audit('assignment', $1, 'assign', NULL, NULL, $2::jsonb, NULL)`, [
-          inserted!.id,
-          JSON.stringify({ org_id: row.orgId, org_name: org.legal_name, initiative_id: parsed.data.initiativeId, initiative_code: initiative.code, award_amount: row.amount }),
-        ]);
+        await writeAudit(tx, {
+          entity: "assignment",
+          entityId: inserted!.id,
+          action: "assign",
+          after: { org_id: row.orgId, org_name: org.legal_name, initiative_id: parsed.data.initiativeId, initiative_code: initiative.code, award_amount: row.amount },
+        });
       }
       const total = await tx.one<{ total: string }>(
         `UPDATE initiative i SET total_funding = (SELECT coalesce(sum(award_amount), 0) FROM assignment WHERE initiative_id = i.id)
          WHERE i.id = $1 RETURNING i.total_funding AS total`,
         [parsed.data.initiativeId]
       );
-      await tx.query(`SELECT app.write_audit('initiative', $1, 'funding_recalculated', NULL, NULL, $2::jsonb, NULL)`, [
-        parsed.data.initiativeId,
-        JSON.stringify({ total_funding: Number(total!.total) }),
-      ]);
+      await writeAudit(tx, { entity: "initiative", entityId: parsed.data.initiativeId, action: "funding_recalculated", after: { total_funding: Number(total!.total) } });
     });
   } catch (error) {
     if (pgCode(error) === "23505") return { error: "One of those organizations is already assigned to this initiative." };
@@ -129,11 +126,13 @@ export async function chooseTemplate(_prev: ActionState, formData: FormData): Pr
         `INSERT INTO form_version (initiative_id, version, status, definition, source, created_by) VALUES ($1, $2, 'draft', $3::jsonb, 'manual', $4) RETURNING id`,
         [initiativeId, next!.next, JSON.stringify(definition), user.id]
       );
-      await tx.query(`SELECT app.write_audit('form_version', $1, 'create_draft', $2, NULL, $3::jsonb, NULL)`, [
-        row!.id,
-        mode === "import" ? "Started to import an uploaded Word template" : "Started from the standard template",
-        JSON.stringify({ initiative_id: initiativeId, version: next!.next }),
-      ]);
+      await writeAudit(tx, {
+        entity: "form_version",
+        entityId: row!.id,
+        action: "create_draft",
+        note: mode === "import" ? "Started to import an uploaded Word template" : "Started from the standard template",
+        after: { initiative_id: initiativeId, version: next!.next },
+      });
       return row!.id;
     });
   } catch (error) {

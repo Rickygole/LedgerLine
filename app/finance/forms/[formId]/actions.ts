@@ -12,6 +12,7 @@ import { checkField, mergeFields, type ProposedField } from "@/lib/forms/editor/
 import { readTemplate } from "@/lib/forms/editor/docx";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
 import type { FormDefinition } from "@/lib/rules/types";
+import { writeAudit } from "@/lib/audit";
 
 const questionSchema = z.object({
   key: z.string(),
@@ -68,14 +69,7 @@ export async function saveDefinition(formId: string, definition: FormDefinition)
       const updated = await tx.query("UPDATE form_version SET definition = $2 WHERE id = $1 AND status = 'draft' RETURNING id", [formId, JSON.stringify(clean)]);
       if (updated.length === 0) return false;
       const count = (d: FormDefinition) => d.sections.reduce((n, s) => n + s.questions.length, 0);
-      await tx.query("SELECT app.write_audit($1, $2, $3, $4, $5::jsonb, $6::jsonb, NULL)", [
-        "form_version",
-        formId,
-        "form_edit",
-        null,
-        JSON.stringify({ questions: count(before.definition) }),
-        JSON.stringify({ questions: count(clean) }),
-      ]);
+      await writeAudit(tx, { entity: "form_version", entityId: formId, action: "form_edit", before: { questions: count(before.definition) }, after: { questions: count(clean) } });
       return true;
     });
     if (!saved) return fail("This version is no longer a draft, so it cannot be changed.");
@@ -180,14 +174,14 @@ export async function applyDraft(formId: string, aiActionId: string, submitted: 
       const status = edited.length > 0 || removed.length > 0 ? "edited" : "accepted";
       const diff = { proposed: original.length, kept: submitted.length, removed, edited, added_keys: merged.added, linked_library_keys: merged.linked, already_in_form: merged.alreadyPresent };
       await tx.query("UPDATE ai_action SET status = $2, approver = app.uid(), decided_at = now(), edit_diff = $3 WHERE id = $1", [aiActionId, status, JSON.stringify(diff)]);
-      await tx.query("SELECT app.write_audit($1, $2, $3, $4, NULL, $5::jsonb, $6)", [
-        "form_version",
-        formId,
-        "ai_draft_applied",
-        `Imported ${merged.added.length + merged.linked.length} questions from the uploaded Word file (${submitted.length} of ${original.length} proposed fields kept, ${status})`,
-        JSON.stringify({ added: merged.added.length, linked_library: merged.linked.length, already_in_form: merged.alreadyPresent.length, removed: removed.length }),
+      await writeAudit(tx, {
+        entity: "form_version",
+        entityId: formId,
+        action: "ai_draft_applied",
+        note: `Imported ${merged.added.length + merged.linked.length} questions from the uploaded Word file (${submitted.length} of ${original.length} proposed fields kept, ${status})`,
+        after: { added: merged.added.length, linked_library: merged.linked.length, already_in_form: merged.alreadyPresent.length, removed: removed.length },
         aiActionId,
-      ]);
+      });
       revalidatePath(`/finance/forms/${formId}`);
       const summary = `${merged.added.length + merged.linked.length} questions added${merged.alreadyPresent.length ? `, ${merged.alreadyPresent.length} already in the form` : ""}${removed.length ? `, ${removed.length} removed from the draft` : ""}.`;
       return { ok: true as const, summary };
@@ -203,7 +197,7 @@ export async function rejectDraft(formId: string, aiActionId: string): Promise<{
     return await withClaims(user.id, async (tx) => {
       const updated = await tx.query("UPDATE ai_action SET status = 'rejected', approver = app.uid(), decided_at = now() WHERE id = $1 AND feature = 'form_draft' AND status = 'proposed' RETURNING id", [aiActionId]);
       if (updated.length === 0) return fail("This draft was already decided.");
-      await tx.query("SELECT app.write_audit($1, $2, $3, $4, NULL, NULL, $5)", ["form_version", formId, "ai_draft_discarded", "Draft discarded without changes", aiActionId]);
+      await writeAudit(tx, { entity: "form_version", entityId: formId, action: "ai_draft_discarded", note: "Draft discarded without changes", aiActionId });
       return { ok: true as const };
     });
   } catch (error) {

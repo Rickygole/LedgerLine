@@ -16,6 +16,7 @@ import { buildSnapshot } from "@/lib/snapshot";
 import { identityProblem } from "@/lib/rules/identity";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
+import { writeAudit } from "@/lib/audit";
 
 export type NoteDraft =
   | { ok: true; text: string; mode: "live" | "fallback"; aiActionId: string | null; ruleIds: string[]; dropped: number }
@@ -161,7 +162,7 @@ export async function addFlagAction(_prev: ActionState, formData: FormData): Pro
       if (!current) return "That report could not be found.";
       if (current.status === "draft") return "This report has not been submitted yet, so it cannot be flagged.";
       const flag = await tx.one<{ id: string }>("INSERT INTO flag (submission_id, kind, source, note, created_by) VALUES ($1, 'manual', 'user', $2, app.uid()) RETURNING id", [id, note]);
-      await tx.query("SELECT app.write_audit('submission', $1, 'flag_add', $2, NULL, $3::jsonb, NULL)", [id, note, JSON.stringify({ flag_id: flag?.id, kind: "manual" })]);
+      await writeAudit(tx, { entity: "submission", entityId: id, action: "flag_add", note, after: { flag_id: flag?.id, kind: "manual" } });
       return null;
     });
     if (refused) return failure(refused);
@@ -185,13 +186,14 @@ export async function resolveFlagAction(_prev: ActionState, formData: FormData):
         [flagId, id, outcome]
       );
       if (!row) return false;
-      await tx.query("SELECT app.write_audit('submission', $1, $2, $3, $4::jsonb, $5::jsonb, NULL)", [
-        id,
-        outcome === "resolved" ? "flag_resolve" : "flag_dismiss",
-        row.note,
-        JSON.stringify({ flag_id: flagId, status: "open" }),
-        JSON.stringify({ flag_id: flagId, status: outcome }),
-      ]);
+      await writeAudit(tx, {
+        entity: "submission",
+        entityId: id,
+        action: outcome === "resolved" ? "flag_resolve" : "flag_dismiss",
+        note: row.note,
+        before: { flag_id: flagId, status: "open" },
+        after: { flag_id: flagId, status: outcome },
+      });
       return true;
     });
     if (!changed) return failure("That flag is already closed. Reload the page to see its current state.");

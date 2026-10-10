@@ -10,6 +10,7 @@ import { isoDate } from "@/lib/finance/admin/params";
 import { isUuid } from "@/lib/ids";
 import { todayInNewYork } from "@/lib/dates";
 import { plural } from "@/lib/format";
+import { writeAudit } from "@/lib/audit";
 
 export async function saveRule(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
@@ -36,13 +37,13 @@ export async function saveRule(_prev: ActionState, formData: FormData): Promise<
         const before = await tx.one<{ offset_days: number; template_subject: string; active: boolean }>("SELECT offset_days, template_subject, active FROM reminder_rule WHERE id = $1", [id]);
         if (!before) throw Object.assign(new Error("not found"), { code: "23503" });
         await tx.query("UPDATE reminder_rule SET offset_days = $2, template_subject = $3, template_body = $4, active = $5 WHERE id = $1", [id, offset, subject, body, active]);
-        await tx.query("SELECT app.write_audit('reminder_rule', $1, 'update', NULL, $2::jsonb, $3::jsonb, NULL)", [id, JSON.stringify(before), JSON.stringify({ offset_days: offset, template_subject: subject, active })]);
+        await writeAudit(tx, { entity: "reminder_rule", entityId: id, action: "update", before, after: { offset_days: offset, template_subject: subject, active } });
       } else {
         const created = await tx.one<{ id: string }>(
           "INSERT INTO reminder_rule (period_id, offset_days, template_subject, template_body, active, created_by) VALUES ($1, $2, $3, $4, $5, app.uid()) RETURNING id",
           [period, offset, subject, body, active]
         );
-        await tx.query("SELECT app.write_audit('reminder_rule', $1, 'create', NULL, NULL, $2::jsonb, NULL)", [created?.id, JSON.stringify({ period, offset_days: offset, template_subject: subject })]);
+        await writeAudit(tx, { entity: "reminder_rule", entityId: created?.id, action: "create", after: { period, offset_days: offset, template_subject: subject } });
       }
     });
   } catch (error) {
@@ -61,7 +62,7 @@ export async function toggleRule(_prev: ActionState, formData: FormData): Promis
   try {
     await withClaims(admin.id, async (tx) => {
       await tx.query("UPDATE reminder_rule SET active = $2 WHERE id = $1", [id, active]);
-      await tx.query("SELECT app.write_audit('reminder_rule', $1, $2, NULL, $3::jsonb, $4::jsonb, NULL)", [id, active ? "activate" : "deactivate", JSON.stringify({ active: !active }), JSON.stringify({ active })]);
+      await writeAudit(tx, { entity: "reminder_rule", entityId: id, action: active ? "activate" : "deactivate", before: { active: !active }, after: { active } });
     });
   } catch (error) {
     return actionFailure("toggle_rule_failed", error);
@@ -77,7 +78,7 @@ export async function deleteRule(_prev: ActionState, formData: FormData): Promis
   try {
     await withClaims(admin.id, async (tx) => {
       const before = await tx.one<{ period_id: string; offset_days: number; template_subject: string }>("DELETE FROM reminder_rule WHERE id = $1 RETURNING period_id, offset_days, template_subject", [id]);
-      if (before) await tx.query("SELECT app.write_audit('reminder_rule', $1, 'delete', NULL, $2::jsonb, NULL, NULL)", [id, JSON.stringify(before)]);
+      if (before) await writeAudit(tx, { entity: "reminder_rule", entityId: id, action: "delete", before });
     });
   } catch (error) {
     return actionFailure("delete_rule_failed", error);

@@ -115,6 +115,7 @@ function emittedActions(): { actions: Set<string>; entities: Set<string> } {
 
   for (const file of codeFiles) {
     const code = readFileSync(file, "utf8");
+    if (file.endsWith(join("lib", "audit.ts"))) continue;
     for (const m of code.matchAll(/write_audit\(/g)) {
       const queryAt = code.lastIndexOf("query(", m.index!);
       const call = code.slice(queryAt + 5, closeAt(code, queryAt + 5) + 1);
@@ -131,6 +132,16 @@ function emittedActions(): { actions: Set<string>; entities: Set<string> } {
       resolve(args[0]).forEach((e) => entities.add(e));
       const found = resolve(args[2]);
       if (found.length === 0) throw new Error(`Could not read the audit action in ${file}: ${args[2]}`);
+      found.forEach((a) => actions.add(a));
+    }
+    for (const m of code.matchAll(/\bwriteAudit\(/g)) {
+      const open = m.index! + m[0].length - 1;
+      const call = code.slice(open, closeAt(code, open) + 1);
+      const entity = call.match(/\bentity: "([a-z_]+)"/);
+      const action = call.match(/\baction: ([^,\n}]+)/);
+      const found = action ? literals(action[1].includes("?") ? action[1].slice(action[1].indexOf("?") + 1) : action[1], '"') : [];
+      if (!entity || found.length === 0) throw new Error(`Could not read the audit call in ${file}: ${call.slice(0, 120)}`);
+      entities.add(entity[1]);
       found.forEach((a) => actions.add(a));
     }
     if (file.endsWith("seed.ts")) for (const m of code.matchAll(/\baction: "([a-z_]+)"/g)) actions.add(m[1]);

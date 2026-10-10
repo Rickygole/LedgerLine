@@ -11,6 +11,7 @@ import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { contractLabel, fundingLabel } from "@/lib/finance/awards";
 import { plural } from "@/lib/format";
+import { writeAudit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,15 +52,13 @@ export async function GET(request: NextRequest) {
     const rows = sortRows(applyFilters(all, filters)).filter((r) => isExportable(r.status));
     const filterLines = describeFilters(filters);
     const filename = exportFilename(period.id, todayInNewYork(), format);
-    await tx.query("SELECT app.write_audit($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7)", [
-      "export",
-      period.id,
-      "export",
-      `${filename}: ${rows.length} ${plural(rows.length, "submission", "submissions")}${filterLines.length ? `, filters: ${filterLines.join("; ")}` : ""}`,
-      null,
-      JSON.stringify({ format, rows: rows.length, filters: Object.fromEntries(filtersToParams(filters)) }),
-      null,
-    ]);
+    await writeAudit(tx, {
+      entity: "export",
+      entityId: period.id,
+      action: "export",
+      note: `${filename}: ${rows.length} ${plural(rows.length, "submission", "submissions")}${filterLines.length ? `, filters: ${filterLines.join("; ")}` : ""}`,
+      after: { format, rows: rows.length, filters: Object.fromEntries(filtersToParams(filters)) },
+    });
     return { period, rows, filterLines, filename };
   });
 

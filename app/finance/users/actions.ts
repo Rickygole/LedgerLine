@@ -9,6 +9,7 @@ import { pgCode, withClaims } from "@/lib/db";
 import { actionFailure, type ActionState } from "@/lib/actions";
 import { isUuid } from "@/lib/ids";
 import { STAFF_ROLES } from "@/lib/finance/admin/users";
+import { writeAudit } from "@/lib/audit";
 
 type Target = { id: string; full_name: string; role: string; active: boolean };
 
@@ -30,7 +31,7 @@ export async function changeRole(_prev: ActionState, formData: FormData): Promis
       if (target.role === "cbo_submitter") return { error: "Organization accounts keep the organization role." };
       if (target.role === role) return { ok: `${target.full_name} already has that role.` };
       await tx.query(`UPDATE app_user SET role = $2 WHERE id = $1`, [userId, role]);
-      await tx.query(`SELECT app.write_audit('app_user', $1, 'role_change', NULL, $2::jsonb, $3::jsonb, NULL)`, [userId, JSON.stringify({ role: target.role }), JSON.stringify({ role })]);
+      await writeAudit(tx, { entity: "app_user", entityId: userId, action: "role_change", before: { role: target.role }, after: { role } });
       return { ok: `Role updated for ${target.full_name}.` };
     });
   } catch (error) {
@@ -51,7 +52,7 @@ export async function setActive(_prev: ActionState, formData: FormData): Promise
       const target = await loadTarget(tx, userId);
       if (target.active === active) return { ok: `${target.full_name} is already ${active ? "active" : "inactive"}.` };
       await tx.query(`UPDATE app_user SET active = $2 WHERE id = $1`, [userId, active]);
-      await tx.query(`SELECT app.write_audit('app_user', $1, $2, NULL, $3::jsonb, $4::jsonb, NULL)`, [userId, active ? "activate" : "deactivate", JSON.stringify({ active: !active }), JSON.stringify({ active })]);
+      await writeAudit(tx, { entity: "app_user", entityId: userId, action: active ? "activate" : "deactivate", before: { active: !active }, after: { active } });
       return { ok: `${target.full_name} is now ${active ? "active" : "inactive"}.` };
     });
   } catch (error) {

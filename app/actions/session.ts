@@ -11,6 +11,7 @@ import { anonymous, withClaims } from "@/lib/db";
 import { safeNext } from "@/lib/redirect";
 import { allowed, blocked, clearAttempts, clientKey, TOO_MANY } from "@/lib/throttle";
 import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession, verifySessionClaims } from "@/lib/session";
+import { writeAudit } from "@/lib/audit";
 
 const loginSchema = z.object({
   email: z.string().trim().min(1, "Enter your work email.").email("Enter a work email address in the right format, like name@example.org."),
@@ -60,7 +61,7 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
 
   const session = await withClaims(account.id, async (tx) => {
     const row = await tx.one<{ role: Role; version: number }>("SELECT role, app.current_session_version() AS version FROM app_user WHERE id = app.uid()");
-    await tx.query("SELECT app.write_audit('user', $1, 'sign_in', NULL, NULL, NULL, NULL)", [account.id]);
+    await writeAudit(tx, { entity: "user", entityId: account.id, action: "sign_in" });
     return row;
   });
   if (!session) return { error: "This account is not active.", values };

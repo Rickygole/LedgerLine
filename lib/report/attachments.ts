@@ -7,6 +7,7 @@ import { withClaims, type Tx } from "@/lib/db";
 import { isUuid } from "@/lib/ids";
 import { ALLOWED_TYPES, extensionOf, getFile } from "@/lib/storage";
 import type { AttachmentItem } from "./types";
+import { writeAudit } from "@/lib/audit";
 
 const PATH_KEY_LABEL = "ledgerline:attachment-path:v1";
 export const UPLOAD_TICKET_SECONDS = 15 * 60;
@@ -108,7 +109,7 @@ export async function removeAttachmentRow(tx: Tx, submissionId: string, attachme
     ? await tx.query<{ filename: string }>("UPDATE attachment SET removed_at = now(), removed_by = app.uid() WHERE id = $1 AND submission_id = $2 AND removed_at IS NULL RETURNING filename", [attachmentId, submissionId])
     : await tx.query<{ filename: string }>("DELETE FROM attachment WHERE id = $1 AND submission_id = $2 AND removed_at IS NULL RETURNING filename", [attachmentId, submissionId]);
   if (rows[0]) {
-    await tx.query("SELECT app.write_audit('submission', $1, 'attachment_removed', $2, NULL, NULL, NULL)", [submissionId, rows[0].filename]);
+    await writeAudit(tx, { entity: "submission", entityId: submissionId, action: "attachment_removed", note: rows[0].filename });
   }
   return rows.length;
 }
