@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import {
-  actualProblem,
-  amountProblem,
+  amountTextMessage,
   emptyRow,
   formatAmountText,
   isBlankRow,
@@ -149,8 +148,10 @@ export function BudgetGrid({
 
   function onPaste(event: React.ClipboardEvent<HTMLDivElement>) {
     const text = event.clipboardData.getData("text");
-    if (!/[\t\n]/.test(text.trim())) return;
-    if (event.target instanceof HTMLInputElement && !text.includes("\t")) return;
+    const trimmed = text.trim();
+    if (event.target instanceof HTMLTextAreaElement) return;
+    if (event.target instanceof HTMLInputElement && !(trimmed.includes("\t") && trimmed.includes("\n"))) return;
+    if (!/[\t\n]/.test(trimmed)) return;
     event.preventDefault();
     applyPaste(text);
   }
@@ -300,17 +301,13 @@ export function BudgetGrid({
                   {rows.map((row, index) => {
                     const n = index + 1;
                     const error = rowErrors[row.rowId];
-                    const badAmount = amountProblem(row);
-                    const badActual = actualProblem(row);
+                    const amountMessage = amountTextMessage(row.amountText, `Line ${index + 1}: the amount`);
+                    const actualMessage = amountTextMessage(row.actualText, `Line ${index + 1}: actual spent`);
+                    const badAmount = amountMessage !== null;
+                    const badActual = actualMessage !== null;
                     const variance = lineVariance(lines[index]);
                     const errorId = `budget-row-error-${row.rowId}`;
-                    const message =
-                      error ??
-                      (badAmount
-                        ? `Line ${n}: enter the budgeted amount as a number, like 1250.00`
-                        : badActual
-                          ? `Line ${n}: enter the actual spent as a number, like 1250.00`
-                          : null);
+                    const message = error ?? amountMessage ?? actualMessage;
                     return (
                       <li
                         key={row.rowId}

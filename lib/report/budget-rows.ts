@@ -1,3 +1,4 @@
+import { amountBoundsProblem } from "@/lib/rules/bounds";
 import { parseAmount } from "@/lib/rules/money";
 import type { BudgetLine, Issue } from "@/lib/rules/types";
 import { RULES } from "@/lib/rules/validate";
@@ -66,6 +67,12 @@ function textProblem(text: string): boolean {
   if (parseAmount(text) === null) return true;
   const plain = text.replace(/[$\s,()-]/g, "");
   return /\.\d{3,}/.test(plain) && !/[kKmM]$/.test(plain);
+}
+
+export function amountTextMessage(text: string, label: string): string | null {
+  if (textProblem(text)) return `${label} must be a number with at most 2 decimal places, like 1,250.00.`;
+  const parsed = text.trim() === "" ? null : parseAmount(text);
+  return parsed === null ? null : amountBoundsProblem(parsed, label);
 }
 
 export function amountProblem(row: BudgetRow): boolean {
