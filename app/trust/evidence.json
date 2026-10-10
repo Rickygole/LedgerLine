@@ -1,29 +1,29 @@
 {
-  "generatedAt": "2026-10-10T02:50:52.350Z",
-  "commit": "0ef11c47ed0cc89a54fe1d470abb9ff15b1201c8",
+  "generatedAt": "2026-10-10T16:17:32.620Z",
+  "commit": "0c4f59580ae7ccd56f8d3211709d52ada5de6e93",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 560,
-    "passed": 560,
-    "failed": 0,
+    "tests": 591,
+    "passed": 588,
+    "failed": 3,
     "skipped": 0
   },
   "suites": {
-    "unit": 290,
-    "sql": 179,
+    "unit": 309,
+    "sql": 183,
     "eval": 32,
-    "e2e": 59
+    "e2e": 67
   },
   "summary": {
     "verified": {
-      "stories": 64,
+      "stories": 61,
       "rules": 27
     },
     "failing": {
-      "stories": 0,
+      "stories": 3,
       "rules": 0
     },
     "demonstrated": {
@@ -52,8 +52,20 @@
           "suite": "sql"
         },
         {
+          "title": "a new initiative gets the next serial under the fiscal year continues the serial across fiscal years and carries the year of the new initiative",
+          "file": "tests/unit/initiative-code.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a new initiative gets the next serial under the fiscal year starts at 001 when no code has been issued",
+          "file": "tests/unit/initiative-code.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "an administrator creates a new initiative without a code change",
-          "file": "tests/e2e/03-priya.spec.ts",
+          "file": "tests/e2e/admin-setup.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -70,7 +82,7 @@
       "tests": [
         {
           "title": "the initiative is funded for an organization and given a report form",
-          "file": "tests/e2e/03-priya.spec.ts",
+          "file": "tests/e2e/admin-setup.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -200,8 +212,26 @@
           "suite": "unit"
         },
         {
+          "title": "the AI switch covers form drafting never calls the model and drafts by rules when the switch is off",
+          "file": "tests/unit/form-draft-switch.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the AI switch covers form drafting calls the model when the switch is on",
+          "file": "tests/unit/form-draft-switch.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the AI switch covers form drafting treats a missing setting as on, like note drafting",
+          "file": "tests/unit/form-draft-switch.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "a Word file imported without a model keeps its headings, table and choices and is not labelled AI",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "file": "tests/e2e/form-import.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -236,7 +266,7 @@
         },
         {
           "title": "an initiative-specific question is added next to the shared standard questions and the form is published",
-          "file": "tests/e2e/03-priya.spec.ts",
+          "file": "tests/e2e/admin-setup.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -359,7 +389,7 @@
         },
         {
           "title": "a Word file imported without a model keeps its headings, table and choices and is not labelled AI",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "file": "tests/e2e/form-import.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -387,14 +417,14 @@
       "area": "Annual rollover",
       "summary": "Copy the prior fiscal year's structure into a new year",
       "route": "/finance/rollover",
-      "state": "verified",
-      "reason": null,
+      "state": "failing",
+      "reason": "1 failing test",
       "note": "The fiscal year rollover copies forms and assignments into the new year. Finance administrators run it.",
       "tests": [
         {
           "title": "award fields carries funding source and sponsors through a rollover",
           "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
+          "status": "failed",
           "suite": "sql"
         },
         {
@@ -428,14 +458,14 @@
       "area": "Annual rollover",
       "summary": "Questions and layouts carry forward automatically",
       "route": "/finance/initiatives",
-      "state": "verified",
-      "reason": null,
+      "state": "failing",
+      "reason": "1 failing test",
       "note": null,
       "tests": [
         {
           "title": "award fields carries funding source and sponsors through a rollover",
           "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
+          "status": "failed",
           "suite": "sql"
         },
         {
@@ -491,14 +521,14 @@
       "area": "Access",
       "summary": "Each person has their own account",
       "route": "/login",
-      "state": "verified",
-      "reason": null,
+      "state": "failing",
+      "reason": "1 failing test",
       "note": null,
       "tests": [
         {
           "title": "sessions can be revoked rejects a session after sign out and keeps other sessions",
           "file": "tests/sql/accounts.test.ts",
-          "status": "passed",
+          "status": "failed",
           "suite": "sql"
         },
         {
@@ -527,13 +557,13 @@
         },
         {
           "title": "a submitter signs in through the passcode gate with a personal account",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "a signed-out session can no longer reach the upload endpoints",
-          "file": "tests/e2e/06-upload-session.spec.ts",
+          "file": "tests/e2e/upload-session.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -580,7 +610,7 @@
         },
         {
           "title": "a submitter cannot open another organization's report by its address",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -661,20 +691,26 @@
           "suite": "sql"
         },
         {
-          "title": "a submitter starts the report the organization owes from the portal",
-          "file": "tests/e2e/01-maria.spec.ts",
-          "status": "passed",
-          "suite": "e2e"
-        },
-        {
           "title": "starting a report is a POST from a button and opens the new draft",
-          "file": "tests/e2e/05-access.spec.ts",
+          "file": "tests/e2e/access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "a start link that pairs an initiative with another year's period is not found and creates nothing",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "file": "tests/e2e/report-editing.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a submitter starts the report the organization owes from the portal",
+          "file": "tests/e2e/reporting.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "an overdue report carries one red signal on My reports and in the report header",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -690,8 +726,14 @@
       "note": null,
       "tests": [
         {
+          "title": "report labels mark only optional fields and required fields say so to assistive tech",
+          "file": "tests/e2e/reporting.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
           "title": "answers save automatically and are still there after reload",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -713,7 +755,13 @@
           "suite": "unit"
         },
         {
-          "title": "last saved label includes the date for an earlier day",
+          "title": "last saved label includes the date without the year for an earlier day this year",
+          "file": "tests/unit/saved-label.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "last saved label keeps the year for a save made in another year",
           "file": "tests/unit/saved-label.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -725,14 +773,14 @@
           "suite": "unit"
         },
         {
-          "title": "answers save automatically and are still there after reload",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "title": "reopening a report lands on the section edited last",
+          "file": "tests/e2e/report-editing.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
-          "title": "the resume prompt goes away once the user edits the report",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "title": "answers save automatically and are still there after reload",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -761,7 +809,7 @@
         },
         {
           "title": "a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -886,7 +934,7 @@
         },
         {
           "title": "a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -903,7 +951,7 @@
       "tests": [
         {
           "title": "the submitted copy prints without the site chrome and saves as a PDF",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -932,7 +980,7 @@
         },
         {
           "title": "several supporting documents of the allowed types attach to the report",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1093,55 +1141,37 @@
         },
         {
           "title": "Excel, Word, CSV and PDF files are accepted accepts each of the four types in any letter case",
-          "file": "tests/unit/upload-limit.test.ts",
+          "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "Excel, Word, CSV and PDF files are accepted refuses other types in plain words",
-          "file": "tests/unit/upload-limit.test.ts",
+          "title": "Excel, Word, CSV and PDF files are accepted refuses legacy Word and Excel files and other types in plain words",
+          "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
           "title": "Excel, Word, CSV and PDF files are accepted refuses a file whose content does not match its extension",
-          "file": "tests/unit/upload-limit.test.ts",
+          "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
           "title": "Excel, Word, CSV and PDF files are accepted maps each extension to its content type",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "legacy Word and Excel files are no longer accepted rejects .doc and .xls by name",
-          "file": "tests/unit/upload-limits.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "legacy Word and Excel files are no longer accepted still rejects other types",
-          "file": "tests/unit/upload-limits.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "legacy Word and Excel files are no longer accepted still accepts the four supported types",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
           "title": "several supporting documents of the allowed types attach to the report",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "finance staff cannot mint upload sessions",
-          "file": "tests/e2e/06-upload-session.spec.ts",
+          "file": "tests/e2e/upload-session.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1157,37 +1187,13 @@
       "note": null,
       "tests": [
         {
-          "title": "uploads are limited to 25 MB per file states the limit as 25 megabytes in both the server and the browser",
-          "file": "tests/unit/upload-limit.test.ts",
+          "title": "upload size limit states the 25 MB cap the same way in the server and the browser",
+          "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "uploads are limited to 25 MB per file accepts a file of exactly 25 MB and refuses one byte more",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "uploads are limited to 25 MB per file refuses a 31 MB file on the server and names its size",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "uploads are limited to 25 MB per file gives the browser the same answer as the server for every size",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "uploads are limited to 25 MB per file refuses an empty file",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "upload size limit keeps the 25 MB cap and accepts a file exactly at it",
+          "title": "upload size limit accepts a file exactly at the cap and refuses one byte more",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1199,7 +1205,19 @@
           "suite": "unit"
         },
         {
-          "title": "upload size limit never says a file over the limit equals the limit",
+          "title": "upload size limit names the size of a file that is too large and never says it equals the limit",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit gives the browser the same answer as the server for every size",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit refuses an empty file",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1375,8 +1393,14 @@
           "suite": "unit"
         },
         {
+          "title": "the budget step shows no totals until there is a line",
+          "file": "tests/e2e/reporting.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
           "title": "an unbalanced budget is refused with the amount, then submits once fixed",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1600,14 +1624,20 @@
           "suite": "unit"
         },
         {
-          "title": "submitting with required answers missing lists each one",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "title": "a required table with only an empty row is refused",
+          "file": "tests/e2e/report-editing.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
-          "title": "a required table with only an empty row is refused",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "title": "submitting the seeded draft lists the two things left to fix",
+          "file": "tests/e2e/reporting.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "submitting with required answers missing lists each one",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1624,7 +1654,7 @@
       "tests": [
         {
           "title": "an unbalanced budget is refused with the amount, then submits once fixed",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1831,7 +1861,7 @@
         },
         {
           "title": "an unbalanced budget is refused with the amount, then submits once fixed",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2000,8 +2030,14 @@
       "note": null,
       "tests": [
         {
+          "title": "clicking a district on the map opens its missing reports on the submissions list",
+          "file": "tests/e2e/district-map.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
           "title": "the dashboard loads and the submissions list filters down to one organization",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2154,6 +2190,18 @@
           "suite": "unit"
         },
         {
+          "title": "filters treats the Citywide borough option as citywide-funded reports",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "filters treats the Citywide borough option as citywide-funded reports",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "filters matches initiative by name, code or id",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
@@ -2172,14 +2220,14 @@
           "suite": "unit"
         },
         {
-          "title": "the dashboard loads and the submissions list filters down to one organization",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "title": "choosing a bucket on the submissions list updates the list within 3 seconds",
+          "file": "tests/e2e/navigation.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
-          "title": "choosing a bucket on the submissions list updates the list within 3 seconds",
-          "file": "tests/e2e/07-same-route-navigation.spec.ts",
+          "title": "the dashboard loads and the submissions list filters down to one organization",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2226,7 +2274,7 @@
         },
         {
           "title": "an analyst flags a submission and it appears in the flagged items view",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2255,7 +2303,7 @@
         },
         {
           "title": "an analyst flags a submission and it appears in the flagged items view",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2271,19 +2319,19 @@
       "note": null,
       "tests": [
         {
-          "title": "the analyst's own flag text reaches the drafted note carries the flag note into the concern",
+          "title": "the analyst's own flag text stays out of the drafted note carries the flag note into the concern",
           "file": "tests/eval/return-note.test.ts",
           "status": "passed",
           "suite": "eval"
         },
         {
-          "title": "the analyst's own flag text reaches the drafted note writes the flag text into the rule based note and leaves contact details out",
+          "title": "the analyst's own flag text stays out of the drafted note tells the organization only that Council Finance has a question, without the flag text or contact details",
           "file": "tests/eval/return-note.test.ts",
           "status": "passed",
           "suite": "eval"
         },
         {
-          "title": "the analyst's own flag text reaches the drafted note falls back to the kind of flag when the analyst left no text",
+          "title": "the analyst's own flag text stays out of the drafted note falls back to the kind of flag when the analyst left no text",
           "file": "tests/eval/return-note.test.ts",
           "status": "passed",
           "suite": "eval"
@@ -2319,14 +2367,50 @@
           "suite": "sql"
         },
         {
-          "title": "an analyst requests an update with a note, the organization resubmits, and the analyst accepts",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "title": "internal flag notes stay internal keeps the analyst's note on the concern but never writes it into the note to the organization",
+          "file": "tests/unit/return-note-flags.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "internal flag notes stay internal does not send the flag note to the drafting model",
+          "file": "tests/unit/return-note-flags.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "what the return note model is sent leaves out the value when a concern has none, so the model cannot write null",
+          "file": "tests/unit/return-note-payload.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "what the return note model is sent keeps the value when there is one",
+          "file": "tests/unit/return-note-payload.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a model sentence that names a rule never reaches the organization removes sentences that mention a rule, even with a mangled id",
+          "file": "tests/unit/return-note-reference.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a model sentence that names a rule never reaches the organization covers the concern from the template instead",
+          "file": "tests/unit/return-note-reference.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "starting a review and accepting a report show the new state without a reload",
+          "file": "tests/e2e/review-refresh.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
-          "title": "starting a review and accepting a report show the new state without a reload",
-          "file": "tests/e2e/06-review-refresh.spec.ts",
+          "title": "an analyst requests an update with a note, the organization resubmits, and the analyst accepts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2355,7 +2439,7 @@
         },
         {
           "title": "a correction after acceptance needs a reason and leaves an audit record",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2390,7 +2474,7 @@
         },
         {
           "title": "submitted data downloads as Excel and as CSV for the filtered list, for finance staff only",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2419,7 +2503,7 @@
         },
         {
           "title": "submitted data downloads as Excel and as CSV for the filtered list, for finance staff only",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2477,7 +2561,7 @@
       "tests": [
         {
           "title": "the dashboard draws its charts from the current reports",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2512,7 +2596,7 @@
         },
         {
           "title": "the trend and comparison charts draw from the reports and change with the filters",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2535,7 +2619,7 @@
         },
         {
           "title": "the dashboard draws its charts from the current reports",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2642,13 +2726,13 @@
         },
         {
           "title": "Add to outbox asks for confirmation with the number of organizations and queues nothing until confirmed",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "file": "tests/e2e/reminders.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "the seeded history shows what earlier rules sent",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "file": "tests/e2e/reminders.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2751,7 +2835,7 @@
         },
         {
           "title": "only an administrator can download the data package, which holds every table and a README",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2827,7 +2911,7 @@
         },
         {
           "title": "a correction after acceptance needs a reason and leaves an audit record",
-          "file": "tests/e2e/02-daniel.spec.ts",
+          "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -2928,7 +3012,7 @@
         },
         {
           "title": "an administrator records a breach, the Council's contacts are queued a notice, and remediation is tracked",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3033,7 +3117,7 @@
         },
         {
           "title": "users send help requests, see only their own, and an administrator answers from the queue",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3065,6 +3149,30 @@
           "file": "tests/sql/health.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "one error mapper for every server action maps database codes to plain sentences and falls back without leaking the raw error",
+          "file": "tests/unit/action-errors.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "one error mapper for every server action applies area specific messages before the code defaults",
+          "file": "tests/unit/action-errors.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "one error mapper for every server action returns a success or failure result with a timestamp",
+          "file": "tests/unit/action-errors.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "one error mapper for every server action logs the real error as one JSON line with the request id",
+          "file": "tests/unit/action-errors.test.ts",
+          "status": "passed",
+          "suite": "unit"
         },
         {
           "title": "health check when the database is down reports degraded without leaking the connection error",
@@ -3104,19 +3212,19 @@
         },
         {
           "title": "the health endpoint answers without the passcode and reveals nothing sensitive",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "an error page shows the request ID that the response carried",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "the platform page shows the health status to administrators only",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3211,7 +3319,7 @@
         },
         {
           "title": "users send help requests, see only their own, and an administrator answers from the queue",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3252,7 +3360,7 @@
         },
         {
           "title": "the annual review is kept per fiscal year and appears in the rollover",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3311,7 +3419,7 @@
         },
         {
           "title": "readiness shows the share of Finance users trained and the test pass rate",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3364,7 +3472,7 @@
         },
         {
           "title": "readiness shows the share of Finance users trained and the test pass rate",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3625,7 +3733,7 @@
         },
         {
           "title": "a start link that pairs an initiative with another year's period is not found and creates nothing",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "file": "tests/e2e/report-editing.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3773,14 +3881,14 @@
           "suite": "unit"
         },
         {
-          "title": "a submitter cannot open another organization's report by its address",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "title": "pages are served with an enforced content security policy and no violations",
+          "file": "tests/e2e/access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
-          "title": "pages are served with an enforced content security policy and no violations",
-          "file": "tests/e2e/05-access.spec.ts",
+          "title": "a submitter cannot open another organization's report by its address",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3808,38 +3916,44 @@
           "suite": "sql"
         },
         {
-          "title": "a submitter signs in through the passcode gate with a personal account",
-          "file": "tests/e2e/01-maria.spec.ts",
-          "status": "passed",
-          "suite": "e2e"
-        },
-        {
           "title": "a finance viewer signs in with the issued password and reaches the finance workspace",
-          "file": "tests/e2e/05-access.spec.ts",
+          "file": "tests/e2e/access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "finance staff see the sidebar in labelled groups and submitters see their own links",
-          "file": "tests/e2e/05-access.spec.ts",
+          "file": "tests/e2e/access.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "after the passcode the start page shows the fiscal year calendar from the database and Start now opens sign in",
+          "file": "tests/e2e/access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "signing out revokes the session so a copied cookie stops working",
-          "file": "tests/e2e/05-access.spec.ts",
+          "file": "tests/e2e/access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "the ninth failed sign-in for one email within 15 minutes is refused with a wait notice",
-          "file": "tests/e2e/05-access.spec.ts",
+          "file": "tests/e2e/access.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "switching between personas many times never locks anyone out",
-          "file": "tests/e2e/05-access.spec.ts",
+          "file": "tests/e2e/access.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a submitter signs in through the passcode gate with a personal account",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3885,37 +3999,13 @@
           "suite": "sql"
         },
         {
-          "title": "uploads are limited to 25 MB per file states the limit as 25 megabytes in both the server and the browser",
-          "file": "tests/unit/upload-limit.test.ts",
+          "title": "upload size limit states the 25 MB cap the same way in the server and the browser",
+          "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "uploads are limited to 25 MB per file accepts a file of exactly 25 MB and refuses one byte more",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "uploads are limited to 25 MB per file refuses a 31 MB file on the server and names its size",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "uploads are limited to 25 MB per file gives the browser the same answer as the server for every size",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "uploads are limited to 25 MB per file refuses an empty file",
-          "file": "tests/unit/upload-limit.test.ts",
-          "status": "passed",
-          "suite": "unit"
-        },
-        {
-          "title": "upload size limit keeps the 25 MB cap and accepts a file exactly at it",
+          "title": "upload size limit accepts a file exactly at the cap and refuses one byte more",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -3927,7 +4017,19 @@
           "suite": "unit"
         },
         {
-          "title": "upload size limit never says a file over the limit equals the limit",
+          "title": "upload size limit names the size of a file that is too large and never says it equals the limit",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit gives the browser the same answer as the server for every size",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit refuses an empty file",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -3940,7 +4042,7 @@
         },
         {
           "title": "the browser refuses a file over 25 MB before sending it and says why",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -4088,7 +4190,7 @@
         },
         {
           "title": "a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -4328,7 +4430,7 @@
         },
         {
           "title": "only an administrator can download the data package, which holds every table and a README",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -4422,14 +4524,20 @@
           "suite": "unit"
         },
         {
-          "title": "submitting with required answers missing lists each one",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "title": "a required table with only an empty row is refused",
+          "file": "tests/e2e/report-editing.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
-          "title": "a required table with only an empty row is refused",
-          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "title": "submitting the seeded draft lists the two things left to fix",
+          "file": "tests/e2e/reporting.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "submitting with required answers missing lists each one",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -4530,13 +4638,13 @@
         },
         {
           "title": "actual spent shows a variance per line and a submitter must explain a large unspent balance",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         },
         {
           "title": "an unbalanced budget is refused with the amount, then submits once fixed",
-          "file": "tests/e2e/01-maria.spec.ts",
+          "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -4731,7 +4839,7 @@
         },
         {
           "title": "an administrator records a breach, the Council's contacts are queued a notice, and remediation is tracked",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -4792,7 +4900,7 @@
         },
         {
           "title": "the annual review is kept per fiscal year and appears in the rollover",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -4881,7 +4989,7 @@
         },
         {
           "title": "users send help requests, see only their own, and an administrator answers from the queue",
-          "file": "tests/e2e/06-operations.spec.ts",
+          "file": "tests/e2e/operations.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
