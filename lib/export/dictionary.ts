@@ -263,8 +263,20 @@ export const TABLES: Record<string, TableDoc> = {
       template: "Kind of message.",
       subject: "Subject line.",
       body_text: "Message text.",
-      status: "queued, sent or failed.",
+      status: "queued, sending, sent, held, recorded or failed. Only sent means a mail provider accepted the message. recorded means the message was kept on file and not delivered because no mail service is connected.",
       reminder_key: "Key that stops the same reminder being queued twice in one day.",
+      attempts: "How many times delivery has been tried.",
+      sent_at: "When the mail provider accepted the message. Empty unless the status is sent.",
+      provider_id: "Identifier the mail provider gave the message. Empty unless the status is sent.",
+      failure_reason: "Why the last delivery attempt failed or why the message was held.",
+      claimed_at: "When the system last picked the message up for delivery.",
+    },
+  },
+  reference_counter: {
+    description: "Last reference number issued in each reporting period, so every report reference is unique.",
+    columns: {
+      period_id: "Reporting period the counter belongs to (reporting_period.id).",
+      last_value: "Highest reference number issued so far in the period.",
     },
   },
   question: {
@@ -412,6 +424,7 @@ export function describeColumn(table: string, column: string): string | null {
 export const NOT_EXPORTED: { table: string; reason: string }[] = [
   { table: "auth_attempt", reason: "Sign-in throttle counters. They hold network details and no business data." },
   { table: "password_token", reason: "One-time password links. These are credentials." },
+  { table: "upload_ticket", reason: "Short-lived permissions to upload one attachment. They expire within minutes and are security plumbing, not records." },
   { table: "revoked_session", reason: "Signed-out session identifiers. These are credentials." },
   { table: "demo_reset", reason: "Internal log of environment resets." },
   { table: "schema_migration", reason: "Internal record of database upgrades." },
