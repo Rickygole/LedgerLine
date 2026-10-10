@@ -68,10 +68,18 @@ test("[US-052] Add to outbox asks for confirmation with the number of organizati
   expect(first?.status()).toBe(200);
   const heading = await page.getByText(/^Preview for /).first().textContent();
   const today = new Date(`${(heading ?? "").replace("Preview for ", "")} 12:00:00 UTC`).toISOString().slice(0, 10);
+  const created = await ownerQuery<{ id: string }>(
+    `INSERT INTO reminder_rule (period_id, offset_days, template_subject, template_body)
+     SELECT p.id, $1::date - p.due_on, 'Your {period} report is past due', 'Hello {contact}, your {period} report for {initiative} was due {due_date}.'
+     FROM reporting_period p WHERE p.id = 'FY26-YE'
+     ON CONFLICT (period_id, offset_days) DO UPDATE SET active = true RETURNING id`,
+    [today]
+  );
   const [rule] = await ownerQuery<{ period_id: string }>(
     "SELECT r.period_id FROM reminder_rule r JOIN reporting_period p ON p.id = r.period_id WHERE r.active AND p.due_on + r.offset_days = $1::date LIMIT 1",
     [today]
   );
+  expect(created.length, `a rule fires on ${today}`).toBe(1);
   expect(rule, `an active rule fires on ${today}`).toBeTruthy();
   await page.goto(`/finance/reminders?period=${rule.period_id}`);
   const before = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1", [today]);
@@ -101,8 +109,9 @@ test("[US-052] the seeded history shows what earlier rules sent", async ({ brows
   const page = await context.newPage();
   await page.goto("/finance/reminders?period=FY26-YE");
   const rows = page.locator("tbody tr").filter({ hasText: /Past due/ });
-  const sent = await rows.first().locator("td").nth(4).textContent();
-  expect(Number(sent)).toBeGreaterThan(0);
+  const lastRun = (await rows.first().locator("td").nth(4).textContent()) ?? "";
+  const count = Number(lastRun.match(/(\d+) messages? queued/)?.[1] ?? 0);
+  expect(count).toBeGreaterThan(0);
   await context.close();
 });
 
