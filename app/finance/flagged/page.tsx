@@ -62,8 +62,8 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
           <span className="num">
             {formatCurrency(total)} of {formatCurrency(row.award)} award
           </span>
-          <Meter ratio={row.award === 0 ? 0 : total / row.award} tone="bad" />
-          <span className="num font-semibold text-bad">
+          <Meter ratio={row.award === 0 ? 0 : total / row.award} tone={diff < 0 ? "bad" : "warn"} />
+          <span className={cn("num font-semibold", diff < 0 ? "text-bad" : "text-warn")}>
             {diff < 0 ? "Under" : "Over"} by {formatCurrency(Math.abs(diff))}
           </span>
         </p>
@@ -156,7 +156,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
         <Breadcrumbs crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Flagged items" }]} />
         <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">Flagged items</h1>
         <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">
-          Reports that need attention, grouped by reason. Each row shows the evidence. <span className="num">{total}</span> {total === 1 ? "report is" : "reports are"} flagged in this period.
+          <span className="num">{total}</span> {total === 1 ? "report is" : "reports are"} flagged for {periods.find((p) => p.id === filters.period)?.label ?? "this period"}.
         </p>
       </div>
 
@@ -218,10 +218,10 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
               <Table density="compact" className="[&_td]:text-[15px]">
                 <THead>
                   <tr>
-                    <TH>Organization</TH>
+                    <TH className="w-[28%]">Organization</TH>
                     <TH>Initiative</TH>
                     <TH align="right">Award</TH>
-                    <TH>Evidence</TH>
+                    <TH className="w-[30%]">Evidence</TH>
                     <TH>
                       <span className="sr-only">Action</span>
                     </TH>
@@ -230,15 +230,18 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                 <tbody>
                   {paged.items.map((row) => (
                     <TR key={`${reason}-${row.assignmentId}`}>
-                      <TD className="min-w-44">
+                      <TD>
                         <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                           {row.orgName}
                         </Link>
-                        <span className="num block text-[13px] text-muted">{orgMeta(row)}</span>
+                        <span className="num block whitespace-nowrap text-[13px] text-muted">{orgMeta(row)}</span>
                       </TD>
                       <TD className="min-w-40">
                         {row.initiativeName}
-                        <span className="block text-[13px] text-muted">{row.initiativeCode}</span>
+                        <span className="block whitespace-nowrap text-[13px] text-muted">
+                          {row.initiativeCode}
+                          {row.referenceNo ? <span className="font-mono"> · {row.referenceNo}</span> : null}
+                        </span>
                       </TD>
                       <TD align="right">{formatCurrency(row.award, { cents: false })}</TD>
                       <TD className="min-w-64">
@@ -247,7 +250,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                       <TD className="whitespace-nowrap text-right">
                         {row.submissionId ? (
                           <Link href={`/finance/submissions/${row.submissionId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-                            Open <span className="font-mono text-sm">{row.referenceNo}</span>
+                            Open<span className="sr-only"> {row.referenceNo}</span>
                           </Link>
                         ) : (
                           <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
