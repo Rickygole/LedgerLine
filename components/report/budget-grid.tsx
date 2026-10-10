@@ -1,21 +1,22 @@
 "use client";
 
-import { AlertCircle, AlertTriangle, CheckCircle2, ClipboardPaste, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardPaste, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { actualProblem, amountProblem, emptyRow, formatAmountText, isBlankRow, linesFromRows, newRowId, type BudgetRow } from "@/lib/report/budget-rows";
 import { formatCurrency, parseAmount } from "@/lib/rules/money";
-import { balanceCopy } from "./balance";
+import { balanceCopy, minusCurrency, signedDifference } from "./balance";
+import { BalanceMeter } from "./balance-meter";
 import { parseBudgetPaste } from "@/lib/rules/paste";
 import { lineVariance, needsVarianceNote, spendSummary, VARIANCE_NOTE_MAX, VARIANCE_THRESHOLD_PERCENT } from "@/lib/rules/spend";
 import { budgetTotals } from "@/lib/rules/validate";
 
-const COLS = "min-[720px]:grid min-[720px]:grid-cols-[3rem_6.5rem_minmax(0,1fr)_9.5rem_9.5rem_8.5rem_2.75rem] min-[720px]:items-stretch";
+const COLS = "@min-[720px]:grid @min-[720px]:grid-cols-[3rem_6.5rem_minmax(0,1fr)_9.5rem_9.5rem_8.5rem_2.75rem] @min-[720px]:items-stretch";
 
 const cell =
-  "block h-10 w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-600 min-[720px]:rounded-none min-[720px]:border-0 min-[720px]:bg-transparent min-[720px]:hover:bg-navy-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
+  "block h-10 w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-navy-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
 
 type Toast = { tone: "ok" | "warn"; text: string };
 
@@ -46,6 +47,7 @@ export function BudgetGrid({
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const focusRow = useRef<string | null>(null);
+  const focusAdd = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addButton = useRef<HTMLButtonElement>(null);
 
@@ -60,6 +62,10 @@ export function BudgetGrid({
     if (focusRow.current) {
       document.getElementById(`budget-desc-${focusRow.current}`)?.focus();
       focusRow.current = null;
+    }
+    if (focusAdd.current) {
+      addButton.current?.focus();
+      focusAdd.current = false;
     }
   });
 
@@ -84,7 +90,7 @@ export function BudgetGrid({
   function removeRow(rowId: string, n: number) {
     onChange(rows.filter((row) => row.rowId !== rowId));
     setNote(`Line ${n} removed.`);
-    addButton.current?.focus();
+    focusAdd.current = true;
   }
 
   function applyPaste(text: string): boolean {
@@ -122,56 +128,47 @@ export function BudgetGrid({
     applyPaste(text);
   }
 
-  const BalanceIcon = balance.tone === "ok" ? CheckCircle2 : balance.tone === "warn" ? AlertTriangle : AlertCircle;
+  const toolbar = (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => setPasteOpen((open) => !open)} aria-expanded={pasteOpen} aria-controls="budget-paste-panel">
+        <ClipboardPaste className="h-4 w-4" aria-hidden="true" />
+        Paste from Excel
+      </Button>
+      <Button ref={addButton} variant="secondary" size="sm" onClick={addRow} disabled={atLimit}>
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        Add line
+      </Button>
+    </>
+  );
 
   return (
-    <div id="budget-grid" tabIndex={-1} onPaste={onPaste} className="rounded-lg border border-line bg-white focus:outline-none">
-      <div className="sticky top-[3.75rem] z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-t-lg border-b border-line bg-white px-3 py-2.5 sm:px-4">
-        <div className="flex flex-wrap gap-2">
-          <Button ref={addButton} variant="secondary" size="sm" onClick={addRow} disabled={atLimit}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Add line
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setPasteOpen((open) => !open)} aria-expanded={pasteOpen} aria-controls="budget-paste-panel">
-            <ClipboardPaste className="h-4 w-4" aria-hidden="true" />
-            Paste box
-          </Button>
-        </div>
-        <div aria-live="polite" aria-atomic="true" className="ml-auto">
-          {rows.length === 0 ? (
-            <p className="num text-sm text-muted">Budget lines must add up to your award of {formatCurrency(award)}.</p>
-          ) : (
-            <p
-              className={cn(
-                "num inline-flex items-center gap-1.5 rounded-sm px-3 py-1 text-sm font-semibold ring-1 ring-inset",
-                balance.tone === "ok" && "bg-ok-bg text-ok ring-ok/25",
-                balance.tone === "warn" && "bg-warn-bg text-warn ring-warn/30",
-                balance.tone === "bad" && "bg-bad-bg text-bad ring-bad/25"
-              )}
-            >
-              <BalanceIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {balance.text}
-            </p>
-          )}
-        </div>
+    <div id="budget-grid" tabIndex={-1} onPaste={onPaste} className="@container focus:outline-none">
+      <div className="sticky top-0 z-20 -mx-1 bg-white px-1 pb-4 pt-1">
+        <BalanceMeter total={totals.total} award={award} lines={lines.length} />
       </div>
 
-      <p className="flex items-start gap-2 border-b border-line bg-surface/60 px-3 py-2 text-sm text-muted sm:px-4">
-        <ClipboardPaste className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        <span>
-          Category is PS for personal services, such as salaries and fringe, or OTPS for other than personal services, such as supplies, rent and contracts. Paste rows from Excel. Columns: category, description, amount. <span className="num">{rows.length}</span> of <span className="num">{maxLines}</span> lines used.
-        </span>
+      {rows.length > 0 ? (
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          {toolbar}
+          <span className="num ml-auto text-sm font-medium text-muted">
+            {rows.length} of {maxLines} lines
+          </span>
+        </div>
+      ) : null}
+      <p className="mb-4 max-w-[70ch] text-sm leading-5 text-muted">
+        PS is personal services (salaries and fringe). OTPS is other than personal services (supplies, rent, contracts). Up to {maxLines} lines. You can also paste rows straight into the table.
       </p>
 
       {pasteOpen ? (
-        <div id="budget-paste-panel" className="border-b border-line bg-navy-50/50 px-3 py-4 sm:px-4">
+        <div id="budget-paste-panel" className="mb-4 rounded border border-line bg-navy-50 px-4 py-4">
           <label htmlFor="budget-paste-text" className="mb-1 block text-sm font-semibold text-ink">
             Paste your rows here
           </label>
-          <p className="mb-2 text-sm text-muted">Use this box if pasting straight into the table does not work in your browser.</p>
-          <Textarea id="budget-paste-text" value={pasteText} onChange={(event) => setPasteText(event.target.value)} rows={5} className="font-mono text-base sm:text-xs" />
-          <div className="mt-3 flex gap-2">
+          <p className="mb-2 text-sm text-muted">Copy the rows in Excel with three columns: category, description and amount.</p>
+          <Textarea id="budget-paste-text" value={pasteText} onChange={(event) => setPasteText(event.target.value)} rows={5} className="font-mono text-base sm:text-sm" />
+          <div className="mt-3 flex flex-wrap items-center gap-4">
             <Button
+              variant="secondary"
               size="sm"
               onClick={() => {
                 if (applyPaste(pasteText)) {
@@ -192,7 +189,7 @@ export function BudgetGrid({
 
       <div role="status" aria-live="polite">
         {toast ? (
-          <div className={cn("flex items-start justify-between gap-3 border-b border-line px-3 py-2.5 text-sm sm:px-4", toast.tone === "ok" ? "bg-ok-bg text-ok" : "bg-warn-bg text-warn")}>
+          <div className={cn("mb-3 flex items-start justify-between gap-3 rounded border px-3 py-2.5 text-sm sm:px-4", toast.tone === "ok" ? "border-ok/30 bg-ok-bg text-ok" : "border-warn/30 bg-warn-bg text-warn")}>
             <p className="flex items-start gap-2 font-semibold">
               {toast.tone === "ok" ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />}
               <span className="num">{toast.text}</span>
@@ -205,9 +202,10 @@ export function BudgetGrid({
         <span className="sr-only">{note}</span>
       </div>
 
-      {gridError ? <p className="border-b border-line px-4 py-2.5 text-sm font-semibold text-bad">{gridError}</p> : null}
+      {gridError ? <p className="mb-3 text-sm font-semibold text-bad">{gridError}</p> : null}
 
-      <div className={cn("hidden h-10 border-b border-line bg-surface min-[720px]:items-center text-[13px] font-semibold text-muted", COLS)}>
+      <div className="rounded border border-line">
+      <div className={cn("hidden h-11 rounded-t border-b border-line bg-navy-50 @min-[720px]:items-center text-sm font-semibold text-[#3d4757]", COLS)}>
         <span className="px-3 text-right">#</span>
         <span className="px-3">Category</span>
         <span className="px-3">Description</span>
@@ -218,10 +216,10 @@ export function BudgetGrid({
       </div>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-          <ClipboardPaste className="h-6 w-6 text-muted" aria-hidden="true" />
-          <p className="text-[15px] font-semibold text-ink">No budget lines yet</p>
-          <p className="max-w-sm text-sm text-muted">Copy your rows in Excel and paste them anywhere in this table, or add lines one at a time.</p>
+        <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+          <p className="text-[17px] font-bold leading-6 text-ink">No budget lines yet</p>
+          <p className="max-w-[46ch] text-[15px] leading-[22px] text-[#3d4757]">Paste rows from Excel (Category, Description, Amount) or add lines one at a time.</p>
+          <div className="mt-1 flex flex-wrap justify-center gap-3">{toolbar}</div>
         </div>
       ) : (
         <ul>
@@ -236,23 +234,23 @@ export function BudgetGrid({
               <li
                 key={row.rowId}
                 className={cn(
-                  "transition-colors max-[719px]:m-3 max-[719px]:grid max-[719px]:grid-cols-[6.5rem_minmax(0,1fr)] max-[719px]:gap-3 max-[719px]:rounded-md max-[719px]:border max-[719px]:border-line max-[719px]:p-3 min-[720px]:border-b min-[720px]:border-line",
+                  "transition-colors hover:bg-navy-50/60 @max-[719px]:m-3 @max-[719px]:grid @max-[719px]:grid-cols-[6.5rem_minmax(0,1fr)] @max-[719px]:gap-3 @max-[719px]:rounded-md @max-[719px]:border @max-[719px]:border-line @max-[719px]:p-3 @min-[720px]:min-h-[52px] @min-[720px]:border-b @min-[720px]:border-[#e3e7ec]",
                   COLS,
                   highlight.has(row.rowId) && "bg-info-bg"
                 )}
               >
-                <p className="num flex items-center justify-between text-sm font-semibold text-muted max-[719px]:col-span-2 min-[720px]:justify-end min-[720px]:border-r min-[720px]:border-line min-[720px]:px-3">
+                <p className="num flex items-center justify-between text-sm font-semibold text-muted @max-[719px]:col-span-2 @min-[720px]:justify-end @min-[720px]:border-r @min-[720px]:border-line @min-[720px]:px-3">
                   <span>
-                    <span className="min-[720px]:sr-only">Line </span>
+                    <span className="@min-[720px]:sr-only">Line </span>
                     {n}
                   </span>
-                  <Button variant="ghost" size="sm" onClick={() => removeRow(row.rowId, n)} aria-label={`Remove line ${n}`} className="min-[720px]:hidden">
+                  <Button variant="ghost" size="sm" onClick={() => removeRow(row.rowId, n)} aria-label={`Remove line ${n}`} className="@min-[720px]:hidden">
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                     Remove
                   </Button>
                 </p>
-                <div className="min-[720px]:border-r min-[720px]:border-line">
-                  <label htmlFor={`budget-cat-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted min-[720px]:sr-only">
+                <div className="@min-[720px]:border-r @min-[720px]:border-line">
+                  <label htmlFor={`budget-cat-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted @min-[720px]:sr-only">
                     <span className="sr-only">Line {n} </span>
                     Category
                   </label>
@@ -261,8 +259,8 @@ export function BudgetGrid({
                     <option value="OTPS" title="Other than personal services">OTPS</option>
                   </select>
                 </div>
-                <div className="max-[719px]:order-last max-[719px]:col-span-2 min-[720px]:border-r min-[720px]:border-line">
-                  <label htmlFor={`budget-desc-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted min-[720px]:sr-only">
+                <div className="@max-[719px]:order-last @max-[719px]:col-span-2 @min-[720px]:border-r @min-[720px]:border-line">
+                  <label htmlFor={`budget-desc-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted @min-[720px]:sr-only">
                     <span className="sr-only">Line {n} </span>
                     Description
                   </label>
@@ -277,8 +275,8 @@ export function BudgetGrid({
                     className={cell}
                   />
                 </div>
-                <div className="min-[720px]:border-r min-[720px]:border-line">
-                  <label htmlFor={`budget-amt-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted min-[720px]:sr-only">
+                <div className="@min-[720px]:border-r @min-[720px]:border-line">
+                  <label htmlFor={`budget-amt-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted @min-[720px]:sr-only">
                     <span className="sr-only">Line {n} </span>
                     Approved budget
                   </label>
@@ -302,8 +300,8 @@ export function BudgetGrid({
                     />
                   </div>
                 </div>
-                <div className="min-[720px]:border-r min-[720px]:border-line">
-                  <label htmlFor={`budget-act-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted min-[720px]:sr-only">
+                <div className="@min-[720px]:border-r @min-[720px]:border-line">
+                  <label htmlFor={`budget-act-${row.rowId}`} className="mb-1 block text-xs font-semibold text-muted @min-[720px]:sr-only">
                     <span className="sr-only">Line {n} </span>
                     Actual spent
                   </label>
@@ -327,17 +325,17 @@ export function BudgetGrid({
                     />
                   </div>
                 </div>
-                <div className="num flex items-center justify-between px-3 text-sm min-[720px]:justify-end min-[720px]:border-r min-[720px]:border-line max-[719px]:col-span-2">
-                  <span className="text-xs font-semibold text-muted min-[720px]:sr-only">Variance</span>
-                  <span className={cn(variance === null ? "text-muted" : variance < 0 ? "font-semibold text-warn" : "text-ink")}>{variance === null ? "Not entered" : formatCurrency(variance)}</span>
+                <div className="num flex items-center justify-between px-3 text-sm @min-[720px]:justify-end @min-[720px]:border-r @min-[720px]:border-line @max-[719px]:col-span-2">
+                  <span className="text-xs font-semibold text-muted @min-[720px]:sr-only">Variance</span>
+                  <span className={cn(variance === null ? "text-muted" : variance < 0 ? "font-semibold text-bad" : "text-ink")}>{variance === null ? "Not entered" : minusCurrency(variance)}</span>
                 </div>
-                <div className="hidden items-center justify-center min-[720px]:flex">
+                <div className="hidden items-center justify-center @min-[720px]:flex">
                   <button type="button" onClick={() => removeRow(row.rowId, n)} aria-label={`Remove line ${n}`} className="rounded-md p-2 text-muted hover:bg-bad-bg hover:text-bad">
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
                 {error ? (
-                  <p id={errorId} className="text-sm font-semibold text-bad max-[719px]:order-last max-[719px]:col-span-2 min-[720px]:col-span-7 min-[720px]:border-t min-[720px]:border-line min-[720px]:bg-bad-bg/40 min-[720px]:px-3 min-[720px]:py-1.5 min-[720px]:pl-[3.75rem]">
+                  <p id={errorId} className="text-sm font-semibold text-bad @max-[719px]:order-last @max-[719px]:col-span-2 @min-[720px]:col-span-7 @min-[720px]:border-t @min-[720px]:border-line @min-[720px]:bg-bad-bg/40 @min-[720px]:px-3 @min-[720px]:py-1.5 @min-[720px]:pl-[3.75rem]">
                     {error}
                   </p>
                 ) : null}
@@ -347,7 +345,7 @@ export function BudgetGrid({
         </ul>
       )}
 
-      <div className={cn("border-t border-line bg-surface/60 text-sm", !explainVariance && "rounded-b-lg")}>
+      <div className={cn("bg-navy-50/50 text-[15px] leading-[22px]", rows.length > 0 && "border-t border-line", !explainVariance && "rounded-b")}>
       <dl>
         {[
           ["Personal services (PS) subtotal", totals.ps],
@@ -365,6 +363,12 @@ export function BudgetGrid({
         <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4">
           <dt className="text-muted">Award</dt>
           <dd className="num text-muted">{formatCurrency(award)}</dd>
+        </div>
+        <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4">
+          <dt className="font-semibold text-ink">Difference (budget total minus award)</dt>
+          <dd className={cn("num font-bold", balance.tone === "ok" ? "text-ok" : balance.tone === "warn" ? "text-warn" : "text-bad")}>
+            {signedDifference(totals.total, award)}
+          </dd>
         </div>
         <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4">
           <dt className="font-semibold text-ink">Actual spent total</dt>
@@ -389,7 +393,7 @@ export function BudgetGrid({
       </div>
 
       {explainVariance ? (
-        <div className="rounded-b-lg border-t border-line px-3 py-4 sm:px-4">
+        <div className="rounded-b border-t border-line px-3 py-4 sm:px-4">
           <label htmlFor="budget-variance-note" className="block text-sm font-semibold text-ink">
             Variance explanation
           </label>
@@ -413,6 +417,7 @@ export function BudgetGrid({
           ) : null}
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
