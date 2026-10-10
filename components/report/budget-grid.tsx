@@ -150,6 +150,7 @@ export function BudgetGrid({
   function onPaste(event: React.ClipboardEvent<HTMLDivElement>) {
     const text = event.clipboardData.getData("text");
     if (!/[\t\n]/.test(text.trim())) return;
+    if (event.target instanceof HTMLInputElement && !text.includes("\t")) return;
     event.preventDefault();
     applyPaste(text);
   }
@@ -303,6 +304,13 @@ export function BudgetGrid({
                     const badActual = actualProblem(row);
                     const variance = lineVariance(lines[index]);
                     const errorId = `budget-row-error-${row.rowId}`;
+                    const message =
+                      error ??
+                      (badAmount
+                        ? `Line ${n}: enter the budgeted amount as a number, like 1250.00`
+                        : badActual
+                          ? `Line ${n}: enter the actual spent as a number, like 1250.00`
+                          : null);
                     return (
                       <li
                         key={row.rowId}
@@ -451,12 +459,12 @@ export function BudgetGrid({
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </button>
                         </div>
-                        {error ? (
+                        {message ? (
                           <p
                             id={errorId}
                             className="text-sm font-semibold text-bad @max-[719px]:order-last @max-[719px]:col-span-2 @min-[720px]:col-span-7 @min-[720px]:border-t @min-[720px]:border-line @min-[720px]:bg-bad-bg/40 @min-[720px]:px-3 @min-[720px]:py-1.5 @min-[720px]:pl-[3.75rem]"
                           >
-                            {error}
+                            {message}
                           </p>
                         ) : null}
                       </li>
