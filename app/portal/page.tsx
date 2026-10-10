@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
+import { formatShortDate } from "@/lib/report/format";
 import { actionFor, loadObligations, loadOrganization, type Obligation } from "@/lib/portal/data";
 import { reportProgress } from "@/lib/portal/progress";
 
@@ -19,6 +20,22 @@ type Year = { id: string; starts_on: string; ends_on: string };
 
 function plural(n: number, one: string, many: string) {
   return n === 1 ? one : many;
+}
+
+const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+
+function numberWord(n: number, capital = false): string {
+  const word = n < WORDS.length ? WORDS[n] : String(n);
+  return capital ? word.charAt(0).toUpperCase() + word.slice(1) : word;
+}
+
+function dueSentence(rows: Obligation[], one: string, many: string, today: string): string {
+  const dates = new Set(rows.map((o) => o.dueOn));
+  const when = dates.size === 1 ? `due ${formatShortDate(rows[0].dueOn, today)}` : "past due";
+  if (rows.length === 1) return `${rows[0].initiativeName} ${rows[0].periodLabel} ${one} ${when}.`;
+  const periods = new Set(rows.map((o) => o.periodLabel));
+  const what = periods.size === 1 ? `${rows[0].periodLabel} reports` : "reports";
+  return `${numberWord(rows.length, true)} ${what} ${many} ${when}.`;
 }
 
 function pickNext(obligations: Obligation[]): Obligation | null {
@@ -70,11 +87,16 @@ export default async function PortalHome() {
           ? `Your next report is due ${formatDate(nextDue)}`
           : "You are up to date";
 
-  const lede = nextDue
-    ? `You have ${dueTogether.length} ${plural(dueTogether.length, "report", "reports")} due by ${formatDate(nextDue)} for ${dueTogether[0].periodLabel}.`
-    : obligations.length > 0
-      ? "Nothing else is due right now. Council Finance assigns new reports at the start of each fiscal year."
-      : "Council Finance has not assigned any reports to your organization yet.";
+  const ledeParts: string[] = [];
+  if (overdue.length > 0) ledeParts.push(dueSentence(overdue, "was", "were", today));
+  else if (returned.length > 0) ledeParts.push(`${returned.length === 1 ? `${returned[0].initiativeName} ${returned[0].periodLabel} has` : `${numberWord(returned.length, true)} reports have`} a note from Council Finance at the top of the report.`);
+  if (dueTogether.length > 0) ledeParts.push(dueSentence(dueTogether, "is", "are", today));
+  const lede =
+    ledeParts.length > 0
+      ? ledeParts.join(" ")
+      : obligations.length > 0
+        ? "Nothing else is due right now. Council Finance assigns new reports at the start of each fiscal year."
+        : "Council Finance has not assigned any reports to your organization yet.";
 
   const eyebrow = org ? [org.legalName, org.borough, org.councilDistrict ? `District ${org.councilDistrict}` : null].filter(Boolean).join(" · ") : user.orgName ?? "Your organization";
 
@@ -99,7 +121,7 @@ export default async function PortalHome() {
       <PageHeader eyebrow={eyebrow} title={title} description={lede} />
 
       {next ? (
-        <NextAction obligation={next} href={actionFor(next).href} progress={progress} />
+        <NextAction obligation={next} href={actionFor(next).href} progress={progress} today={today} />
       ) : obligations.length > 0 ? (
         <p className="flex items-start gap-2 rounded border border-ok/30 bg-ok-bg px-5 py-4 text-[15px] font-semibold text-ok">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -109,28 +131,24 @@ export default async function PortalHome() {
 
       {year ? (
         <section aria-labelledby="fy-glance" className="rounded border border-line bg-white">
-          <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
+          <div className="px-5 pt-5 sm:px-6">
             <h2 id="fy-glance" className="text-xl font-bold leading-7 text-ink">
               {year.id} at a glance
             </h2>
-            <p className="mt-0.5 text-[15px] text-ink-2">
-              {year.id} runs {formatDate(year.starts_on)} to {formatDate(year.ends_on)}. Squares are your report due dates.
-            </p>
           </div>
-          <div className="px-5 py-4 sm:px-6 sm:py-6">
+          <div className="px-5 pb-4 pt-2 sm:px-6 sm:pb-6">
             <FiscalYearTimeline fiscalYear={year.id} startsOn={year.starts_on} endsOn={year.ends_on} today={today} marks={marks} label={`${year.id} at a glance for your organization`} />
           </div>
         </section>
       ) : null}
 
       <section aria-labelledby="all-reports" className="rounded border border-line bg-white">
-        <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
+        <div className="px-5 pt-5 sm:px-6">
           <h2 id="all-reports" className="text-xl font-bold leading-7 text-ink">
             Your reports
           </h2>
-          <p className="mt-0.5 text-[15px] text-ink-2">One report for each initiative and reporting period. Dates and times are Eastern Time.</p>
         </div>
-        <div className="px-5 py-6 sm:px-6">
+        <div className="px-5 pb-6 pt-5 sm:px-6">
           <ObligationGroups obligations={obligations} />
         </div>
       </section>
