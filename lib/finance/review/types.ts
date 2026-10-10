@@ -56,6 +56,7 @@ export type Filters = {
   category: string;
   borough: string;
   district: string;
+  by: "" | "sponsor" | "location";
   member: string;
   funding: string;
   contract: string;

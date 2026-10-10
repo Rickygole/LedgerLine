@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, CheckCircle2, Eye, Flag, RotateCcw, Send } from "lucide-react";
-import { ActivityFeed, type ActivityItem } from "@/components/finance/review/activity-feed";
-import { NeedsAttention, type AttentionItem } from "@/components/finance/review/needs-attention";
-import { PeriodSelect } from "@/components/finance/review/period-select";
+import { ArrowRight } from "lucide-react";
+import { DistrictMapCard, DistrictRanking } from "@/components/finance/map/district-map";
+import { AutoSelect } from "@/components/finance/map/auto-select";
+import { StatTile } from "@/components/finance/dashboard/stat-tile";
 import { StatusStackChart, type StackDatum } from "@/components/charts/status-stack";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
-import { Stat } from "@/components/ui/stat";
+import { buttonClass } from "@/components/ui/button";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
-import { daysBetween, formatDate, todayInNewYork } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
+import { districtStats, loadCouncilMembers, parseMapMode } from "@/lib/finance/district-stats";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { countBuckets, groupBy } from "@/lib/finance/review/derive";
 import { hrefWith, parseFilters } from "@/lib/finance/review/filters";
-import { QUIET_ACTIONS } from "@/lib/finance/review/audit-words";
-import { auditEntityHref, auditPhrase, recentActivity } from "@/lib/finance/admin/audit";
-import type { Filters, ReportRow } from "@/lib/finance/review/types";
-import { formatCompactCurrency } from "@/lib/rules/money";
+import type { Filters, PeriodInfo, ReportRow } from "@/lib/finance/review/types";
+import { isGeoBorough } from "@/lib/geo/boroughs";
+import { dashboardHeadline, periodEyebrow, plural } from "@/lib/finance/dashboard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,116 +23,139 @@ export const metadata: Metadata = { title: "Dashboard" };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+function first(value: string | string[] | undefined) {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
 export default async function FinanceDashboard({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
+  const mode = parseMapMode(raw.map);
+  const borough = isGeoBorough(first(raw.borough)) ? first(raw.borough) : "";
+  const table = first(raw.table) === "1";
+  const sort = first(raw.sort) === "missing" ? "missing" : "district";
 
-  const data = await withClaims(user.id, async (tx) => {
+  const { periods, period, rows, members } = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
-    const activity = await recentActivity(tx, QUIET_ACTIONS);
-    return { periods, period, rows, activity };
+    const members = await loadCouncilMembers(tx);
+    return { periods, period, rows, members };
   });
 
-  const { periods, period, rows } = data;
   const counts = countBuckets(rows);
-  const awarded = rows.reduce((sum, row) => sum + row.award, 0);
-  const initiativeCount = new Set(rows.map((row) => row.initiativeId)).size;
-  const flagged = rows.filter((row) => row.flags.length > 0).length;
-  const untilDue = daysBetween(todayInNewYork(), period.dueOn);
-  const pct = (n: number) => (rows.length === 0 ? "0%" : `${Math.round((n / rows.length) * 100)}%`);
-
-  const overdue = rows
-    .filter((row) => (row.status === null || row.status === "draft") && row.daysPastDue > 0)
-    .sort((a, b) => b.daysPastDue - a.daysPastDue || b.award - a.award)
-    .slice(0, 4);
-
-  const activity: ActivityItem[] = data.activity.map((a) => {
-    const phrase = auditPhrase(a);
-    const href = a.entity === "app_user" && user.role !== "finance_admin" ? null : auditEntityHref(a);
-    return { id: a.id, at: new Date(a.at).toISOString(), actor: phrase.actor, verb: phrase.verb, subject: phrase.subject, href, initiative: a.initiative_name, ai: Boolean(a.ai_action_id) };
-  });
-
+  const stats = districtStats(rows, mode, members);
   const base = { period: period.id };
   const list = (extra: Partial<Filters>) => hrefWith("/finance/submissions", base, extra);
-  const stack = (key: (row: ReportRow) => string, param: "category" | "borough"): StackDatum[] =>
-    [...groupBy(rows, key).entries()].map(([name, group]) => ({ name, href: list({ [param]: name }), ...countBuckets(group) }));
+  const headline = dashboardHeadline(period, counts, rows.length);
 
-  const attention: AttentionItem[] = [
-    { label: "Missing", detail: "Past due with nothing submitted", count: counts.missing, href: list({ bucket: "missing" }), tone: "bad", icon: AlertTriangle },
-    { label: "Waiting for review", detail: "Submitted, review not started", count: counts.submitted, href: list({ bucket: "submitted" }), tone: "info", icon: Send },
-    { label: "Flagged", detail: "At least one open finding", count: flagged, href: hrefWith("/finance/flagged", base, {}), tone: "warn", icon: Flag },
-    { label: "Update requested", detail: "Waiting on the organization", count: counts.returned, href: list({ bucket: "returned" }), tone: "warn", icon: RotateCcw },
-  ];
+  const waiting = rows.filter((r) => r.status === "submitted" && r.submissionId).sort((a, b) => (a.submittedAt ?? "").localeCompare(b.submittedAt ?? ""));
+  const next = waiting[0];
+  const acceptedPct = rows.length === 0 ? 0 : Math.round((counts.accepted / rows.length) * 100);
 
-  const due = untilDue < 0 ? `${Math.abs(untilDue)} ${Math.abs(untilDue) === 1 ? "day" : "days"} past due` : untilDue === 0 ? "due today" : `due in ${untilDue} ${untilDue === 1 ? "day" : "days"}`;
+  const overdue = rows
+    .filter((row) => row.bucket === "missing")
+    .sort((a, b) => b.daysPastDue - a.daysPastDue || b.award - a.award || a.orgName.localeCompare(b.orgName))
+    .slice(0, 6);
+
+  const stack = (key: (row: ReportRow) => string): StackDatum[] => [...groupBy(rows, key).entries()].map(([name, group]) => ({ name, href: list({ category: name }), ...countBuckets(group) }));
 
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        description={`${period.label} reports ${untilDue < 0 ? "were" : "are"} due ${formatDate(period.dueOn)}, ${due}.`}
-        meta={
-          <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted">
-            <li>
-              <span className="num font-semibold text-ink">{initiativeCount}</span> {initiativeCount === 1 ? "initiative" : "initiatives"} in {period.fiscalYearId}
-            </li>
-            <li className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
-            <li>
-              <Link href="/finance/trends" className="text-link underline underline-offset-2 hover:text-link-hover">Trends and comparisons</Link>
-            </li>
-            <li className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
-            <li>
-              <span className="num font-semibold text-ink">{formatCompactCurrency(awarded)}</span> awarded across <span className="num">{rows.length}</span> awards
-            </li>
-          </ul>
-        }
-        actions={<PeriodSelect periods={periods} value={period.id} />}
-      />
-
-      <section aria-label="Key figures" className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Reports due" value={rows.length} icon={CalendarClock} tone="info" hint={period.label} href={list({})} />
-        <Stat label="Accepted" value={counts.accepted} icon={CheckCircle2} tone="ok" hint={`${pct(counts.accepted)} of reports due`} href={list({ bucket: "accepted" })} />
-        <Stat label="In review" value={counts.in_review} icon={Eye} tone="neutral" hint={`${counts.submitted} more waiting to start`} href={list({ bucket: "in_review" })} />
-        <Stat label="Missing" value={counts.missing} icon={AlertTriangle} tone="bad" hint="Past due, nothing submitted" href={list({ bucket: "missing" })} />
-      </section>
-
-      <section aria-label="Status and attention" className="mb-6 grid gap-4 xl:grid-cols-12">
-        <StatusStackChart
-          title="Report status by category"
-          description={`Where each ${period.label} report stands, by initiative category.`}
-          dimension="Category"
-          data={stack((row) => row.category, "category")}
-          periodLabel={period.label}
-          className="xl:col-span-8"
-        />
-        <div className="min-w-0 xl:col-span-4">
-          <NeedsAttention items={attention} overdue={overdue} overdueHref={list({ bucket: "missing" })} />
-        </div>
-      </section>
-
-      <section aria-label="Borough and activity" className="grid gap-4 xl:grid-cols-12">
-        <div className="min-w-0 xl:col-span-8">
-          <StatusStackChart
-            title="Report status by borough"
-            description="The same reports, grouped by where the organization is based."
-            dimension="Borough"
-            data={stack((row) => row.borough, "borough")}
-            periodLabel={period.label}
+      <div className="mb-7">
+        <div className="mb-4 flex justify-end">
+          <AutoSelect
+            id="period"
+            name="period"
+            label="Reporting period"
+            value={period.id}
+            keep={{ map: mode === "sponsor" ? "" : mode, borough }}
+            options={periods.map((p) => ({ value: p.id, label: p.label }))}
           />
         </div>
-        <Card className="xl:col-span-4">
-          <CardHeader title="Recent activity" description="Latest actions across all reports." />
-          <ActivityFeed items={activity} />
-          <CardBody className="border-t border-line py-3 text-sm">
-            <Link href="/finance/audit" className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-              Open the full audit log
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div className="min-w-0 flex-1 basis-[28rem]">
+            <p className="text-sm font-semibold leading-5 text-muted">{periodEyebrow(period)}</p>
+            <h1 className="mt-1 text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">{headline.title}</h1>
+            <p className="mt-2 max-w-[70ch] text-lg leading-7 text-[#3d4757]">{headline.lede}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href={`/finance/reminders?period=${encodeURIComponent(period.id)}`} className={buttonClass("secondary", "md", "h-11 px-5 text-base")}>
+              Send reminders
             </Link>
-          </CardBody>
-        </Card>
+            {next ? (
+              <Link href={`/finance/submissions/${next.submissionId}?queue=waiting`} className={buttonClass("primary", "md", "h-11 px-5 text-base")}>
+                Review next submission
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <section aria-label="Key figures" className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile label="Missing" value={counts.missing} bad={counts.missing > 0} sub="Past due, nothing submitted" action={{ href: list({ bucket: "missing" }), label: "Chase missing reports" }} />
+        <StatTile
+          label="Waiting for review"
+          value={counts.submitted}
+          sub={next?.submittedAt ? `Oldest submitted ${formatDate(next.submittedAt)} · ${counts.in_review} in review` : `${counts.in_review} in review`}
+          action={{ href: list({ bucket: "submitted" }), label: "Open review queue" }}
+        />
+        <StatTile label="Update requested" value={counts.returned} sub="Waiting on the organization" action={{ href: list({ bucket: "returned" }), label: "See requests" }} />
+        <StatTile label="Accepted" value={counts.accepted} of={rows.length} meter={acceptedPct} sub={`${acceptedPct} percent of reports due`} />
       </section>
+
+      <div className="mb-4 grid gap-4 lg:grid-cols-12">
+        <DistrictMapCard stats={stats} borough={borough} periodId={period.id} table={table} sort={sort} />
+        <DistrictRanking stats={stats} borough={borough} periodId={period.id} />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-12">
+        <StatusStackChart
+          title="Status by initiative category"
+          description={`Where each ${period.label} report stands, by initiative category.`}
+          dimension="Category"
+          data={stack((row) => row.category)}
+          periodLabel={period.label}
+          className="lg:col-span-7"
+        />
+        <section aria-labelledby="overdue-title" className="min-w-0 rounded border border-line bg-white lg:col-span-5">
+          <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+            <h2 id="overdue-title" className="text-xl font-bold leading-7 text-ink">
+              Longest overdue
+            </h2>
+            <p className="mt-0.5 text-[15px] leading-[22px] text-[#3d4757]">Missing reports, oldest first.</p>
+          </div>
+          {overdue.length === 0 ? (
+            <p className="px-6 py-8 text-[15px] text-muted">Nothing is overdue for {period.label}.</p>
+          ) : (
+            <ul className="divide-y divide-[#e3e7ec]">
+              {overdue.map((row) => (
+                <li key={row.assignmentId} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 px-5 py-3 sm:px-6">
+                  <div className="min-w-0 flex-1 basis-56">
+                    <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                      {row.orgName}
+                    </Link>
+                    <p className="text-[13px] leading-5 text-muted">{row.initiativeName}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 text-right">
+                    <span className="num inline-flex rounded-sm bg-bad-bg px-2 py-0.5 text-[13px] font-semibold text-bad ring-1 ring-inset ring-bad/20">{plural(row.daysPastDue, "day", "days")} past due</span>
+                    <Link href={`/finance/reminders?period=${encodeURIComponent(period.id)}`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                      Send reminder<span className="sr-only"> to {row.orgName}</span>
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="border-t border-[#e3e7ec] px-5 py-3 text-sm sm:px-6">
+            <Link href={list({ bucket: "missing" })} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+              See all {counts.missing} missing reports
+            </Link>
+          </div>
+        </section>
+      </div>
     </>
   );
 }
