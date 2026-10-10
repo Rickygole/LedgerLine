@@ -1,6 +1,7 @@
-import "dotenv/config";
+import "../lib/load-env";
 import { chromium, type Browser, type Page } from "@playwright/test";
 import { Client } from "pg";
+import { sslFor } from "../lib/db-ssl";
 import { startReport } from "../lib/report/create";
 import { checkUpload } from "../lib/storage";
 import { fillRequiredAnswers, gotoStep, PEOPLE, setBudget, signIn } from "../tests/e2e/support/app";
@@ -18,7 +19,7 @@ function url(name: string): string {
 }
 
 async function connect(connection: string): Promise<Client> {
-  const client = new Client({ connectionString: connection, ssl: connection.includes("localhost") ? undefined : true });
+  const client = new Client({ connectionString: connection, ssl: sslFor(connection) });
   await client.connect();
   return client;
 }

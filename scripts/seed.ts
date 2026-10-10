@@ -1,7 +1,8 @@
-import "dotenv/config";
+import "../lib/load-env";
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { Client } from "pg";
+import { sslFor } from "../lib/db-ssl";
 import { buildDefinition, CATEGORY_METRICS } from "../lib/forms/standard";
 import { buildSnapshot } from "../lib/snapshot";
 import { todayInNewYork } from "../lib/dates";
@@ -1626,7 +1627,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
 }
 
 export async function runSeed(url: string, scene = "fresh"): Promise<string> {
-  const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : true });
+  const client = new Client({ connectionString: url, ssl: sslFor(url) });
   await client.connect();
   await client.query("BEGIN");
   try {
