@@ -20,6 +20,7 @@
     "db:seed": "tsx scripts/seed.ts fresh",
     "db:seed:live": "tsx scripts/seed-live.ts",
     "preset": "tsx scripts/preset.ts",
+    "demo-desk": "tsx scripts/make-demo-desk.ts",
     "cron:reminders": "tsx scripts/run-reminders.ts"
   },
   "dependencies": {

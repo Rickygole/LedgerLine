@@ -50,3 +50,4 @@ next-env.d.ts
 !.env.example
 
 /data/raw
+/fixtures/demo-desk/

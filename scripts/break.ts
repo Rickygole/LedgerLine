@@ -52,10 +52,12 @@ type Scratch = { id: string; award: number; created: boolean };
 async function scratchDraft(owner: Client, mariaId: string): Promise<Scratch> {
   const { rows } = await owner.query(
     `SELECT a.id, a.award_amount::float8 AS award FROM assignment a
+     JOIN initiative i ON i.id = a.initiative_id
+     JOIN reporting_period p ON p.fiscal_year_id = i.fiscal_year_id AND p.id = 'FY27-MY'
      WHERE a.org_id = (SELECT org_id FROM app_user WHERE id = $1)
        AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY')
        AND EXISTS (SELECT 1 FROM form_version f WHERE f.initiative_id = a.initiative_id AND f.status = 'published')
-     LIMIT 1`,
+     ORDER BY a.id LIMIT 1`,
     [mariaId]
   );
   if (!rows[0]) throw new Error("No assignment is free for a scratch report. Reseed with pnpm db:seed.");
@@ -189,7 +191,7 @@ async function main() {
       scratch = await scratchDraft(owner, maria);
       const draft = scratch;
       attacks.push({
-        label: "Submit a report with the required answers and the budget left empty",
+        label: "Submit a report with nothing filled in",
         run: () =>
           withMariaPage(async (page) => {
             await page.goto(`/portal/reports/${draft.id}`);
@@ -211,7 +213,7 @@ async function main() {
           withMariaPage(async (page) => {
             await page.goto(`/portal/reports/${draft.id}`);
             await page.locator("#attachment-input").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]) });
-            const message = page.getByText("26 MB. The limit is 25 MB.");
+            const message = page.getByText(/over the 25\.0 MB limit for one file/).first();
             await message.waitFor({ timeout: 15_000 });
             const stored = (await owner.query("SELECT count(*)::int AS n FROM attachment WHERE submission_id = $1", [draft.id])).rows[0].n as number;
             return { refused: stored === 0, plain: "A 26 MB file was refused before it was sent, with its size and the limit stated.", raw: (await message.innerText()).trim() };
