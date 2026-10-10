@@ -11,6 +11,7 @@ export type ReturnNoteDraft = {
   mode: "live" | "fallback";
   aiActionId: string | null;
   dropped: number;
+  filled: number;
 };
 
 const SYSTEM = [
@@ -46,7 +47,7 @@ export async function draftReturnNote(tx: Tx, input: { submissionId: string; con
 
   if (!(await aiEnabled(tx))) {
     const sentences = templateSentences(concerns);
-    return { sentences, text: noteText(sentences), mode: "fallback", aiActionId: null, dropped: 0 };
+    return { sentences, text: noteText(sentences), mode: "fallback", aiActionId: null, dropped: 0, filled: sentences.length };
   }
 
   let live: Awaited<ReturnType<typeof callStructured>> = null;
@@ -82,7 +83,7 @@ export async function draftReturnNote(tx: Tx, input: { submissionId: string; con
       latencyMs: live.latencyMs,
       submissionId: input.submissionId,
     });
-    return { sentences, text, mode: "live", aiActionId, dropped: dropped.length };
+    return { sentences, text, mode: "live", aiActionId, dropped: dropped.length, filled };
   }
 
   const sentences = templateSentences(concerns);
@@ -97,5 +98,5 @@ export async function draftReturnNote(tx: Tx, input: { submissionId: string; con
     validation: { dropped: [], filledFromTemplate: sentences.length, reason: failure ?? "no model configured" },
     submissionId: input.submissionId,
   });
-  return { sentences, text, mode: "fallback", aiActionId, dropped: 0 };
+  return { sentences, text, mode: "fallback", aiActionId, dropped: 0, filled: sentences.length };
 }
