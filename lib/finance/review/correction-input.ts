@@ -5,7 +5,7 @@ import type { AnswerValue, BudgetLine, Question } from "@/lib/rules/types";
 export type CorrectionParse<T> = { ok: true; value: T } | { ok: false; message: string };
 
 export const BUDGET_KEY = "budget";
-const DESCRIPTION_MAX = 200;
+const DESCRIPTION_MAX = 500;
 const CELL_MAX = 1000;
 
 function fail<T>(message: string): CorrectionParse<T> {

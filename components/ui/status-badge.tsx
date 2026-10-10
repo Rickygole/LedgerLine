@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 import { STATE_LABEL, type Audience, type ReportState } from "@/lib/domain";
 import { plural } from "@/lib/format";
 
-export type Tone = "ok" | "bad" | "warn" | "info" | "neutral" | "ai_draft";
+export type Tone = "ok" | "bad" | "warn" | "info" | "neutral" | "ai_draft" | "progress";
 
 const tones: Record<Tone, string> = {
   ok: "bg-ok-bg text-ok ring-ok/20",
@@ -13,6 +13,7 @@ const tones: Record<Tone, string> = {
   info: "bg-info-bg text-info ring-info/20",
   neutral: "bg-white text-ink-2 ring-line-strong",
   ai_draft: "bg-info-bg text-info ring-info/20",
+  progress: "bg-harbor-100 text-harbor-900 ring-harbor-300",
 };
 
 export function Badge({
@@ -35,6 +36,7 @@ export function Badge({
       )}
     >
       {Icon && (tone === "bad" || tone === "ok") ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : null}
+      {tone === "progress" ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-action" aria-hidden="true" /> : null}
       {children}
     </span>
   );
@@ -44,7 +46,7 @@ export type { ReportState };
 
 const STATE_STYLE: Record<ReportState, { tone: Tone; icon?: ComponentType<{ className?: string }> }> = {
   not_started: { tone: "neutral" },
-  draft: { tone: "neutral" },
+  draft: { tone: "progress" },
   submitted: { tone: "info" },
   under_review: { tone: "info" },
   returned: { tone: "warn" },

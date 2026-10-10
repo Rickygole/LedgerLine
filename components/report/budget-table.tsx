@@ -4,6 +4,7 @@ import { formatCurrency } from "@/lib/format";
 import { lineVariance, spendSummary, VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { budgetTotals } from "@/lib/rules/validate";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
+import { NoValue } from "./no-value";
 import { balanceCopy } from "./balance";
 
 type Line = Omit<BudgetLine, "rowId">;
@@ -54,17 +55,13 @@ export function BudgetTable({
                   <TD align="right">{formatCurrency(line.amount, { cents: true })}</TD>
                   <TD align="right">
                     {line.actual === null || line.actual === undefined ? (
-                      <span className="text-muted">Not entered</span>
+                      <NoValue />
                     ) : (
                       formatCurrency(line.actual, { cents: true })
                     )}
                   </TD>
                   <TD align="right" className={cn(variance !== null && variance < 0 && "font-semibold text-warn")}>
-                    {variance === null ? (
-                      <span className="text-muted">Not entered</span>
-                    ) : (
-                      formatCurrency(variance, { cents: true })
-                    )}
+                    {variance === null ? <NoValue /> : formatCurrency(variance, { cents: true })}
                   </TD>
                 </TR>
               );

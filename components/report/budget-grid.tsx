@@ -16,6 +16,7 @@ import {
 } from "@/lib/report/budget-rows";
 import { parseAmount } from "@/lib/rules/money";
 import { formatCurrency, plural } from "@/lib/format";
+import { NoValue } from "./no-value";
 import { NumericInput } from "./numeric-input";
 import { balanceCopy, minusCurrency, signedDifference } from "./balance";
 import { BalanceMeter } from "./balance-meter";
@@ -30,7 +31,7 @@ import {
 import { budgetTotals } from "@/lib/rules/validate";
 
 const COLS =
-  "@min-[720px]:grid @min-[720px]:grid-cols-[2.5rem_6.5rem_minmax(0,1fr)_8.5rem_7.5rem_7rem_2.5rem] @min-[720px]:items-stretch";
+  "@min-[720px]:grid @min-[720px]:grid-cols-[2.5rem_5.5rem_minmax(16rem,1fr)_8rem_8rem_7.5rem_2.5rem] @min-[720px]:items-stretch";
 
 const cell =
   "block h-10 @min-[720px]:h-full w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-harbor-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-harbor-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
@@ -367,6 +368,7 @@ export function BudgetGrid({
                           <input
                             id={`budget-desc-${row.rowId}`}
                             value={row.description}
+                            title={row.description || undefined}
                             aria-invalid={error && !badAmount ? true : undefined}
                             aria-describedby={error ? errorId : undefined}
                             onChange={(event) => update(row.rowId, { description: event.target.value })}
@@ -446,7 +448,7 @@ export function BudgetGrid({
                               variance === null ? "text-muted" : variance < 0 ? "font-semibold text-bad" : "text-ink",
                             )}
                           >
-                            {variance === null ? "Not entered" : minusCurrency(variance)}
+                            {variance === null ? <NoValue /> : minusCurrency(variance)}
                           </span>
                         </div>
                         <div className="hidden items-center justify-center @min-[720px]:flex">

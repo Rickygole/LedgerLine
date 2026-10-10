@@ -10,6 +10,7 @@ import type { Answers, BudgetLine, FormDefinition, Question } from "@/lib/rules/
 import { VARIANCE_NOTE_KEY, spendSummary } from "@/lib/rules/spend";
 import { budgetTotals, isVisible } from "@/lib/rules/validate";
 import { balanceCopy } from "./balance";
+import { NoValue } from "./no-value";
 
 const ROW = "grid gap-x-6 gap-y-1 border-b border-line-soft py-3 sm:grid-cols-[40%_minmax(0,1fr)_auto]";
 
@@ -186,9 +187,11 @@ export function CheckAnswers({
                             <td className="px-3 py-2">{line.description}</td>
                             <td className="num px-3 py-2 text-right">{formatCurrency(line.amount, { cents: true })}</td>
                             <td className="num px-3 py-2 text-right">
-                              {line.actual === null || line.actual === undefined
-                                ? "Not entered"
-                                : formatCurrency(line.actual, { cents: true })}
+                              {line.actual === null || line.actual === undefined ? (
+                                <NoValue />
+                              ) : (
+                                formatCurrency(line.actual, { cents: true })
+                              )}
                             </td>
                           </tr>
                         ))}
