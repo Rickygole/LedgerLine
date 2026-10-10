@@ -176,7 +176,8 @@ async function main() {
           });
           return {
             refused: raw !== null && raw.includes("must equal the award"),
-            plain: "A submit sent straight to the database with a short budget was refused by the database itself, with no application code involved.",
+            plain:
+              "A submit sent straight to the database with a short budget was refused by the database itself, with no application code involved.",
             raw: raw ?? "submit succeeded",
           };
         },
