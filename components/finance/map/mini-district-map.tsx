@@ -24,7 +24,7 @@ export function MiniDistrictMap({
         <path
           key={d.district}
           d={d.path}
-          fill={fills[d.district] ?? "#eef2f6"}
+          fill={fills[d.district] ?? "#c3d0df"}
           stroke="#fff"
           strokeWidth={1.5}
           strokeLinejoin="round"

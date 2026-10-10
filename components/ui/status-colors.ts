@@ -14,7 +14,7 @@ export const STATUS_COLOR: Record<StatusSeriesKey, string> = Object.fromEntries(
 ) as Record<StatusSeriesKey, string>;
 
 export const GEO_BINS = [
-  { min: 0, max: 0, label: "None", color: "#eef2f6" },
+  { min: 0, max: 0, label: "None", color: "#c3d0df" },
   { min: 1, max: 9, label: "Under 10 percent", color: "#fde3c8" },
   { min: 10, max: 24, label: "10 to 24 percent", color: "#f8b27a" },
   { min: 25, max: 49, label: "25 to 49 percent", color: "#e8743b" },
