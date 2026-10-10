@@ -1,3 +1,4 @@
+import { nowMs } from "@/lib/dates";
 import { z } from "zod";
 import { pgCode } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
@@ -5,11 +6,11 @@ import { plainError } from "@/lib/finance/admin/errors";
 export type OpState = { ok?: string; error?: string; at?: number } | undefined;
 
 export function failure(message: string): OpState {
-  return { error: message, at: Date.now() };
+  return { error: message, at: nowMs() };
 }
 
 export function success(message: string): OpState {
-  return { ok: message, at: Date.now() };
+  return { ok: message, at: nowMs() };
 }
 
 export function firstIssue(error: z.ZodError): string {

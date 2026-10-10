@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { replyToSupportRequest } from "@/app/actions/support";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDateTime } from "@/lib/dates";
+import { formatDateTime, nowDate } from "@/lib/dates";
 import { isUuid } from "@/lib/finance/admin/params";
 import { ageMinutes, categoryLabel, dueAt, formatDuration, loadMessages, loadSupport, metTarget, responseMinutes, supportState } from "@/lib/ops/support";
 import { ActionForm } from "@/components/ops/action-form";
@@ -27,7 +27,7 @@ export default async function SupportDetail({ params }: { params: Promise<{ id: 
   });
   if (!data) notFound();
   const { row, messages } = data;
-  const now = new Date();
+  const now = nowDate();
   const state = supportState({ createdAt: row.created_at, firstResponseAt: row.first_response_at, closedAt: row.closed_at, now });
   const replied = responseMinutes(row.created_at, row.first_response_at);
   const met = metTarget(row.created_at, row.first_response_at);

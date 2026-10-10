@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
+import { dispatchFor } from "@/lib/outbox-dispatch";
 import { isUuid } from "@/lib/finance/admin/params";
 import { dbFailure, failure, firstIssue, isoDay, success, trimmed, type OpState } from "@/lib/ops/action-state";
 
@@ -36,6 +37,7 @@ export async function recordIncident(_previous: OpState, formData: FormData): Pr
         [row?.id]
       );
     });
+    await dispatchFor(admin.id);
     const late = result?.on_time ? "" : " The notification deadline had already passed when it was recorded.";
     return success(`${result?.reference} recorded. ${result?.contacts} designated ${result?.contacts === 1 ? "contact was" : "contacts were"} notified through the outbox.${late}`);
   } catch (error) {
@@ -71,6 +73,7 @@ export async function recordRemediation(_previous: OpState, formData: FormData):
     await withClaims(admin.id, (tx) =>
       tx.query("SELECT app.record_remediation($1, $2, $3, $4, $5)", [parsed.data.incidentId, parsed.data.rootCause, parsed.data.actions, parsed.data.prevention, parsed.data.completedOn || null])
     );
+    await dispatchFor(admin.id);
     return success(parsed.data.completedOn ? "Remediation report saved and marked complete. The designated contacts were notified." : "Remediation report saved. The designated contacts were notified.");
   } catch (error) {
     return dbFailure(error, { "completed date must fall": "The completed date must be between the detection date and today." });

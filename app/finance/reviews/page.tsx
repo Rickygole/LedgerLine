@@ -36,7 +36,7 @@ export default async function ReviewsPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <Card>
           <CardHeader title="Reviews" />
-          <Table>
+          <Table density="compact">
             <THead>
               <tr>
                 <TH>Fiscal year</TH>

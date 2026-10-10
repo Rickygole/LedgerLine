@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDateTime } from "@/lib/dates";
+import { formatDateTime, nowDate } from "@/lib/dates";
 import { one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
 import { ageMinutes, categoryLabel, formatDuration, listSupport, metTarget, responseMinutes, RESPONSE_TARGET_HOURS, supportState, targetSummary } from "@/lib/ops/support";
 import { SupportStateBadge } from "@/components/ops/support-parts";
@@ -22,7 +22,7 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
   const admin = await requireUser(["finance_admin"]);
   const params = await searchParams;
   const filter = pickOne(one(params, "state"), FILTERS, "all");
-  const now = new Date();
+  const now = nowDate();
   const all = await withClaims(admin.id, (tx) => listSupport(tx, {}));
   const rows = all.map((row) => ({ row, state: supportState({ createdAt: row.created_at, firstResponseAt: row.first_response_at, closedAt: row.closed_at, now }) }));
   const count = (state: string) => rows.filter((r) => r.state === state).length;
@@ -56,7 +56,7 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
             Apply
           </Button>
         </form>
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Reference</TH>

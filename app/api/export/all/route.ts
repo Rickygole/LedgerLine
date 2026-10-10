@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { todayInNewYork } from "@/lib/dates";
+import { nowDate, todayInNewYork } from "@/lib/dates";
 import { buildPackage, type CatalogColumn, type PackageRows } from "@/lib/export/package";
 import { buildZip } from "@/lib/export/zip";
 
@@ -13,7 +13,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Sign in to export data." }, { status: 401 });
   if (user.role !== "finance_admin") return NextResponse.json({ error: "Only Finance administrators can export all data." }, { status: 403 });
 
-  const generatedAt = new Date();
+  const generatedAt = nowDate();
   const filename = `ledgerline-data-package-${todayInNewYork()}.zip`;
   const { catalog, rows } = await withClaims(user.id, async (tx) => {
     const catalog = await tx.query<CatalogColumn>("SELECT table_name, column_name, data_type, is_nullable, ordinal FROM app.export_catalog()");

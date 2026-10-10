@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
+import { dispatchFor } from "@/lib/outbox-dispatch";
 import { isUuid } from "@/lib/finance/admin/params";
 import { dbFailure, failure, firstIssue, success, trimmed, type OpState } from "@/lib/ops/action-state";
 
@@ -45,6 +46,7 @@ export async function replyToSupportRequest(_previous: OpState, formData: FormDa
   if (!body.success) return failure(firstIssue(body.error));
   try {
     await withClaims(user.id, (tx) => tx.query("SELECT app.reply_support_request($1, $2)", [id, body.data]));
+    await dispatchFor(user.id);
     return success("Your message was sent.");
   } catch (error) {
     return dbFailure(error, { "request is closed": "This request is closed. Send a new request instead.", "request not found": "That request could not be found." });

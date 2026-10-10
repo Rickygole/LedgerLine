@@ -1,8 +1,9 @@
 import type { Tx } from "@/lib/db";
 import { roleLabel, type Role } from "@/lib/auth";
 import { PAGE_SIZE, isUuid } from "./params";
-import { actionVerb } from "@/lib/finance/audit-actions";
+import { actionVerb, entityLabel } from "@/lib/finance/audit-actions";
 import { describeOffset } from "@/lib/lifecycle/reminders";
+import { formatCount } from "@/lib/rules/money";
 
 export { actionLabel, entityLabel } from "@/lib/finance/audit-actions";
 
@@ -95,6 +96,11 @@ export function auditEntityHref(row: Pick<AuditRow, "entity" | "entity_id">): st
   if (row.entity === "form_version") return `/finance/forms/${row.entity_id}`;
   if (row.entity === "organization") return `/finance/organizations/${row.entity_id}`;
   if (row.entity === "app_user") return "/finance/users";
+  if (row.entity === "support_request") return `/finance/support/${row.entity_id}`;
+  if (row.entity === "security_incident") return `/finance/incidents/${row.entity_id}`;
+  if (row.entity === "incident_contact") return "/finance/incidents";
+  if (row.entity === "annual_review") return "/finance/reviews";
+  if (row.entity === "training_record" || row.entity === "uat_session") return "/finance/readiness";
   return null;
 }
 
@@ -133,11 +139,17 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
     case "fiscal_year":
       return { actor, verb, subject: row.entity_id };
     case "export": {
+      if (row.action === "export_all") {
+        const tables = typeof after.tables === "number" ? after.tables : null;
+        const total = typeof after.rows === "number" ? after.rows : null;
+        const detail = tables === null || total === null ? "" : ` (${formatCount(tables)} tables, ${formatCount(total)} rows)`;
+        return { actor, verb, subject: `the complete data package${detail}` };
+      }
       const rows = typeof after.rows === "number" ? after.rows : null;
-      return { actor, verb, subject: `${row.entity_id} submissions${rows === null ? "" : ` (${rows.toLocaleString("en-US")} ${rows === 1 ? "row" : "rows"})`}` };
+      return { actor, verb, subject: `${row.entity_id} submissions${rows === null ? "" : ` (${formatCount(rows)} ${rows === 1 ? "row" : "rows"})`}` };
     }
     default:
-      return { actor, verb, subject: label };
+      return { actor, verb, subject: row.label ?? row.note ?? entityLabel(row.entity).toLowerCase() };
   }
 }
 

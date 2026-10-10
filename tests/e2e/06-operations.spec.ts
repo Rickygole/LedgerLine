@@ -1,3 +1,5 @@
+import { readdirSync } from "node:fs";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { ownerQuery } from "./support/db";
 import { authFile } from "./support/app";
@@ -20,7 +22,8 @@ test("[US-062] the health endpoint answers without the passcode and reveals noth
   const body = await response.json();
   expect(body.status).toBe("ok");
   expect(body.database.ok).toBe(true);
-  expect(body.migrations.latest).toMatch(/^0018_r_/);
+  const files = readdirSync(path.resolve(__dirname, "../../db/migrations")).filter((f) => f.endsWith(".sql")).sort();
+  expect(body.migrations.latest).toBe(files[files.length - 1]);
   expect(body.requestId).toBe(response.headers()["x-request-id"]);
   const text = JSON.stringify(body);
   for (const secret of [process.env.APP_DATABASE_URL, process.env.DB_OWNER_URL, process.env.AUTH_SECRET, process.env.GATE_PASSCODE, "postgres://"]) if (secret) expect(text).not.toContain(secret);

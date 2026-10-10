@@ -1,3 +1,6 @@
+import { nowDate } from "@/lib/dates";
+
+
 export type ErrorLogInput = {
   requestId: string | null;
   digest: string | null;
@@ -8,7 +11,7 @@ export type ErrorLogInput = {
   message: string;
 };
 
-export function formatErrorLog(input: ErrorLogInput, at: Date = new Date()): string {
+export function formatErrorLog(input: ErrorLogInput, at: Date = nowDate()): string {
   return JSON.stringify({
     level: "error",
     event: "request_error",

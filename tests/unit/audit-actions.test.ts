@@ -100,6 +100,8 @@ function emittedActions(): { actions: Set<string>; entities: Set<string> } {
       else if (/^'([a-z_]+)'\s*\|\|\s*v_planned\.action$/.test(action)) {
         const prefix = action.match(/^'([a-z_]+)'/)![1];
         for (const kind of sql.matchAll(/rp\.action IN \(([^)]*)\)/g)) for (const k of literals(kind[1], "'")) if (k !== "retire") actions.add(`${prefix}${k}`);
+      } else if (/^CASE WHEN [^']+THEN '[a-z_]+' ELSE '[a-z_]+' END$/.test(action)) {
+        literals(action, "'").forEach((a) => actions.add(a));
       } else if (action === "p_action") {
         for (const p of sql.matchAll(/p_action = '([a-z_]+)'/g)) actions.add(p[1]);
       } else throw new Error(`Unrecognized audit action expression ${action} in ${file}`);
