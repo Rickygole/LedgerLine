@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { ErrorSummary } from "@/components/finance/admin/error-summary";
+import { formatCurrency } from "@/lib/format";
 import { AGENCIES } from "@/lib/domain";
 
 type Org = { id: string; name: string; ein: string; borough: string };
@@ -25,7 +26,7 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
   }, [orgs, query, rows]);
   const fe = state?.fieldErrors ?? {};
   const summary = [...(state?.error ? [{ id: "", message: state.error }] : []), ...Object.entries(fe).map(([key, message]) => ({ id: key, message }))];
-  const total = rows.reduce((sum, r) => sum + (Number(r.amount.replace(/[$,\s]/g, "")) || 0), 0);
+  const total = rows.reduce((sum, r) => sum + Math.max(0, Number(r.amount.replace(/[$,\s]/g, "")) || 0), 0);
 
   return (
     <form action={action} noValidate>
@@ -66,7 +67,7 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
             <tr>
               <TH>Organization</TH>
               <TH>Award amount</TH>
-              <TH>Sponsoring agency</TH>
+              <TH>Administering agency</TH>
               <TH>
                 <span className="sr-only">Remove</span>
               </TH>
@@ -130,7 +131,7 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted">
-          Total funding after saving: <span className="num font-semibold text-ink">{total.toLocaleString("en-US", { style: "currency", currency: "USD" })}</span>
+          Total funding after saving: <span className="num font-semibold text-ink">{formatCurrency(total)}</span>
         </p>
         <Button type="submit" disabled={pending || rows.length === 0}>
           {pending ? "Saving" : "Save and continue"}
