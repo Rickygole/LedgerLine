@@ -43,3 +43,20 @@ test("the map has a table view, borough chips and an organization location mode"
   await expect(page).toHaveURL(/district=8&by=location/);
   await expect(page.getByRole("link", { name: /District 8, organization location/ })).toBeVisible();
 });
+
+test("District 8 ranks in the top three, the map is shaded by share missing, and its missing reports include Mott Haven", async ({ page }) => {
+  await page.goto("/finance?period=FY26-YE");
+  await expect(page.getByText("Share of reports missing", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Not shown on the map:/)).toContainText(/Citywide initiatives, \d+ missing of \d+/);
+  const ranking = page.locator("section[aria-labelledby=rank-title] ol > li");
+  const top = await ranking.locator("a").evaluateAll((links) => links.slice(0, 3).map((a) => a.textContent?.trim()));
+  expect(top).toContain("District 8");
+
+  const d8 = page.getByRole("group", { name: /Map of the 51/ }).getByRole("link", { name: /^District 8,/ });
+  await d8.focus();
+  await expect(page.locator("[aria-live=polite]").first()).toContainText("District 8");
+  await expect(d8).toHaveCSS("outline-style", "none");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/district=8&by=sponsor&bucket=missing/);
+  await expect(page.getByRole("link", { name: /^Mott Haven Youth Futures/ })).toBeVisible();
+});
