@@ -35,10 +35,11 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
     <>
       <PageHeader
         title={row.subject}
-        crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages", href: "/portal/messages" }, { label: "Message" }]}
+        eyebrow={`${templateLabel(row.template)} · ${formatDateTime(row.created_at)}`}
+        crumbs={[{ label: "Messages", href: "/portal/messages" }, { label: "Message" }]}
         actions={
           row.submission_id ? (
-            <ButtonLink href={`/portal/reports/${row.submission_id}`} variant="secondary">
+            <ButtonLink href={`/portal/reports/${row.submission_id}`} variant="secondary" >
               View report {row.reference_no}
             </ButtonLink>
           ) : null

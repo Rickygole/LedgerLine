@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authFile, fillRequiredAnswers, openOverdueDraft, PEOPLE, setBudget, signIn, SAVED_LABEL } from "./support/app";
+import { authFile, fillRequiredAnswers, gotoStep, openOverdueDraft, PEOPLE, REPORT_URL, setBudget, signIn, SAVED_LABEL } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -14,7 +14,8 @@ test("[BR-011][US-013] a submitter signs in through the passcode gate with a per
   await expect(page).toHaveURL(/\/gate/);
   await signIn(page, PEOPLE.maria);
   await expect(page).toHaveURL(/\/portal$/);
-  await expect(page.getByText("Welcome, Maria")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByText("Mott Haven Youth Futures, Inc. · Bronx · District 8")).toBeVisible();
   await context.close();
 });
 
@@ -32,7 +33,8 @@ test("[BR-010][US-014] a submitter cannot open another organization's report by 
 
 test("[US-016] a submitter starts the report the organization owes from the portal", async ({ page }) => {
   await page.goto("/portal");
-  await expect(page.getByRole("heading", { name: "My reports", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /report is overdue|reports are overdue|asked for changes|next report is due|up to date/, level: 1 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Continue report" })).toHaveCount(1);
   const id = await openOverdueDraft(page);
   expect(id).toMatch(/^[0-9a-f-]{36}$/);
   await expect(page.getByText(/^LL-[A-Z0-9]+-\d+$/).first()).toBeVisible();
@@ -40,28 +42,36 @@ test("[US-016] a submitter starts the report the organization owes from the port
 
 test("[BR-021][US-031] submitting with required answers missing lists each one", async ({ page }) => {
   await openOverdueDraft(page);
+  await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
-  const summary = page.getByRole("alert").filter({ hasText: /Fix \d+ problems? before you submit/ }).first();
+  const summary = page.getByRole("alert").filter({ hasText: /problems? to fix before you submit/ }).first();
   await expect(summary).toBeVisible();
   await expect(summary).toContainText("Enter the number of participants served this period.");
   await expect(summary).toContainText("Add at least one budget line.");
   await expect(summary).toContainText("Check the box to certify that this report is accurate and complete.");
-  await expect(page).toHaveURL(/\/portal\/reports\/[0-9a-f-]{36}$/);
+  await expect(summary).toBeFocused();
+  await expect(page).toHaveURL(REPORT_URL);
+  await summary.getByRole("link", { name: "Add at least one budget line." }).click();
+  await expect(page.locator("#step-heading")).toHaveText("Budget");
+  await expect(page).toHaveURL(/step=budget/);
 });
 
 test("[US-017][US-018] answers save automatically and are still there after reload", async ({ page }) => {
   await openOverdueDraft(page);
   await fillRequiredAnswers(page);
+  await gotoStep(page, "Program performance");
   await page.locator("#q-participants_target").fill("120");
   await page.locator("#q-sites_count").fill("3");
   await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
   await page.reload();
+  await expect(page.locator("#step-heading")).toHaveText("Program performance");
   await expect(page.locator("#q-participants_target")).toHaveValue("120");
   await expect(page.locator("#q-sites_count")).toHaveValue("3");
 });
 
 test("[US-022][US-023] several supporting documents of the allowed types attach to the report", async ({ page }) => {
   const id = await openOverdueDraft(page);
+  await gotoStep(page, "Attachments");
   await page.locator("#attachment-input").setInputFiles([
     { name: "roster.csv", mimeType: "text/csv", buffer: Buffer.from("name,sessions\nA,4\nB,6\n") },
     { name: "invoice.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\nInvoice 1042\n") },
@@ -75,6 +85,7 @@ test("[US-022][US-023] several supporting documents of the allowed types attach 
 
 test("[BR-012] the browser refuses a file over 25 MB before sending it and says why", async ({ page }) => {
   await openOverdueDraft(page);
+  await gotoStep(page, "Attachments");
   await page.locator("#attachment-input").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]) });
   await expect(page.getByText(/over the 25\.0 MB limit for one file/)).toBeVisible();
 });
@@ -90,12 +101,16 @@ test("[BR-022] actual spent shows a variance per line and a submitter must expla
   await expect(page.getByText("Unspent balance (award minus actual spent)")).toBeVisible();
   await expect(page.getByText("(52.9% of the award)")).toBeVisible();
   await expect(page.getByLabel("Variance explanation")).toBeVisible();
+  await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
-  const summary = page.getByRole("alert").filter({ hasText: /Fix \d+ problems? before you submit/ }).first();
+  const summary = page.getByRole("alert").filter({ hasText: /problems? to fix before you submit/ }).first();
   await expect(summary).toContainText("of the award is unspent. Explain why in the variance explanation.");
+  await summary.getByRole("link", { name: /of the award is unspent/ }).click();
+  await expect(page.getByLabel("Variance explanation")).toBeFocused();
   await page.getByLabel("Variance explanation").fill("Two mentor positions were vacant until March and supplies were bought in bulk last year.");
+  await page.getByRole("button", { name: "Save and return to review" }).click();
   await expect(page.getByText("Everything required is complete. You can submit this report.")).toBeVisible();
-  await expect(page).toHaveURL(/\/portal\/reports\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(REPORT_URL);
 });
 
 test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the amount, then submits once fixed", async ({ page }) => {
@@ -105,18 +120,22 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
     { category: "PS", description: "Mentor stipends", amount: "60000" },
     { category: "OTPS", description: "Program supplies", amount: "20000" },
   ]);
-  await expect(page.getByText("$5,000.00 under award")).toBeVisible();
+  await expect(page.getByText("Under by $5,000.00", { exact: true })).toBeVisible();
+  await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
   const refusal = page.getByRole("alert").filter({ hasText: /must equal award/ }).first();
   await expect(refusal).toContainText("Total $80,000.00 must equal award $85,000.00 (under by $5,000.00).");
-  await expect(page).toHaveURL(/\/portal\/reports\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(REPORT_URL);
+  await refusal.getByRole("link", { name: /must equal award/ }).click();
+  await expect(page.locator("#step-heading")).toHaveText("Budget");
   await page.getByLabel("Line 2 Approved budget").fill("25000");
   await page.getByLabel("Line 2 Approved budget").blur();
   await expect(page.getByText(/Balanced|equals the award/).first()).toBeVisible();
   await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
+  await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
   await page.waitForURL(/\/submitted$/);
-  await expect(page.getByRole("heading", { name: "Report received" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Report submitted", level: 1 })).toBeVisible();
   await expect(page.getByText(/A copy of this report is in/)).toBeVisible();
   await expect(page.getByText(/was emailed to/)).toHaveCount(0);
   await expect(page.getByText(/was sent to/)).toHaveCount(0);

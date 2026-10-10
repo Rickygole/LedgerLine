@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow, WidthType } from "docx";
 import type { Page } from "@playwright/test";
-import { authFile, PEOPLE, SAVED_LABEL } from "./support/app";
+import { authFile, gotoStep, PEOPLE, SAVED_LABEL, stepLink } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -13,7 +13,7 @@ async function openAnyDraft(page: Page): Promise<string> {
     [PEOPLE.maria]
   );
   await page.goto(`/portal/reports/${draft.id}`);
-  await expect(page.getByRole("button", { name: "Submit report" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Report sections" })).toBeVisible();
   return draft.id;
 }
 
@@ -40,24 +40,28 @@ test("[BR-021][US-031] a required table with only an empty row is refused", asyn
   const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
   const page = await context.newPage();
   await openAnyDraft(page);
+  await gotoStep(page, "Program performance");
   await page.getByRole("radio", { name: "Yes", exact: true }).first().check();
   await page.getByRole("button", { name: "Add row" }).first().click();
+  await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
   await expect(page.getByRole("alert").getByText("Fill in the participants under 18 by age group table.").first()).toBeVisible();
   await context.close();
 });
 
-test("[US-018] the resume prompt goes away once the user edits the report", async ({ browser }) => {
+test("[US-018] reopening a report lands on the section edited last", async ({ browser }) => {
   const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
   const page = await context.newPage();
   const id = await openAnyDraft(page);
+  await gotoStep(page, "Narrative");
   await page.locator("#q-accomplishments").fill("Participants completed the curriculum.");
   await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
+  await gotoStep(page, "Organization and contact");
   await page.goto(`/portal/reports/${id}`);
-  const banner = page.getByText("Pick up where you left off");
-  await expect(banner).toBeVisible();
-  await page.locator("#q-accomplishments").fill("Participants completed the full curriculum.");
-  await expect(banner).toHaveCount(0);
+  await expect(page.locator("#step-heading")).toHaveText("Narrative");
+  await expect(stepLink(page, "Narrative")).toHaveAttribute("aria-current", "step");
+  await expect(page.getByText("Pick up where you left off")).toHaveCount(0);
+  await expect(page.locator("#q-accomplishments")).toHaveValue("Participants completed the curriculum.");
   await context.close();
 });
 

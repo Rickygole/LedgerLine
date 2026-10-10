@@ -5,7 +5,8 @@ import { ReportEditor } from "@/components/report/report-editor";
 import { ReportHeader } from "@/components/report/report-header";
 import { SubmittedCopy } from "@/components/report/submitted-copy";
 import { requireUser } from "@/lib/auth";
-import { formatDateTime } from "@/lib/dates";
+import { daysPastDue, formatDateTime } from "@/lib/dates";
+import { reportState } from "@/lib/reporting";
 import { withClaims } from "@/lib/db";
 import { loadEditorPayload, loadReport } from "@/lib/report/data";
 import { loadFileIds, loadLatestRevision, loadReturnNote } from "@/lib/report/revision";
@@ -41,11 +42,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   if (!data) notFound();
 
   const { header } = data.report;
+  const daysLate = daysPastDue(header.dueOn);
+  const state = reportState(header.status, header.dueOn);
 
   if (data.kind === "view") {
     return (
       <>
-        <ReportHeader header={header} />
+        <ReportHeader header={header} daysLate={daysLate} state={state} />
         {data.revision ? (
           <SubmittedCopy definition={data.report.definition} revision={data.revision} awardAmount={header.awardAmount} submissionId={id} files={data.files} />
         ) : (
@@ -55,45 +58,45 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  return (
-    <>
-      <ReportHeader header={header} />
-      {data.note ? (
-        <section aria-labelledby="changes-requested" className="mb-6 rounded-lg border border-l-4 border-line border-l-warn bg-white px-5 py-4 shadow-card">
-          <h2 id="changes-requested" className="flex items-center gap-2 text-[15px] font-semibold text-ink">
-            <AlertTriangle className="h-4 w-4 text-warn" aria-hidden="true" />
-            Council Finance asked for changes
-          </h2>
-          <p className="mt-2 max-w-[72ch] whitespace-pre-wrap rounded-md bg-surface px-3 py-2.5 text-sm leading-6 text-ink">{data.note.note}</p>
-          <p className="mt-2 text-xs text-muted">
-            {data.note.by ? `${data.note.by}, Council Finance` : "Council Finance"}, {formatDateTime(data.note.at)} ET. Update the report below, then submit it again.
-          </p>
-        </section>
-      ) : null}
-      {data.sent && data.sent.snapshot.attachments.length > 0 ? (
-        <section aria-labelledby="sent-files" className="mb-6 rounded-lg border border-line bg-white px-5 py-4 shadow-card">
-          <h2 id="sent-files" className="text-[15px] font-semibold text-ink">
-            Files sent with revision {data.sent.revision}
-          </h2>
-          <p className="mt-1 text-sm text-muted">Council Finance keeps these files even if you remove them from the working copy below.</p>
-          <ul className="mt-3 divide-y divide-line text-sm">
-            {data.sent.snapshot.attachments.map((file) => (
-              <li key={file.path} className="flex flex-wrap items-center justify-between gap-3 py-2">
-                <span className="font-semibold text-ink">{file.filename}</span>
-                <span className="flex items-center gap-4 text-muted">
-                  <span className="num">{formatBytes(file.bytes)}</span>
+  const notice =
+    data.note || (data.sent && data.sent.snapshot.attachments.length > 0) ? (
+      <div className="mb-7 space-y-4">
+        {data.note ? (
+          <section aria-labelledby="changes-requested" className="rounded border border-l-4 border-line border-l-warn bg-white p-5">
+            <h2 id="changes-requested" className="flex items-center gap-2 text-[17px] font-bold leading-6 text-ink">
+              <AlertTriangle className="h-4 w-4 text-warn" aria-hidden="true" />
+              Council Finance asked for changes
+            </h2>
+            <p className="mt-2 max-w-[70ch] whitespace-pre-wrap rounded bg-harbor-50 px-4 py-3 text-[15px] leading-6 text-ink">{data.note.note}</p>
+            <p className="mt-2 text-sm text-muted">
+              {data.note.by ? `${data.note.by}, Council Finance` : "Council Finance"}, {formatDateTime(data.note.at)} ET. Update the report, then submit it again.
+            </p>
+          </section>
+        ) : null}
+        {data.sent && data.sent.snapshot.attachments.length > 0 ? (
+          <details className="rounded border border-line bg-white px-5 py-4">
+            <summary className="cursor-pointer text-[15px] font-semibold text-ink">
+              Files sent with revision {data.sent.revision} ({data.sent.snapshot.attachments.length})
+            </summary>
+            <p className="mt-2 text-sm text-muted">Council Finance keeps these files even if you remove them from the working copy.</p>
+            <ul className="mt-2 divide-y divide-line-soft text-[15px]">
+              {data.sent.snapshot.attachments.map((file) => (
+                <li key={file.path} className="flex flex-wrap items-center justify-between gap-3 py-2">
                   {data.sentIds[file.path] ? (
                     <a href={`/portal/reports/${id}/files/${data.sentIds[file.path]}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover" aria-label={`Download ${file.filename}`}>
-                      Download
+                      {file.filename}
                     </a>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      <ReportEditor payload={data.payload} />
-    </>
-  );
+                  ) : (
+                    <span className="font-semibold text-ink">{file.filename}</span>
+                  )}
+                  <span className="num text-sm text-muted">{formatBytes(file.bytes)}</span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+      </div>
+    ) : null;
+
+  return <ReportEditor payload={data.payload} daysLate={daysLate} state={state} notice={notice} />;
 }
