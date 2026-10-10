@@ -46,6 +46,7 @@ test("[BR-011] after the passcode the start page shows the fiscal year calendar 
   await page.getByLabel("Passcode").fill(process.env.GATE_PASSCODE ?? "ledger-demo");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.waitForURL((url) => url.pathname === "/");
+  await ownerQuery("DELETE FROM auth_attempt WHERE id = (SELECT max(id) FROM auth_attempt WHERE key LIKE 'gate:%')");
   await expect(page.getByRole("heading", { name: "Report on your City Council initiative funding", level: 1 })).toBeVisible();
   const calendar = page.getByRole("list", { name: "FY27 reporting calendar" }).first();
   await expect(calendar).toContainText(`${period.label} due`);

@@ -35,5 +35,4 @@ describe("public calendar for the start page", () => {
     const rows = await asUser(app, null, async () => (await app.query("SELECT * FROM app.public_calendar('1990-01-01')")).rows);
     expect(rows).toEqual([]);
   });
-
 });
