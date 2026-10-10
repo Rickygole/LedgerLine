@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CheckCircle2, CircleAlert, ClipboardList, Eye, ShieldCheck } from "lucide-react";
+import { CheckCircle2, CircleAlert, ClipboardList, Eye, ShieldCheck, Wrench } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
 import { Badge } from "@/components/ui/status-badge";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
@@ -24,6 +24,13 @@ const LEGEND: { state: State; label: string; icon: typeof CheckCircle2; tone: st
     text: "At least one automated test tagged with the requirement ID asserts the behavior, and every tagged test passed in this run on its first attempt.",
   },
   {
+    state: "supporting",
+    label: "Supporting tool built",
+    icon: Wrench,
+    tone: "text-navy-700",
+    text: "The commitment itself is delivered under contract, such as support, breach notification or the testing and training periods. The tool it relies on is built here and every tagged test passed, but those tests do not prove the commitment.",
+  },
+  {
     state: "demonstrated",
     label: "Demonstrated",
     icon: Eye,
@@ -35,7 +42,7 @@ const LEGEND: { state: State; label: string; icon: typeof CheckCircle2; tone: st
     label: "Planned",
     icon: ClipboardList,
     tone: "text-muted",
-    text: "A delivery, hosting, support or contract commitment, or work not yet built. It is not an application behavior that a test can assert.",
+    text: "A delivery or hosting commitment with no supporting tool in this application, or work not yet built. It is not an application behavior that a test can assert.",
   },
   {
     state: "failing",
@@ -53,7 +60,7 @@ const CONTROLS = [
     attempt:
       "Submit a budget that does not equal the award, or change a report's status with a direct database update.",
     result:
-      "The server re-checks every rule at submit and refuses an unbalanced budget, stating the amount over or under. Separately, the database refuses any status change made outside the workflow function. The balance rule itself is enforced by the application server, not by a database constraint.",
+      "The server re-checks every rule at submit and refuses an unbalanced budget, stating the amount over or under. Separately, the database refuses any status change made outside the workflow function. The balance rule is enforced a second time inside the database: the workflow function that files a report refuses an unbalanced submit even when the application is bypassed.",
   },
   {
     ids: ["BR-010"],
@@ -93,7 +100,7 @@ type Evidence = {
   repository: string;
   totals: { tests: number; passed: number; failed: number; skipped: number };
   suites: { unit: number; sql: number; eval: number; e2e: number };
-  summary: Record<State, { stories: number; rules: number }>;
+  summary: Partial<Record<State, { stories: number; rules: number }>>;
   requirements: EvidenceRow[];
 };
 
@@ -102,6 +109,10 @@ export default async function TraceabilityPage() {
   const data = evidence as unknown as Evidence;
   const stories = data.requirements.filter((r) => r.id.startsWith("US-")).length;
   const rules = data.requirements.filter((r) => r.id.startsWith("BR-")).length;
+  const total = (state: State) => {
+    const counts = data.summary[state];
+    return counts ? counts.stories + counts.rules : 0;
+  };
 
   return (
     <AppShell user={user}>
@@ -181,10 +192,17 @@ export default async function TraceabilityPage() {
         </Card>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <p className="num mt-6 text-sm font-semibold text-ink">
+        {total("verified")} verified by test, {total("supporting")} supporting tools built, {total("planned")} delivery
+        commitments
+        {total("demonstrated") > 0 ? `, ${total("demonstrated")} demonstrated` : ""}
+        {total("failing") > 0 ? `, ${total("failing")} failing` : ""}.
+      </p>
+
+      <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-5">
         {LEGEND.map((item) => {
           const Icon = item.icon;
-          const counts = data.summary[item.state];
+          const counts = data.summary[item.state] ?? { stories: 0, rules: 0 };
           return (
             <div key={item.state} className="rounded-xl border border-line bg-white px-4 py-4 shadow-card">
               <p className="flex items-center gap-2 text-[13px] font-semibold text-muted">
