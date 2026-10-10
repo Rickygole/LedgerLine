@@ -133,8 +133,16 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
             <span className="hidden group-open:inline">Hide the table</span>
           </summary>
           <div className="mt-3 overflow-x-auto">
-            <table className="w-full border-collapse text-[15px] leading-[22px]">
+            <table className="w-full table-fixed border-collapse break-words text-[15px] leading-[22px]">
               <caption className="sr-only">Reports by Council district{borough ? ` in ${borough}` : ""}</caption>
+              <colgroup>
+                <col className="w-[17%]" />
+                <col className="w-[25%]" />
+                <col className="w-[22%]" />
+                <col className="w-[10%]" />
+                <col className="w-[12%]" />
+                <col className="w-[14%]" />
+              </colgroup>
               <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
                 <tr>
                   <th scope="col" aria-sort={sort === "district" ? "ascending" : undefined} className="h-11 px-2">
@@ -156,7 +164,7 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
               <tbody>
                 {tableRows.map((d) => (
                   <tr key={d.district} className="border-b border-line-soft hover:bg-harbor-50">
-                    <th scope="row" className="h-11 whitespace-nowrap px-2 text-left font-semibold">
+                    <th scope="row" className="h-11 px-2 text-left font-semibold">
                       <Link href={districtHref(periodId, d.district, mode, d.missing)} className="text-link underline underline-offset-2 hover:text-link-hover">
                         District {d.district}
                       </Link>
