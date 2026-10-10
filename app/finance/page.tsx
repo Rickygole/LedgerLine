@@ -150,9 +150,9 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           dimension="Category"
           data={stack((row) => row.category)}
           periodLabel={period.label}
-          className="lg:col-span-7"
+          className="lg:col-span-8"
         />
-        <section aria-labelledby="overdue-title" className="min-w-0 rounded border border-line bg-white lg:col-span-5">
+        <section aria-labelledby="overdue-title" className="min-w-0 rounded border border-line bg-white lg:col-span-4">
           <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
             <h2 id="overdue-title" className="text-xl font-bold leading-7 text-ink">
               Longest overdue
