@@ -176,3 +176,22 @@ describe("[US-061][US-063][BR-029] help requests and the 24 hour response target
     expect(await plainErrorCode(() => owner.query("DELETE FROM support_message WHERE id = $1", [message]))).toBe("42501");
   });
 });
+
+describe("[US-061][US-063] a requester can read the support reply", () => {
+  it("returns the staff message to the requester even though the requester cannot read the staff account", async () => {
+    await asUser(app, null, async () => {
+      await as(maria);
+      const id = await ask(maria, "Reply visibility");
+      await as(priya);
+      await app.query("SELECT app.reply_support_request($1, 'Here is the answer.')", [id]);
+      await as(maria);
+      const { loadMessages } = await import("@/lib/ops/support");
+      const tx = {
+        query: async (sql: string, params?: unknown[]) => (await app.query(sql, params)).rows,
+        one: async (sql: string, params?: unknown[]) => (await app.query(sql, params)).rows[0] ?? null,
+      };
+      const messages = await loadMessages(tx, id);
+      expect(messages.map((m) => [m.from_staff, m.author_name])).toEqual([[false, "Maria Santos"], [true, "Finance support"]]);
+    });
+  });
+});

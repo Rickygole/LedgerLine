@@ -98,8 +98,8 @@ export type SupportMessage = { id: string; author_name: string; from_staff: bool
 
 export async function loadMessages(tx: Tx, id: string): Promise<SupportMessage[]> {
   return tx.query<SupportMessage>(
-    `SELECT m.id::text, u.full_name AS author_name, m.from_staff, m.body, ${iso("m.created_at")} AS created_at
-     FROM support_message m JOIN app_user u ON u.id = m.author WHERE m.request_id = $1 ORDER BY m.created_at, m.id`,
+    `SELECT m.id::text, coalesce(u.full_name, 'Finance support') AS author_name, m.from_staff, m.body, ${iso("m.created_at")} AS created_at
+     FROM support_message m LEFT JOIN app_user u ON u.id = m.author WHERE m.request_id = $1 ORDER BY m.created_at, m.id`,
     [id]
   );
 }
