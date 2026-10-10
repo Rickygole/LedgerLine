@@ -51,7 +51,7 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="max-w-[760px]">
-      <PageHeader eyebrow={`${details.period} report`} title="Start a report" description="Starting a report creates a draft for your organization. You can leave and come back at any time." crumbs={crumbs} />
+      <PageHeader eyebrow={`${details.period} report`} title="Start a report" crumbs={crumbs} />
       <Card>
         <CardBody className="space-y-5">
           <DescriptionList

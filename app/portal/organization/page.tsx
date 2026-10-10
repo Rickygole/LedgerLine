@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ExternalLink, Info, MapPin, Phone, Star } from "lucide-react";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { ProfileHeader } from "@/components/ui/profile-header";
@@ -76,10 +75,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
               Founded {org.foundedYear}
             </span>
           ) : null,
-          <span key="update" className="inline-flex items-center gap-1.5">
-            <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            To update organization details, contact Council Finance.
-          </span>,
+          <span key="update">To update organization details, contact Council Finance.</span>,
         ]}
         tabs={
           <TabNav
@@ -106,9 +102,6 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                 </h2>
                 <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 text-[15px] sm:grid-cols-2">
                   {[
-                    { label: "Legal name", value: <span className="font-semibold">{org.legalName}</span> },
-                    { label: "EIN", value: <span className="whitespace-nowrap font-mono text-sm">{org.ein}</span> },
-                    { label: "Borough and Council district", value: `${org.borough}${org.councilDistrict ? ` · District ${org.councilDistrict}` : ""}` },
                     { label: `${fiscalYear} awards`, value: <span className="num">{funded.filter((f) => f.fiscal_year_id === fiscalYear).length}</span> },
                     { label: `${fiscalYear} total awarded`, value: <span className="num font-semibold">{formatCurrency(totalAward)}</span> },
                   ].map((item) => (
@@ -125,7 +118,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                     { label: "Not yet submitted", value: outstanding, note: "open reports" },
                     { label: "Overdue", value: overdue, note: "past the due date", bad: overdue > 0 },
                   ].map((tile) => (
-                    <li key={tile.label} className="rounded border border-line p-4">
+                    <li key={tile.label} className="border-t border-line pt-3">
                       <p className="flex items-center gap-2 text-sm font-semibold text-ink-2">
                         {tile.bad ? <span className="h-2 w-2 shrink-0 rounded-full bg-bad" aria-hidden="true" /> : null}
                         {tile.label}
@@ -149,8 +142,6 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                   <DescriptionList
                     columns={2}
                     items={[
-                      { label: "Organization type", value: orgTypeLabel(org.orgType) },
-                      { label: "Founded", value: org.foundedYear ? <span className="num">{org.foundedYear}</span> : null },
                       { label: "Annual budget", value: org.annualBudget !== null ? <span className="num">{formatCurrency(org.annualBudget)}</span> : null },
                       { label: "Reports on file", value: <span className="num">{totalReports}</span> },
                     ]}
@@ -160,19 +151,10 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             </Card>
             <Card className="self-start">
               <CardHeader title="Contact" />
-              <ul className="space-y-3 px-5 py-4 text-sm">
-                <li className="flex gap-2.5">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                  <span>{org.address}</span>
-                </li>
-                <li className="flex gap-2.5">
-                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                  <span className="num">{org.phone ?? "No phone on file"}</span>
-                </li>
-                <li className="flex gap-2.5">
-                  <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                  <span className="break-all">{org.website ?? "No website on file"}</span>
-                </li>
+              <ul className="space-y-1.5 px-5 py-4 text-sm">
+                <li>{org.address}</li>
+                <li className="num">{org.phone ?? "No phone on file"}</li>
+                <li className="break-all">{org.website ?? "No website on file"}</li>
               </ul>
               <div className="border-t border-line px-5 py-4">
                 <h3 className="text-[13px] font-semibold text-muted">Primary contact</h3>
@@ -197,7 +179,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       {tab === "people" ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader title="Contacts" description="People Council Finance may contact about reports." />
+            <CardHeader title="Contacts" />
             <Table>
               <THead>
                 <tr>
@@ -215,7 +197,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                         <p className="flex items-center gap-2 font-medium text-ink">
                           {c.full_name}
                           {c.is_primary ? (
-                            <Badge tone="info" icon={Star}>
+                            <Badge tone="info">
                               Primary
                             </Badge>
                           ) : null}
@@ -233,7 +215,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             </Table>
           </Card>
           <Card>
-            <CardHeader title="Team members" description="People who can sign in and report for this organization." />
+            <CardHeader title="Team members" />
             <Table>
               <THead>
                 <tr>
@@ -268,7 +250,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
 
       {tab === "initiatives" ? (
         <Card>
-          <CardHeader title="Funded initiatives" description="Council initiatives awarded to this organization." />
+          <CardHeader title="Funded initiatives" />
           <Table>
             <THead>
               <tr>
