@@ -16,7 +16,7 @@ import { budgetTotals } from "@/lib/rules/validate";
 const COLS = "@min-[720px]:grid @min-[720px]:grid-cols-[3rem_6.5rem_minmax(0,1fr)_9.5rem_9.5rem_8.5rem_2.75rem] @min-[720px]:items-stretch";
 
 const cell =
-  "block h-10 w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-navy-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
+  "block h-10 w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-harbor-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-harbor-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
 
 type Toast = { tone: "ok" | "warn"; text: string };
 
@@ -160,7 +160,7 @@ export function BudgetGrid({
       </p>
 
       {pasteOpen ? (
-        <div id="budget-paste-panel" className="mb-4 rounded border border-line bg-navy-50 px-4 py-4">
+        <div id="budget-paste-panel" className="mb-4 rounded border border-line bg-harbor-50 px-4 py-4">
           <label htmlFor="budget-paste-text" className="mb-1 block text-sm font-semibold text-ink">
             Paste your rows here
           </label>
@@ -205,7 +205,7 @@ export function BudgetGrid({
       {gridError ? <p className="mb-3 text-sm font-semibold text-bad">{gridError}</p> : null}
 
       <div className="rounded border border-line">
-      <div className={cn("hidden h-11 rounded-t border-b border-line bg-navy-50 @min-[720px]:items-center text-sm font-semibold text-[#3d4757]", COLS)}>
+      <div className={cn("hidden h-11 rounded-t border-b border-line bg-harbor-50 @min-[720px]:items-center text-sm font-semibold text-ink-2", COLS)}>
         <span className="px-3 text-right">#</span>
         <span className="px-3">Category</span>
         <span className="px-3">Description</span>
@@ -218,7 +218,7 @@ export function BudgetGrid({
       {rows.length === 0 ? (
         <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
           <p className="text-[17px] font-bold leading-6 text-ink">No budget lines yet</p>
-          <p className="max-w-[46ch] text-[15px] leading-[22px] text-[#3d4757]">Paste rows from Excel (Category, Description, Amount) or add lines one at a time.</p>
+          <p className="max-w-[46ch] text-[15px] leading-[22px] text-ink-2">Paste rows from Excel (Category, Description, Amount) or add lines one at a time.</p>
           <div className="mt-1 flex flex-wrap justify-center gap-3">{toolbar}</div>
         </div>
       ) : (
@@ -234,7 +234,7 @@ export function BudgetGrid({
               <li
                 key={row.rowId}
                 className={cn(
-                  "transition-colors hover:bg-navy-50/60 @max-[719px]:m-3 @max-[719px]:grid @max-[719px]:grid-cols-[6.5rem_minmax(0,1fr)] @max-[719px]:gap-3 @max-[719px]:rounded-md @max-[719px]:border @max-[719px]:border-line @max-[719px]:p-3 @min-[720px]:min-h-[52px] @min-[720px]:border-b @min-[720px]:border-[#e3e7ec]",
+                  "transition-colors hover:bg-harbor-50/60 @max-[719px]:m-3 @max-[719px]:grid @max-[719px]:grid-cols-[6.5rem_minmax(0,1fr)] @max-[719px]:gap-3 @max-[719px]:rounded-md @max-[719px]:border @max-[719px]:border-line @max-[719px]:p-3 @min-[720px]:min-h-[52px] @min-[720px]:border-b @min-[720px]:border-line-soft",
                   COLS,
                   highlight.has(row.rowId) && "bg-info-bg"
                 )}
@@ -345,7 +345,7 @@ export function BudgetGrid({
         </ul>
       )}
 
-      <div className={cn("bg-navy-50/50 text-[15px] leading-[22px]", rows.length > 0 && "border-t border-line", !explainVariance && "rounded-b")}>
+      <div className={cn("bg-harbor-50/50 text-[15px] leading-[22px]", rows.length > 0 && "border-t border-line", !explainVariance && "rounded-b")}>
       <dl>
         {[
           ["Personal services (PS) subtotal", totals.ps],

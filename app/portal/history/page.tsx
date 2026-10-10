@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { PageTitle } from "@/components/portal/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { Badge, type Tone } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { Segmented } from "@/components/portal/portal-filters";
@@ -60,10 +60,10 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageTitle
+      <PageHeader
         eyebrow={user.orgName ?? "Your organization"}
         title="Submission history"
-        lede="Every report your organization has submitted, including reports submitted by your colleagues."
+        description="Every report your organization has submitted, including reports submitted by your colleagues."
       />
       <Card>
         <CardHeader

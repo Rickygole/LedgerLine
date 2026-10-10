@@ -295,7 +295,7 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
       <div className={cn("lg:grid lg:items-start lg:gap-10", wide ? "lg:grid-cols-[260px_minmax(0,1100px)]" : "lg:grid-cols-[260px_minmax(0,760px)]")}>
         <aside className="no-print mb-5 lg:sticky lg:top-6 lg:mb-0">
           <Stepper steps={steps} current={step} onSelect={(key) => go(key)} />
-          <div className="mt-3 px-1 lg:mt-4 lg:border-t lg:border-[#e3e7ec] lg:px-3 lg:pt-4">
+          <div className="mt-3 px-1 lg:mt-4 lg:border-t lg:border-line-soft lg:px-3 lg:pt-4">
             <SaveStatus state={state} lastSavedAt={lastSavedAt} today={payload.today} />
           </div>
         </aside>
@@ -304,14 +304,14 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
           <fieldset disabled={halted} className="min-w-0 border-0 p-0">
             <legend className="sr-only">Report form</legend>
             <section aria-labelledby="step-heading" className="rounded border border-line bg-white">
-              <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+              <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
                 <p className="num hidden text-sm font-semibold text-muted lg:block">
                   Step {index + 1} of {steps.length}
                 </p>
                 <h2 id="step-heading" ref={headingRef} tabIndex={-1} className="lg:mt-0.5 text-xl font-bold leading-7 text-ink outline-none">
                   {current?.title}
                 </h2>
-                {purpose ? <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-[#3d4757]">{purpose}</p> : null}
+                {purpose ? <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">{purpose}</p> : null}
               </div>
 
               <div className="px-5 py-6 sm:px-6">
@@ -420,7 +420,7 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                       <Hint>The name, title and time are stored with this submission and shown to Council Finance.</Hint>
                     </fieldset>
 
-                    <p id="submit-hint" className="max-w-[70ch] text-[15px] leading-[22px] text-[#3d4757]">
+                    <p id="submit-hint" className="max-w-[70ch] text-[15px] leading-[22px] text-ink-2">
                       After you submit, the report is locked. You can change it again only if Council Finance asks for an update. A copy is saved in Messages.
                     </p>
                     {message ? (
@@ -432,7 +432,7 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                 ) : null}
               </div>
 
-              <div className="no-print flex flex-col-reverse gap-4 border-t border-[#e3e7ec] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <div className="no-print flex flex-col-reverse gap-4 border-t border-line-soft px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 {previous ? (
                   <a
                     href={`?step=${encodeURIComponent(previous.key)}`}
@@ -452,11 +452,11 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                   <span />
                 )}
                 {step === REVIEW ? (
-                  <Button onClick={() => void submit()} disabled={submitting || halted} aria-describedby="submit-hint" className="h-11 px-5 text-base max-sm:w-full">
+                  <Button onClick={() => void submit()} disabled={submitting || halted} aria-describedby="submit-hint" className="max-sm:w-full">
                     {submitting ? "Submitting" : "Submit report to Council Finance"}
                   </Button>
                 ) : (
-                  <Button onClick={saveAndContinue} disabled={halted} className="h-11 px-5 text-base max-sm:w-full">
+                  <Button onClick={saveAndContinue} disabled={halted} className="max-sm:w-full">
                     {returning ? "Save and return to review" : "Save and continue"}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Button>

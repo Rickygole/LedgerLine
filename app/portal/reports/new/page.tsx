@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, DescriptionList } from "@/components/ui/card";
-import { PageTitle } from "@/components/portal/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
@@ -41,9 +41,9 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
 
   if (!details.published || closed) {
     return (
-      <PageTitle
+      <PageHeader
         title="This report is not open yet"
-        lede="Council Finance has not published the reporting form for this initiative. Check back soon or contact Council Finance."
+        description="Council Finance has not published the reporting form for this initiative. Check back soon or contact Council Finance."
         crumbs={crumbs}
       />
     );
@@ -51,7 +51,7 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="max-w-[760px]">
-      <PageTitle eyebrow={`${details.period} report`} title="Start a report" lede="Starting a report creates a draft for your organization. You can leave and come back at any time." crumbs={crumbs} />
+      <PageHeader eyebrow={`${details.period} report`} title="Start a report" description="Starting a report creates a draft for your organization. You can leave and come back at any time." crumbs={crumbs} />
       <Card>
         <CardBody className="space-y-5">
           <DescriptionList
@@ -66,7 +66,7 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
           <form action={startReportAction} className="flex flex-wrap gap-3">
             <input type="hidden" name="assignment" value={assignment} />
             <input type="hidden" name="period" value={period} />
-            <Button type="submit" className="h-11 px-5 text-base max-sm:w-full">Start report</Button>
+            <Button type="submit" className="max-sm:w-full">Start report</Button>
           </form>
         </CardBody>
       </Card>

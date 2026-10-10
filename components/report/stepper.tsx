@@ -52,7 +52,7 @@ function StepList({ steps, current, onSelect }: { steps: Step[]; current: string
               }}
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded px-3 py-2 text-[15px] leading-5 no-underline",
-                active ? "bg-navy-50 font-bold text-ink" : step.state === "error" ? "font-semibold text-bad hover:bg-navy-50" : "text-ink hover:bg-navy-50"
+                active ? "bg-harbor-50 font-bold text-ink" : step.state === "error" ? "font-semibold text-bad hover:bg-harbor-50" : "text-ink hover:bg-harbor-50"
               )}
             >
               <span aria-hidden="true" className="contents">
@@ -74,10 +74,10 @@ export function Stepper({ steps, current, onSelect }: { steps: Step[]; current: 
   const percent = Math.round((done / steps.length) * 100);
   const progress = (
     <>
-      <p className="num text-sm font-semibold text-[#3d4757]">
+      <p className="num text-sm font-semibold text-ink-2">
         {done} of {steps.length} sections complete
       </p>
-      <div className="mt-2 h-2 overflow-hidden rounded-sm bg-navy-100" aria-hidden="true">
+      <div className="mt-2 h-2 overflow-hidden rounded-sm bg-harbor-100" aria-hidden="true">
         <div className="h-full w-full origin-left bg-ok" style={{ transform: `scaleX(${percent / 100})` }} />
       </div>
     </>
@@ -91,7 +91,7 @@ export function Stepper({ steps, current, onSelect }: { steps: Step[]; current: 
               Step {index + 1} of {steps.length}
             </span>
             <span className="block truncate text-base font-bold text-ink">{steps[index]?.title}</span>
-            <span className="mt-2 block h-1.5 w-40 overflow-hidden rounded-sm bg-navy-100 group-open:hidden" aria-hidden="true">
+            <span className="mt-2 block h-1.5 w-40 overflow-hidden rounded-sm bg-harbor-100 group-open:hidden" aria-hidden="true">
               <span className="block h-full w-full origin-left bg-ok" style={{ transform: `scaleX(${percent / 100})` }} />
             </span>
           </span>
@@ -100,7 +100,7 @@ export function Stepper({ steps, current, onSelect }: { steps: Step[]; current: 
             <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
           </span>
         </summary>
-        <div className="border-t border-[#e3e7ec] px-2 pb-2 pt-3">
+        <div className="border-t border-line-soft px-2 pb-2 pt-3">
           <div className="px-2 pb-3">{progress}</div>
           <StepList
             steps={steps}

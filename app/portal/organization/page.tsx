@@ -126,7 +126,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                     { label: "Overdue", value: overdue, note: "past the due date", bad: overdue > 0 },
                   ].map((tile) => (
                     <li key={tile.label} className="rounded border border-line p-4">
-                      <p className="flex items-center gap-2 text-sm font-semibold text-[#3d4757]">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-ink-2">
                         {tile.bad ? <span className="h-2 w-2 shrink-0 rounded-full bg-bad" aria-hidden="true" /> : null}
                         {tile.label}
                       </p>

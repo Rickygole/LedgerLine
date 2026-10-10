@@ -11,7 +11,7 @@ import { VARIANCE_NOTE_KEY, spendSummary } from "@/lib/rules/spend";
 import { budgetTotals, isVisible } from "@/lib/rules/validate";
 import { balanceCopy } from "./balance";
 
-const ROW = "grid gap-x-6 gap-y-1 border-b border-[#e3e7ec] py-3 sm:grid-cols-[40%_minmax(0,1fr)_auto]";
+const ROW = "grid gap-x-6 gap-y-1 border-b border-line-soft py-3 sm:grid-cols-[40%_minmax(0,1fr)_auto]";
 
 function ChangeLink({ step, target, label, onChange }: { step: string; target?: string; label: string; onChange: (step: string, target?: string) => void }) {
   return (
@@ -115,14 +115,14 @@ export function CheckAnswers({
                 </div>
               ) : null}
               {lines.length > 0 ? (
-                <details className="group border-b border-[#e3e7ec] py-3">
+                <details className="group border-b border-line-soft py-3">
                   <summary className="cursor-pointer text-[15px] font-semibold text-link underline underline-offset-2">
                     <span className="group-open:hidden">Show all {lines.length} {lines.length === 1 ? "line" : "lines"}</span>
                     <span className="hidden group-open:inline">Hide budget lines</span>
                   </summary>
                   <div className="mt-3 overflow-x-auto">
                     <table className="w-full min-w-[32rem] text-[15px]">
-                      <thead className="bg-navy-50 text-left text-sm font-semibold text-[#3d4757]">
+                      <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
                         <tr>
                           <th scope="col" className="px-3 py-2 text-right">#</th>
                           <th scope="col" className="px-3 py-2">Category</th>
@@ -133,7 +133,7 @@ export function CheckAnswers({
                       </thead>
                       <tbody>
                         {lines.map((line, index) => (
-                          <tr key={line.rowId} className="border-b border-[#e3e7ec]">
+                          <tr key={line.rowId} className="border-b border-line-soft">
                             <td className="num px-3 py-2 text-right text-muted">{index + 1}</td>
                             <td className="px-3 py-2">{line.category}</td>
                             <td className="px-3 py-2">{line.description}</td>

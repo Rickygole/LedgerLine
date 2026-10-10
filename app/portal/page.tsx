@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { CheckCircle2 } from "lucide-react";
-import { FyTimeline, type TimelineMark } from "@/components/portal/fy-timeline";
+import { FiscalYearTimeline, type TimelineMark } from "@/components/ui/fiscal-year-timeline";
 import { NextAction } from "@/components/portal/next-action";
 import { ObligationGroups } from "@/components/portal/obligation-groups";
-import { PageTitle } from "@/components/portal/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
@@ -84,25 +84,19 @@ export default async function PortalHome() {
     marks.push({ date: year.ends_on, label: `${year.id} ends`, kind: "boundary" });
     for (const period of periods) {
       if (period.ends_on > year.starts_on && period.ends_on < year.ends_on) marks.push({ date: period.ends_on, label: `${period.label.replace(/^FY\d+ /, "")} period ends`, kind: "period-end" });
-      if (period.due_on >= year.starts_on && period.due_on <= year.ends_on) {
-        const mine = obligations.filter((o) => o.periodId === period.id);
-        if (mine.length === 0) continue;
-        const open = mine.filter((o) => o.state === "missing" || o.state === "returned" || o.state === "draft" || o.state === "not_started").length;
-        const late = mine.filter((o) => o.state === "missing").length;
-        marks.push({
-          date: period.due_on,
-          label: `${period.label} due`,
-          kind: "due",
-          detail: late > 0 ? `${late} overdue` : open > 0 ? `${open} ${plural(open, "report", "reports")} to file` : "All submitted",
-          tone: late > 0 ? "bad" : open > 0 ? "neutral" : "ok",
-        });
-      }
+      if (period.due_on < year.starts_on || period.due_on > year.ends_on) continue;
+      const mine = obligations.filter((o) => o.periodId === period.id);
+      if (mine.length === 0) continue;
+      const late = mine.filter((o) => o.state === "missing").length;
+      const open = mine.filter((o) => o.state === "returned" || o.state === "draft" || o.state === "not_started").length;
+      const status = late > 0 ? `${late} overdue` : open > 0 ? `${open} to file` : "all submitted";
+      marks.push({ date: period.due_on, label: `${period.label} due, ${status}`, kind: "due", state: late > 0 ? "current" : undefined });
     }
   }
 
   return (
     <div className="space-y-8">
-      <PageTitle eyebrow={eyebrow} title={title} lede={lede} />
+      <PageHeader eyebrow={eyebrow} title={title} description={lede} />
 
       {next ? (
         <NextAction obligation={next} href={actionFor(next).href} progress={progress} />
@@ -115,26 +109,26 @@ export default async function PortalHome() {
 
       {year ? (
         <section aria-labelledby="fy-glance" className="rounded border border-line bg-white">
-          <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+          <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
             <h2 id="fy-glance" className="text-xl font-bold leading-7 text-ink">
               {year.id} at a glance
             </h2>
-            <p className="mt-0.5 text-[15px] text-[#3d4757]">
+            <p className="mt-0.5 text-[15px] text-ink-2">
               {year.id} runs {formatDate(year.starts_on)} to {formatDate(year.ends_on)}. Squares are your report due dates.
             </p>
           </div>
           <div className="px-5 py-4 sm:px-6 sm:py-6">
-            <FyTimeline startsOn={year.starts_on} endsOn={year.ends_on} today={today} marks={marks} />
+            <FiscalYearTimeline fiscalYear={year.id} startsOn={year.starts_on} endsOn={year.ends_on} today={today} marks={marks} label={`${year.id} at a glance for your organization`} />
           </div>
         </section>
       ) : null}
 
       <section aria-labelledby="all-reports" className="rounded border border-line bg-white">
-        <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+        <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
           <h2 id="all-reports" className="text-xl font-bold leading-7 text-ink">
             Your reports
           </h2>
-          <p className="mt-0.5 text-[15px] text-[#3d4757]">One report for each initiative and reporting period. Dates and times are Eastern Time.</p>
+          <p className="mt-0.5 text-[15px] text-ink-2">One report for each initiative and reporting period. Dates and times are Eastern Time.</p>
         </div>
         <div className="px-5 py-6 sm:px-6">
           <ObligationGroups obligations={obligations} />

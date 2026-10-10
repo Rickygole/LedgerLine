@@ -123,7 +123,7 @@ export function Attachments({
         }}
         className={cn(
           "flex min-h-[160px] flex-col items-center justify-center rounded border-2 border-dashed px-5 py-6 text-center",
-          dragging ? "border-action bg-navy-100" : "border-line-strong bg-navy-50/50"
+          dragging ? "border-action bg-harbor-100" : "border-line-strong bg-harbor-50/50"
         )}
       >
         <Upload className="h-6 w-6 text-muted" aria-hidden="true" />
@@ -136,7 +136,7 @@ export function Attachments({
             <input ref={input} id="attachment-input" type="file" multiple accept={ACCEPT_ATTRIBUTE} className="sr-only" onChange={(event) => event.target.files && void handleFiles(event.target.files)} />
           </label>
         </p>
-        <p className="mt-1 text-[15px] text-[#3d4757]">PDF, Word, Excel or CSV. Up to 25 MB each. Files with macros are not accepted.</p>
+        <p className="mt-1 text-[15px] text-ink-2">PDF, Word, Excel or CSV. Up to 25 MB each. Files with macros are not accepted.</p>
       </div>
 
       {removeError ? <p role="alert" className="mt-3 text-sm font-semibold text-bad">{removeError}</p> : null}
@@ -149,7 +149,7 @@ export function Attachments({
         {empty ? (
           <p className="py-6 text-[15px] text-muted">No files attached yet. Attachments are optional unless Council Finance asked for supporting documents.</p>
         ) : (
-          <ul className="divide-y divide-[#e3e7ec]">
+          <ul className="divide-y divide-line-soft">
             {attachments.map((item) => (
               <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
                 <FileIcon name={item.filename} />
@@ -183,7 +183,7 @@ export function Attachments({
                   </p>
                   {item.state === "uploading" ? (
                     <div className="mt-1.5">
-                      <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-sm bg-navy-100" role="progressbar" aria-label={`Uploading ${item.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.progress === undefined ? undefined : Math.round(item.progress)}>
+                      <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-sm bg-harbor-100" role="progressbar" aria-label={`Uploading ${item.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.progress === undefined ? undefined : Math.round(item.progress)}>
                         {item.progress === undefined ? (
                           <div className="h-full w-1/3 animate-pulse bg-action motion-reduce:animate-none" />
                         ) : (

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
-import { PageTitle } from "@/components/portal/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireUser } from "@/lib/auth";
@@ -30,10 +30,10 @@ export default async function MessagesPage() {
   );
   return (
     <>
-      <PageTitle
+      <PageHeader
         eyebrow={user.orgName ?? "Your organization"}
         title="Messages"
-        lede="Copies of every message LedgerLine has generated for your organization, such as submission confirmations and update requests from Council Finance."
+        description="Copies of every message LedgerLine has generated for your organization, such as submission confirmations and update requests from Council Finance."
       />
       {emailDeliveryOn() ? null : <p className="mb-6 max-w-[70ch] rounded border border-l-4 border-line border-l-action bg-white px-5 py-4 text-[15px] text-ink">{DELIVERY_OFF_NOTICE}</p>}
       <Card>

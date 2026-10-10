@@ -67,7 +67,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               <AlertTriangle className="h-4 w-4 text-warn" aria-hidden="true" />
               Council Finance asked for changes
             </h2>
-            <p className="mt-2 max-w-[70ch] whitespace-pre-wrap rounded bg-navy-50 px-4 py-3 text-[15px] leading-6 text-ink">{data.note.note}</p>
+            <p className="mt-2 max-w-[70ch] whitespace-pre-wrap rounded bg-harbor-50 px-4 py-3 text-[15px] leading-6 text-ink">{data.note.note}</p>
             <p className="mt-2 text-sm text-muted">
               {data.note.by ? `${data.note.by}, Council Finance` : "Council Finance"}, {formatDateTime(data.note.at)} ET. Update the report, then submit it again.
             </p>
@@ -79,7 +79,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               Files sent with revision {data.sent.revision} ({data.sent.snapshot.attachments.length})
             </summary>
             <p className="mt-2 text-sm text-muted">Council Finance keeps these files even if you remove them from the working copy.</p>
-            <ul className="mt-2 divide-y divide-[#e3e7ec] text-[15px]">
+            <ul className="mt-2 divide-y divide-line-soft text-[15px]">
               {data.sent.snapshot.attachments.map((file) => (
                 <li key={file.path} className="flex flex-wrap items-center justify-between gap-3 py-2">
                   {data.sentIds[file.path] ? (

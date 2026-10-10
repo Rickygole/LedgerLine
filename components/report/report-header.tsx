@@ -1,4 +1,4 @@
-import { PageTitle } from "@/components/portal/page-title";
+import { PageHeader } from "@/components/ui/page-header";
 import { DueBadge, StateBadge, type ReportState } from "@/components/ui/status-badge";
 import { formatDate } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
@@ -7,7 +7,7 @@ import type { ReportHeader as Header } from "@/lib/report/types";
 export function ReportHeader({ header, daysLate, state, actions }: { header: Header; daysLate: number; state: ReportState; actions?: React.ReactNode }) {
   const open = header.status === "draft" || header.status === "returned";
   return (
-    <PageTitle
+    <PageHeader
       crumbs={[{ label: "My reports", href: "/portal" }, { label: header.initiativeName }]}
       eyebrow={
         <>
@@ -18,7 +18,7 @@ export function ReportHeader({ header, daysLate, state, actions }: { header: Hea
       title={header.initiativeName}
       actions={actions}
       meta={
-        <>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[15px] leading-[22px] text-ink-2">
           <span className="num whitespace-nowrap">
             Award <span className="font-semibold text-ink">{formatCurrency(header.awardAmount)}</span>
           </span>
@@ -30,7 +30,7 @@ export function ReportHeader({ header, daysLate, state, actions }: { header: Hea
             Reference <span className="num font-mono text-sm font-medium text-ink">{header.referenceNo}</span>
           </span>
           <StateBadge state={state} audience="cbo" />
-        </>
+        </div>
       }
     />
   );

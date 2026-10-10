@@ -50,7 +50,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
           ) : null}
           . Keep your reference number in case you need to contact Council Finance.
         </p>
-        <dl className="grid gap-x-6 gap-y-3 border-y border-[#e3e7ec] py-4 text-[15px] sm:grid-cols-3">
+        <dl className="grid gap-x-6 gap-y-3 border-y border-line-soft py-4 text-[15px] sm:grid-cols-3">
           <div>
             <dt className="text-sm font-semibold text-muted">Submitted</dt>
             <dd className="mt-0.5">{formatDateTime(header.submittedAt)} ET</dd>
@@ -84,7 +84,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
       </section>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-        <ButtonLink href={`/portal/reports/${id}`} variant="secondary" className="h-11 px-5 text-base">
+        <ButtonLink href={`/portal/reports/${id}`} variant="secondary" >
           View or print the submitted report
         </ButtonLink>
         <Link href="/portal" className="text-base font-semibold text-link underline underline-offset-2 hover:text-link-hover">

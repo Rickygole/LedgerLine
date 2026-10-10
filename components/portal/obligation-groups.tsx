@@ -30,7 +30,7 @@ function ActionLink({ o }: { o: Obligation }) {
 function Rows({ rows }: { rows: Obligation[] }) {
   return (
     <>
-      <ul className="divide-y divide-[#e3e7ec] border-y border-[#e3e7ec] md:hidden">
+      <ul className="divide-y divide-line-soft border-y border-line-soft md:hidden">
         {rows.map((o) => (
           <li key={`${o.assignmentId}-${o.periodId}`} className="py-4">
             <div className="flex items-start justify-between gap-3">
@@ -43,7 +43,7 @@ function Rows({ rows }: { rows: Obligation[] }) {
               </div>
               <StateBadge state={o.state} audience="cbo" />
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-[#3d4757]">
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-ink-2">
               <span className="whitespace-nowrap">Due {formatDate(o.dueOn)}</span>
               {open(o) ? <DueBadge daysPastDue={o.pastDue} /> : null}
               <span className="num whitespace-nowrap">Award {formatCurrency(o.award)}</span>
@@ -56,7 +56,7 @@ function Rows({ rows }: { rows: Obligation[] }) {
       </ul>
       <div className="hidden md:block">
         <table className="w-full table-fixed border-collapse text-[15px] leading-[22px]">
-          <thead className="bg-navy-50 text-left text-sm font-semibold text-[#3d4757]">
+          <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
             <tr className="h-11">
               <th scope="col" className="w-[28%] px-4 font-semibold">Initiative</th>
               <th scope="col" className="w-[22%] px-4 font-semibold">Period</th>
@@ -70,7 +70,7 @@ function Rows({ rows }: { rows: Obligation[] }) {
           </thead>
           <tbody>
             {rows.map((o) => (
-              <tr key={`${o.assignmentId}-${o.periodId}`} className="border-b border-[#e3e7ec] hover:bg-navy-50/60">
+              <tr key={`${o.assignmentId}-${o.periodId}`} className="border-b border-line-soft hover:bg-harbor-50/60">
                 <td className="px-4 py-3">
                   <p className="font-semibold text-ink">{o.initiativeName}</p>
                   <p className="font-mono text-[13px] text-muted">

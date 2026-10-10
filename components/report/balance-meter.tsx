@@ -23,7 +23,7 @@ export function BalanceMeter({ total, award, lines }: { total: number; award: nu
       <p className="num text-[15px] leading-[22px] text-ink">
         Budget total <strong className="font-bold">{formatCurrency(total)}</strong> of <strong className="font-bold">{formatCurrency(award)}</strong> award
       </p>
-      <div className="relative h-2.5 min-w-[120px] flex-1 overflow-visible rounded-sm bg-navy-100" aria-hidden="true">
+      <div className="relative h-2.5 min-w-[120px] flex-1 overflow-visible rounded-sm bg-harbor-100" aria-hidden="true">
         <div className={cn("h-full w-full origin-left rounded-sm transition-transform duration-200 ease-out motion-reduce:transition-none", tone.fill)} style={{ transform: `scaleX(${ratio})` }} />
         {balance.tone === "bad" ? <span className="absolute -top-1 right-0 h-[18px] w-0.5 bg-ink" /> : null}
       </div>

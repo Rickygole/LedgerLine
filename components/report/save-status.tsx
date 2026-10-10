@@ -37,7 +37,7 @@ export function SaveStatus({ state, lastSavedAt, today }: { state: SaveState; la
       {icon}
       <span>{text}</span>
       {state.kind === "signed_out" ? (
-        <a href="/login" target="_blank" rel="noreferrer" className="text-navy-800 underline underline-offset-2">
+        <a href="/login" target="_blank" rel="noreferrer" className="text-harbor-800 underline underline-offset-2">
           Sign in (opens a new tab)
         </a>
       ) : null}
