@@ -200,6 +200,7 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
   }
 
   function saveAndContinue() {
+    if (section) setTouched((current) => new Set([...current, ...section.questions.map((question) => question.key)]));
     void flushNow();
     if (returning) go(REVIEW);
     else if (next) go(next.key);
