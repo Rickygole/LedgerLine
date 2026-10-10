@@ -50,6 +50,7 @@ function Highlighted({ paragraph, quote }: { paragraph: string; quote: string })
 }
 
 export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgress }: { formId: string; initiallyOpen?: boolean; onApplied: (summary: string) => void; onClose: () => void; onProgress?: (reviewed: number, total: number) => void }) {
+  const storageKey = `import-review:${formId}`;
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
@@ -60,7 +61,25 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
   const [fileName, setFileName] = useState("");
   const [focusId, setFocusId] = useState<number | null>(null);
 
+  useEffect(() => {
+    try {
+      const saved = window.sessionStorage.getItem(storageKey);
+      if (!saved) return;
+      const restored = JSON.parse(saved) as { analysis: Analysis; rows: Row[]; fileName: string };
+      setAnalysis(restored.analysis);
+      setRows(restored.rows);
+      setFileName(restored.fileName);
+    } catch {
+      window.sessionStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (analysis) window.sessionStorage.setItem(storageKey, JSON.stringify({ analysis, rows, fileName }));
+  }, [analysis, rows, fileName, storageKey]);
+
   function showErrors(list: string[]) {
+    if (list.some((message) => message.includes("already decided"))) window.sessionStorage.removeItem(storageKey);
     setErrors(list);
     requestAnimationFrame(() => errorRef.current?.focus());
   }
@@ -105,6 +124,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
         kept.map((row) => ({ id: row.id, ...row.field }))
       );
       if (!result.ok) return showErrors(result.errors);
+      window.sessionStorage.removeItem(storageKey);
       onApplied(result.summary);
     });
   }
@@ -114,6 +134,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
     startTransition(async () => {
       const result = await rejectDraft(formId, analysis.aiActionId);
       if (!result.ok) return showErrors(result.errors);
+      window.sessionStorage.removeItem(storageKey);
       onClose();
     });
   }
