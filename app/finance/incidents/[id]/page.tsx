@@ -103,25 +103,25 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
           ) : null}
           <ActionForm action={recordRemediation} hidden={{ incidentId: incident.id }} submitLabel={latest ? "Save updated report" : "Save report"} pendingLabel="Saving" resetOnSuccess={false}>
             <div>
-              <Label htmlFor="rootCause" required>
+              <Label htmlFor="rootCause">
                 Root cause
               </Label>
-              <Textarea id="rootCause" name="rootCause" rows={3} maxLength={4000} defaultValue={latest?.root_cause} />
+              <Textarea id="rootCause" aria-required="true" name="rootCause" rows={3} maxLength={4000} defaultValue={latest?.root_cause} />
             </div>
             <div>
-              <Label htmlFor="actions" required>
+              <Label htmlFor="actions">
                 Actions taken
               </Label>
-              <Textarea id="actions" name="actions" rows={3} maxLength={4000} defaultValue={latest?.actions} />
+              <Textarea id="actions" aria-required="true" name="actions" rows={3} maxLength={4000} defaultValue={latest?.actions} />
             </div>
             <div>
-              <Label htmlFor="prevention" required>
+              <Label htmlFor="prevention">
                 Plan to reduce the risk of a repeat
               </Label>
-              <Textarea id="prevention" name="prevention" rows={3} maxLength={4000} defaultValue={latest?.prevention} />
+              <Textarea id="prevention" aria-required="true" name="prevention" rows={3} maxLength={4000} defaultValue={latest?.prevention} />
             </div>
             <div className="max-w-xs">
-              <Label htmlFor="completedOn">Completed on</Label>
+              <Label htmlFor="completedOn" optional>Completed on</Label>
               <Hint id="completedOn-hint">Leave empty while work continues.</Hint>
               <Input id="completedOn" name="completedOn" type="date" aria-describedby="completedOn-hint" defaultValue={latest?.completed_on ?? ""} />
             </div>

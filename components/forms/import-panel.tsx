@@ -322,7 +322,7 @@ function FieldEditor({ row, onChange }: { row: Row; onChange: (patch: Partial<Pr
         <Input id={`${id}-label`} value={field.label} onChange={(e) => onChange({ label: e.target.value })} />
       </div>
       <div className="sm:col-span-2">
-        <Label htmlFor={`${id}-help`}>Help text</Label>
+        <Label htmlFor={`${id}-help`} optional>Help text</Label>
         <Input id={`${id}-help`} value={field.help ?? ""} onChange={(e) => onChange({ help: e.target.value || undefined })} />
       </div>
       <div>

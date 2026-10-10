@@ -111,34 +111,34 @@ export default async function ReadinessPage() {
           <ActionForm action={recordUatSession} submitLabel="Record session" pendingLabel="Recording">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <Label htmlFor="scenario" required>
+                <Label htmlFor="scenario">
                   Scenario
                 </Label>
-                <Input id="scenario" name="scenario" maxLength={160} />
+                <Input id="scenario" aria-required="true" name="scenario" maxLength={160} />
               </div>
               <div>
-                <Label htmlFor="sessionOn" required>
+                <Label htmlFor="sessionOn">
                   Session date
                 </Label>
-                <Input id="sessionOn" name="sessionOn" type="date" defaultValue={today} />
+                <Input id="sessionOn" aria-required="true" name="sessionOn" type="date" defaultValue={today} />
               </div>
               <div>
-                <Label htmlFor="tester" required>
+                <Label htmlFor="tester">
                   Tester
                 </Label>
-                <Input id="tester" name="tester" maxLength={120} />
+                <Input id="tester" aria-required="true" name="tester" maxLength={120} />
               </div>
               <div>
-                <Label htmlFor="testerRole" required>
+                <Label htmlFor="testerRole">
                   Tester role or team
                 </Label>
-                <Input id="testerRole" name="testerRole" maxLength={120} />
+                <Input id="testerRole" aria-required="true" name="testerRole" maxLength={120} />
               </div>
               <div>
-                <Label htmlFor="result" required>
+                <Label htmlFor="result">
                   Result
                 </Label>
-                <Select id="result" name="result" defaultValue="">
+                <Select id="result" aria-required="true" name="result" defaultValue="">
                   <option value="" disabled>
                     Choose one
                   </option>
@@ -156,11 +156,11 @@ export default async function ReadinessPage() {
                 </Select>
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="defects">Defects found, one per line</Label>
+                <Label htmlFor="defects" optional>Defects found, one per line</Label>
                 <Textarea id="defects" name="defects" rows={3} maxLength={4000} />
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes" optional>Notes</Label>
                 <Textarea id="notes" name="notes" rows={2} maxLength={2000} />
               </div>
             </div>
@@ -202,10 +202,10 @@ export default async function ReadinessPage() {
           <ActionForm action={recordTraining} submitLabel="Record training" pendingLabel="Recording">
             <div className="grid gap-3 md:grid-cols-3">
               <div>
-                <Label htmlFor="userId" required>
+                <Label htmlFor="userId">
                   Person
                 </Label>
-                <Select id="userId" name="userId" defaultValue="">
+                <Select id="userId" aria-required="true" name="userId" defaultValue="">
                   <option value="" disabled>
                     Choose a person
                   </option>
@@ -217,10 +217,10 @@ export default async function ReadinessPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="module" required>
+                <Label htmlFor="module">
                   Module
                 </Label>
-                <Select id="module" name="module" defaultValue="">
+                <Select id="module" aria-required="true" name="module" defaultValue="">
                   <option value="" disabled>
                     Choose a module
                   </option>
@@ -232,10 +232,10 @@ export default async function ReadinessPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="completedOn" required>
+                <Label htmlFor="completedOn">
                   Completed on
                 </Label>
-                <Input id="completedOn" name="completedOn" type="date" defaultValue={today} />
+                <Input id="completedOn" aria-required="true" name="completedOn" type="date" defaultValue={today} />
               </div>
             </div>
           </ActionForm>

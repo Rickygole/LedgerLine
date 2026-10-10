@@ -3,10 +3,6 @@ import { formatDate } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
 import type { PeriodInfo } from "@/lib/finance/review/types";
 
-export function shortDate(value: string | Date): string {
-  return formatDate(value).replace(/, \d{4}$/, "");
-}
-
 export function formatWholeDollars(value: number): string {
   return formatCurrency(value, { cents: false });
 }

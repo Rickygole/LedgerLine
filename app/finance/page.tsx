@@ -16,7 +16,8 @@ import { countBuckets, groupBy } from "@/lib/finance/review/derive";
 import { hrefWith, parseFilters } from "@/lib/finance/review/filters";
 import type { Filters, ReportRow } from "@/lib/finance/review/types";
 import { isGeoBorough } from "@/lib/geo/boroughs";
-import { cycleTimeline, dashboardHeadline, formatWholeDollars, periodEyebrow, shortDate } from "@/lib/finance/dashboard";
+import { cycleTimeline, dashboardHeadline, formatWholeDollars, periodEyebrow } from "@/lib/finance/dashboard";
+import { formatShortDate } from "@/lib/report/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -100,7 +101,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           className="rounded-none border-0"
           label="Waiting for review"
           value={counts.submitted}
-          sub={next?.submittedAt ? `Oldest ${shortDate(next.submittedAt)} · ${counts.in_review} already in review` : `${counts.in_review} already in review`}
+          sub={next?.submittedAt ? `Oldest ${formatShortDate(next.submittedAt)} · ${counts.in_review} already in review` : `${counts.in_review} already in review`}
           action={{ href: list({ bucket: "submitted" }), label: "Open review queue" }}
         />
         <Stat className="rounded-none border-0" label="Update requested" value={counts.returned} sub="Waiting on the organization" action={{ href: list({ bucket: "returned" }), label: "See requests" }} />
