@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, Check, Mail, Pause } from "lucide-react";
+import { BellRing, Check } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
@@ -137,7 +137,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                         {renderSubject(rule.template_subject, { label: period.label, dueOn: period.due_on })}
                         <span className="mt-0.5 block text-xs text-muted">Template: {rule.template_subject}</span>
                       </TD>
-                      <TD>{rule.active ? <Badge tone="ok" icon={Check}>On</Badge> : <Badge icon={Pause}>Off</Badge>}</TD>
+                      <TD>{rule.active ? <Badge tone="ok" icon={Check}>On</Badge> : <Badge>Off</Badge>}</TD>
                       <TD className="whitespace-nowrap">
                         {rule.last_sent ? (
                           <>
@@ -219,7 +219,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                       </TD>
                       <TD className="max-w-xs">{t.initiatives}</TD>
                       <TD className="whitespace-nowrap">{describeOffset(t.offset_days)}</TD>
-                      <TD className="whitespace-nowrap">{t.already_sent ? <Badge icon={Check}>Already in outbox</Badge> : <Badge tone="info" icon={Mail}>Will be queued</Badge>}</TD>
+                      <TD className="whitespace-nowrap">{t.already_sent ? <Badge>Already in outbox</Badge> : <Badge tone="info">Will be queued</Badge>}</TD>
                     </TR>
                   ))}
                 </tbody>

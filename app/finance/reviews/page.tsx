@@ -77,10 +77,10 @@ export default async function ReviewsPage() {
             <CardBody>
               <ActionForm action={startReview} submitLabel="Start review" pendingLabel="Starting">
                 <div>
-                  <Label htmlFor="year" required>
+                  <Label htmlFor="year">
                     Fiscal year
                   </Label>
-                  <Select id="year" name="year" defaultValue={open[0]}>
+                  <Select id="year" aria-required="true" name="year" defaultValue={open[0]}>
                     {open.map((y) => (
                       <option key={y} value={y}>
                         {y}
@@ -89,10 +89,10 @@ export default async function ReviewsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="reviewDate" required>
+                  <Label htmlFor="reviewDate">
                     Review date
                   </Label>
-                  <Input id="reviewDate" name="reviewDate" type="date" defaultValue={systemToday()} />
+                  <Input id="reviewDate" aria-required="true" name="reviewDate" type="date" defaultValue={systemToday()} />
                 </div>
               </ActionForm>
             </CardBody>

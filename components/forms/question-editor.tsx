@@ -100,7 +100,7 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
             <Input id={`${id}-label`} value={question.label} disabled={!editable} onChange={(e) => onChange({ label: e.target.value })} aria-describedby={problems.length ? errorId : undefined} />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor={`${id}-help`}>Help text</Label>
+            <Label htmlFor={`${id}-help`} optional>Help text</Label>
             <Textarea id={`${id}-help`} className="min-h-16" value={question.help ?? ""} disabled={!editable} onChange={(e) => onChange({ help: e.target.value || undefined })} />
           </div>
           <div>
@@ -139,7 +139,7 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
             </div>
           ) : null}
           <div className="sm:col-span-2">
-            <Label htmlFor={`${id}-when`}>Show only when</Label>
+            <Label htmlFor={`${id}-when`} optional>Show only when</Label>
             <div className="grid gap-2 sm:grid-cols-[1fr_8rem]">
               <Select
                 id={`${id}-when`}

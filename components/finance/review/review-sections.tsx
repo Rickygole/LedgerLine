@@ -68,67 +68,120 @@ function correctionsFrom(detail: SubmissionDetail): Record<string, Correction> {
   return map;
 }
 
+function CorrectionNote({ fix }: { fix: Correction | undefined }) {
+  if (!fix) return null;
+  return (
+    <span className="mt-1.5 block text-xs text-muted">
+      <span className="font-semibold text-ink">Corrected by {fix.by}</span>
+      {fix.original !== undefined && fix.original !== null && fix.original !== "" ? (
+        <>
+          {". Was "}
+          <del>{String(fix.original)}</del>
+        </>
+      ) : ". Was blank"}
+    </span>
+  );
+}
+
+const CONTACT_KEYS = ["org_legal_name", "org_ein", "contact_name", "contact_title", "contact_email", "contact_phone"];
+
+function text(value: AnswerValue | undefined): string {
+  return value === null || value === undefined ? "" : String(value).trim();
+}
+
+function count(value: AnswerValue | undefined): number | null {
+  const raw = text(value).replace(/,/g, "");
+  if (raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+function Served({ detail }: { detail: SubmissionDetail }) {
+  const { answers, periodId } = detail.row;
+  const actual = count(answers.participants_actual);
+  const target = count(answers.participants_target);
+  if (actual === null) return <span className="text-muted">Not answered</span>;
+  const share = target && target > 0 ? Math.round((actual / target) * 100) : null;
+  return (
+    <>
+      <span className="num">
+        {formatCount(actual)}
+        {target !== null ? ` of ${formatCount(target)} targeted` : ""}
+      </span>
+      {share !== null ? <span className={share < 40 ? "num font-semibold text-bad" : "num text-ink-2"}> ({share} percent)</span> : null}
+      {detail.earlier && periodId.endsWith("-YE") ? (
+        <span className="num block text-[13px] text-muted">
+          {detail.earlier.label.replace(/^FY\d+ /, "")} reported {formatCount(detail.earlier.served)}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 export function ReportTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
   const definition = row.definition as FormDefinition;
   const sections = definition.sections.filter((section) => section.kind === "questions");
   const corrections = correctionsFrom(detail);
+  const contactCorrected = CONTACT_KEYS.some((key) => corrections[key]);
   return (
-    <div className="space-y-5">
-      {sections.map((section) => {
-        const questions = section.questions.filter((q) => isVisible(q, row.answers));
-        return (
-          <Card key={section.key} id={`review-${section.key}`} className="scroll-mt-4">
-            <CardHeader title={section.title} />
-            <CardBody>
-              <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-                {questions.map((q) => {
-                  const fix = corrections[q.key];
-                  return (
-                    <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "min-w-0 md:col-span-2" : "min-w-0"}>
-                      <dt className="text-[13px] font-semibold text-muted">{q.label}</dt>
-                      <dd className="mt-1 text-sm text-ink break-words">
-                        {formatValue(q, row.answers[q.key])}
-                        {fix ? (
-                          <span className="mt-1.5 block text-xs text-muted">
-                            <span className="font-semibold text-ink">Corrected by {fix.by}</span>
-                            {fix.original !== undefined && fix.original !== null && fix.original !== "" ? (
-                              <>
-                                {". Was "}
-                                <del>{String(fix.original)}</del>
-                              </>
-                            ) : ". Was blank"}
+    <Card>
+      <CardBody>
+        {sections.map((section, index) => {
+          const all = section.questions.filter((q) => isVisible(q, row.answers));
+          const compactContact = section.key === "organization" && !contactCorrected;
+          const merged = all.some((q) => q.key === "participants_actual") && !corrections.participants_target;
+          const questions = all.filter((q) => !(compactContact && CONTACT_KEYS.includes(q.key)) && !(merged && q.key === "participants_target"));
+          const contactLine = [[text(row.answers.contact_name), text(row.answers.contact_title)].filter(Boolean).join(", "), text(row.answers.contact_email), text(row.answers.contact_phone)].filter(Boolean);
+          return (
+            <section key={section.key} id={`review-${section.key}`} aria-labelledby={`review-${section.key}-title`} className={index > 0 ? "mt-6 scroll-mt-4 border-t border-line-soft pt-6" : "scroll-mt-4"}>
+              <h2 id={`review-${section.key}-title`} className="text-xl font-bold leading-7 text-ink">
+                {section.title}
+              </h2>
+              {compactContact ? (
+                <div className="mt-2 text-[15px] leading-[22px]">
+                  <p className="text-ink">
+                    {contactLine.length > 0
+                      ? contactLine.map((part, i) => (
+                          <span key={part}>
+                            {i > 0 ? " · " : null}
+                            <span className="whitespace-nowrap">{part}</span>
                           </span>
-                        ) : null}
+                        ))
+                      : <span className="text-muted">No report contact entered</span>}
+                  </p>
+                  <p className="num text-[13px] text-muted">{[text(row.answers.org_legal_name), text(row.answers.org_ein)].filter(Boolean).join(" · ")}</p>
+                </div>
+              ) : null}
+              {questions.length > 0 ? (
+                <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+                  {questions.map((q) => (
+                    <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "min-w-0 md:col-span-2" : "min-w-0"}>
+                      <dt className="text-[13px] font-semibold text-muted">{merged && q.key === "participants_actual" ? "Participants served" : q.label}</dt>
+                      <dd className="mt-1 break-words text-sm text-ink">
+                        {merged && q.key === "participants_actual" ? <Served detail={detail} /> : formatValue(q, row.answers[q.key])}
+                        <CorrectionNote fix={corrections[q.key]} />
                       </dd>
                     </div>
-                  );
-                })}
-              </dl>
-            </CardBody>
-          </Card>
-        );
-      })}
-      {detail.certification ? (
-        <Card id="review-certification" className="scroll-mt-4">
-          <CardHeader title="Certification" description={detail.certification.statement} />
-          <CardBody>
-            <dl className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3">
-              {[
-                ["Certified by", detail.certification.name],
-                ["Title", detail.certification.title],
-                ["Certified on", `${formatDateTime(detail.certification.certifiedAt)} ET`],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="text-[13px] font-semibold text-muted">{label}</dt>
-                  <dd className="mt-1 text-sm text-ink">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </CardBody>
-        </Card>
-      ) : null}
-    </div>
+                  ))}
+                </dl>
+              ) : null}
+            </section>
+          );
+        })}
+        {detail.certification ? (
+          <section id="review-certification" aria-labelledby="review-certification-title" className="mt-6 scroll-mt-4 border-t border-line-soft pt-6">
+            <h2 id="review-certification-title" className="text-xl font-bold leading-7 text-ink">
+              Certification
+            </h2>
+            <p className="mt-0.5 text-sm leading-5 text-muted">{detail.certification.statement}</p>
+            <p className="mt-3 text-[15px] text-ink">
+              {detail.certification.name}, {detail.certification.title} · <span className="num">{formatDateTime(detail.certification.certifiedAt)} ET</span>
+            </p>
+          </section>
+        ) : null}
+      </CardBody>
+    </Card>
   );
 }
 
@@ -136,7 +189,7 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
   const { row } = detail;
   return (
     <Card>
-      <CardHeader title="Budget" description="Personal services (PS) and other than personal services (OTPS) lines as reported, with actual spent and variance." />
+      <CardHeader title="Budget" />
       <CardBody>
         {row.budget.length === 0 ? (
           <p className="text-sm text-muted">No budget has been entered yet.</p>
@@ -156,7 +209,7 @@ function formatBytes(bytes: number) {
 export function AttachmentsTab({ submissionId, attachments }: { submissionId: string; attachments: AttachmentRow[] }) {
   return (
     <Card>
-      <CardHeader title="Attachments" description="Supporting files uploaded by the organization." />
+      <CardHeader title="Attachments" />
       <Table>
         <THead>
           <tr>
@@ -239,7 +292,7 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
         )}
       </Card>
       <Card>
-        <CardHeader title={`Open flags (${open.length})`} description="Flags added by Finance staff." />
+        <CardHeader title={`Open flags (${open.length})`} />
         {open.length === 0 ? <p className="px-5 py-6 text-sm text-muted">There are no open flags on this report.</p> : <ul className="divide-y divide-line">{open.map(item)}</ul>}
       </Card>
       {closed.length > 0 ? (
@@ -255,7 +308,7 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
 export function AuditTab({ audit, labels }: { audit: AuditRecord[]; labels: Record<string, string> }) {
   return (
     <Card>
-      <CardHeader title="Audit timeline" description="Every recorded action on this report, oldest first. Entries cannot be changed or deleted." />
+      <CardHeader title="Audit timeline" description="Oldest first. Entries cannot be changed or deleted." />
       <CardBody className="py-5">
         {audit.length === 0 ? <p className="py-8 text-center text-sm text-muted">No actions have been recorded.</p> : <AuditTimeline events={audit} labels={labels} />}
       </CardBody>

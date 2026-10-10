@@ -9,6 +9,12 @@ type Tone = "ok" | "info" | "warn" | "neutral";
 
 type Task = { title: string; meta: string; status: string; tone: Tone; link?: { href: string; label: string }; primary?: { href: string; label: string } };
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function dayMonth(iso: string) {
+  return `${MONTHS[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8, 10))}`;
+}
+
 const TONE: Record<Tone, string> = {
   ok: "bg-ok-bg text-ok ring-ok/20",
   info: "bg-harbor-100 text-harbor-700 ring-harbor-700/20",
@@ -39,10 +45,10 @@ export function setupTasks(s: SetupStatus, today: string): Task[] {
     },
     {
       title: `Add new ${fy} initiatives`,
-      meta: s.created > 0 ? `${plural(s.created, "new initiative", "new initiatives")}${s.createdWithoutOrgs > 0 ? `, ${s.createdWithoutOrgs} without organizations` : ""}` : "No new initiatives added this year. Add one when the Council funds a new program.",
+      meta: s.created > 0 ? `${plural(s.created, "new initiative", "new initiatives")}${s.createdWithoutOrgs > 0 ? `, ${s.createdWithoutOrgs} without organizations` : ""}` : "None added yet.",
       status: s.created === 0 ? "None added" : s.createdWithoutOrgs > 0 ? "In progress" : "Completed",
       tone: s.created === 0 ? "neutral" : s.createdWithoutOrgs > 0 ? "info" : "ok",
-      link: { href: "/finance/initiatives/new", label: "Create initiative" },
+      link: { href: "/finance/initiatives/new", label: s.created > 0 ? "Add another initiative" : "Add an initiative" },
     },
     {
       title: "Build report forms",
@@ -59,15 +65,16 @@ export function setupTasks(s: SetupStatus, today: string): Task[] {
     },
     {
       title: `Open ${fy} Mid-Year reporting`,
-      meta: opensOn ? `${today >= opensOn ? "Opened" : "Opens"} ${formatDate(opensOn)}. Reports due ${formatDate(s.midYear!.dueOn)}.${today < opensOn ? (ready ? " Tasks 1 to 4 are done, so reporting opens on schedule." : " Finish tasks 1 to 4 first.") : ""}` : "No Mid-Year period is set up.",
-      status: opensOn && today >= opensOn ? "Open" : "Not started",
+      meta: opensOn ? `${today >= opensOn ? "Opened" : "Opens"} ${formatDate(opensOn)}, reports due ${dayMonth(s.midYear!.dueOn)}.${today < opensOn && !ready ? " Finish tasks 1 to 4 first." : ""}` : "No Mid-Year period is set up.",
+      status: opensOn && today >= opensOn ? "Open" : opensOn ? "Scheduled" : "Not set up",
       tone: opensOn && today >= opensOn ? "ok" : "neutral",
     },
   ];
-  if (s.needForm > 0) tasks[2].primary = { href: formsHref, label: s.needForm === 1 ? "Build the missing form" : `Build the ${s.needForm} missing forms` };
+  if (s.carried === 0) {
+    tasks[0].primary = tasks[0].link;
+    tasks[0].link = undefined;
+  } else if (s.needForm > 0) tasks[2].primary = { href: formsHref, label: s.needForm === 1 ? "Build the missing form" : `Build the ${s.needForm} missing forms` };
   else if (s.noOrgs > 0 && s.firstNoOrgs) tasks[3].primary = { href: `/finance/initiatives/new?initiative=${s.firstNoOrgs}`, label: s.noOrgs === 1 ? "Assign organizations" : `Assign organizations to ${s.noOrgs} initiatives` };
-  else tasks[1].primary = { href: "/finance/initiatives/new", label: "Create initiative" };
-  if (tasks[1].primary) tasks[1].link = undefined;
   return tasks;
 }
 
@@ -78,16 +85,16 @@ export function SetupTaskList({ status, today }: { status: SetupStatus; today: s
   const done = tasks.filter((t) => t.status === "Completed").length;
   return (
     <section aria-labelledby="setup-title" className="mb-8 rounded border border-line bg-white">
-      <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
-        <p className="text-sm font-semibold leading-5 text-muted">
-          {fy} ({formatDate(status.fiscalYear.startsOn)} to {formatDate(status.fiscalYear.endsOn)})
-        </p>
-        <h2 id="setup-title" className="mt-0.5 text-xl font-bold leading-7 text-ink">
-          {fy} setup
-        </h2>
-        <p className="mt-0.5 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">
-          Get {fy} initiatives and report forms ready before Mid-Year reporting opens{status.midYear ? ` ${formatDate(nextDay(status.midYear.endsOn))}` : ""}. {done} of 4 setup tasks complete.
-        </p>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
+        <div>
+          <p className="text-sm font-semibold leading-5 text-muted">
+            {formatDate(status.fiscalYear.startsOn)} to {formatDate(status.fiscalYear.endsOn)}
+          </p>
+          <h2 id="setup-title" className="mt-0.5 text-xl font-bold leading-7 text-ink">
+            {fy} setup
+          </h2>
+        </div>
+        <p className="num text-[15px] text-ink-2">{done} of 4 tasks complete</p>
       </div>
       <ol className="divide-y divide-line-soft">
         {tasks.map((task, i) => (

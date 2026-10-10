@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Bot } from "lucide-react";
 import { Badge } from "@/components/ui/status-badge";
 import { getCurrentUser } from "@/lib/auth";
 import { auditEntityHref, auditPhrase, type AuditRow } from "@/lib/finance/admin/audit";
@@ -20,7 +19,7 @@ export async function AuditSentence({ row }: { row: AuditRow }) {
       <span className="font-semibold">{phrase.actor}</span> {phrase.verb} {subject}
       {row.ai_action_id ? (
         <span className="ml-2 align-middle">
-          <Badge tone="info" icon={Bot}>
+          <Badge tone="info">
             AI assisted
           </Badge>
         </span>

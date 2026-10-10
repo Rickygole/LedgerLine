@@ -40,6 +40,20 @@ test("[US-016] a submitter starts the report the organization owes from the port
   await expect(page.getByText(/^LL-[A-Z0-9]+-\d+$/).first()).toBeVisible();
 });
 
+test("[BR-021][US-031] submitting the seeded draft lists the two things left to fix", async ({ page }) => {
+  await openOverdueDraft(page);
+  await gotoStep(page, "Review and submit");
+  await page.getByRole("button", { name: "Submit report" }).click();
+  const summary = page.getByRole("alert").filter({ hasText: /problems? to fix before you submit/ }).first();
+  await expect(summary).toBeVisible();
+  await expect(summary).toContainText("There are 2 problems to fix before you submit");
+  await expect(summary).toContainText("Total $71,401.00 must equal award $85,000.00 (under by $13,599.00).");
+  await expect(summary).toContainText("Check the box to certify that this report is accurate and complete.");
+  await summary.getByRole("link", { name: /under by \$13,599\.00/ }).click();
+  await expect(page.locator("#step-heading")).toHaveText("Budget");
+  await expect(page).toHaveURL(/step=budget/);
+});
+
 test("[US-016] an overdue report carries one red signal on My reports and in the report header", async ({ page }) => {
   await page.goto("/portal");
   const row = page.locator("table tbody tr").filter({ hasText: /days? past due/ }).first();

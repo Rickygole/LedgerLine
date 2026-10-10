@@ -54,7 +54,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
       />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Checklist" description="Tick each area once it has been reviewed." />
+          <CardHeader title="Checklist" />
           <CardBody>
             <ul className="divide-y divide-line border-y border-line">
               {CHECKLIST.map((item) => (
@@ -82,7 +82,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
           </CardBody>
         </Card>
         <Card>
-          <CardHeader title="Participants" description="Who took part in the review." />
+          <CardHeader title="Participants" />
           <CardBody className="space-y-4">
             {participants.length === 0 ? <p className="text-sm text-muted">No participants recorded.</p> : null}
             <ul className="divide-y divide-line border-y border-line">
@@ -97,11 +97,11 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" name="name" maxLength={120} />
+                    <Input id="name" aria-required="true" name="name" maxLength={120} />
                   </div>
                   <div>
                     <Label htmlFor="affiliation">Organization or team</Label>
-                    <Input id="affiliation" name="affiliation" maxLength={160} />
+                    <Input id="affiliation" aria-required="true" name="affiliation" maxLength={160} />
                   </div>
                 </div>
               </ActionForm>
@@ -126,7 +126,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
               <div className="grid gap-3 sm:grid-cols-[14rem_minmax(0,1fr)]">
                 <div>
                   <Label htmlFor="area">Area</Label>
-                  <Select id="area" name="area" defaultValue="">
+                  <Select id="area" aria-required="true" name="area" defaultValue="">
                     <option value="" disabled>
                       Choose one
                     </option>
@@ -139,7 +139,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
                 </div>
                 <div>
                   <Label htmlFor="decision">Decision</Label>
-                  <Textarea id="decision" name="decision" rows={2} maxLength={1000} />
+                  <Textarea id="decision" aria-required="true" name="decision" rows={2} maxLength={1000} />
                 </div>
               </div>
             </ActionForm>
@@ -159,10 +159,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
             ) : null}
             <ActionForm action={signOffReview} hidden={{ reviewId: review.id, year }} submitLabel="Sign off review" pendingLabel="Signing off" resetOnSuccess={false}>
               <div className="max-w-xs">
-                <Label htmlFor="signedOn" required>
+                <Label htmlFor="signedOn">
                   Sign-off date
                 </Label>
-                <Input id="signedOn" name="signedOn" type="date" defaultValue={systemToday()} />
+                <Input id="signedOn" aria-required="true" name="signedOn" type="date" defaultValue={systemToday()} />
               </div>
             </ActionForm>
           </CardBody>

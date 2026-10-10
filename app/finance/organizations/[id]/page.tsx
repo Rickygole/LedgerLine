@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, Check, CheckCircle2, ExternalLink, Mail, MapPin, Phone, Star } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
@@ -201,7 +201,6 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
           <Card className="mt-6">
             <CardHeader
               title="Awards"
-              description="Active and past awards with report status by period."
               actions={
                 <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   Open awards tab
@@ -268,7 +267,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       {tab === "contacts" ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader title="Contacts" description="People Council Finance can reach about this organization." />
+            <CardHeader title="Contacts" />
             <ul className="divide-y divide-line">
               {contacts.length === 0 ? <li className="px-5 py-10 text-center text-sm text-muted">No contacts on file.</li> : null}
               {contacts.map((c) => (
@@ -276,7 +275,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{c.full_name}</span>
                     {c.is_primary ? (
-                      <Badge tone="info" icon={Star}>
+                      <Badge tone="info">
                         Primary
                       </Badge>
                     ) : null}
@@ -292,7 +291,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
             </ul>
           </Card>
           <Card>
-            <CardHeader title="Team" description="People with a LedgerLine account for this organization." />
+            <CardHeader title="Team" />
             <ul className="divide-y divide-line">
               {team.length === 0 ? <li className="px-5 py-8 text-center text-sm text-muted">No one from this organization has an account.</li> : null}
               {team.map((t) => (
@@ -319,7 +318,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
 
       {tab === "activity" ? (
         <Card>
-          <CardHeader title="Activity" description="Recent actions on this organization's reports, newest first." />
+          <CardHeader title="Activity" />
           <ol className="divide-y divide-line">
             {activity.length === 0 ? <li className="px-5 py-8 text-center text-sm text-muted">No activity has been recorded yet.</li> : null}
             {activity.map((row) => (

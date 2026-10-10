@@ -67,10 +67,10 @@ function FlagForm({ submissionId }: { submissionId: string }) {
         submit(fd, () => setNote(""));
       }}
     >
-      <Label htmlFor="flag-note" required>
+      <Label htmlFor="flag-note">
         Flag note
       </Label>
-      <Textarea id="flag-note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby={state && !state.ok ? "flag-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
+      <Textarea id="flag-note" aria-required="true" rows={3} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby={state && !state.ok ? "flag-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
       {state && !state.ok ? <FieldError id="flag-error">{state.message}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Flag className="h-4 w-4" aria-hidden="true" />
@@ -105,11 +105,11 @@ function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId
       }}
     >
       <div>
-        <Label htmlFor="corr-question" required>
+        <Label htmlFor="corr-question">
           Question
         </Label>
         <Select
-          id="corr-question"
+          id="corr-question" aria-required="true"
           value={question}
           onChange={(event) => {
             setQuestion(event.target.value);
@@ -127,16 +127,16 @@ function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId
         </Select>
       </div>
       <div>
-        <Label htmlFor="corr-value" required>
+        <Label htmlFor="corr-value">
           New value
         </Label>
-        <Input id="corr-value" value={value} onChange={(event) => setValue(event.target.value)} />
+        <Input id="corr-value" aria-required="true" value={value} onChange={(event) => setValue(event.target.value)} />
       </div>
       <div>
-        <Label htmlFor="corr-reason" required>
+        <Label htmlFor="corr-reason">
           Reason
         </Label>
-        <Textarea id="corr-reason" rows={2} value={reason} onChange={(event) => setReason(event.target.value)} aria-describedby={state && !state.ok ? "corr-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
+        <Textarea id="corr-reason" aria-required="true" rows={2} value={reason} onChange={(event) => setReason(event.target.value)} aria-describedby={state && !state.ok ? "corr-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
       </div>
       {state && !state.ok ? isStale(state.message) ? <StaleNotice /> : <FieldError id="corr-error">{state.message}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>

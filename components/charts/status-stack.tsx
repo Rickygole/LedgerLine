@@ -49,7 +49,7 @@ function Tick({ x, y, payload, max }: { x?: number | string; y?: number | string
   );
 }
 
-export function StatusStackChart({ title, description, dimension, data, periodLabel, className }: { title: string; description: string; dimension: string; data: StackDatum[]; periodLabel: string; className?: string }) {
+export function StatusStackChart({ title, description, dimension, data, periodLabel, className }: { title: string; description?: string; dimension: string; data: StackDatum[]; periodLabel: string; className?: string }) {
   const rows = [...data].map((d) => ({ ...d, total: STACK.reduce((sum, b) => sum + d[b], 0) })).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
   const totals = Object.fromEntries(STACK.map((b) => [b, rows.reduce((sum, r) => sum + r[b], 0)])) as Record<Bucket, number>;
   const height = rows.length * 34 + 56;

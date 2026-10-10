@@ -32,8 +32,8 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
       {rule ? <input type="hidden" name="id" value={rule.id} /> : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="rule-days" required>Days</Label>
-          <Input id="rule-days" name="days" type="number" min={0} max={365} defaultValue={days} aria-invalid={Boolean(errors.days)} aria-describedby={errors.days ? "rule-days-error" : undefined} />
+          <Label htmlFor="rule-days">Days</Label>
+          <Input id="rule-days" aria-required="true" name="days" type="number" min={0} max={365} defaultValue={days} aria-invalid={Boolean(errors.days)} aria-describedby={errors.days ? "rule-days-error" : undefined} />
           <FieldError id="rule-days-error">{errors.days}</FieldError>
         </div>
         <div>
@@ -46,14 +46,14 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
         </div>
       </div>
       <div>
-        <Label htmlFor="rule-subject" required>Subject</Label>
-        <Input id="rule-subject" name="subject" defaultValue={rule?.template_subject ?? ""} aria-invalid={Boolean(errors.subject)} aria-describedby={errors.subject ? "rule-subject-error" : undefined} />
+        <Label htmlFor="rule-subject">Subject</Label>
+        <Input id="rule-subject" aria-required="true" name="subject" defaultValue={rule?.template_subject ?? ""} aria-invalid={Boolean(errors.subject)} aria-describedby={errors.subject ? "rule-subject-error" : undefined} />
         <FieldError id="rule-subject-error">{errors.subject}</FieldError>
       </div>
       <div>
-        <Label htmlFor="rule-body" required>Message</Label>
+        <Label htmlFor="rule-body">Message</Label>
         <Hint id="rule-body-hint">Placeholders you can use: {PLACEHOLDERS.join(", ")}.</Hint>
-        <Textarea id="rule-body" name="body" rows={7} defaultValue={rule?.template_body ?? ""} aria-invalid={Boolean(errors.body)} aria-describedby={errors.body ? "rule-body-error rule-body-hint" : "rule-body-hint"} />
+        <Textarea id="rule-body" aria-required="true" name="body" rows={7} defaultValue={rule?.template_body ?? ""} aria-invalid={Boolean(errors.body)} aria-describedby={errors.body ? "rule-body-error rule-body-hint" : "rule-body-hint"} />
         <FieldError id="rule-body-error">{errors.body}</FieldError>
       </div>
       <label className="flex items-center gap-2 text-sm">

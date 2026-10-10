@@ -36,16 +36,16 @@ export default async function IncidentsPage() {
           <CardBody>
             <ActionForm action={recordIncident} submitLabel="Record and notify" pendingLabel="Recording">
               <div>
-                <Label htmlFor="detectedAt" required>
+                <Label htmlFor="detectedAt">
                   Detected at (Eastern time)
                 </Label>
-                <Input id="detectedAt" name="detectedAt" type="datetime-local" />
+                <Input id="detectedAt" aria-required="true" name="detectedAt" type="datetime-local" />
               </div>
               <div>
-                <Label htmlFor="severity" required>
+                <Label htmlFor="severity">
                   Severity
                 </Label>
-                <Select id="severity" name="severity" defaultValue="">
+                <Select id="severity" aria-required="true" name="severity" defaultValue="">
                   <option value="" disabled>
                     Choose one
                   </option>
@@ -57,16 +57,16 @@ export default async function IncidentsPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="description" required>
+                <Label htmlFor="description">
                   What happened
                 </Label>
-                <Textarea id="description" name="description" rows={4} maxLength={4000} />
+                <Textarea id="description" aria-required="true" name="description" rows={4} maxLength={4000} />
               </div>
               <div>
-                <Label htmlFor="affectedData" required>
+                <Label htmlFor="affectedData">
                   Data affected
                 </Label>
-                <Textarea id="affectedData" name="affectedData" rows={3} maxLength={2000} />
+                <Textarea id="affectedData" aria-required="true" name="affectedData" rows={3} maxLength={2000} />
               </div>
             </ActionForm>
           </CardBody>
@@ -109,7 +109,7 @@ export default async function IncidentsPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <Label htmlFor="contactName">Name</Label>
-                  <Input id="contactName" name="name" maxLength={120} />
+                  <Input id="contactName" aria-required="true" name="name" maxLength={120} />
                 </div>
                 <div>
                   <Label htmlFor="contactTitle">Title</Label>
@@ -117,7 +117,7 @@ export default async function IncidentsPage() {
                 </div>
                 <div>
                   <Label htmlFor="contactEmail">Email</Label>
-                  <Input id="contactEmail" name="email" type="email" maxLength={254} />
+                  <Input id="contactEmail" aria-required="true" name="email" type="email" maxLength={254} />
                 </div>
               </div>
               <Hint>Contacts are never deleted so past notices stay traceable. Switch a contact off instead.</Hint>
@@ -127,7 +127,7 @@ export default async function IncidentsPage() {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Incident history" description="Newest first." />
+        <CardHeader title="Incident history" />
         <Table density="compact">
           <THead>
             <tr>

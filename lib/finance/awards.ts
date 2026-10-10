@@ -33,9 +33,9 @@ export function sponsorShort(sponsors: Sponsor[]): string {
 }
 
 export function sponsorLabel(row: { fundingSource: string; sponsors: Sponsor[] }): string {
-  if (row.fundingSource === "speaker") return "Speaker's allocation";
-  if (row.fundingSource === "citywide") return "Citywide initiative";
+  if (row.fundingSource === "speaker") return "Speaker";
+  if (row.fundingSource === "citywide") return "Citywide";
   if (row.sponsors.length === 0) return "No sponsor on file";
-  if (row.sponsors.length === 1) return `${row.sponsors[0].name} (D${row.sponsors[0].district})`;
-  return `Delegation, ${row.sponsors.length} members`;
+  if (row.sponsors.length === 1) return `${row.sponsors[0].name.split(" ").at(-1)} (D${row.sponsors[0].district})`;
+  return `Delegation: ${row.sponsors.map((s) => `D${s.district}`).join(", ")}`;
 }

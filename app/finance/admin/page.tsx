@@ -22,7 +22,7 @@ export default async function AdminIndex() {
   await requireUser(["finance_admin"]);
   return (
     <>
-      <PageHeader title="Administration" description="Areas for Finance administrators." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Administration" }]} />
+      <PageHeader title="Administration" crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Administration" }]} />
       <Card>
         <Table density="compact">
           <THead>

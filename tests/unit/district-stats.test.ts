@@ -58,7 +58,8 @@ describe("Council district map numbers", () => {
   });
 
   it("bins, ranks and places district 8 in both Manhattan and the Bronx", () => {
-    expect([0, 1, 2, 3, 4, 5, 7, 8, 30].map(binFor)).toEqual([0, 1, 1, 2, 2, 3, 3, 4, 4]);
+    const pairs: [number, number][] = [[0, 10], [1, 20], [1, 11], [1, 10], [2, 9], [6, 25], [3, 7], [1, 2], [2, 2], [3, 0]];
+    expect(pairs.map(([m, d]) => binFor(m, d))).toEqual([0, 1, 1, 2, 2, 2, 3, 4, 4, 0]);
     expect(boroughsForDistrict(8)).toEqual(["Manhattan", "Bronx"]);
     expect(districtInBorough(8, "Bronx")).toBe(true);
     expect(boroughLabel(50)).toBe("Staten Island");

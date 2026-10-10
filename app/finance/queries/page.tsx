@@ -35,14 +35,14 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
     <>
       <PageHeader
         title="Saved queries"
-        description="Build a question about reports, see how many reports match, then open the results or export them. Saved queries are private to you."
+        description="Saved queries are private to you."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Saved queries" }]}
       />
       {one(raw, "saved") === "1" ? <p role="status" className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">Query saved.</p> : null}
       <div className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
           <Card className="lg:col-span-8">
-            <CardHeader title="Query builder" description="Choose any combination of criteria. The count updates as you change them." />
+            <CardHeader title="Query builder" />
             <CardBody>
               {problems.length > 0 ? (
                 <p role="alert" className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm font-semibold text-bad">

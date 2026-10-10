@@ -3,7 +3,7 @@ import { ArrowRight, CalendarRange, Landmark, Layers, Users } from "lucide-react
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
-import { formatCompactCurrency, formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/rules/money";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { fiscalYears, nextFiscalYear, validFiscalYear, yearSummary } from "@/lib/lifecycle/rollover";
 import { PageHeader } from "@/components/ui/page-header";
@@ -57,7 +57,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
       <RolloverSteps current={1} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <Card>
-          <CardHeader title="Choose the source year" description="Pick the year to copy from and the new year to create." />
+          <CardHeader title="Choose the source year" />
           <CardBody>
             <form action="/finance/rollover" className="space-y-4">
               <div>

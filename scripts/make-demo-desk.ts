@@ -3,6 +3,7 @@ import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
 import * as XLSX from "xlsx";
+import { MARIA_REMAINING_BUDGET } from "./seed";
 
 const OUT = path.resolve(__dirname, "../fixtures/demo-desk");
 const TEMPLATES = path.resolve(__dirname, "../fixtures/templates");
@@ -67,6 +68,7 @@ async function main() {
   const given = argument("award");
   const { award, initiative } = given ? { award: Number(given), initiative: "the award given on the command line" } : await mariaAward();
   if (!Number.isFinite(award) || award <= 0) throw new Error("The award must be a positive number of dollars.");
+  workbook(MARIA_REMAINING_BUDGET.map(([category, description, amount]) => ({ category, description, amount })), "budget-remaining.xlsx");
   workbook(lines(award, 1750), "budget-over-award.xlsx");
   workbook(lines(award, 0), "budget-balanced.xlsx");
   pdfOfSize("scan-31MB.pdf", 31 * MB);
@@ -75,6 +77,7 @@ async function main() {
   copyFileSync(path.join(TEMPLATES, "food-pantry-report-injected.docx"), path.join(OUT, "legacy-template-held-out.docx"));
   console.log(`Wrote demo files to ${OUT}`);
   console.log(`Budget files are sized for ${initiative}, award $${award.toLocaleString("en-US", { minimumFractionDigits: 2 })}.`);
+  console.log("budget-remaining.xlsx holds the two lines missing from the seeded draft and brings it to $85,000.00.");
   console.log("budget-over-award.xlsx is $1,750.00 over the award. budget-balanced.xlsx equals it.");
 }
 
