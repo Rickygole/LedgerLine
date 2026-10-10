@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 export const PASSCODE = process.env.GATE_PASSCODE ?? "ledger-demo";
-export const PASSWORD = "ledgerline-demo";
+export const PASSWORD = process.env.PERSONA_PASSWORD ?? "ledgerline-demo";
 
 export const PEOPLE = {
   maria: "maria.santos@motthavenyouth.example.org",

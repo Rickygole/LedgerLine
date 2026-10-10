@@ -24,7 +24,7 @@ function fakeTx(aiEnabled: boolean | null): Tx {
 
 const paragraphs = ["Food Pantry Report", "1. How many households did you serve this quarter?", "2. Describe your outreach work."];
 
-describe("[AI-1] the AI switch covers form drafting", () => {
+describe("[US-003] the AI switch covers form drafting", () => {
   beforeEach(() => callStructured.mockReset());
 
   it("never calls the model and drafts by rules when the switch is off", async () => {

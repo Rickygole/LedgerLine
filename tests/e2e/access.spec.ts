@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authFile, PEOPLE, signIn } from "./support/app";
+import { authFile, PASSCODE, PEOPLE, signIn } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -43,7 +43,7 @@ test("[BR-011] after the passcode the start page shows the fiscal year calendar 
   const page = await context.newPage();
   await page.goto("/");
   await expect(page).toHaveURL(/\/gate$/);
-  await page.getByLabel("Passcode").fill(process.env.GATE_PASSCODE ?? "ledger-demo");
+  await page.getByLabel("Passcode").fill(PASSCODE);
   await page.getByRole("button", { name: "Continue" }).click();
   await page.waitForURL((url) => url.pathname === "/");
   await ownerQuery("DELETE FROM auth_attempt WHERE id = (SELECT max(id) FROM auth_attempt WHERE key LIKE 'gate:%')");
@@ -103,7 +103,7 @@ test("[BR-011] the ninth failed sign-in for one email within 15 minutes is refus
   const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
   const page = await context.newPage();
   await page.goto("/gate");
-  await page.getByLabel("Passcode").fill(process.env.GATE_PASSCODE ?? "ledger-demo");
+  await page.getByLabel("Passcode").fill(PASSCODE);
   await page.getByRole("button", { name: "Continue" }).click();
   await page.waitForURL((url) => url.pathname === "/");
   for (let attempt = 1; attempt <= 8; attempt++) {
