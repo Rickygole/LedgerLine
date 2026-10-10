@@ -58,15 +58,13 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
   const email = parsed.data.email.toLowerCase();
   const ipKey = `login-ip:${ip}`;
   const emailKey = `login-email:${email}`;
-  if ((await blocked(ipKey, IP_FAILURE_LIMIT)) || (await blocked(emailKey, EMAIL_FAILURE_LIMIT)))
-    return { error: TOO_MANY, values };
+  if (await blocked(ipKey, IP_FAILURE_LIMIT)) return { error: TOO_MANY, values };
+  if (!(await allowed(emailKey, EMAIL_FAILURE_LIMIT))) return { error: TOO_MANY, values };
 
   const account = await lookup(email);
   const valid = await bcrypt.compare(parsed.data.password, account?.password_hash ?? DUMMY_HASH);
   if (!account || !valid) {
-    const ipOk = await allowed(ipKey, IP_FAILURE_LIMIT);
-    const emailOk = await allowed(emailKey, EMAIL_FAILURE_LIMIT);
-    if (!ipOk || !emailOk) return { error: TOO_MANY, values };
+    if (!(await allowed(ipKey, IP_FAILURE_LIMIT))) return { error: TOO_MANY, values };
     return { error: "That email and password do not match an account.", values };
   }
   await clearAttempts(emailKey);
