@@ -24,7 +24,7 @@ export function hostingInfo(env: Env = process.env): Hosting {
   };
 }
 
-export function buildCommit(env: Env = process.env): string | null {
+export function buildCommit(env: Env = { BUILD_COMMIT: process.env.BUILD_COMMIT, VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA }): string | null {
   const sha = (env.BUILD_COMMIT || env.VERCEL_GIT_COMMIT_SHA || "").trim();
   return /^[0-9a-f]{7,40}$/i.test(sha) ? sha.slice(0, 12) : null;
 }
