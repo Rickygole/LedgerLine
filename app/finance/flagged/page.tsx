@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { NoPeriods } from "@/components/finance/no-periods";
 import Link from "next/link";
 import { Flag } from "lucide-react";
@@ -14,7 +15,7 @@ import { withClaims } from "@/lib/db";
 import { loadCouncilMembers } from "@/lib/finance/district-stats";
 import { loadFilterOptions, loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { applyFilters, numberAnswer, paginate, sortRows } from "@/lib/finance/review/derive";
-import { FLAG_LABEL, FLAG_ORDER, hrefWith, parseFilters } from "@/lib/finance/review/filters";
+import { FLAG_LABEL, FLAG_ORDER, hrefWith, parseFilters, withoutEmptyParams } from "@/lib/finance/review/filters";
 import type { FlagReason, ReportRow } from "@/lib/finance/review/types";
 import { formatCount, formatCurrency, plural } from "@/lib/format";
 import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
@@ -120,6 +121,8 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
 export default async function FlaggedPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
+  const tidy = withoutEmptyParams(raw);
+  if (tidy !== null) redirect(tidy ? `/finance/flagged?${tidy}` : "/finance/flagged");
   const reasonParam = (Array.isArray(raw.reason) ? raw.reason[0] : raw.reason) ?? "";
 
   const data = await withClaims(user.id, async (tx) => {

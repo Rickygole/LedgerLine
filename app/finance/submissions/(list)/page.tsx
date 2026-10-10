@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ActiveChips, ExportMenu, UnderlineTabs, type Chip } from "@/components/finance/review/list-controls";
 import { Pagination } from "@/components/finance/review/pagination";
 import { SubmissionFilters } from "@/components/finance/review/submission-filters";
@@ -10,7 +11,7 @@ import { withClaims } from "@/lib/db";
 import { contractLabel, fundingLabel } from "@/lib/finance/awards";
 import { loadCouncilMembers } from "@/lib/finance/district-stats";
 import { loadFilterOptions, loadPeriods, loadReportRows } from "@/lib/finance/review/data";
-import { activeFilterCount, filtersToParams, FLAG_LABEL, hrefWith, parseFilters } from "@/lib/finance/review/filters";
+import { activeFilterCount, filtersToParams, FLAG_LABEL, hrefWith, parseFilters, withoutEmptyParams } from "@/lib/finance/review/filters";
 import { applyFilters, countBuckets, paginate, sortByUrgency } from "@/lib/finance/review/derive";
 import type { Filters } from "@/lib/finance/review/types";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
@@ -30,6 +31,8 @@ const TAB_LABEL: Record<Bucket, string> = { ...BUCKET_LABEL, submitted: "Waiting
 export default async function SubmissionsPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
+  const tidy = withoutEmptyParams(raw);
+  if (tidy !== null) redirect(tidy ? `/finance/submissions?${tidy}` : "/finance/submissions");
 
   const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);

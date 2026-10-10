@@ -56,6 +56,19 @@ export function parseFilters(raw: Raw, periods: PeriodInfo[]): Filters {
   };
 }
 
+export function withoutEmptyParams(raw: Raw): string | null {
+  const params = new URLSearchParams();
+  let dropped = false;
+  for (const [key, value] of Object.entries(raw)) {
+    for (const item of Array.isArray(value) ? value : [value]) {
+      if (item === undefined) continue;
+      if (item === "") dropped = true;
+      else params.append(key, item);
+    }
+  }
+  return dropped ? params.toString() : null;
+}
+
 export function filtersToParams(filters: Partial<Filters>, include: { page?: boolean } = {}): URLSearchParams {
   const params = new URLSearchParams();
   const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "district", "by", "member", "funding", "contract", "agency", "orgType", "awardMin", "awardMax", "period", "bucket", "status", "flag"];
