@@ -165,7 +165,7 @@ export default async function IncidentsPage() {
           </THead>
           <tbody>
             {incidents.length === 0 ? (
-              <EmptyRow colSpan={5}>No incidents have been recorded.</EmptyRow>
+              <EmptyRow colSpan={5}>No incidents recorded.</EmptyRow>
             ) : (
               incidents.map((i) => {
                 const notice = notificationDeadline({ detectedAt: i.detected_at, notifiedAt: i.notified_at, now });

@@ -29,6 +29,7 @@ export default async function ReadinessPage() {
     map.set(record.module_key, record.completed_on);
     doneBy.set(record.user_id, map);
   }
+  const upcoming = data.schedule.filter((s) => s.scheduled_on >= today);
   const defectsBySession = new Map<string, typeof data.defects>();
   for (const defect of data.defects)
     defectsBySession.set(defect.session_id, [...(defectsBySession.get(defect.session_id) ?? []), defect]);
@@ -37,7 +38,7 @@ export default async function ReadinessPage() {
     <>
       <PageHeader
         title="Go-live readiness"
-        description="Test sessions and training records for Council Finance staff ahead of the February 1, 2027 target. The formal test window runs January 4 to 15, 2027 and training runs January 11 to 22, 2027. Entries here are earlier rounds."
+        description="Test sessions and training records for Council Finance staff ahead of the February 1, 2027 target. The formal test window runs January 4 to 15, 2027 and training runs January 11 to 22, 2027. Sessions that have not happened yet are listed under Scheduled sessions."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Go-live readiness" }]}
       />
       <ul className="mb-6 list-disc space-y-1 pl-5 text-sm">
@@ -57,6 +58,39 @@ export default async function ReadinessPage() {
 
       <Card className="mb-6">
         <CardHeader
+          title="Scheduled sessions"
+          description="Test sessions and training that are planned and have not been held yet."
+        />
+        <Table density="compact">
+          <THead>
+            <tr>
+              <TH>Date</TH>
+              <TH>Type</TH>
+              <TH>What it covers</TH>
+              <TH>Who attends</TH>
+            </tr>
+          </THead>
+          <tbody>
+            {upcoming.length === 0 ? (
+              <EmptyRow colSpan={4}>No sessions are scheduled.</EmptyRow>
+            ) : (
+              upcoming.map((s) => (
+                <TR key={s.id}>
+                  <TD className="whitespace-nowrap">{formatDate(s.scheduled_on)}</TD>
+                  <TD>
+                    <Badge tone="info">{s.kind === "test" ? "Test session" : "Training"}</Badge>
+                  </TD>
+                  <TD className="font-semibold">{s.title}</TD>
+                  <TD className="text-muted">{s.audience}</TD>
+                </TR>
+              ))
+            )}
+          </tbody>
+        </Table>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader
           title="Test sessions"
           description="One row per scenario run by one tester. The pass rate uses the most recent session of each scenario."
         />
@@ -72,7 +106,7 @@ export default async function ReadinessPage() {
           </THead>
           <tbody>
             {data.sessions.length === 0 ? (
-              <EmptyRow colSpan={5}>No test sessions recorded.</EmptyRow>
+              <EmptyRow colSpan={5}>No test sessions have been held yet.</EmptyRow>
             ) : (
               data.sessions.map((s) => (
                 <TR key={s.id} className="align-top">

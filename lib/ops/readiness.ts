@@ -50,6 +50,14 @@ export function trainedShare(
   return { users: users.length, trained, percent: percent(trained, users.length) };
 }
 
+export type ScheduledSession = {
+  id: string;
+  kind: "test" | "training";
+  scheduled_on: string;
+  title: string;
+  audience: string;
+};
+
 type UatSession = {
   id: string;
   session_on: string;
@@ -83,7 +91,11 @@ export async function loadReadiness(tx: Tx) {
   const defects = await tx.query<UatDefect>(
     "SELECT id, session_id, description, severity, status, fixed_on::text AS fixed_on FROM uat_defect ORDER BY created_at, id",
   );
+  const schedule = await tx.query<ScheduledSession>(
+    "SELECT id, kind, scheduled_on::text AS scheduled_on, title, audience FROM readiness_schedule ORDER BY scheduled_on, kind, title",
+  );
   return {
+    schedule,
     modules,
     users,
     records,
