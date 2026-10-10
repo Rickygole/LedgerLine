@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-10-10T20:01:04.731Z",
-  "commit": "a3186d3256516280a4ecafbea89329db417edabb",
+  "generatedAt": "2026-10-10T20:52:28.134Z",
+  "commit": "b3c1404613332dabfaf81f0048d76f90cc4e8224",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 617,
-    "passed": 617,
+    "tests": 619,
+    "passed": 619,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 320,
+    "unit": 322,
     "sql": 198,
     "eval": 32,
     "e2e": 67
@@ -2263,6 +2263,12 @@
       "note": null,
       "tests": [
         {
+          "title": "export scope includes every submitted report, including those with an update requested",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "workbook carries the award fields: funding source, Council Member, agency and contract",
           "file": "tests/unit/finance-export.test.ts",
           "status": "passed",
@@ -2297,6 +2303,12 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "export scope includes every submitted report, including those with an update requested",
+          "file": "tests/unit/finance-derive.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "workbook builds a CSV of the Submissions sheet only",
           "file": "tests/unit/finance-export.test.ts",
