@@ -11,9 +11,9 @@ type Task = { title: string; meta: string; status: string; tone: Tone; link?: { 
 
 const TONE: Record<Tone, string> = {
   ok: "bg-ok-bg text-ok ring-ok/20",
-  info: "bg-[#e5edf7] text-[#1f4e85] ring-[#1f4e85]/20",
+  info: "bg-harbor-100 text-harbor-700 ring-harbor-700/20",
   warn: "bg-warn-bg text-warn ring-warn/25",
-  neutral: "bg-white text-[#3d4757] ring-line-strong",
+  neutral: "bg-white text-ink-2 ring-line-strong",
 };
 
 function nextDay(iso: string) {
@@ -78,18 +78,18 @@ export function SetupTaskList({ status, today }: { status: SetupStatus; today: s
   const done = tasks.filter((t) => t.status === "Completed").length;
   return (
     <section aria-labelledby="setup-title" className="mb-8 rounded border border-line bg-white">
-      <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+      <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
         <p className="text-sm font-semibold leading-5 text-muted">
           {fy} ({formatDate(status.fiscalYear.startsOn)} to {formatDate(status.fiscalYear.endsOn)})
         </p>
         <h2 id="setup-title" className="mt-0.5 text-xl font-bold leading-7 text-ink">
           {fy} setup
         </h2>
-        <p className="mt-0.5 max-w-[70ch] text-[15px] leading-[22px] text-[#3d4757]">
+        <p className="mt-0.5 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">
           Get {fy} initiatives and report forms ready before Mid-Year reporting opens{status.midYear ? ` ${formatDate(nextDay(status.midYear.endsOn))}` : ""}. {done} of 4 setup tasks complete.
         </p>
       </div>
-      <ol className="divide-y divide-[#e3e7ec]">
+      <ol className="divide-y divide-line-soft">
         {tasks.map((task, i) => (
           <li key={task.title} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-4 sm:px-6">
             <div className="min-w-0 flex-1 basis-72">
@@ -97,7 +97,7 @@ export function SetupTaskList({ status, today }: { status: SetupStatus; today: s
                 <span className="num mr-2 text-muted">{i + 1}.</span>
                 {task.title}
               </h3>
-              <p className="mt-0.5 text-[15px] leading-[22px] text-[#3d4757]">{task.meta}</p>
+              <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{task.meta}</p>
               {task.link ? (
                 <Link href={task.link.href} className="mt-1 inline-block text-[15px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   {task.link.label}

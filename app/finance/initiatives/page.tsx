@@ -106,10 +106,10 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                   <Link
                     href={buildHref(base, { q, status, agency: data.agency, period: data.period.id, category: selected ? undefined : c.category })}
                     aria-current={selected ? "true" : undefined}
-                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 hover:bg-navy-50", selected && "bg-navy-50 ring-1 ring-navy-600/30")}
+                    className={cn("group block rounded-md px-2 py-1.5 -mx-2 hover:bg-harbor-50", selected && "bg-harbor-50 ring-1 ring-harbor-600/30")}
                   >
                     <span className="flex items-baseline justify-between gap-3 text-sm">
-                      <span className={cn("truncate", selected ? "font-semibold text-navy-900" : "text-ink")}>{c.category}</span>
+                      <span className={cn("truncate", selected ? "font-semibold text-harbor-900" : "text-ink")}>{c.category}</span>
                       <span className="num shrink-0 text-muted">
                         {formatCompactCurrency(Number(c.funding))}
                         <span className="ml-2 text-xs">
@@ -118,8 +118,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                         </span>
                       </span>
                     </span>
-                    <span className="mt-1 block h-1 overflow-hidden rounded-full bg-navy-100" aria-hidden="true">
-                      <span className={cn("block h-full rounded-full", selected ? "bg-navy-800" : "bg-navy-600/70 group-hover:bg-navy-600")} style={{ width: `${share}%` }} />
+                    <span className="mt-1 block h-1 overflow-hidden rounded-full bg-harbor-100" aria-hidden="true">
+                      <span className={cn("block h-full rounded-full", selected ? "bg-harbor-800" : "bg-harbor-600/70 group-hover:bg-harbor-600")} style={{ width: `${share}%` }} />
                     </span>
                   </Link>
                 </li>
@@ -135,7 +135,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             <h2 className="text-xl font-bold leading-7 text-ink">
               {data.period.fiscalYearId} initiatives <span className="num font-semibold text-muted">({data.total})</span>
             </h2>
-            <p className="mt-0.5 text-[15px] text-[#3d4757]">
+            <p className="mt-0.5 text-[15px] text-ink-2">
               {formatCompactCurrency(totals.funding)} across {formatCount(totals.assignments)} awards
             </p>
           </div>
@@ -237,7 +237,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                     {row.form_status === "published" ? (
                       <span>Published v{row.form_version}</span>
                     ) : row.form_status === "draft" ? (
-                      <span className="text-[#3d4757]">Draft v{row.form_version}</span>
+                      <span className="text-ink-2">Draft v{row.form_version}</span>
                     ) : (
                       <Badge tone="warn">No form</Badge>
                     )}

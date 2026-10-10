@@ -93,7 +93,7 @@ export function RequestUpdate({
         aria-labelledby="request-title"
         className="m-auto w-[min(40rem,calc(100vw-2rem))] max-w-none rounded border border-line bg-white p-0 text-ink shadow-[0_4px_16px_rgba(10,26,48,0.16)] backdrop:bg-[#0a1a30]/50"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[#e3e7ec] px-6 pb-4 pt-5">
+        <div className="flex items-start justify-between gap-4 border-b border-line-soft px-6 pb-4 pt-5">
           <h2 id="request-title" className="text-xl font-bold leading-7">
             {title}
           </h2>
@@ -126,14 +126,14 @@ export function RequestUpdate({
           {concerns.length > 0 ? (
             <details className="group rounded border border-line">
               <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">Suggest a note from the checks</summary>
-              <div className="space-y-3 border-t border-[#e3e7ec] px-4 py-3">
+              <div className="space-y-3 border-t border-line-soft px-4 py-3">
                 <fieldset>
                   <legend className="text-sm font-semibold">What needs to change</legend>
                   <ul className="mt-1.5 space-y-1">
                     {concerns.map((concern) => (
                       <li key={concern.id}>
-                        <label htmlFor={`concern-${concern.id}`} className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 text-[15px] hover:bg-navy-50">
-                          <input id={`concern-${concern.id}`} type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-navy-800" checked={selected.includes(concern.id)} onChange={() => toggle(concern.id)} disabled={pending} />
+                        <label htmlFor={`concern-${concern.id}`} className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 text-[15px] hover:bg-harbor-50">
+                          <input id={`concern-${concern.id}`} type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-harbor-800" checked={selected.includes(concern.id)} onChange={() => toggle(concern.id)} disabled={pending} />
                           <span className="min-w-0">
                             {concern.label}
                             {concern.detail ? <span className="block text-sm text-muted">{concern.detail}</span> : null}
@@ -147,7 +147,7 @@ export function RequestUpdate({
                   {pending && !draft ? "Suggesting" : draft ? "Suggest again" : "Suggest a note"}
                 </Button>
                 {draft ? (
-                  <section aria-label="Suggested note" className="rounded border border-line bg-navy-50 p-3">
+                  <section aria-label="Suggested note" className="rounded border border-line bg-harbor-50 p-3">
                     <p className="flex flex-wrap items-center gap-2">
                       <Badge tone="info" icon={FileText}>
                         Suggested
@@ -169,7 +169,7 @@ export function RequestUpdate({
             </details>
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-4 border-t border-[#e3e7ec] px-6 py-4">
+        <div className="flex flex-wrap items-center gap-4 border-t border-line-soft px-6 py-4">
           <Button onClick={send} disabled={pending} className="h-11 px-5 text-base">
             {pending && text ? "Sending" : "Send request"}
           </Button>

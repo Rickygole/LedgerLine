@@ -95,7 +95,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         <Breadcrumbs crumbs={[{ label: "Submissions", href: `/finance/submissions?period=${encodeURIComponent(row.periodId)}` }, { label: row.referenceNo ?? "Report" }]} />
         {queued ? (
           <nav aria-label="Review queue" className="flex flex-wrap items-center gap-4">
-            <p className="text-[15px] text-[#3d4757]">
+            <p className="text-[15px] text-ink-2">
               {at >= 0 ? (
                 <>
                   <span className="num font-semibold text-ink">{at + 1}</span> of <span className="num">{waiting.length}</span> waiting for review
@@ -134,7 +134,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
             {state}
             {late > 0 ? <DueBadge daysPastDue={late} /> : null}
           </div>
-          <p className="mt-2 text-[15px] leading-[22px] text-[#3d4757]">
+          <p className="mt-2 text-[15px] leading-[22px] text-ink-2">
             <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
               {row.orgName}
             </Link>
@@ -151,13 +151,13 @@ export default async function ReviewPage({ params, searchParams }: Props) {
               ["Submitted at", row.submittedAt ? formatDateTime(row.submittedAt) : "Not submitted"],
             ].map(([label, value]) => (
               <div key={String(label)} className="min-w-0">
-                <dt className="text-sm font-semibold text-[#3d4757]">{label}</dt>
+                <dt className="text-sm font-semibold text-ink-2">{label}</dt>
                 <dd className="mt-0.5 truncate text-ink">{value}</dd>
               </div>
             ))}
           </dl>
         </div>
-        <div className="border-t border-[#e3e7ec] bg-navy-50/50 px-5 py-3 sm:px-6">
+        <div className="border-t border-line-soft bg-harbor-50/50 px-5 py-3 sm:px-6">
           <h2 className="sr-only">Automated checks</h2>
           <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
             {checks.map((check) => (

@@ -181,11 +181,11 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div role="tablist" aria-label="Form view" className="inline-flex rounded-md border border-line bg-white p-0.5 shadow-sm">
-          <button type="button" role="tab" aria-selected={view === "edit"} onClick={() => setView("edit")} className={cn("inline-flex h-8 items-center gap-2 rounded px-3 text-sm font-semibold", view === "edit" ? "bg-navy-800 text-white" : "text-ink hover:bg-navy-50")}>
+          <button type="button" role="tab" aria-selected={view === "edit"} onClick={() => setView("edit")} className={cn("inline-flex h-8 items-center gap-2 rounded px-3 text-sm font-semibold", view === "edit" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
             <Pencil className="h-4 w-4" aria-hidden="true" />
             {editable ? "Edit form" : "Structure"}
           </button>
-          <button type="button" role="tab" aria-selected={view === "preview"} onClick={() => setView("preview")} className={cn("inline-flex h-8 items-center gap-2 rounded px-3 text-sm font-semibold", view === "preview" ? "bg-navy-800 text-white" : "text-ink hover:bg-navy-50")}>
+          <button type="button" role="tab" aria-selected={view === "preview"} onClick={() => setView("preview")} className={cn("inline-flex h-8 items-center gap-2 rounded px-3 text-sm font-semibold", view === "preview" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
             <Eye className="h-4 w-4" aria-hidden="true" />
             Preview as organization
           </button>
@@ -201,7 +201,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
               {pending ? "Saving" : dirty ? "Save draft" : "Saved"}
             </Button>
             {review && importOpen ? (
-              <span className={cn("num rounded-sm px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset", reviewing ? "bg-[#e5edf7] text-[#1f4e85] ring-[#1f4e85]/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
+              <span className={cn("num rounded-sm px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset", reviewing ? "bg-harbor-100 text-harbor-700 ring-harbor-700/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
                 {review.reviewed} of {review.total} reviewed
               </span>
             ) : null}
@@ -237,12 +237,12 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
               </p>
             );
           })()}
-          <p className="mt-2 text-[15px] leading-[22px] text-[#3d4757]">
+          <p className="mt-2 text-[15px] leading-[22px] text-ink-2">
             {publishedVersion ? `New reports use version ${version}. Organizations already reporting keep version ${publishedVersion}.` : "Funded organizations start using it right away."}
           </p>
           <p className="mt-2 text-sm text-muted">Published versions cannot be changed. The change is recorded in the audit log under your name.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-4 border-t border-[#e3e7ec] px-6 py-4">
+        <div className="flex flex-wrap items-center gap-4 border-t border-line-soft px-6 py-4">
           <Button onClick={confirmPublish} disabled={pending} className="h-11 px-5 text-base">
             {pending ? "Publishing" : `Yes, publish version ${version}`}
           </Button>

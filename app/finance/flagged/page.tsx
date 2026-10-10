@@ -38,8 +38,8 @@ const PAGE = 25;
 
 function Meter({ ratio, tick, tone }: { ratio: number; tick?: number; tone: "bad" | "warn" }) {
   return (
-    <span aria-hidden="true" className="relative inline-block h-2 w-20 shrink-0 overflow-visible rounded-sm bg-navy-100 align-middle">
-      <span className={cn("block h-full rounded-sm", tone === "bad" ? "bg-bad" : "bg-[#c98a0b]")} style={{ width: `${Math.max(0, Math.min(100, ratio * 100))}%` }} />
+    <span aria-hidden="true" className="relative inline-block h-2 w-20 shrink-0 overflow-visible rounded-sm bg-harbor-100 align-middle">
+      <span className={cn("block h-full rounded-sm", tone === "bad" ? "bg-bad" : "bg-series-returned")} style={{ width: `${Math.max(0, Math.min(100, ratio * 100))}%` }} />
       {tick !== undefined ? <span className="absolute -top-1 h-4 w-0.5 bg-ink" style={{ left: `${tick * 100}%` }} /> : null}
     </span>
   );
@@ -85,7 +85,7 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
               <span className="hidden group-open:inline">Hide</span>
             </span>
           </summary>
-          <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-sm text-[#3d4757]">
+          <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-sm text-ink-2">
             {row.issues.map((issue, i) => (
               <li key={`${issue.message}-${i}`}>{issue.message}</li>
             ))}
@@ -155,14 +155,14 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
       <div className="mb-7">
         <Breadcrumbs crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Flagged items" }]} />
         <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">Flagged items</h1>
-        <p className="mt-2 max-w-[70ch] text-lg leading-7 text-[#3d4757]">
+        <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">
           Reports that need attention, grouped by reason. Each row shows the evidence. <span className="num">{total}</span> {total === 1 ? "report is" : "reports are"} flagged in this period.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
         <nav aria-label="Flag reasons" className="rounded border border-line bg-white lg:sticky lg:top-6">
-          <ul className="divide-y divide-[#e3e7ec]">
+          <ul className="divide-y divide-line-soft">
             {FLAG_ORDER.map((r) => {
               const active = r === reason;
               return (
@@ -172,7 +172,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "relative flex min-h-11 items-center justify-between gap-3 px-4 py-2.5 text-[15px]",
-                      active ? "bg-navy-50 font-bold text-navy-900" : counts[r] === 0 ? "text-muted hover:bg-surface" : "text-ink hover:bg-navy-50 hover:text-link hover:underline"
+                      active ? "bg-harbor-50 font-bold text-harbor-900" : counts[r] === 0 ? "text-muted hover:bg-surface" : "text-ink hover:bg-harbor-50 hover:text-link hover:underline"
                     )}
                   >
                     {active ? <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-action" /> : null}
@@ -186,11 +186,11 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
         </nav>
 
         <section aria-labelledby="reason-title" className="min-w-0 rounded border border-line bg-white">
-          <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+          <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
             <h2 id="reason-title" className="text-xl font-bold leading-7 text-ink">
               {FLAG_LABEL[reason]} <span className="num font-semibold text-muted">({items.length})</span>
             </h2>
-            <p className="mt-0.5 text-[15px] leading-[22px] text-[#3d4757]">{EXPLAIN[reason]}</p>
+            <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{EXPLAIN[reason]}</p>
           </div>
           <div className="px-5 pt-4 sm:px-6">
             <SubmissionFilters

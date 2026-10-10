@@ -11,7 +11,7 @@ export function ActiveChips({ chips }: { chips: Chip[] }) {
     <ul aria-label="Active filters" className="mb-4 flex flex-wrap gap-2">
       {chips.map((chip) => (
         <li key={chip.key}>
-          <Link href={chip.href} className="inline-flex h-8 items-center gap-1.5 rounded-sm border border-navy-200 bg-navy-50 pl-3 pr-2 text-sm font-semibold text-navy-900 hover:border-navy-600">
+          <Link href={chip.href} className="inline-flex h-8 items-center gap-1.5 rounded-sm border border-harbor-200 bg-harbor-50 pl-3 pr-2 text-sm font-semibold text-harbor-900 hover:border-harbor-600">
             {chip.label}
             <X className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">, remove this filter</span>
@@ -35,7 +35,7 @@ export function UnderlineTabs({ label, tabs }: { label: string; tabs: Tab[] }) {
               aria-current={tab.active ? "true" : undefined}
               className={cn(
                 "inline-flex items-center gap-1.5 whitespace-nowrap border-b-[3px] px-3 py-3 text-[15px] font-semibold focus-visible:-outline-offset-4",
-                tab.active ? "border-action text-navy-900" : "border-transparent text-[#3d4757] hover:border-line-strong hover:text-link"
+                tab.active ? "border-action text-harbor-900" : "border-transparent text-ink-2 hover:border-line-strong hover:text-link"
               )}
             >
               {tab.label}
@@ -59,7 +59,7 @@ export function ExportMenu({ items }: { items: { label: string; href: string }[]
       <ul className="absolute right-0 z-20 mt-1 w-56 rounded border border-line bg-white py-1 shadow-[0_4px_16px_rgba(10,26,48,0.16)]">
         {items.map((item) => (
           <li key={item.label}>
-            <a href={item.href} download className="block px-4 py-2.5 text-[15px] text-ink hover:bg-navy-50 hover:text-link hover:underline">
+            <a href={item.href} download className="block px-4 py-2.5 text-[15px] text-ink hover:bg-harbor-50 hover:text-link hover:underline">
               {item.label}
             </a>
           </li>

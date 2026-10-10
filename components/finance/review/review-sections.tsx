@@ -343,10 +343,10 @@ export function TabNav({ id, current, counts, query = "" }: { id: string; curren
             key={key}
             href={`/finance/submissions/${id}?tab=${key}${query}`}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-[3px] px-3 py-3 text-[15px] font-semibold ${active ? "border-action text-navy-900" : "border-transparent text-[#3d4757] hover:border-line-strong hover:text-ink"}`}
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-[3px] px-3 py-3 text-[15px] font-semibold ${active ? "border-action text-harbor-900" : "border-transparent text-ink-2 hover:border-line-strong hover:text-ink"}`}
           >
             {label}
-            {counts[key] !== undefined ? <span className={`num rounded-sm px-1.5 text-xs font-semibold ${active ? "bg-navy-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
+            {counts[key] !== undefined ? <span className={`num rounded-sm px-1.5 text-xs font-semibold ${active ? "bg-harbor-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
           </Link>
         );
       })}

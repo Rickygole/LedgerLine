@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { GEO_FILL, MAP_INK } from "./geo-colors";
+import { GEO_BIN_LABEL, GEO_FILL, MAP_INK } from "./geo-colors";
 
 export type MapDistrict = {
   district: number;
@@ -61,7 +61,7 @@ export function DistrictMapView({ viewBox, districts, outlines, initial, caption
         <div>
           <p className="text-sm font-semibold text-ink">Missing reports</p>
           <ul className="mt-1.5 space-y-1 text-sm text-ink">
-            {["None", "1 to 2", "3 to 4", "5 to 7", "8 or more"].map((label, bin) => (
+            {GEO_BIN_LABEL.map((label, bin) => (
               <li key={label} className="flex items-center gap-2">
                 <span aria-hidden="true" className="inline-block h-3 w-4 border border-line" style={{ background: GEO_FILL[bin] }} />
                 {label}
@@ -69,7 +69,7 @@ export function DistrictMapView({ viewBox, districts, outlines, initial, caption
             ))}
           </ul>
         </div>
-        <div aria-live="polite" className="min-h-[9.5rem] border-l-4 border-navy-900 bg-white py-2 pl-3 pr-2 text-sm leading-5 ring-1 ring-inset ring-line">
+        <div aria-live="polite" className="min-h-[9.5rem] border-l-4 border-harbor-900 bg-white py-2 pl-3 pr-2 text-sm leading-5 ring-1 ring-inset ring-line">
           {current ? (
             <>
               <p className="font-bold text-ink">District {current.district}</p>

@@ -80,7 +80,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0 flex-1 basis-80">
             <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">Submissions</h1>
-            <p className="mt-2 max-w-[70ch] text-lg leading-7 text-[#3d4757]">Every award and reporting period for {period.label}, including organizations that have not started.</p>
+            <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">Every award and reporting period for {period.label}, including organizations that have not started.</p>
           </div>
           <ExportMenu
             items={[

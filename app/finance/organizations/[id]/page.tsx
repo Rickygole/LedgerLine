@@ -13,7 +13,7 @@ import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Badge, StateBadge } from "@/components/ui/status-badge";
 import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
-import { StatTile } from "@/components/finance/dashboard/stat-tile";
+import { Stat } from "@/components/ui/stat";
 import { MiniDistrictMap } from "@/components/finance/map/mini-district-map";
 import { ReportingRecord } from "@/components/finance/reporting-record";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
@@ -122,9 +122,9 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       {tab === "overview" ? (
         <>
           <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatTile label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} sub={`across ${awards.length} ${awards.length === 1 ? "award" : "awards"}${years.length ? ` (${years.join(" and ")})` : ""}`} />
-            <StatTile label="Reports accepted" value={acceptedDue} of={dueSoFar} sub={dueSoFar === 0 ? "No reports due yet" : "of reports due so far"} />
-            <StatTile label="Missing" value={overdue} bad={overdue > 0} sub="Past due, nothing submitted" action={overdue > 0 ? { href: `/finance/submissions?q=${encodeURIComponent(org.ein)}&bucket=missing`, label: overdue === 1 ? "See missing report" : "See missing reports" } : undefined} />
+            <Stat label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} sub={`across ${awards.length} ${awards.length === 1 ? "award" : "awards"}${years.length ? ` (${years.join(" and ")})` : ""}`} />
+            <Stat label="Reports accepted" value={<>{acceptedDue} <span className="text-lg font-semibold tracking-normal text-ink-2">of {dueSoFar}</span></>} sub={dueSoFar === 0 ? "No reports due yet" : "of reports due so far"} />
+            <Stat label="Missing" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} sub="Past due, nothing submitted" action={overdue > 0 ? { href: `/finance/submissions?q=${encodeURIComponent(org.ein)}&bucket=missing`, label: overdue === 1 ? "See missing report" : "See missing reports" } : undefined} />
           </section>
           <div className="grid items-start gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
@@ -150,13 +150,13 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 <figure className="md:border-l md:border-line md:pl-6">
                   <MiniDistrictMap fills={mapFills} outlined={sponsorDistricts} label={`Map of Council districts. ${mapCaption}`} />
                   <figcaption className="mt-2 text-[13px] leading-5 text-muted">{mapCaption}</figcaption>
-                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-[#3d4757]" aria-hidden="true">
+                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-ink-2" aria-hidden="true">
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="inline-block h-3 w-4 bg-[#1f4e85]" />
+                      <span className="inline-block h-3 w-4 bg-harbor-700" />
                       Location
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="inline-block h-3 w-4 border-2 border-action bg-[#eef2f6]" />
+                      <span className="inline-block h-3 w-4 border-2 border-action bg-geo-0" />
                       Sponsor
                     </span>
                   </p>

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DistrictMapCard, DistrictRanking } from "@/components/finance/map/district-map";
 import { AutoSelect } from "@/components/finance/map/auto-select";
-import { StatTile } from "@/components/finance/dashboard/stat-tile";
+import { Stat } from "@/components/ui/stat";
+import { FiscalYearTimeline, marksFromCalendar } from "@/components/ui/fiscal-year-timeline";
+import { loadFiscalCalendar } from "@/lib/calendar";
 import { StatusStackChart, type StackDatum } from "@/components/charts/status-stack";
 import { buttonClass } from "@/components/ui/button";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
@@ -44,6 +46,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
     return { periods, period, rows, members };
   });
 
+  const calendar = await loadFiscalCalendar();
   const counts = countBuckets(rows);
   const stats = districtStats(rows, mode, members);
   const base = { period: period.id };
@@ -78,7 +81,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           <div className="min-w-0 flex-1 basis-[28rem]">
             <p className="text-sm font-semibold leading-5 text-muted">{periodEyebrow(period)}</p>
             <h1 className="mt-1 text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">{headline.title}</h1>
-            <p className="mt-2 max-w-[70ch] text-lg leading-7 text-[#3d4757]">{headline.lede}</p>
+            <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">{headline.lede}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link href={`/finance/reminders?period=${encodeURIComponent(period.id)}`} className={buttonClass("secondary", "md", "h-11 px-5 text-base")}>
@@ -95,21 +98,50 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
       </div>
 
       <section aria-label="Key figures" className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile label="Missing" value={counts.missing} bad={counts.missing > 0} sub="Past due, nothing submitted" action={{ href: list({ bucket: "missing" }), label: "Chase missing reports" }} />
-        <StatTile
+        <Stat label="Missing" value={counts.missing} tone={counts.missing > 0 ? "bad" : "neutral"} sub="Past due, nothing submitted" action={{ href: list({ bucket: "missing" }), label: "Chase missing reports" }} />
+        <Stat
           label="Waiting for review"
           value={counts.submitted}
           sub={next?.submittedAt ? `Oldest submitted ${formatDate(next.submittedAt)} · ${counts.in_review} in review` : `${counts.in_review} in review`}
           action={{ href: list({ bucket: "submitted" }), label: "Open review queue" }}
         />
-        <StatTile label="Update requested" value={counts.returned} sub="Waiting on the organization" action={{ href: list({ bucket: "returned" }), label: "See requests" }} />
-        <StatTile label="Accepted" value={counts.accepted} of={rows.length} meter={acceptedPct} sub={`${acceptedPct} percent of reports due`} />
+        <Stat label="Update requested" value={counts.returned} sub="Waiting on the organization" action={{ href: list({ bucket: "returned" }), label: "See requests" }} />
+        <Stat
+          label="Accepted"
+          value={
+            <>
+              {counts.accepted.toLocaleString("en-US")} <span className="text-lg font-semibold tracking-normal text-ink-2">of {rows.length.toLocaleString("en-US")}</span>
+            </>
+          }
+          meter={{ value: counts.accepted, max: rows.length, label: `${acceptedPct} percent accepted` }}
+          sub={`${acceptedPct} percent of reports due`}
+        />
       </section>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-12">
         <DistrictMapCard stats={stats} borough={borough} periodId={period.id} table={table} sort={sort} />
         <DistrictRanking stats={stats} borough={borough} periodId={period.id} />
       </div>
+
+      <section aria-labelledby="calendar-title" className="mb-4 rounded border border-line bg-white">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
+          <h2 id="calendar-title" className="text-xl font-bold leading-7 text-ink">
+            {calendar.fiscalYear.id} at a glance
+          </h2>
+          <p className="text-[15px] text-ink-2">New York City fiscal years run July 1 to June 30.</p>
+        </div>
+        <div className="px-5 py-5 sm:px-6">
+          <FiscalYearTimeline
+            fiscalYear={calendar.fiscalYear.id}
+            startsOn={calendar.fiscalYear.startsOn}
+            endsOn={calendar.fiscalYear.endsOn}
+            today={calendar.today}
+            marks={marksFromCalendar(calendar)}
+            variant="compact"
+            label={`${calendar.fiscalYear.id} reporting calendar`}
+          />
+        </div>
+      </section>
 
       <div className="grid gap-4 lg:grid-cols-12">
         <StatusStackChart
@@ -121,16 +153,16 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           className="lg:col-span-7"
         />
         <section aria-labelledby="overdue-title" className="min-w-0 rounded border border-line bg-white lg:col-span-5">
-          <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+          <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
             <h2 id="overdue-title" className="text-xl font-bold leading-7 text-ink">
               Longest overdue
             </h2>
-            <p className="mt-0.5 text-[15px] leading-[22px] text-[#3d4757]">Missing reports, oldest first.</p>
+            <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">Missing reports, oldest first.</p>
           </div>
           {overdue.length === 0 ? (
             <p className="px-6 py-8 text-[15px] text-muted">Nothing is overdue for {period.label}.</p>
           ) : (
-            <ul className="divide-y divide-[#e3e7ec]">
+            <ul className="divide-y divide-line-soft">
               {overdue.map((row) => (
                 <li key={row.assignmentId} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 px-5 py-3 sm:px-6">
                   <div className="min-w-0 flex-1 basis-56">
@@ -149,7 +181,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
               ))}
             </ul>
           )}
-          <div className="border-t border-[#e3e7ec] px-5 py-3 text-sm sm:px-6">
+          <div className="border-t border-line-soft px-5 py-3 text-sm sm:px-6">
             <Link href={list({ bucket: "missing" })} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
               See all {counts.missing} missing reports
             </Link>

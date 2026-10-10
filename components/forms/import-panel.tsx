@@ -136,12 +136,12 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
 
   return (
     <section className="mb-6 rounded border border-line bg-white" aria-labelledby={`${fileId}-title`}>
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
         <div className="min-w-0">
           <h2 id={`${fileId}-title`} className="text-xl font-bold leading-7 text-ink">
             Import from Word
           </h2>
-          <p className="mt-0.5 max-w-[70ch] text-[15px] leading-[22px] text-[#3d4757]">We read the document and suggest questions. Nothing is added to the form until you accept it.</p>
+          <p className="mt-0.5 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">We read the document and suggest questions. Nothing is added to the form until you accept it.</p>
         </div>
         <Button variant="ghost" size="sm" className="px-0" onClick={analysis ? discard : onClose} disabled={pending}>
           Cancel import
@@ -152,10 +152,10 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
 
         {!analysis ? (
           <form action={upload} className="space-y-4">
-            <label htmlFor={fileId} className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 border-dashed border-line-strong bg-navy-50/50 px-4 py-6 text-center hover:border-action">
-              <FileUp className="h-6 w-6 text-[#3d4757]" aria-hidden="true" />
+            <label htmlFor={fileId} className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 border-dashed border-line-strong bg-harbor-50/50 px-4 py-6 text-center hover:border-action">
+              <FileUp className="h-6 w-6 text-ink-2" aria-hidden="true" />
               <span className="text-[17px] font-bold text-ink">Upload a Word template (.docx)</span>
-              <span className="text-[15px] text-[#3d4757]">{fileName ? `Selected: ${fileName}` : "Choose a file or drag it here. Up to 2 MB."}</span>
+              <span className="text-[15px] text-ink-2">{fileName ? `Selected: ${fileName}` : "Choose a file or drag it here. Up to 2 MB."}</span>
               <input
                 id={fileId}
                 ref={fileRef}
@@ -188,7 +188,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                     const number = index + 1;
                     const active = focusedParagraph === number;
                     return (
-                      <li key={number} id={`${fileId}-p${number}`} className={cn("scroll-my-4 rounded px-2 py-1", active && "bg-navy-50 ring-1 ring-inset ring-navy-200")}>
+                      <li key={number} id={`${fileId}-p${number}`} className={cn("scroll-my-4 rounded px-2 py-1", active && "bg-harbor-50 ring-1 ring-inset ring-harbor-200")}>
                         <span className="num mr-2 select-none text-[13px] text-muted">{number}</span>
                         {active && focused ? <Highlighted paragraph={paragraph} quote={focused.field.citation.quote} /> : paragraph}
                       </li>
@@ -204,7 +204,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                     {reviewed} of {rows.length} reviewed
                   </p>
                 </div>
-                <span aria-hidden="true" className="mt-2 block h-2 overflow-hidden rounded-sm bg-navy-100">
+                <span aria-hidden="true" className="mt-2 block h-2 overflow-hidden rounded-sm bg-harbor-100">
                   <span className="block h-full bg-ok" style={{ width: `${rows.length ? Math.round((reviewed / rows.length) * 100) : 0}%` }} />
                 </span>
                 <ul className="mt-4 space-y-3">
@@ -234,7 +234,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                         key={row.id}
                         onFocusCapture={() => focusRow(row.id)}
                         onMouseEnter={() => focusRow(row.id)}
-                        className={cn("rounded border bg-white", !check.ok ? "border-bad" : focused?.id === row.id ? "border-navy-600 ring-2 ring-navy-600/15" : "border-line")}
+                        className={cn("rounded border bg-white", !check.ok ? "border-bad" : focused?.id === row.id ? "border-harbor-600 ring-2 ring-harbor-600/15" : "border-line")}
                       >
                         <div className="px-4 py-3">
                           <p className="flex flex-wrap items-center gap-2">
@@ -243,7 +243,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                             </Badge>
                             <span className="text-[15px] font-bold text-ink">{row.field.label || "Untitled question"}</span>
                           </p>
-                          <p className="mt-1.5 text-sm text-[#3d4757]">
+                          <p className="mt-1.5 text-sm text-ink-2">
                             {[row.field.type === "textarea" && row.field.max_words ? `${typeLabel}, up to ${row.field.max_words} words` : typeLabel, row.field.section_title || SECTION_LABEL[row.field.section] || row.field.section, row.field.required ? "Required" : "Optional"].join(" · ")}
                           </p>
                           {library ? (
@@ -295,7 +295,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
             </div>
 
             <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-line bg-white px-5 py-3 sm:-mx-6 sm:px-6">
-              <p className="text-[15px] text-[#3d4757]" aria-live="polite">
+              <p className="text-[15px] text-ink-2" aria-live="polite">
                 <span className="num">{kept.length}</span> accepted{left > 0 ? `, ${left} not reviewed yet (they will not be added)` : ""}.
                 {blocked > 0 ? ` ${blocked} accepted ${blocked === 1 ? "question needs" : "questions need"} fixing.` : ""}
               </p>

@@ -176,7 +176,7 @@ export function ActionsPanel({
   const common = { submissionId, lockVersion, onDone: setNotice };
   return (
     <section aria-labelledby="decision-title" className="rounded border border-line bg-white">
-      <div className="flex items-center justify-between gap-3 border-b border-[#e3e7ec] px-5 pb-4 pt-5">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 pb-4 pt-5">
         <h2 id="decision-title" className="text-xl font-bold leading-7 text-ink">
           Your decision
         </h2>
@@ -194,8 +194,8 @@ export function ActionsPanel({
         {status === "submitted" ? (
           <div className="space-y-3">
             <TransitionButton {...common} action="start_review" label="Start review" variant="primary" />
-            <p className="text-sm text-[#3d4757]">Starting review tells the organization their report is being reviewed.</p>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-[#e3e7ec] pt-3 text-sm">
+            <p className="text-sm text-ink-2">Starting review tells the organization their report is being reviewed.</p>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line-soft pt-3 text-sm">
               <span className="w-full text-muted">Or decide now:</span>
               <TransitionButton {...common} action="accept" label="Accept report" variant="ghost" />
               <RequestUpdate {...common} concerns={concerns} contactName={contactName} prefill={prefill} variant="ghost" />
@@ -207,7 +207,7 @@ export function ActionsPanel({
             <RequestUpdate {...common} concerns={concerns} contactName={contactName} prefill={prefill} />
           </div>
         ) : (
-          <p className="rounded bg-surface px-3 py-2.5 text-[15px] text-[#3d4757]">
+          <p className="rounded bg-surface px-3 py-2.5 text-[15px] text-ink-2">
             {status === "accepted"
               ? `This report is accepted${since ? `. ${since}` : ""}. You can still correct an answer or add a flag.`
               : status === "returned"
@@ -216,7 +216,7 @@ export function ActionsPanel({
           </p>
         )}
         {status !== "draft" ? (
-          <details className="group border-t border-[#e3e7ec] pt-3">
+          <details className="group border-t border-line-soft pt-3">
             <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-[15px] font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
               <Flag className="h-4 w-4" aria-hidden="true" />
               Add a manual flag
@@ -227,7 +227,7 @@ export function ActionsPanel({
           </details>
         ) : null}
         {correctable ? (
-          <details className="group border-t border-[#e3e7ec] pt-3">
+          <details className="group border-t border-line-soft pt-3">
             <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm text-[15px] font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
               <Pencil className="h-4 w-4" aria-hidden="true" />
               Correct an answer
@@ -238,7 +238,7 @@ export function ActionsPanel({
             </div>
           </details>
         ) : null}
-        <p className="border-t border-[#e3e7ec] pt-3 text-[13px] text-muted">Every action is recorded in the audit timeline under your name.</p>
+        <p className="border-t border-line-soft pt-3 text-[13px] text-muted">Every action is recorded in the audit timeline under your name.</p>
       </div>
     </section>
   );

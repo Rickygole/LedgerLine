@@ -66,7 +66,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
             <Badge tone={tone} icon={icon}>
               {statusLabel}
             </Badge>
-            <span className="text-[15px] text-[#3d4757]">
+            <span className="text-[15px] text-ink-2">
               Version <span className="num">{form.version}</span> · {statusLabel} · <span className="font-mono text-sm">{form.initiative_code}</span>
               {form.published_at ? ` · Published ${formatDate(form.published_at)}${form.published_by_name ? ` by ${form.published_by_name}` : ""}` : ""}
             </span>

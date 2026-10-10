@@ -46,7 +46,7 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
   }
 
   return (
-    <li ref={itemRef} id={`question-${question.key}`} className={`scroll-mt-4 rounded-lg border bg-white ${problems.length ? "border-bad" : selected ? "border-navy-600 ring-2 ring-navy-600/15" : "border-line"}`}>
+    <li ref={itemRef} id={`question-${question.key}`} className={`scroll-mt-4 rounded-lg border bg-white ${problems.length ? "border-bad" : selected ? "border-harbor-600 ring-2 ring-harbor-600/15" : "border-line"}`}>
       <div className="flex items-start gap-3 px-4 py-3">
         <span className="num mt-0.5 w-6 shrink-0 text-right text-sm text-muted">{index + 1}</span>
         <div className="min-w-0 flex-1">

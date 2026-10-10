@@ -55,11 +55,11 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
 
   return (
     <section aria-labelledby="map-title" className="min-w-0 rounded border border-line bg-white lg:col-span-7">
-      <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+      <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
         <h2 id="map-title" className="text-xl font-bold leading-7 text-ink">
           Missing reports by Council district
         </h2>
-        <p className="mt-0.5 text-[15px] leading-[22px] text-[#3d4757]">
+        <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">
           {mode === "sponsor"
             ? "Each district shows reports funded by its Council Member that are past due with nothing submitted."
             : "Each district shows reports from organizations located there that are past due with nothing submitted."}
@@ -79,7 +79,7 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
                       aria-current={selected ? "true" : undefined}
                       className={cn(
                         "inline-flex h-8 items-center rounded border px-3 text-sm font-semibold",
-                        selected ? "border-navy-900 bg-navy-900 text-white" : "border-line-strong bg-white text-ink hover:bg-navy-50"
+                        selected ? "border-harbor-900 bg-harbor-900 text-white" : "border-line-strong bg-white text-ink hover:bg-harbor-50"
                       )}
                     >
                       {b || "All boroughs"}
@@ -127,7 +127,7 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
           <p>{MAP_SOURCE}</p>
         </div>
 
-        <details id="district-table" open={table} className="group border-t border-[#e3e7ec] pt-3">
+        <details id="district-table" open={table} className="group border-t border-line-soft pt-3">
           <summary className="cursor-pointer list-none text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">View as a table</span>
             <span className="hidden group-open:inline">Hide the table</span>
@@ -135,7 +135,7 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
           <div className="mt-3 overflow-x-auto">
             <table className="w-full border-collapse text-[15px] leading-[22px]">
               <caption className="sr-only">Reports by Council district{borough ? ` in ${borough}` : ""}</caption>
-              <thead className="bg-navy-50 text-left text-sm font-semibold text-[#3d4757]">
+              <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
                 <tr>
                   <th scope="col" aria-sort={sort === "district" ? "ascending" : undefined} className="h-11 px-3">
                     <Link href={dashHref({ ...keep, table: "1", sort: "" }, "#district-table")} scroll={false} className="underline underline-offset-2">
@@ -155,7 +155,7 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
               </thead>
               <tbody>
                 {tableRows.map((d) => (
-                  <tr key={d.district} className="border-b border-[#e3e7ec] hover:bg-navy-50">
+                  <tr key={d.district} className="border-b border-line-soft hover:bg-harbor-50">
                     <th scope="row" className="h-11 whitespace-nowrap px-3 text-left font-semibold">
                       <Link href={districtHref(periodId, d.district, mode, d.missing)} className="text-link underline underline-offset-2 hover:text-link-hover">
                         District {d.district}
@@ -180,7 +180,7 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
 function SideTile({ title, tally, href }: { title: string; tally: Tally; href: string }) {
   return (
     <div className="rounded border border-line px-4 py-3">
-      <p className="text-sm font-medium text-[#3d4757]">{title}</p>
+      <p className="text-sm font-medium text-ink-2">{title}</p>
       <p className="text-xl font-extrabold leading-7 text-ink">
         <span className="num">{tally.missing}</span> missing
       </p>
@@ -203,16 +203,16 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
   const allHref = dashHref({ period: periodId, map: mode === "sponsor" ? "" : mode, borough, table: "1", sort: "missing" }, "#district-table");
   return (
     <section aria-labelledby="rank-title" className="flex min-w-0 flex-col rounded border border-line bg-white lg:col-span-5">
-      <div className="border-b border-[#e3e7ec] px-5 pb-4 pt-5 sm:px-6">
+      <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
         <h2 id="rank-title" className="text-xl font-bold leading-7 text-ink">
           Districts with the most missing reports
         </h2>
-        <p className="mt-0.5 text-[15px] leading-[22px] text-[#3d4757]">{borough ? `${borough} only. ` : ""}Select a district to see its organizations and send reminders.</p>
+        <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{borough ? `${borough} only. ` : ""}Select a district to see its organizations and send reminders.</p>
       </div>
       {ranked.length === 0 ? (
         <p className="px-6 py-8 text-[15px] text-muted">No reports were due in {borough ? `${borough} districts` : "any district"} for this period.</p>
       ) : (
-        <ol className="divide-y divide-[#e3e7ec]">
+        <ol className="divide-y divide-line-soft">
           {ranked.map((d) => (
             <li key={d.district} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_110px_64px] sm:px-6">
               <div className="min-w-0">
@@ -223,8 +223,8 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
                   {d.member ?? "No Council Member on file"} · {d.boroughs}
                 </p>
               </div>
-              <span aria-hidden="true" className="col-span-2 row-start-2 block h-2 overflow-hidden rounded-sm bg-[#eef2f6] sm:col-span-1 sm:col-start-2 sm:row-start-1">
-                <span className="block h-full bg-[#b23a12]" style={{ width: `${d.due === 0 ? 0 : Math.round((d.missing / d.due) * 100)}%` }} />
+              <span aria-hidden="true" className="col-span-2 row-start-2 block h-2 overflow-hidden rounded-sm bg-geo-0 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+                <span className="block h-full bg-geo-4" style={{ width: `${d.due === 0 ? 0 : Math.round((d.missing / d.due) * 100)}%` }} />
               </span>
               <p className="num whitespace-nowrap text-right text-[15px] text-ink sm:col-start-3 sm:row-start-1">
                 <span className="font-bold">{d.missing}</span> of {d.due}

@@ -134,11 +134,11 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
 
       {!published ? (
         <section aria-labelledby="no-form-title" className="mb-6 rounded border border-line bg-white px-5 py-6 sm:px-6">
-          <FileText className="h-6 w-6 text-[#3d4757]" aria-hidden="true" />
+          <FileText className="h-6 w-6 text-ink-2" aria-hidden="true" />
           <h2 id="no-form-title" className="mt-2 text-xl font-bold leading-7 text-ink">
             This initiative has no report form yet.
           </h2>
-          <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-[#3d4757]">
+          <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">
             Funded organizations cannot report until a form is published. Import the Word template the Council has used so far, or start from the standard questions every initiative shares.
           </p>
           <div className="mt-4">
