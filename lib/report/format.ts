@@ -126,3 +126,7 @@ export function savedAtLabel(value: string, today: string = todayInNewYork()): s
   const when = new Date(value);
   return isToday(when, today) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
 }
+
+export function questionLabel(label: string): string {
+  return label.replace(/\s*\(optional\)\s*$/i, "");
+}

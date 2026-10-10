@@ -20,11 +20,15 @@ export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<H
   );
 });
 
-export function Label({ htmlFor, children, required, className }: { htmlFor?: string; children: React.ReactNode; required?: boolean; className?: string }) {
+export function OptionalMark() {
+  return <span className="font-normal text-muted"> (optional)</span>;
+}
+
+export function Label({ htmlFor, children, optional, className }: { htmlFor?: string; children: React.ReactNode; required?: boolean; optional?: boolean; className?: string }) {
   return (
     <label htmlFor={htmlFor} className={cn("mb-1 block text-sm font-semibold text-ink", className)}>
       {children}
-      {required ? <span className="ml-1 font-normal text-muted">(required)</span> : null}
+      {optional ? <OptionalMark /> : null}
     </label>
   );
 }
