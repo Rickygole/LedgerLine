@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FlagBadge, StateBadge } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
+import { daysBetween, toIsoDate } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
@@ -18,7 +19,7 @@ export function dueNote(row: Pick<ReportRow, "status" | "daysPastDue" | "submitt
     return { text: `Due in ${days} ${unit}`, tone: row.daysPastDue > -14 ? "warn" : "muted" };
   }
   if (row.submittedAt && row.daysPastDue > 0) {
-    const late = Math.round((Date.parse(row.submittedAt) - Date.parse(`${row.dueOn}T23:59:59-04:00`)) / 86_400_000);
+    const late = daysBetween(row.dueOn, toIsoDate(new Date(row.submittedAt)));
     if (late > 0) return { text: `Submitted ${late} ${late === 1 ? "day" : "days"} late`, tone: "muted" };
   }
   return null;
