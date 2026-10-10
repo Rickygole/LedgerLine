@@ -68,7 +68,7 @@ export function SubmissionFilters({
           <input key={k} type="hidden" name={k} value={v} />
         ))}
       {filters.by && filters.district ? <input type="hidden" name="by" value={filters.by} /> : null}
-      <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]" : top === 4 ? "lg:grid-cols-[2fr_1fr_1fr_1fr]" : "lg:grid-cols-3"}`}>
+      <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(10rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1.2fr)_minmax(13.75rem,1.2fr)]" : top === 4 ? "lg:grid-cols-[minmax(0,2fr)_minmax(10rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(10rem,1fr)_minmax(10rem,1fr)]"}`}>
         {has("q") ? (
           <div className="min-w-0 sm:col-span-2 lg:col-span-1">
             <label htmlFor="f-q" className="mb-1 block text-sm font-semibold text-ink">
@@ -114,8 +114,7 @@ export function SubmissionFilters({
               const name = members.find((m) => m.district === d)?.name;
               return (
                 <option key={d} value={d}>
-                  {d}
-                  {name ? ` · ${name}` : ""}
+                  {name ? `${d} · ${name}` : String(d)}
                 </option>
               );
             })}
@@ -132,77 +131,77 @@ export function SubmissionFilters({
           </Select>
         ) : null}
       </div>
-      {moreCount > 0 ? (
-        <details className="group mt-3" open={moreApplied > 0}>
-          <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover [&::-webkit-details-marker]:hidden">
-            <span className="group-open:hidden">More filters ({moreCount})</span>
-            <span className="hidden group-open:inline">Fewer filters</span>
-            {moreApplied > 0 ? <span className="no-underline text-muted">, {moreApplied} applied</span> : null}
-          </summary>
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {has("initiative") ? (
-              <div className="min-w-0">
-                <label htmlFor="f-initiative" className="mb-1 block text-sm font-semibold text-ink">
-                  Initiative
-                </label>
-                <input id="f-initiative" name="initiative" defaultValue={filters.initiative} placeholder="Name or code" className={control} onBlur={(e) => e.currentTarget.value !== filters.initiative && submit()} />
-              </div>
-            ) : null}
-            {has("category") ? (
-              <Select id="f-category" name="category" label="Category" value={filters.category} onChange={submit}>
-                <option value="">All categories</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </Select>
-            ) : null}
-            {has("funding") ? (
-              <Select id="f-funding" name="funding" label="Funding source" value={filters.funding} onChange={submit}>
-                <option value="">All funding sources</option>
-                {FUNDING_SOURCES.map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label}
-                  </option>
-                ))}
-              </Select>
-            ) : null}
-            {has("contract") ? (
-              <Select id="f-contract" name="contract" label="Contract status" value={filters.contract} onChange={submit}>
-                <option value="">All contract statuses</option>
-                {CONTRACT_STATUSES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </Select>
-            ) : null}
-            {has("agency") ? (
-              <Select id="f-agency" name="agency" label="Administering agency" value={filters.agency} onChange={submit}>
-                <option value="">All agencies</option>
-                {agencies.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </Select>
-            ) : null}
-            {has("flag") ? (
-              <Select id="f-flag" name="flag" label="Flag" value={filters.flag} onChange={submit}>
-                <option value="">All reports</option>
-                <option value="any">Any flag</option>
-                {FLAG_ORDER.map((f) => (
-                  <option key={f} value={f}>
-                    {FLAG_LABEL[f]}
-                  </option>
-                ))}
-              </Select>
-            ) : null}
-          </div>
-        </details>
-      ) : null}
-      <div className="mt-3 flex flex-wrap items-center gap-4">
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+        {moreCount > 0 ? (
+          <details className="group min-w-0 flex-1" open={moreApplied > 0}>
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover [&::-webkit-details-marker]:hidden">
+              <span className="group-open:hidden">More filters ({moreCount})</span>
+              <span className="hidden group-open:inline">Fewer filters</span>
+              {moreApplied > 0 ? <span className="no-underline text-muted">, {moreApplied} applied</span> : null}
+            </summary>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {has("initiative") ? (
+                <div className="min-w-0">
+                  <label htmlFor="f-initiative" className="mb-1 block text-sm font-semibold text-ink">
+                    Initiative
+                  </label>
+                  <input id="f-initiative" name="initiative" defaultValue={filters.initiative} placeholder="Name or code" className={control} onBlur={(e) => e.currentTarget.value !== filters.initiative && submit()} />
+                </div>
+              ) : null}
+              {has("category") ? (
+                <Select id="f-category" name="category" label="Category" value={filters.category} onChange={submit}>
+                  <option value="">All categories</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
+              {has("funding") ? (
+                <Select id="f-funding" name="funding" label="Funding source" value={filters.funding} onChange={submit}>
+                  <option value="">All funding sources</option>
+                  {FUNDING_SOURCES.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
+              {has("contract") ? (
+                <Select id="f-contract" name="contract" label="Contract status" value={filters.contract} onChange={submit}>
+                  <option value="">All contract statuses</option>
+                  {CONTRACT_STATUSES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
+              {has("agency") ? (
+                <Select id="f-agency" name="agency" label="Administering agency" value={filters.agency} onChange={submit}>
+                  <option value="">All agencies</option>
+                  {agencies.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
+              {has("flag") ? (
+                <Select id="f-flag" name="flag" label="Flag" value={filters.flag} onChange={submit}>
+                  <option value="">All reports</option>
+                  <option value="any">Any flag</option>
+                  {FLAG_ORDER.map((f) => (
+                    <option key={f} value={f}>
+                      {FLAG_LABEL[f]}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
+            </div>
+          </details>
+        ) : null}
         <button type="submit" className="sr-only focus:not-sr-only focus:text-sm focus:font-semibold focus:text-link focus:underline">
           Apply filters
         </button>

@@ -11,7 +11,7 @@ import { contractLabel, fundingLabel } from "@/lib/finance/awards";
 import { loadCouncilMembers } from "@/lib/finance/district-stats";
 import { loadFilterOptions, loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { activeFilterCount, filtersToParams, FLAG_LABEL, hrefWith, parseFilters } from "@/lib/finance/review/filters";
-import { applyFilters, countBuckets, isExportable, paginate, sortRows } from "@/lib/finance/review/derive";
+import { applyFilters, countBuckets, paginate, sortByUrgency } from "@/lib/finance/review/derive";
 import type { Filters } from "@/lib/finance/review/types";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 
@@ -28,17 +28,17 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
 
-  const { periods, period, filters, rows, options, members } = await withClaims(user.id, async (tx) => {
+  const { periods, filters, rows, options, members } = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const filters = parseFilters(raw, periods);
     const period = periods.find((p) => p.id === filters.period)!;
     const rows = await loadReportRows(tx, period);
     const options = await loadFilterOptions(tx);
     const members = await loadCouncilMembers(tx);
-    return { periods, period, filters, rows, options, members };
+    return { periods, filters, rows, options, members };
   });
 
-  const matched = sortRows(applyFilters(rows, filters));
+  const matched = sortByUrgency(applyFilters(rows, filters));
   const bucketCounts = countBuckets(applyFilters(rows, filters, ["bucket"]));
   const paged = paginate(matched, filters.page);
   const base = "/finance/submissions";
@@ -47,7 +47,6 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
     params.set("format", format);
     return `/api/export?${params.toString()}`;
   };
-  const withSubmission = matched.filter((r) => isExportable(r.status)).length;
   const clearHref = hrefWith(base, {}, { period: filters.period });
   const total = Object.values(bucketCounts).reduce((a, b) => a + b, 0);
   const allMembers = [...members.entries()].map(([district, name]) => ({ district, name }));
@@ -80,7 +79,6 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0 flex-1 basis-80">
             <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">Submissions</h1>
-            <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">Every award and reporting period for {period.label}, including organizations that have not started.</p>
           </div>
           <ExportMenu
             items={[
@@ -125,7 +123,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         <Pagination page={paged.page} pages={paged.pages} from={paged.from} to={paged.to} total={paged.total} hrefFor={(p) => hrefWith(base, filters, { page: p }, { page: true })} />
       </Card>
       <p className="mt-3 text-sm text-muted">
-        <span className="num">{matched.length}</span> {matched.length === 1 ? "row matches" : "rows match"}. Exports include the {withSubmission} {withSubmission === 1 ? "report" : "reports"} in these results that have been submitted. Drafts and reports returned to the organization are left out.
+        <span className="num">{matched.length.toLocaleString("en-US")}</span> {matched.length === 1 ? "report" : "reports"}
       </p>
     </>
   );

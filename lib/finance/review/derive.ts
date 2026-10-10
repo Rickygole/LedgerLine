@@ -188,6 +188,14 @@ export function sortRows(rows: ReportRow[]): ReportRow[] {
   return [...rows].sort((a, b) => a.orgName.localeCompare(b.orgName) || a.initiativeName.localeCompare(b.initiativeName));
 }
 
+const URGENCY: Record<Bucket, number> = { missing: 0, submitted: 1, returned: 2, in_review: 3, outstanding: 4, accepted: 5 };
+
+export function sortByUrgency(rows: ReportRow[]): ReportRow[] {
+  return [...rows].sort(
+    (a, b) => URGENCY[a.bucket] - URGENCY[b.bucket] || a.dueOn.localeCompare(b.dueOn) || (a.submittedAt ?? "").localeCompare(b.submittedAt ?? "") || b.award - a.award || a.orgName.localeCompare(b.orgName)
+  );
+}
+
 export function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
   const map = new Map<string, T[]>();
   for (const item of items) {
