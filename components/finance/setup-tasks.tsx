@@ -94,7 +94,7 @@ export function SetupTaskList({ status, today }: { status: SetupStatus; today: s
             {fy} setup
           </h2>
         </div>
-        <p className="num text-[15px] text-ink-2">{done} of 4 tasks complete</p>
+        <p className="num text-[15px] text-ink-2">{done} of {tasks.length} tasks complete</p>
       </div>
       <ol className="divide-y divide-line-soft">
         {tasks.map((task, i) => (
