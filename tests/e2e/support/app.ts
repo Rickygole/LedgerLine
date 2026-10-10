@@ -30,11 +30,25 @@ export async function signIn(page: Page, email: string) {
   await page.waitForURL(/\/(portal|finance)/);
 }
 
+export const REPORT_URL = /\/portal\/reports\/[0-9a-f-]{36}(\?.*)?$/;
+
+export function stepLink(page: Page, title: string) {
+  const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return page.getByRole("navigation", { name: "Report sections" }).getByRole("link", { name: new RegExp(`^Step \\d+: ${escaped},`) });
+}
+
+export async function gotoStep(page: Page, title: string) {
+  const link = stepLink(page, title);
+  if ((await link.getAttribute("aria-current")) !== "step") await link.click();
+  await expect(link).toHaveAttribute("aria-current", "step");
+  await expect(page.locator("#step-heading")).toHaveText(title);
+}
+
 export async function openOverdueDraft(page: Page) {
   await page.goto("/portal");
   await page.getByRole("link", { name: "Continue report" }).first().click();
   await page.waitForURL(/\/portal\/reports\/[0-9a-f-]{36}$/);
-  await expect(page.getByRole("button", { name: "Submit report" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Report sections" })).toBeVisible();
   return page.url().split("/").pop() as string;
 }
 
@@ -52,19 +66,27 @@ const FILL: Record<string, string> = {
 };
 
 export async function fillRequiredAnswers(page: Page) {
-  for (const [id, value] of Object.entries(FILL)) {
-    const field = page.locator(`#${id}`);
-    if ((await field.count()) === 0) continue;
-    if ((await field.inputValue()) === "") await field.fill(value);
+  for (const step of ["Organization and contact", "Program performance", "Narrative"]) {
+    await gotoStep(page, step);
+    for (const [id, value] of Object.entries(FILL)) {
+      const field = page.locator(`#${id}`);
+      if ((await field.count()) === 0) continue;
+      if ((await field.inputValue()) === "") await field.fill(value);
+    }
+    if (step === "Program performance") await fillPerformanceChoices(page);
   }
+  await certify(page);
+}
+
+async function fillPerformanceChoices(page: Page) {
   const delivery = page.locator("#q-delivery_model");
   if ((await delivery.count()) && (await delivery.inputValue()) === "") await delivery.selectOption("In person");
   const youth = page.getByRole("radio", { name: "No", exact: true });
   if ((await youth.count()) && !(await youth.first().isChecked())) await youth.first().check();
-  await certify(page);
 }
 
 export async function certify(page: Page) {
+  await gotoStep(page, "Review and submit");
   const box = page.getByRole("checkbox", { name: /certify this report/i });
   if (!(await box.isChecked())) await box.check();
   const name = page.getByLabel("Certifier name");
@@ -74,6 +96,7 @@ export async function certify(page: Page) {
 }
 
 export async function setBudget(page: Page, lines: { category: "PS" | "OTPS"; description: string; amount: string; actual?: string }[]) {
+  await gotoStep(page, "Budget");
   const existing = await page.getByRole("button", { name: /^Remove line/ }).count();
   for (let i = 0; i < existing; i++) await page.getByRole("button", { name: "Remove line 1" }).first().click();
   for (const [index, line] of lines.entries()) {
@@ -96,6 +119,7 @@ export async function submitOverdueDraft(page: Page): Promise<string> {
     { category: "OTPS", description: "Program supplies", amount: "25000" },
   ]);
   await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
+  await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
   await page.waitForURL(/\/submitted$/);
   return id;
