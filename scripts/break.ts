@@ -3,7 +3,7 @@ import { chromium, type Browser, type Page } from "@playwright/test";
 import { Client } from "pg";
 import { startReport } from "../lib/report/create";
 import { checkUpload } from "../lib/storage";
-import { fillRequiredAnswers, PEOPLE, setBudget, signIn } from "../tests/e2e/support/app";
+import { fillRequiredAnswers, gotoStep, PEOPLE, setBudget, signIn } from "../tests/e2e/support/app";
 
 type Outcome = { refused: boolean; plain: string; raw: string };
 type Attack = { label: string; run: () => Promise<Outcome> };
@@ -128,6 +128,7 @@ async function main() {
               { category: "PS", description: "Staff", amount: String(ps) },
               { category: "OTPS", description: "Supplies", amount: String(otps) },
             ]);
+            await gotoStep(page, "Review and submit");
             await page.getByRole("button", { name: "Submit report" }).click();
             const text = await alertText(page);
             const after = (await owner.query("SELECT status FROM submission WHERE id = $1", [draft.id])).rows[0].status;
@@ -195,6 +196,7 @@ async function main() {
         run: () =>
           withMariaPage(async (page) => {
             await page.goto(`/portal/reports/${draft.id}`);
+            await gotoStep(page, "Review and submit");
             await page.getByRole("button", { name: "Submit report" }).click();
             const text = await alertText(page);
             const after = (await owner.query("SELECT status FROM submission WHERE id = $1", [draft.id])).rows[0].status;
@@ -212,6 +214,7 @@ async function main() {
         run: () =>
           withMariaPage(async (page) => {
             await page.goto(`/portal/reports/${draft.id}`);
+            await gotoStep(page, "Attachments");
             await page.locator("#attachment-input").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]) });
             const message = page.getByText(/over the 25\.0 MB limit for one file/).first();
             await message.waitFor({ timeout: 15_000 });
