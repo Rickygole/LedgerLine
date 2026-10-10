@@ -122,7 +122,7 @@ Run from the repository root with the app running. The default port is 3105, so 
 
 | Rule | Command | What the screen prints |
 | --- | --- | --- |
-| BR-022 budget must equal the award | `pnpm break BR-022` | `REFUSED: A budget of $68,000.00 against an award of $85,000.00 was refused at submit and the report stayed a draft.` and `REFUSED: A direct status change by the organization's own account was refused by the database.` |
+| BR-022 budget must equal the award | `pnpm break BR-022` | `REFUSED: A budget of $68,000.00 against an award of $85,000.00 was refused at submit and the report stayed a draft.` and `REFUSED: A submit sent straight to the database with a short budget was refused by the database itself, with no application code involved.` |
 | BR-010 organizations are isolated | `pnpm break BR-010` | `REFUSED: Another organization's report address returned not found to Maria.`, `REFUSED: Row-level security showed Maria none of the other organizations' reports.`, `REFUSED: A storage path under another organization's EIN was refused.` |
 | BR-021 required answers | `pnpm break BR-021` | `REFUSED: The empty report was refused with 14 problems listed, and it stayed a draft.` |
 | BR-012 25 MB file limit | `pnpm break BR-012` | `REFUSED: A 26 MB file was refused before it was sent, with its size and the limit stated.` and `REFUSED: The server upload check refused a 31 MB file and stated the size.` |
@@ -130,7 +130,7 @@ Run from the repository root with the app running. The default port is 3105, so 
 
 Each attempt prints a raw line under the plain one (for example `42501 permission denied for table audit_event`). The last line reads "All N attempts on BR-0xx were refused."
 
-Prepared answer to "who can change the audit log": "The database owner can drop the guard, which is how I reset the data between rehearsals, and that reset is logged. Production adds an Azure immutability policy plus database audit logging."
+Prepared answer to "who can change the audit log": "The database owner can drop the guard, which is how I reset the data between rehearsals, and each reset is recorded in the demo_reset table, which the owner can also edit. Production adds an Azure immutability policy plus database audit logging."
 
 Engineers only: `pnpm test:rule BR-022` runs the tests tagged with the rule. It reseeds the database when it runs the browser part, so run `pnpm preset fresh` afterward.
 

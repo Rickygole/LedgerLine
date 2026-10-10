@@ -1,4 +1,5 @@
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
+import { sslFor } from "./db-ssl";
 
 declare global {
   var ledgerPool: Pool | undefined;
@@ -12,7 +13,7 @@ function pool(): Pool {
       connectionString,
       max: Number(process.env.DB_POOL_MAX ?? 3),
       idleTimeoutMillis: 10_000,
-      ssl: connectionString.includes("localhost") ? undefined : true,
+      ssl: sslFor(connectionString),
     });
   }
   return globalThis.ledgerPool;
