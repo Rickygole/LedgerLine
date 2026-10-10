@@ -1,6 +1,6 @@
 # LedgerLine
 
-LedgerLine is a proof of concept for the NYC Council Initiative Reporting System RFP, built for Estrada Consulting. It is not an official NYC system. Every organization, person, award and report in it is synthetic.
+LedgerLine is a reporting system built for Estrada Consulting for the NYC Council Initiative Reporting System RFP. It is not an official NYC system. The seed script loads a full set of organizations, initiatives, people and reports so every screen has data to work with.
 
 Funded organizations file mid-year and year-end reports on the Council funding they receive. Council Finance staff track who is on time, late or missing, review what comes in, ask for changes, and export the results.
 
@@ -21,7 +21,7 @@ You need Node 22, pnpm 10 and Docker.
    docker run -d --name ledgerline-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=ledgerline -p 5432:5432 postgres:16
    ```
 
-2. Copy `.env.example` to `.env.local` and replace the placeholders. The minimum is `DB_OWNER_URL`, `APP_SERVER_PASSWORD` (24 or more URL-safe characters), `APP_DATABASE_URL` (same password), `AUTH_SECRET`, `GATE_COOKIE_SECRET` and `GATE_PASSCODE`. Set `PERSONA_PASSWORD` for the demo users; on a local database the seed has a default if you leave it out, and it refuses that default on any other host. `DEMO_TODAY` pins the date the app treats as today.
+2. Copy `.env.example` to `.env.local` and replace the placeholders. The minimum is `DB_OWNER_URL`, `APP_SERVER_PASSWORD` (24 or more URL-safe characters), `APP_DATABASE_URL` (same password), `AUTH_SECRET`, `GATE_COOKIE_SECRET` and `GATE_PASSCODE`. Set `PERSONA_PASSWORD` for the seeded users; on a local database the seed has a default if you leave it out, and it refuses that default on any other host. `DEMO_TODAY` pins the date the app treats as today.
 
 3. Install, migrate, give the app role a login, and seed:
 
@@ -49,8 +49,8 @@ Scripts:
 | `pnpm db:role` | Set the `app_server` password from `APP_SERVER_PASSWORD` and allow it to log in |
 | `pnpm db:seed` | Erase and reload the starting data set on the database in `DB_OWNER_URL` |
 | `pnpm db:seed:live` | Reseed the hosted database. Reads the owner connection string from the first line of `.env.neon` and `NEON_PERSONA_PASSWORD` from `.env.neon-app`, prints the host, and asks you to type it before it changes anything |
-| `pnpm preset <scene>` | Reset one demo scene: `fresh` (full reseed), `maria` (her overdue draft back to half filled with an empty budget), `daniel` (one of her reports under review with an open flag), `priya` (remove initiatives created since the last reseed). Add `--live` to target the hosted database with the same host confirmation. It uses the owner connection and is not part of the deployed app |
-| `pnpm demo-desk` | Write the sample budget, oversize PDF and Word files used in the demo to `fixtures/demo-desk/` (git ignored). `--award <dollars>` overrides the award it sizes the budget files to |
+| `pnpm preset <scene>` | Reset one walkthrough scene: `fresh` (full reseed), `maria` (her overdue draft back to half filled with an empty budget), `daniel` (one of her reports under review with an open flag), `priya` (remove initiatives created since the last reseed). Add `--live` to target the hosted database with the same host confirmation. It uses the owner connection and is not part of the deployed app |
+| `pnpm demo-desk` | Write the budget, oversize PDF and Word files used in the walkthrough to `fixtures/demo-desk/` (git ignored). `--award <dollars>` overrides the award it sizes the budget files to |
 | `pnpm break <rule>` | Try to defeat one business rule against the running app and print each refusal. Rules: BR-022, BR-010, BR-021, BR-012, BR-019, US-057 |
 | `pnpm test:rule <id>` | Run the tests tagged with one requirement ID |
 | `pnpm cron:reminders` | Call the reminders route of a running app |
@@ -68,7 +68,7 @@ The reminders job is the route `/api/cron/reminders`. On Vercel the schedule in 
 - **Live eval** (`tests/live`): `pnpm eval:live` scores a local Ollama model. It is not part of `pnpm test`.
 - **Evidence**: `pnpm evidence` runs Vitest and Playwright and then writes `app/trust/evidence.json` from the results (see Requirements traceability).
 
-CI (`.github/workflows/ci.yml`) runs migrations, role setup and seed, lint, type check, the Vitest suites, a build, the Playwright suite and the evidence script against a Postgres service, and uploads `reports` and `app/trust/evidence.json` as an artifact. It deploys to Vercel only from main and only if the repository variable `DEPLOY_ENABLED` is `true`. `docs/runbook.md` is the script for the Wednesday demonstration.
+CI (`.github/workflows/ci.yml`) runs migrations, role setup and seed, lint, type check, the Vitest suites, a build, the Playwright suite and the evidence script against a Postgres service, and uploads `reports` and `app/trust/evidence.json` as an artifact. It deploys to Vercel only from main and only if the repository variable `DEPLOY_ENABLED` is `true`. `docs/runbook.md` is the 10 minute walkthrough.
 
 ## Deployment
 
@@ -89,7 +89,7 @@ Next.js 15 (App Router, server components and server actions), React 19, Tailwin
 
 **Status changes go through one function.** A submission changes status only through `app.transition_submission`, which checks the action, the caller's role and a lock version, and writes the audit row in the same transaction. Two people acting on the same report cannot both win: the second gets a stale-version error and is shown the current state. Corrections and form publishing have their own functions.
 
-**History is append-only.** Triggers on the audit and revision tables reject UPDATE, DELETE and TRUNCATE for every role, including the table owner. Each submit and each correction stores a full snapshot with its SHA-256 hash. The demo preset scripts switch the triggers off while they reset a scene, as the table owner, and record each reset in `demo_reset`.
+**History is append-only.** Triggers on the audit and revision tables reject UPDATE, DELETE and TRUNCATE for every role, including the table owner. Each submit and each correction stores a full snapshot with its SHA-256 hash. The preset scripts switch the triggers off while they reset a scene, as the table owner, and record each reset in `demo_reset`.
 
 **Email goes through an outbox.** Messages are written to the `outbox` table in the same transaction as the action that caused them, so a message exists exactly when its action committed. A dispatcher in `lib/outbox-dispatch.ts` delivers them through Resend when it is configured; otherwise they stay recorded.
 
@@ -111,7 +111,7 @@ lib/          db, auth, session, email, outbox-dispatch, storage, throttle, csp
 db/migrations ordered SQL: roles, tables, audit, access policies, workflow, throttle, outbox
 scripts/      migrate, role-password, seed*, preset(s), trust, break, test-rule, make-templates, make-demo-desk, run-reminders
 tests/        unit/, sql/, eval/, e2e/, live/
-fixtures/     templates/ (sample Word files for form import)
+fixtures/     templates/ (Word files for form import)
 patches/      pnpm patch for Next.js
 vendor/       vendored xlsx tarball
 docs/         runbook, azure, ai-eval
@@ -131,7 +131,7 @@ docs/         runbook, azure, ai-eval
 - Every validation rule is re-checked on the server when data is written. Uploads are limited to 25 MB per file, checked by type and, for Office files, by content. Spreadsheet exports guard against formula injection.
 - The cron route compares its bearer token in constant time.
 - The database connection requires TLS for any host that is not localhost.
-- A hosted database cannot be seeded with the default demo password.
+- A hosted database cannot be seeded with the default seed password.
 - `docs/azure.md` lists the controls the code implements against NIST SP 800-53 and the ones it does not.
 
 ## Requirements traceability
@@ -161,7 +161,7 @@ The council district and borough shapes in `lib/geo` come from NYC Open Data, pu
 - Email goes out through Resend only when it is configured. Otherwise messages are recorded in the outbox and shown as Recorded.
 - Live AI was evaluated with local Ollama models on three templates and five note cases (`docs/ai-eval.md`), not with a hosted API. The deployed site has no model.
 - Azure Government is the production path I would propose for a real engagement (`docs/azure.md`). This is not deployed there and has no compliance review behind it.
-- Staff sign in with a password and no second factor. The shared passcode gate is a demo measure.
+- Staff sign in with a password and no second factor. The shared passcode gate is an interim access measure.
 - Autosave waits 1.2 seconds after the last edit. Leaving the page before the Saved label appears can lose that edit.
 - Word form import accepts .docx files up to 2 MB.
 - The district and borough maps are for display only and cannot locate an address.
