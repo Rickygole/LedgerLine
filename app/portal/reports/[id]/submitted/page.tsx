@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { DownloadPdfLink } from "@/components/report/download-pdf";
 import { ButtonLink } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
@@ -87,6 +88,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
         <ButtonLink href={`/portal/reports/${id}`} variant="secondary">
           View or print the submitted report
         </ButtonLink>
+        <DownloadPdfLink href={`/portal/reports/${id}/pdf`} />
         <Link href="/portal" className="text-base font-semibold text-link underline underline-offset-2 hover:text-link-hover">
           Back to my reports
         </Link>

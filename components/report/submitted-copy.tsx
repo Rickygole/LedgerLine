@@ -7,6 +7,7 @@ import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "./budget-table";
 import type { FormDefinition } from "@/lib/rules/types";
 import type { Snapshot } from "@/lib/snapshot";
+import { DownloadPdfLink } from "./download-pdf";
 import { PrintButton } from "./print-button";
 
 export type RevisionView = {
@@ -37,7 +38,12 @@ export function SubmittedCopy({
     <div className="space-y-6">
       <style>{`@media print { header, footer, [data-print-hide] { display: none !important; } main { padding: 0 !important; max-width: none !important; } }`}</style>
       <Card>
-        <CardHeader title="Submitted copy" actions={<PrintButton />} />
+        <CardHeader title="Submitted copy" actions={
+            <div className="flex flex-wrap gap-3">
+              <DownloadPdfLink href={`/portal/reports/${submissionId}/pdf`} />
+              <PrintButton />
+            </div>
+          } />
         <CardBody>
           <DescriptionList
             columns={3}
