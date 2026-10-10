@@ -97,19 +97,19 @@ const MILESTONES: Milestone[] = [
       "Build initiative forms from the question library, load organizations and awards, and set reminder schedules.",
   },
   {
-    when: "Dec 2026",
-    title: "Security review and environment ready",
-    detail:
-      "Production environment built in Azure Government, controls mapped to NIST 800-53, and the breach procedure agreed.",
-  },
-  {
-    when: "Jan 4 to Jan 15, 2027",
-    title: "User acceptance testing",
+    when: "Nov to Dec 2026",
+    title: "Testing and revisions",
     detail:
       "Finance staff and a group of funded organizations work through real scenarios. Defects are logged, fixed and retested before sign off.",
   },
   {
-    when: "Jan 11 to Jan 22, 2027",
+    when: "Dec 2026",
+    title: "Security review and environment ready",
+    detail:
+      "Production environment built in the government cloud the Council selects, controls mapped to NIST 800-53, and the breach procedure agreed.",
+  },
+  {
+    when: "Dec 2026 to Jan 2027",
     title: "Training",
     detail:
       "Role based sessions for Finance administrators, analysts and viewers, and live and recorded walkthroughs for funded organizations.",
