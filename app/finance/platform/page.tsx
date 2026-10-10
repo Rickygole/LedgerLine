@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, Clock, Download, FileLock2, Headset, Server, ShieldAlert, Users2 } from "lucide-react";
 import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime, nowDate } from "@/lib/dates";
 import { platformFacts } from "@/lib/lifecycle/platform";
 import { getHealth, hostingInfo } from "@/lib/ops/health";
 import { listSupport, supportState } from "@/lib/ops/support";
@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { ButtonLink } from "@/components/ui/button";
+import { formatCount } from "@/lib/rules/money";
 import { Stat } from "@/components/ui/stat";
 import { Table, THead, TH, TR, TD } from "@/components/ui/table";
 import { Timeline, type Milestone } from "@/components/finance/lifecycle/timeline";
@@ -92,7 +93,7 @@ function Ids({ ids }: { ids: string[] }) {
 export default async function PlatformPage() {
   const user = await requireUser(FINANCE_ROLES);
   const isAdmin = user.role === "finance_admin";
-  const now = new Date();
+  const now = nowDate();
   const { facts, ops } = await withClaims(user.id, async (tx) => {
     const facts = await platformFacts(tx);
     if (!isAdmin) return { facts, ops: null };
@@ -169,7 +170,7 @@ export default async function PlatformPage() {
             <div>
               <h3 className="mb-2 text-sm font-semibold">NIST 800-53 control mapping</h3>
               <div className="overflow-hidden rounded-md border border-line">
-                <Table>
+                <Table density="compact">
                   <THead>
                     <tr>
                       <TH>Control</TH>
@@ -186,8 +187,8 @@ export default async function PlatformPage() {
                         <TD className="max-w-xl text-muted">{c.how}</TD>
                         <TD className="text-xs">
                           {c.id === "AC-3" ? `${facts.protectedTables} of ${facts.totalTables} tables protected by ${facts.policies} policies` : null}
-                          {c.id === "AU-9" ? `${facts.appendOnlyTriggers} append only guards, ${facts.auditEvents.toLocaleString("en-US")} events held` : null}
-                          {c.id === "AU-2" ? `${facts.auditEvents.toLocaleString("en-US")} audit events recorded` : null}
+                          {c.id === "AU-9" ? `${facts.appendOnlyTriggers} append only guards, ${formatCount(facts.auditEvents)} events held` : null}
+                          {c.id === "AU-2" ? `${formatCount(facts.auditEvents)} audit events recorded` : null}
                           {!c.live ? <span className="text-muted">Enforced in the application</span> : null}
                         </TD>
                       </TR>
@@ -224,8 +225,8 @@ export default async function PlatformPage() {
             <CardHeader title="Retention" description="Submitted data is kept permanently." actions={<Ids ids={["US-056", "BR-019"]} />} />
             <CardBody className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-3">
-                <Stat label="Report revisions kept" value={facts.revisions.toLocaleString("en-US")} icon={FileLock2} hint="Live count" />
-                <Stat label="Audit events kept" value={facts.auditEvents.toLocaleString("en-US")} icon={Clock} hint={facts.firstAudit ? `Since ${formatDate(facts.firstAudit)}` : "Live count"} href="/finance/audit" />
+                <Stat label="Report revisions kept" value={formatCount(facts.revisions)} icon={FileLock2} hint="Live count" />
+                <Stat label="Audit events kept" value={formatCount(facts.auditEvents)} icon={Clock} hint={facts.firstAudit ? `Since ${formatDate(facts.firstAudit)}` : "Live count"} href="/finance/audit" />
               </div>
               <p>No delete path exists. The application cannot remove a submitted report, a revision or an audit event, and the database rejects the attempt. Corrections add a new revision with a reason instead of overwriting history.</p>
             </CardBody>
@@ -266,9 +267,9 @@ export default async function PlatformPage() {
           <CardBody className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {facts.usersByRole.map((r) => (
-                <Stat key={r.role} label={roleLabel(r.role as Role)} value={r.n.toLocaleString("en-US")} hint="Active accounts" icon={Users2} />
+                <Stat key={r.role} label={roleLabel(r.role as Role)} value={formatCount(r.n)} hint="Active accounts" icon={Users2} />
               ))}
-              <Stat label="Funded organizations" value={facts.organizations.toLocaleString("en-US")} hint="Live count" href="/finance/organizations" />
+              <Stat label="Funded organizations" value={formatCount(facts.organizations)} hint="Live count" href="/finance/organizations" />
             </div>
             <p className="text-sm">
               This system holds <span className="num font-semibold">{financeUsers}</span> Finance accounts across three permission levels, not counting the system scheduler. The design sets no cap on Finance accounts; the stated need is 50 to 100 users with different permissions. Automated tests create 100 Finance users across the three levels and check what each level can and cannot do, and create 5,000 submitting accounts to show that no cap exists. Submitting users are not licensed or capped: each funded organization can add as many staff as it needs.
@@ -283,7 +284,7 @@ export default async function PlatformPage() {
 
         <Card>
           <CardHeader title="Support model" description="Vendor help with accounts, post launch support and fast responses." actions={<Ids ids={["US-061", "US-062", "US-063", "BR-029"]} />} />
-          <Table>
+          <Table density="compact">
             <THead>
               <tr>
                 <TH>Tier</TH>

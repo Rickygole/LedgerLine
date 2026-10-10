@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createSupportRequest, replyToSupportRequest } from "@/app/actions/support";
 import type { CurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDateTime } from "@/lib/dates";
+import { formatDateTime, nowDate } from "@/lib/dates";
 import { isUuid } from "@/lib/finance/admin/params";
 import { CATEGORIES, categoryLabel, listSupport, loadMessages, loadSupport, RESPONSE_TARGET_HOURS, supportState } from "@/lib/ops/support";
 import { ActionForm } from "@/components/ops/action-form";
@@ -13,7 +13,7 @@ import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 
 export async function HelpPage({ user, home, base, selected }: { user: CurrentUser; home: { label: string; href: string }; base: string; selected: string }) {
-  const now = new Date();
+  const now = nowDate();
   const data = await withClaims(user.id, async (tx) => {
     const rows = await listSupport(tx, { requester: user.id });
     const current = isUuid(selected) ? await loadSupport(tx, selected) : null;
@@ -67,7 +67,7 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
         <div className="space-y-6">
           <Card>
             <CardHeader title="Your requests" description="Only you can see these." />
-            <Table>
+            <Table density="compact">
               <THead>
                 <tr>
                   <TH>Reference</TH>

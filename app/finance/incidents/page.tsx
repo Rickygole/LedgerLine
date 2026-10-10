@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDateTime } from "@/lib/dates";
+import { formatDateTime, nowDate } from "@/lib/dates";
 import { incidentStatus, listContacts, listIncidents, notificationDeadline, NOTIFY_WITHIN_HOURS, remediationDeadline, REMEDIATE_WITHIN_DAYS, SEVERITIES, severityLabel, STATUS_LABEL } from "@/lib/ops/incidents";
 import { ActionForm } from "@/components/ops/action-form";
 import { DeadlineBadge } from "@/components/ops/deadline-badge";
@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: "Security incidents" };
 
 export default async function IncidentsPage() {
   const admin = await requireUser(["finance_admin"]);
-  const now = new Date();
+  const now = nowDate();
   const { incidents, contacts } = await withClaims(admin.id, async (tx) => ({ incidents: await listIncidents(tx), contacts: await listContacts(tx) }));
   const activeContacts = contacts.filter((c) => c.active);
 
@@ -73,7 +73,7 @@ export default async function IncidentsPage() {
         </Card>
         <Card>
           <CardHeader title="Designated Council contacts" description="These people receive every incident notice and remediation report." />
-          <Table>
+          <Table density="compact">
             <THead>
               <tr>
                 <TH>Name</TH>
@@ -128,7 +128,7 @@ export default async function IncidentsPage() {
 
       <Card className="mt-6">
         <CardHeader title="Incident history" description="Newest first." />
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Reference</TH>

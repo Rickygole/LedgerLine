@@ -51,3 +51,11 @@ export function toIsoTimestamp(value: string | Date): string {
 export function nowEpochSeconds(): number {
   return Math.floor(Date.now() / 1000);
 }
+
+export function nowMs(): number {
+  return Date.now();
+}
+
+export function nowDate(): Date {
+  return new Date(nowMs());
+}

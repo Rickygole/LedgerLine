@@ -1,5 +1,5 @@
-import { toIsoDate } from "@/lib/dates";
+import { nowDate, toIsoDate } from "@/lib/dates";
 
-export function systemToday(now: Date = new Date()): string {
+export function systemToday(now: Date = nowDate()): string {
   return toIsoDate(now);
 }

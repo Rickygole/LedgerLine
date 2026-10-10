@@ -1,3 +1,4 @@
+import { nowDate } from "@/lib/dates";
 import { anonymous } from "@/lib/db";
 
 export type Hosting = { provider: string; region: string; declared: boolean; onCouncilServers: boolean };
@@ -29,7 +30,7 @@ export function buildCommit(env: Env = { BUILD_COMMIT: process.env.BUILD_COMMIT,
   return /^[0-9a-f]{7,40}$/i.test(sha) ? sha.slice(0, 12) : null;
 }
 
-export async function getHealth(now: Date = new Date()): Promise<Health> {
+export async function getHealth(now: Date = nowDate()): Promise<Health> {
   const started = performance.now();
   let database = { ok: false, latencyMs: null as number | null };
   let migrations = { ok: false, latest: null as string | null, applied: 0 };

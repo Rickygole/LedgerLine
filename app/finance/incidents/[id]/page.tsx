@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime, nowDate } from "@/lib/dates";
 import { isUuid } from "@/lib/finance/admin/params";
 import { EVENT_LABEL, incidentStatus, loadEvents, loadIncident, loadRemediations, notificationDeadline, remediationDeadline, severityLabel, STATUS_LABEL } from "@/lib/ops/incidents";
 import { ActionForm } from "@/components/ops/action-form";
@@ -28,7 +28,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
   });
   if (!data) notFound();
   const { incident, reports, events } = data;
-  const now = new Date();
+  const now = nowDate();
   const notice = notificationDeadline({ detectedAt: incident.detected_at, notifiedAt: incident.notified_at, now });
   const fix = remediationDeadline({ detectedAt: incident.detected_at, completedOn: incident.latest_completed_on, now });
   const status = incidentStatus(reports.length === 0 ? null : { completed_on: incident.latest_completed_on });
