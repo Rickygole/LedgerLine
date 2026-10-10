@@ -104,6 +104,7 @@ export type FundedOrg = {
   legal_name: string;
   ein: string;
   borough: string;
+  council_district: number | null;
   award_amount: string;
   sponsoring_agency: string | null;
   funding_source: string;
@@ -132,7 +133,7 @@ export async function loadInitiative(tx: Tx, id: string) {
   );
   if (!initiative) return null;
   const funded = await tx.query<FundedOrg>(
-    `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, a.award_amount, a.sponsoring_agency,
+    `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, o.council_district, a.award_amount, a.sponsoring_agency,
             a.funding_source, a.contract_status, a.contract_number, a.contract_registered_on::text AS contract_registered_on,
             ${SPONSORS_SQL} AS sponsors,
             ${PERIODS_SQL} AS periods

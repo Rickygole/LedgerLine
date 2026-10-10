@@ -15,6 +15,10 @@ import { Badge } from "@/components/ui/status-badge";
 import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { CreateDraftForm } from "@/components/finance/admin/create-draft-form";
+import { FormStartChoice } from "@/components/finance/admin/form-start-choice";
+import { MiniDistrictMap } from "@/components/finance/map/mini-district-map";
+import { buttonClass } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 import { loadInitiative } from "@/lib/finance/admin/initiatives";
 import { isUuid } from "@/lib/finance/admin/params";
 
@@ -38,6 +42,14 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
   const { initiative, funded, forms, lineage } = data;
   const hasDraft = forms.some((f) => f.status === "draft");
   const hasSource = forms.some((f) => f.status !== "draft");
+  const published = forms.some((f) => f.status === "published");
+  const draft = forms.find((f) => f.status === "draft");
+  const admin = user.role === "finance_admin";
+  const perDistrict = new Map<number, number>();
+  for (const f of funded) if (f.council_district) perDistrict.set(f.council_district, (perDistrict.get(f.council_district) ?? 0) + 1);
+  const fills = Object.fromEntries([...perDistrict.entries()].map(([d, n]) => [d, n >= 3 ? "#173962" : n === 2 ? "#2b64a8" : "#9db8dc"]));
+  const districtList = [...perDistrict.keys()].sort((a, b) => a - b);
+  const mapCaption = districtList.length === 0 ? "No funded organizations have a Council district on file." : `Funded organizations are located in ${districtList.length === 1 ? "District" : "Districts"} ${districtList.join(", ")}.`;
 
   return (
     <>
@@ -54,9 +66,9 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
         ]}
         actions={<PrintButton label="Print" />}
       >
-        <div className="grid gap-5 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <p className="max-w-[72ch] text-sm leading-relaxed text-ink">{initiative.description}</p>
-          <dl className="grid grid-cols-2 gap-4 lg:border-l lg:border-line lg:pl-6">
+        <div className="grid gap-5 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_200px]">
+          <p className="max-w-[72ch] text-[15px] leading-relaxed text-ink">{initiative.description}</p>
+          <dl className="grid grid-cols-2 content-start gap-4 lg:border-l lg:border-line lg:pl-6">
             <div>
               <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
               <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding), { cents: false })}</dd>
@@ -66,6 +78,11 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
               <dd className="num mt-1 text-lg font-bold text-ink">{funded.length}</dd>
             </div>
           </dl>
+          <figure>
+            <p className="text-[13px] font-semibold text-muted">Where funded organizations are</p>
+            <MiniDistrictMap fills={fills} label={`Map of Council districts. ${mapCaption}`} className="mt-1 block h-auto w-[200px] max-w-full" />
+            <figcaption className="mt-1 text-[13px] leading-5 text-muted">{mapCaption} Darker means more organizations.</figcaption>
+          </figure>
         </div>
       </ProfileHeader>
 
@@ -114,6 +131,34 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           </tbody>
         </Table>
       </Card>
+
+      {!published ? (
+        <section aria-labelledby="no-form-title" className="mb-6 rounded border border-line bg-white px-5 py-6 sm:px-6">
+          <FileText className="h-6 w-6 text-[#3d4757]" aria-hidden="true" />
+          <h2 id="no-form-title" className="mt-2 text-xl font-bold leading-7 text-ink">
+            This initiative has no report form yet.
+          </h2>
+          <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-[#3d4757]">
+            Funded organizations cannot report until a form is published. Import the Word template the Council has used so far, or start from the standard questions every initiative shares.
+          </p>
+          <div className="mt-4">
+            {!admin ? (
+              <p className="text-[15px] text-muted">A Finance administrator can build the form.</p>
+            ) : draft ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <a href={`/finance/forms/${draft.id}?import=1`} className={buttonClass("primary", "md", "h-11 px-5 text-base")}>
+                  Import a Word template
+                </a>
+                <a href={`/finance/forms/${draft.id}`} className={buttonClass("secondary", "md", "h-11 px-5 text-base")}>
+                  Continue the draft (version {draft.version})
+                </a>
+              </div>
+            ) : (
+              <FormStartChoice initiativeId={initiative.id} />
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <Card>
         <CardHeader
