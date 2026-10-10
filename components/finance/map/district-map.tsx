@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import { binFor, missingShare, rankDistricts, type DistrictStats, type MapMode, type Tally } from "@/lib/finance/district-stats";
+import { binFor, byMostMissing, missingShare, rankDistricts, type DistrictStats, type MapMode, type Tally } from "@/lib/finance/district-stats";
 import { BOROUGH_SHAPES, COUNCIL_DISTRICT_SHAPES, GEO_VIEWBOX } from "@/lib/geo";
-import { districtInBorough, GEO_BOROUGHS } from "@/lib/geo/boroughs";
+import { boroughsForDistrict, districtInBorough, GEO_BOROUGHS } from "@/lib/geo/boroughs";
 import { AutoSelect } from "./auto-select";
 import { DistrictMapView, type MapDistrict } from "./district-map-view";
 
@@ -51,8 +51,9 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
   const keep = { period: periodId, map: mode === "sponsor" ? "" : mode, borough };
   const tableRows = [...stats.districts]
     .filter((d) => borough === "" || districtInBorough(d.district, borough))
-    .sort((a, b) => (sort === "missing" ? b.missing - a.missing || a.district - b.district : a.district - b.district));
-  const multiSponsor = mode === "sponsor" && stats.districts.reduce((sum, d) => sum + d.missing, 0) > stats.inDistricts.missing;
+    .sort((a, b) => (sort === "missing" ? byMostMissing(a, b) : a.district - b.district));
+  const districtSum = stats.districts.reduce((sum, d) => sum + d.missing, 0);
+  const multiSponsor = mode === "sponsor" && districtSum > stats.inDistricts.missing;
 
   return (
     <section aria-labelledby="map-title" className="min-w-0 rounded border border-line bg-white lg:col-span-7">
@@ -114,7 +115,12 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
 
         <div className="space-y-1 text-[13px] leading-5 text-muted">
           {mode === "sponsor" ? (
-            multiSponsor ? <p>Awards with more than one sponsor count in each sponsoring district.</p> : null
+            multiSponsor ? (
+              <p>
+                District counts add up to <span className="num">{districtSum}</span> because an award with more than one sponsor counts in each sponsoring district. That is <span className="num">{stats.inDistricts.missing}</span> missing{" "}
+                {reportsWord(stats.inDistricts.missing)} funded by a district, plus <span className="num">{stats.speaker.missing}</span> Speaker's allocation and <span className="num">{stats.citywide.missing}</span> citywide.
+              </p>
+            ) : null
           ) : stats.noDistrict.due > 0 ? (
             <p>
               No district on file: <span className="num">{stats.noDistrict.missing}</span> missing of <span className="num">{stats.noDistrict.due}</span> {reportsWord(stats.noDistrict.due)}.
@@ -206,6 +212,7 @@ function OffMapLink({ label, tally, href }: { label: string; tally: Tally; href:
 export function DistrictRanking({ stats, borough, periodId }: Common) {
   const ranked = rankDistricts(stats.districts, borough, 8);
   const mode = stats.mode;
+  const shared = borough === "" ? [] : stats.districts.filter((d) => boroughsForDistrict(d.district).length > 1 && districtInBorough(d.district, borough)).map((d) => d.district);
   const missingHref = (funding: string) => `/finance/submissions?${new URLSearchParams({ period: periodId, funding, bucket: "missing" }).toString()}`;
   const allHref = dashHref({ period: periodId, map: mode === "sponsor" ? "" : mode, borough, table: "1", sort: "missing" }, "#district-table");
   return (
@@ -214,7 +221,11 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
         <h2 id="rank-title" className="text-xl font-bold leading-7 text-ink">
           Districts with the most missing reports
         </h2>
-        {borough ? <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{borough} only</p> : null}
+        {borough ? (
+          <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">
+            {borough} only{mode === "location" && shared.length > 0 ? `. District ${shared.join(" and ")} counts only organizations located in ${borough}.` : ""}
+          </p>
+        ) : null}
       </div>
       {ranked.length === 0 ? (
         <p className="px-5 py-8 text-[15px] text-muted sm:px-6">No reports were due in {borough ? `${borough} districts` : "any district"} for this period.</p>
@@ -243,7 +254,7 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
         </ol>
       )}
       <div className="space-y-3 border-t border-line-soft px-5 py-4 text-[15px] leading-[22px] sm:px-6">
-        {mode === "sponsor" ? (
+        {mode === "sponsor" && borough === "" ? (
           <p className="text-ink-2">
             Not shown on the map: <OffMapLink label="Citywide initiatives" tally={stats.citywide} href={missingHref("citywide")} /> · <OffMapLink label="Speaker's allocations" tally={stats.speaker} href={missingHref("speaker")} />
           </p>

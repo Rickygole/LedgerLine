@@ -20,7 +20,7 @@ export type DistrictStats = {
   totalMissing: number;
 };
 
-type Row = Pick<ReportRow, "bucket" | "fundingSource" | "sponsors" | "councilDistrict">;
+type Row = Pick<ReportRow, "bucket" | "fundingSource" | "sponsors" | "councilDistrict"> & Partial<Pick<ReportRow, "borough">>;
 
 const empty = (): Tally => ({ due: 0, missing: 0, waiting: 0, accepted: 0 });
 
@@ -46,7 +46,7 @@ export function matchesDistrict(row: Pick<ReportRow, "fundingSource" | "sponsors
   return String(row.councilDistrict ?? "") === district;
 }
 
-export function districtStats(rows: Row[], mode: MapMode, members: Map<number, string>): DistrictStats {
+export function districtStats(rows: Row[], mode: MapMode, members: Map<number, string>, borough = ""): DistrictStats {
   const byDistrict = new Map<number, Tally>(DISTRICT_NUMBERS.map((d) => [d, empty()]));
   const speaker = empty();
   const citywide = empty();
@@ -81,6 +81,18 @@ export function districtStats(rows: Row[], mode: MapMode, members: Map<number, s
     }
   }
 
+  if (mode === "location" && borough) {
+    const scoped = new Map<number, Tally>();
+    for (const row of rows) {
+      const d = row.councilDistrict;
+      if (d === null || row.borough !== borough || !districtInBorough(d, borough)) continue;
+      const tally = scoped.get(d) ?? empty();
+      add(tally, row);
+      scoped.set(d, tally);
+    }
+    for (const d of DISTRICT_NUMBERS) if (districtInBorough(d, borough)) byDistrict.set(d, scoped.get(d) ?? empty());
+  }
+
   return {
     mode,
     districts: DISTRICT_NUMBERS.map((district) => ({ district, member: members.get(district) ?? null, boroughs: boroughLabel(district), ...byDistrict.get(district)! })),
@@ -105,10 +117,14 @@ export function binFor(missing: number, due: number): 0 | 1 | 2 | 3 | 4 {
   return 4;
 }
 
+export function byMostMissing(a: DistrictStat, b: DistrictStat): number {
+  return b.missing - a.missing || b.missing / Math.max(1, b.due) - a.missing / Math.max(1, a.due) || a.district - b.district;
+}
+
 export function rankDistricts(stats: DistrictStat[], borough: string, limit = 6): DistrictStat[] {
   return stats
     .filter((s) => s.due > 0 && (borough === "" || districtInBorough(s.district, borough)))
-    .sort((a, b) => b.missing - a.missing || b.missing / Math.max(1, b.due) - a.missing / Math.max(1, a.due) || a.district - b.district)
+    .sort(byMostMissing)
     .slice(0, limit);
 }
 
