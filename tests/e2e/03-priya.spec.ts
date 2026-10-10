@@ -32,7 +32,7 @@ test("[US-002] the initiative is funded for an organization and given a report f
   expect(Number(assigned[0].award_amount)).toBe(40000);
   await page.getByRole("button", { name: "Use the standard template" }).click();
   await page.waitForURL(/\/finance\/forms\/[0-9a-f-]{36}/);
-  await expect(page.getByRole("button", { name: "Publish", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Publish version 1", exact: true })).toBeVisible();
 });
 
 test("[US-004] an initiative-specific question is added next to the shared standard questions and the form is published", async ({ page }) => {
@@ -44,8 +44,10 @@ test("[US-004] an initiative-specific question is added next to the shared stand
   await page.getByRole("button", { name: "Add question" }).click();
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByText("Draft saved.")).toBeVisible();
-  await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await page.getByRole("button", { name: "Publish version 1" }).click();
+  await page.getByRole("button", { name: "Publish version 1", exact: true }).click();
+  const confirm = page.getByRole("dialog", { name: "Publish version 1?" });
+  await expect(confirm.getByText("This is the first version")).toBeVisible();
+  await confirm.getByRole("button", { name: "Yes, publish version 1" }).click();
   await expect(page.getByText("Version 1 is published.")).toBeVisible();
   const [form] = await ownerQuery<{ status: string; definition: { sections: { questions: { key: string; label: string }[] }[] } }>(
     "SELECT status, definition FROM form_version WHERE id = $1",

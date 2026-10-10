@@ -55,7 +55,6 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
             {[TYPE_LABEL[question.type], question.required ? "required" : "optional", shared ? "from standard library" : null, question.visibleWhen ? "shown only when a condition is met" : null, question.citation ? `from template paragraph ${question.citation.paragraph}` : null]
               .filter(Boolean)
               .join(", ")}
-            . Key: <span className="font-mono">{question.key}</span>
           </p>
           {question.citation ? <p className="mt-1.5 text-xs italic text-muted">&ldquo;{question.citation.quote}&rdquo;</p> : null}
         </div>
@@ -73,8 +72,7 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
               </Button>
             </>
           ) : null}
-          <Button variant="secondary" size="sm" aria-expanded={open} aria-controls={`${id}-body`} onClick={() => setOpen(!open)}>
-            {editable ? "Edit" : "Details"}
+          <Button variant="secondary" size="sm" className="w-9 px-0" aria-expanded={open} aria-controls={`${id}-body`} aria-label={`${open ? "Hide" : editable ? "Edit" : "Show"} details for question ${index + 1}, ${question.label || "untitled"}`} title={open ? "Hide details" : "Show details"} onClick={() => setOpen(!open)}>
             {open ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />}
           </Button>
         </div>
@@ -92,7 +90,11 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
             <p className="text-sm text-muted sm:col-span-2">
               This is a standard library question. It is shared by reference with every initiative, so it can be moved or removed here but not reworded. Key: <span className="font-mono">{question.key}</span>
             </p>
-          ) : null}
+          ) : (
+            <p className="text-sm text-muted sm:col-span-2">
+              Key used in exports: <span className="font-mono text-ink">{question.key}</span>
+            </p>
+          )}
           <div className="sm:col-span-2">
             <Label htmlFor={`${id}-label`}>Label</Label>
             <Input id={`${id}-label`} value={question.label} disabled={!editable} onChange={(e) => onChange({ label: e.target.value })} aria-describedby={problems.length ? errorId : undefined} />

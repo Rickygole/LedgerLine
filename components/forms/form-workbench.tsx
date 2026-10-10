@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Eye, FileUp, Lock, Pencil, Plus, Rocket, Save } from "lucide-react";
+import { CheckCircle2, Eye, FileUp, Lock, Pencil, Plus, Save } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { publishForm, saveDefinition } from "@/app/finance/forms/[formId]/actions";
 import { FormPreview } from "@/components/forms/form-preview";
@@ -28,11 +28,32 @@ type Props = {
   canEdit: boolean;
   openImport: boolean;
   publishedVersion: number | null;
+  publishedDefinition: FormDefinition | null;
 };
+
+function changesSince(before: FormDefinition | null, after: FormDefinition) {
+  const list = (d: FormDefinition | null) => new Map((d?.sections ?? []).flatMap((s) => s.questions.map((q) => [q.key, JSON.stringify(q)] as const)));
+  const old = list(before);
+  const now = list(after);
+  let added = 0;
+  let changed = 0;
+  let removed = 0;
+  for (const [key, value] of now) {
+    if (!old.has(key)) added += 1;
+    else if (old.get(key) !== value) changed += 1;
+  }
+  for (const key of old.keys()) if (!now.has(key)) removed += 1;
+  const budget = before !== null && JSON.stringify(before.budget) !== JSON.stringify(after.budget);
+  return { added, changed, removed, budget, total: [...now.keys()].length };
+}
+
+function count(n: number, word: string) {
+  return `${n} ${n === 1 ? word : `${word}s`}`;
+}
 
 const BUDGET = "__budget";
 
-export function FormWorkbench({ formId, version, status, initiativeId, initiativeName, initialDefinition, canEdit, openImport, publishedVersion }: Props) {
+export function FormWorkbench({ formId, version, status, initiativeId, initiativeName, initialDefinition, canEdit, openImport, publishedVersion, publishedDefinition }: Props) {
   const router = useRouter();
   const [saved, setSaved] = useState<FormDefinition>(initialDefinition);
   const [definition, setDefinition] = useState<FormDefinition>(initialDefinition);
@@ -50,7 +71,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [review, setReview] = useState<{ reviewed: number; total: number } | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
-  const confirmRef = useRef<HTMLDivElement>(null);
+  const confirmRef = useRef<HTMLDialogElement>(null);
 
   const editable = canEdit && status === "draft";
   const dirty = useMemo(() => JSON.stringify(cleanDefinition(definition)) !== JSON.stringify(cleanDefinition(saved)), [definition, saved]);
@@ -95,7 +116,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
     if (problems.length > 0) return showErrors(problems);
     setErrors([]);
     setConfirming(true);
-    requestAnimationFrame(() => confirmRef.current?.focus());
+    confirmRef.current?.showModal();
   }
 
   function reorder(key: string, from: number, to: number) {
@@ -110,6 +131,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
   function confirmPublish() {
     startTransition(async () => {
       const result = await publishForm(formId);
+      confirmRef.current?.close();
       setConfirming(false);
       if (!result.ok) return showErrors(result.errors);
       setPublished(result.version);
@@ -172,20 +194,20 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" onClick={() => setImportOpen(true)} disabled={dirty || importOpen} title={dirty ? "Save your changes before importing" : undefined}>
               <FileUp className="h-4 w-4" aria-hidden="true" />
-              Import legacy Word template
+              Import from Word
             </Button>
             <Button variant="secondary" onClick={() => save()} disabled={pending || !dirty}>
               <Save className="h-4 w-4" aria-hidden="true" />
               {pending ? "Saving" : dirty ? "Save draft" : "Saved"}
             </Button>
             {review && importOpen ? (
-              <span className={cn("num rounded-sm px-2.5 py-1 text-xs font-semibold ring-1 ring-inset", reviewing ? "bg-[#f1ecfb] text-[#5b3fa0] ring-[#5b3fa0]/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
+              <span className={cn("num rounded-sm px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset", reviewing ? "bg-[#e5edf7] text-[#1f4e85] ring-[#1f4e85]/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
                 {review.reviewed} of {review.total} reviewed
               </span>
             ) : null}
             <Button onClick={openPublish} disabled={pending || dirty || importOpen || confirming} aria-describedby="publish-why" title={dirty ? "Save your changes before publishing" : importOpen ? "Finish the import review first" : undefined}>
-              {importOpen ? <Lock className="h-4 w-4" aria-hidden="true" /> : <Rocket className="h-4 w-4" aria-hidden="true" />}
-              Publish
+              {importOpen ? <Lock className="h-4 w-4" aria-hidden="true" /> : null}
+              Publish version {version}
             </Button>
             <span id="publish-why" className="sr-only">
               {dirty ? "Save your changes before publishing." : importOpen ? "Review every imported question first." : ""}
@@ -194,26 +216,41 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
         ) : null}
       </div>
 
-      {confirming ? (
-        <div ref={confirmRef} tabIndex={-1} role="region" aria-labelledby="publish-title" className="mb-4 rounded-xl border border-l-4 border-line border-l-navy-800 bg-white px-5 py-4 shadow-card focus:outline-none">
-          <h2 id="publish-title" className="text-[15px] font-semibold text-ink">
+      <dialog
+        ref={confirmRef}
+        aria-labelledby="publish-title"
+        onClose={() => setConfirming(false)}
+        className="m-auto w-[min(34rem,calc(100vw-2rem))] max-w-none rounded border border-line bg-white p-0 text-ink shadow-[0_4px_16px_rgba(10,26,48,0.16)] backdrop:bg-[#0a1a30]/50"
+      >
+        <div className="px-6 pb-2 pt-5">
+          <h2 id="publish-title" className="text-xl font-bold leading-7">
             Publish version {version}?
           </h2>
-          <p className="mt-1 text-sm text-ink">
-            Publishing creates version {version}.{publishedVersion ? ` Organizations already reporting keep version ${publishedVersion}.` : " Organizations start using it right away."}
+          {(() => {
+            const diff = changesSince(publishedDefinition, definition);
+            const parts = publishedDefinition
+              ? [diff.added ? `${count(diff.added, "question")} added` : null, diff.changed ? `${diff.changed} changed` : null, diff.removed ? `${diff.removed} removed` : null, diff.budget ? "budget settings changed" : null].filter(Boolean)
+              : [];
+            return (
+              <p className="mt-2 text-[15px] leading-[22px]">
+                {publishedVersion ? `Changes since version ${publishedVersion}: ${parts.length ? parts.join(", ") : "no question changes"}.` : `This is the first version, with ${count(diff.total, "question")}.`}
+              </p>
+            );
+          })()}
+          <p className="mt-2 text-[15px] leading-[22px] text-[#3d4757]">
+            {publishedVersion ? `New reports use version ${version}. Organizations already reporting keep version ${publishedVersion}.` : "Funded organizations start using it right away."}
           </p>
-          <p className="mt-1 text-sm text-muted">This cannot be undone. The change is recorded in the audit log under your name.</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button onClick={confirmPublish} disabled={pending}>
-              <Rocket className="h-4 w-4" aria-hidden="true" />
-              {pending ? "Publishing" : `Publish version ${version}`}
-            </Button>
-            <Button variant="secondary" onClick={() => setConfirming(false)} disabled={pending}>
-              Cancel
-            </Button>
-          </div>
+          <p className="mt-2 text-sm text-muted">Published versions cannot be changed. The change is recorded in the audit log under your name.</p>
         </div>
-      ) : null}
+        <div className="flex flex-wrap items-center gap-4 border-t border-[#e3e7ec] px-6 py-4">
+          <Button onClick={confirmPublish} disabled={pending} className="h-11 px-5 text-base">
+            {pending ? "Publishing" : `Yes, publish version ${version}`}
+          </Button>
+          <Button variant="ghost" className="px-0" onClick={() => confirmRef.current?.close()} disabled={pending}>
+            Cancel
+          </Button>
+        </div>
+      </dialog>
 
       {status !== "draft" ? (
         <div className="mb-4 flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink" role="note">
