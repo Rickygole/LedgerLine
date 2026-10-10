@@ -8,12 +8,10 @@ import { Button } from "@/components/ui/button";
 import { FieldError, Textarea } from "@/components/ui/field";
 import type { Concern } from "@/lib/finance/review/return-note-core";
 import { StaleNotice, isStale } from "./stale-notice";
+import { formatTime, nowIso } from "@/lib/dates";
 
 type Draft = { text: string; mode: "live" | "fallback"; aiActionId: string | null; ruleIds: string[]; dropped: number };
 
-function clock(date: Date) {
-  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
-}
 
 export function RequestUpdate({
   submissionId,
@@ -73,7 +71,7 @@ export function RequestUpdate({
       if (!res.ok) return setError(res.message);
       setSent(true);
       dialog.current?.close();
-      onDone(`Update requested. ${contactName ?? "The organization's primary contact"} was emailed at ${clock(new Date())}. The note appears above their report.`);
+      onDone(`Update requested. ${contactName ?? "The organization's primary contact"} was emailed at ${formatTime(nowIso())}. The note appears above their report.`);
       requestAnimationFrame(() => document.getElementById("queue-next")?.focus());
     });
   };
