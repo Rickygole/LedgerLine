@@ -42,6 +42,25 @@ export const AUDIT_ACTIONS: Record<string, ActionWords> = {
   reminders_queued: { label: "Reminders queued", alone: "queued reminders", verb: "queued reminders for" },
   reminder_defaults_restored: { label: "Standard reminders added", alone: "added the standard reminder schedule", verb: "added the standard reminder schedule for" },
   export: { label: "Submissions exported", alone: "exported submissions", verb: "exported" },
+  export_all: { label: "Data package downloaded", alone: "downloaded the complete data package", verb: "downloaded" },
+  support_request_created: { label: "Support request sent", alone: "sent a support request", verb: "sent support request" },
+  support_first_response: { label: "Support request answered", alone: "answered a support request", verb: "answered support request" },
+  support_reply: { label: "Support reply sent", alone: "replied to a support request", verb: "replied to support request" },
+  support_follow_up: { label: "Support follow-up sent", alone: "followed up on a support request", verb: "followed up on support request" },
+  support_closed: { label: "Support request closed", alone: "closed a support request", verb: "closed support request" },
+  incident_recorded: { label: "Security incident recorded", alone: "logged a security incident", verb: "logged security incident" },
+  incident_remediation_reported: { label: "Remediation report saved", alone: "saved a remediation report", verb: "saved a remediation report for" },
+  incident_contact_added: { label: "Security contact added", alone: "added a security contact", verb: "added the security contact" },
+  incident_contact_activated: { label: "Security contact turned on", alone: "turned on a security contact", verb: "turned on the security contact" },
+  incident_contact_deactivated: { label: "Security contact turned off", alone: "turned off a security contact", verb: "turned off the security contact" },
+  review_started: { label: "Annual review started", alone: "started an annual review", verb: "started the annual review for" },
+  review_check: { label: "Review checklist updated", alone: "updated a review checklist", verb: "updated the review checklist for" },
+  review_participant_added: { label: "Review participant added", alone: "added a review participant", verb: "added a participant to the review of" },
+  review_decision_added: { label: "Review decision recorded", alone: "added a review decision", verb: "added a decision to the review of" },
+  review_signed_off: { label: "Annual review signed off", alone: "signed off an annual review", verb: "signed off the annual review for" },
+  training_recorded: { label: "Training recorded", alone: "logged a training completion", verb: "logged training for" },
+  uat_recorded: { label: "Test session recorded", alone: "logged a test session", verb: "logged a test session for" },
+  uat_defect_fixed: { label: "Test defect marked fixed", alone: "marked a test defect as fixed", verb: "marked a test defect as fixed in" },
 };
 
 export const ENTITY_LABELS: Record<string, string> = {
@@ -56,6 +75,12 @@ export const ENTITY_LABELS: Record<string, string> = {
   fiscal_year: "Fiscal year",
   reminder_rule: "Reminder rule",
   export: "Export",
+  support_request: "Support request",
+  security_incident: "Security incident",
+  incident_contact: "Security contact",
+  annual_review: "Annual review",
+  training_record: "Training record",
+  uat_session: "Test session",
 };
 
 function humanize(text: string): string {
