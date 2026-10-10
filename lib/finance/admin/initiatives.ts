@@ -79,6 +79,13 @@ export async function listAgencies(tx: Tx) {
   return rows.map((r) => r.agency);
 }
 
+export async function nextInitiativeCode(tx: Tx, fiscalYearId: string): Promise<string> {
+  const row = await tx.one<{ next: number }>(
+    `SELECT coalesce(max(substring(code from '[0-9]+$')::int), 0) + 1 AS next FROM initiative WHERE code ~ '^CI-[0-9]{2}-[0-9]+$'`
+  );
+  return `CI-${fiscalYearId.replace(/\D/g, "")}-${String(row?.next ?? 1).padStart(3, "0")}`;
+}
+
 export async function listCategories(tx: Tx) {
   const rows = await tx.query<{ category: string }>(`SELECT DISTINCT category FROM initiative ORDER BY category`);
   return rows.map((r) => r.category);

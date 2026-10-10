@@ -8,6 +8,7 @@ import { buildDefinition } from "@/lib/forms/standard";
 import { parseAmount } from "@/lib/rules/money";
 import { actionFailure, type ActionState } from "@/lib/actions";
 import { AGENCIES } from "@/lib/domain";
+import { nextInitiativeCode } from "@/lib/finance/admin/initiatives";
 import { isUuid } from "@/lib/ids";
 import { writeAudit } from "@/lib/audit";
 
@@ -34,8 +35,7 @@ export async function createInitiative(_prev: ActionState, formData: FormData): 
       newId = await withClaims(user.id, async (tx) => {
         const category = await tx.one(`SELECT 1 FROM initiative WHERE category = $1 LIMIT 1`, [parsed.data.category]);
         if (!category) throw Object.assign(new Error("unknown category"), { code: "23514" });
-        const next = await tx.one<{ next: number }>(`SELECT coalesce(max(substring(code from '[0-9]+$')::int), 0) + 1 AS next FROM initiative WHERE code ~ '^CI-[0-9]+$'`);
-        const code = `CI-${String(next!.next).padStart(3, "0")}`;
+        const code = await nextInitiativeCode(tx, "FY27");
         const row = await tx.one<{ id: string }>(
           `INSERT INTO initiative (code, name, category, description, fiscal_year_id, total_funding, created_by)
            VALUES ($1, $2, $3, $4, 'FY27', 0, $5) RETURNING id`,

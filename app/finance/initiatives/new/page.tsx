@@ -10,7 +10,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { NewInitiativeForm } from "@/components/finance/admin/new-initiative-form";
 import { AssignOrgsForm } from "@/components/finance/admin/assign-orgs-form";
 import { TemplateChoiceForm } from "@/components/finance/admin/template-choice-form";
-import { listCategories } from "@/lib/finance/admin/initiatives";
+import { listCategories, nextInitiativeCode } from "@/lib/finance/admin/initiatives";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { isUuid } from "@/lib/ids";
 import { cn } from "@/lib/cn";
@@ -31,8 +31,7 @@ export default async function NewInitiativePage({ searchParams }: { searchParams
   const data = await withClaims(user.id, async (tx) => {
     if (step === 1) {
       const categories = await listCategories(tx);
-      const next = await tx.one<{ next: number }>(`SELECT coalesce(max(substring(code from '[0-9]+$')::int), 0) + 1 AS next FROM initiative WHERE code ~ '^CI-[0-9]+$'`);
-      return { categories, nextCode: `CI-${String(next!.next).padStart(3, "0")}`, initiative: null, assigned: [], orgs: [] };
+      return { categories, nextCode: await nextInitiativeCode(tx, "FY27"), initiative: null, assigned: [], orgs: [] };
     }
     const initiative = await tx.one<{ id: string; code: string; name: string; total_funding: string }>(`SELECT id, code, name, total_funding FROM initiative WHERE id = $1`, [initiativeId]);
     if (!initiative) return undefined;
