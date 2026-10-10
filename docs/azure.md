@@ -12,8 +12,8 @@ Every Azure Government availability statement below is marked "verify". Service 
 | Database | Postgres 16 (Neon in the hosted copy, a local container in development) |
 | Sign-in | Shared passcode gate, then email and password, signed session cookie (8 hour lifetime) |
 | Files | Vercel Blob in production, a local folder in development |
-| Email | A database outbox table. Messages are written in the same transaction as the action that caused them. Nothing is sent to a real mailbox |
-| AI model | Anthropic API, or a local model through Ollama, behind one adapter (`lib/ai/model.ts`) |
+| Email | A database outbox table. Messages are written in the same transaction as the action that caused them. A dispatcher (`lib/outbox-dispatch.ts`, transport in `lib/email.ts`) delivers them through the Resend HTTP API when `RESEND_API_KEY` and `EMAIL_FROM` are set. Otherwise they stay in the outbox with the status Recorded. The hosted copy is configured for recorded mode unless stated otherwise |
+| AI model | A local model through Ollama (evaluated in `docs/ai-eval.md`) or the Anthropic API (not evaluated), behind one adapter (`lib/ai/model.ts`). The hosted copy has no model configured and uses the saved replays and the rule-based fallback |
 | Scheduled work | A daily Vercel cron calling `/api/cron/reminders` |
 
 ## 2. Service mapping
@@ -24,7 +24,7 @@ Every Azure Government availability statement below is marked "verify". Service 
 | Web application | Azure App Service (Linux, Node 22) or Azure Container Apps, running the Next.js server | Verify for both | App Service is the simpler operating model. Container Apps suits a container pipeline. Either works behind Azure Front Door or Application Gateway with a web application firewall |
 | Sign-in | Microsoft Entra ID (OpenID Connect) for Council Finance staff. Organization users either as Entra External ID guests or kept on the application's own accounts | Verify, including whether external identities are offered in the Government cloud | See section 4 for the code that changes |
 | Files | Azure Blob Storage, private container, short lived SAS tokens issued by the server after the same access check the application makes today | Verify | Customer managed keys and an immutability policy are available if the City requires them |
-| Email | Azure Communication Services Email, sending from a City approved domain with SPF, DKIM and DMARC | Verify. If it is not offered, use the City's existing mail relay or Microsoft Graph with the Exchange Online tenant | The outbox table stays. A small worker reads unsent rows and sends them, so a failed send never loses a message |
+| Email | Azure Communication Services Email, sending from a City approved domain with SPF, DKIM and DMARC | Verify. If it is not offered, use the City's existing mail relay or Microsoft Graph with the Exchange Online tenant | The outbox table stays. The dispatcher already reads queued rows, retries failed sends and records the result, so a failed send never loses a message. Only the transport in `lib/email.ts` changes |
 | Scheduled work | Container Apps job, App Service WebJob or an Azure Functions timer calling the same reminders route | Verify | Replaces the Vercel cron entry in `vercel.json` |
 | AI model adapter | Azure OpenAI Service in Azure Government, or Anthropic models through Microsoft Foundry | Verify both, including which model versions are offered and whether the City permits the data to leave a tenant boundary | Only `callStructured` in `lib/ai/model.ts` changes. The prompts, the schema checks, the citation check and the human approval step are provider independent |
 | Secrets | Azure Key Vault with managed identity | Verify | Replaces environment variables for the database password, session secret and mail credentials |
@@ -35,7 +35,7 @@ Every Azure Government availability statement below is marked "verify". Service 
 
 These are the parts that carry the business rules, and none of them depends on Vercel.
 
-- **Schema and migrations.** The 31 SQL files in `db/migrations` apply to any Postgres 16 server with `pnpm db:migrate`. Flexible Server allows the extensions and roles they use. Role creation and the `app_server` login are scripted (`pnpm db:role`) and would be run once by the database administrator.
+- **Schema and migrations.** The SQL files in `db/migrations` apply to any Postgres 16 server with `pnpm db:migrate`. Flexible Server allows the extensions and roles they use. Role creation and the `app_server` login are scripted (`pnpm db:role`) and would be run once by the database administrator.
 - **Row level security.** Policies on every table decide which organization and which role sees which rows, using the user id the server sets for each transaction.
 - **State machine and audit.** Submission status changes, corrections and form publishing happen in SQL functions that check the action, the role and a lock version, and write the audit row in the same transaction.
 - **Append-only history.** Triggers on the audit and revision tables reject UPDATE, DELETE and TRUNCATE.
@@ -48,7 +48,7 @@ These are the parts that carry the business rules, and none of them depends on V
 | --- | --- | --- |
 | Entra ID sign-in replaces the passcode gate and the password login for staff | `middleware.ts`, `lib/session.ts`, `lib/auth.ts`, the login and reset pages | About two weeks including the role and group mapping |
 | Blob SAS in place of Vercel Blob | `lib/storage.ts`, the upload route and the CSP allow list in `lib/csp.ts` | About one week |
-| Mail worker reading the outbox | New small worker, plus a send status column | About one week |
+| Azure Communication Services transport for the outbox dispatcher | `lib/email.ts` and the sender domain setup. The queue, retry and status handling exist | About three days, plus domain verification with the City |
 | Model adapter for Azure OpenAI or Foundry | `callStructured` in `lib/ai/model.ts` | Two to three days, plus re-running the evaluation set on the chosen model |
 | Hosting configuration, secrets, networking, WAF | Infrastructure as code (Bicep or Terraform) | Two to three weeks |
 | Cron replacement | Scheduler job calling the reminders route | One day |
