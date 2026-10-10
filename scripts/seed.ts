@@ -380,7 +380,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
 
     const id = randomUUID();
     const place = pick(BOROUGH_PLACES[borough]);
-    const district = isMaria ? 8 : pick(BOROUGH_DISTRICTS[borough]);
+    const district = isMaria ? 17 : pick(BOROUGH_DISTRICTS[borough]);
     const contactName = isMaria ? PERSONAS.maria.name : isTomas ? PERSONAS.tomas.name : orgName();
     const [contactFirst, ...contactRest] = contactName.split(" ");
     const contactEmail = isMaria ? PERSONAS.maria.email : isTomas ? PERSONAS.tomas.email : `${slug(contactFirst)}.${slug(contactRest.join(""))}@${domain}`;

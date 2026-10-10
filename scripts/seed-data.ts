@@ -154,7 +154,7 @@ export const BOROUGH_WEIGHTS: Record<Borough, number> = { Bronx: 22, Brooklyn: 2
 
 export const BOROUGH_DISTRICTS: Record<Borough, number[]> = {
   Manhattan: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  Bronx: [8, 11, 12, 13, 14, 15, 16, 17, 18],
+  Bronx: [11, 12, 13, 14, 15, 16, 17, 18],
   Queens: [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
   Brooklyn: [33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48],
   "Staten Island": [49, 50, 51],
