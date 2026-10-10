@@ -268,7 +268,7 @@ export const TABLES: Record<string, TableDoc> = {
       body_text: "Message text.",
       status:
         "queued, sending, sent, held, recorded or failed. Only sent means a mail provider accepted the message. recorded means the message was kept on file and not delivered because no mail service is connected.",
-      reminder_key: "Key that stops the same reminder being queued twice in one day.",
+      reminder_key: "Key that stops the same reminder being queued twice for the same send date.",
       attempts: "How many times delivery has been tried.",
       sent_at: "When the mail provider accepted the message. Empty unless the status is sent.",
       provider_id: "Identifier the mail provider gave the message. Empty unless the status is sent.",
