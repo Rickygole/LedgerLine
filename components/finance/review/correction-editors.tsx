@@ -2,6 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NumericInput } from "@/components/report/numeric-input";
 import { Input, Select } from "@/components/ui/field";
 
 export type TableColumnInfo = { key: string; label: string; type: "text" | "integer" | "currency" | "percent" };
@@ -40,12 +41,20 @@ export function TableEditor({
               >
                 {column.label}
               </label>
-              <Input
-                id={`corr-row-${index}-${column.key}`}
-                value={row[column.key] ?? ""}
-                inputMode={column.type === "text" ? undefined : "decimal"}
-                onChange={(event) => update(index, column.key, event.target.value)}
-              />
+              {column.type === "text" ? (
+                <Input
+                  id={`corr-row-${index}-${column.key}`}
+                  value={row[column.key] ?? ""}
+                  onChange={(event) => update(index, column.key, event.target.value)}
+                />
+              ) : (
+                <NumericInput
+                  id={`corr-row-${index}-${column.key}`}
+                  kind={column.type}
+                  value={row[column.key] ?? ""}
+                  onValueChange={(next) => update(index, column.key, next)}
+                />
+              )}
             </div>
           ))}
           <Button
@@ -108,11 +117,11 @@ export function BudgetEditor({
               <label htmlFor={`corr-line-${index}-amount`} className="mb-1 block text-[13px] font-semibold text-ink">
                 Amount
               </label>
-              <Input
+              <NumericInput
                 id={`corr-line-${index}-amount`}
-                inputMode="decimal"
+                kind="currency"
                 value={line.amount}
-                onChange={(event) => update(index, { amount: event.target.value })}
+                onValueChange={(next) => update(index, { amount: next })}
               />
             </div>
           </div>

@@ -38,12 +38,15 @@ export function SubmittedCopy({
     <div className="space-y-6">
       <style>{`@media print { header, footer, [data-print-hide] { display: none !important; } main { padding: 0 !important; max-width: none !important; } }`}</style>
       <Card>
-        <CardHeader title="Submitted copy" actions={
+        <CardHeader
+          title="Submitted copy"
+          actions={
             <div className="flex flex-wrap gap-3">
               <DownloadPdfLink href={`/portal/reports/${submissionId}/pdf`} />
               <PrintButton />
             </div>
-          } />
+          }
+        />
         <CardBody>
           <DescriptionList
             columns={3}

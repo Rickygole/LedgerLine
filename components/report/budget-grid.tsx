@@ -16,6 +16,7 @@ import {
 } from "@/lib/report/budget-rows";
 import { parseAmount } from "@/lib/rules/money";
 import { formatCurrency, plural } from "@/lib/format";
+import { NumericInput } from "./numeric-input";
 import { balanceCopy, minusCurrency, signedDifference } from "./balance";
 import { BalanceMeter } from "./balance-meter";
 import { parseBudgetPaste } from "@/lib/rules/paste";
@@ -389,13 +390,14 @@ export function BudgetGrid({
                             >
                               $
                             </span>
-                            <input
+                            <NumericInput
+                              bare
+                              kind="currency"
                               id={`budget-amt-${row.rowId}`}
-                              inputMode="decimal"
                               value={row.amountText}
                               aria-invalid={badAmount || undefined}
                               aria-describedby={badAmount || error ? errorId : undefined}
-                              onChange={(event) => update(row.rowId, { amountText: event.target.value })}
+                              onValueChange={(next) => update(row.rowId, { amountText: next })}
                               onBlur={() => {
                                 const parsed = parseAmount(row.amountText);
                                 if (parsed !== null) update(row.rowId, { amountText: formatAmountText(parsed) });
@@ -420,13 +422,14 @@ export function BudgetGrid({
                             >
                               $
                             </span>
-                            <input
+                            <NumericInput
+                              bare
+                              kind="currency"
                               id={`budget-act-${row.rowId}`}
-                              inputMode="decimal"
                               value={row.actualText}
                               aria-invalid={badActual || undefined}
                               aria-describedby={badActual || error ? errorId : undefined}
-                              onChange={(event) => update(row.rowId, { actualText: event.target.value })}
+                              onValueChange={(next) => update(row.rowId, { actualText: next })}
                               onBlur={() => {
                                 const parsed = parseAmount(row.actualText);
                                 if (parsed !== null) update(row.rowId, { actualText: formatAmountText(parsed) });
