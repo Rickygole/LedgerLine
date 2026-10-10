@@ -19,6 +19,7 @@ import {
   type Concern,
 } from "@/lib/finance/review/return-note-core";
 import { buildSnapshot } from "@/lib/snapshot";
+import { isUuid } from "@/lib/ids";
 import { introducedBlockingIssues } from "@/lib/rules/correction";
 import { identityProblem } from "@/lib/rules/identity";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
@@ -72,7 +73,9 @@ export async function transitionAction(_prev: ActionState, formData: FormData): 
   const id = String(formData.get("submissionId") ?? "");
   const action = String(formData.get("action") ?? "");
   const lock = lockField.safeParse(formData.get("lockVersion"));
-  if (!["start_review", "accept"].includes(action) || !lock.success) return failure("That action is not available.");
+  if (!isUuid(id) || !["start_review", "accept"].includes(action) || !lock.success) {
+    return failure("That action is not available.");
+  }
   try {
     const problem = await withClaims(user.id, async (tx) => {
       if (action === "accept") {
