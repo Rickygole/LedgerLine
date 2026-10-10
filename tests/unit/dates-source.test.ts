@@ -24,7 +24,7 @@ describe("[US-040] one source of today", () => {
     expect(savedAtLabel("2026-10-09T20:56:00Z")).toBe("4:56 PM");
     vi.stubEnv("DEMO_TODAY", "2026-10-14");
     expect(daysPastDue("2026-09-30")).toBe(14);
-    expect(savedAtLabel("2026-10-09T20:56:00Z")).toBe("Oct 9, 2026, 4:56 PM");
+    expect(savedAtLabel("2026-10-09T20:56:00Z")).toBe("Oct 9, 4:56 PM");
   });
 
   it("never reads the clock for a calendar date outside lib/dates.ts", () => {

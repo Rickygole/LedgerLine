@@ -122,9 +122,22 @@ export function plainTextReport(input: SummaryInput): string {
   return lines.join("\n");
 }
 
+const TZ = "America/New_York";
+
+function asDate(value: string | Date): Date {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00Z`) : new Date(value);
+}
+
+export function formatShortDate(value: string | Date, today: string = todayInNewYork()): string {
+  const date = asDate(value);
+  const year = new Intl.DateTimeFormat("en-US", { timeZone: TZ, year: "numeric" }).format(date);
+  if (year !== today.slice(0, 4)) return formatDate(date);
+  return new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" }).format(date);
+}
+
 export function savedAtLabel(value: string, today: string = todayInNewYork()): string {
   const when = new Date(value);
-  return isToday(when, today) ? formatTime(when) : `${formatDate(when)}, ${formatTime(when)}`;
+  return isToday(when, today) ? formatTime(when) : `${formatShortDate(when, today)}, ${formatTime(when)}`;
 }
 
 export function questionLabel(label: string): string {
