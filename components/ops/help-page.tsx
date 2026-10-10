@@ -35,10 +35,10 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
           <CardBody>
             <ActionForm action={createSupportRequest} submitLabel="Send request" pendingLabel="Sending">
               <div>
-                <Label htmlFor="category" required>
+                <Label htmlFor="category">
                   What do you need help with
                 </Label>
-                <Select id="category" name="category" defaultValue="">
+                <Select id="category" name="category" defaultValue="" aria-required="true">
                   <option value="" disabled>
                     Choose one
                   </option>
@@ -50,16 +50,16 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
                 </Select>
               </div>
               <div>
-                <Label htmlFor="subject" required>
+                <Label htmlFor="subject">
                   Subject
                 </Label>
-                <Input id="subject" name="subject" maxLength={120} />
+                <Input id="subject" name="subject" maxLength={120} aria-required="true" />
               </div>
               <div>
-                <Label htmlFor="body" required>
+                <Label htmlFor="body">
                   Details
                 </Label>
-                <Textarea id="body" name="body" maxLength={4000} rows={6} />
+                <Textarea id="body" name="body" maxLength={4000} rows={6} aria-required="true" />
               </div>
             </ActionForm>
           </CardBody>

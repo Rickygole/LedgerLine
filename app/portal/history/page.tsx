@@ -63,12 +63,11 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
       <PageHeader
         eyebrow={user.orgName ?? "Your organization"}
         title="Submission history"
-        description="Every report your organization has submitted, including reports submitted by your colleagues."
       />
       <Card>
         <CardHeader
           title="Submitted reports"
-          description={`${shown.length} of ${rows.length} shown. Newest first.`}
+          description={shown.length === rows.length ? undefined : `${shown.length} of ${rows.length} shown`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Segmented label="Filter by period" param="period" base={base("period")} current={period} options={[{ value: "all", label: "All periods" }, ...periods.map(([id, label]) => ({ value: id, label }))]} />

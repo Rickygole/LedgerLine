@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DueBadge, StateBadge } from "@/components/ui/status-badge";
+import { StateBadge } from "@/components/ui/status-badge";
 import { formatDate } from "@/lib/dates";
 import { formatCurrency } from "@/lib/rules/money";
 import { actionFor, type Obligation } from "@/lib/portal/data";
@@ -15,6 +15,12 @@ function open(o: Obligation) {
   return o.status === null || o.status === "draft" || o.status === "returned";
 }
 
+function DueNote({ days }: { days: number }) {
+  if (days > 0) return <span className="whitespace-nowrap text-sm font-semibold text-bad">{days} {days === 1 ? "day" : "days"} past due</span>;
+  if (days > -14) return <span className="whitespace-nowrap text-sm font-semibold text-warn">Due in {-days} {days === -1 ? "day" : "days"}</span>;
+  return null;
+}
+
 function ActionLink({ o }: { o: Obligation }) {
   return (
     <Link href={actionFor(o).href} className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover">
@@ -27,7 +33,28 @@ function ActionLink({ o }: { o: Obligation }) {
   );
 }
 
-function Rows({ rows }: { rows: Obligation[] }) {
+type Code = { code: string; fiscalYearId: string };
+
+function currentCodes(obligations: Obligation[]): Map<string, Code> {
+  const codes = new Map<string, Code>();
+  for (const o of obligations) {
+    const known = codes.get(o.initiativeName);
+    if (!known || o.fiscalYearId > known.fiscalYearId) codes.set(o.initiativeName, { code: o.initiativeCode, fiscalYearId: o.fiscalYearId });
+  }
+  return codes;
+}
+
+function InitiativeCode({ o, codes }: { o: Obligation; codes: Map<string, Code> }) {
+  const current = codes.get(o.initiativeName);
+  if (!current || current.code === o.initiativeCode) return <>{o.initiativeCode}</>;
+  return (
+    <abbr title={`${o.fiscalYearId} code ${o.initiativeCode}, carried forward as ${current.code}`} className="no-underline">
+      {current.code}
+    </abbr>
+  );
+}
+
+function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> }) {
   return (
     <>
       <ul className="divide-y divide-line-soft border-y border-line-soft md:hidden">
@@ -38,14 +65,16 @@ function Rows({ rows }: { rows: Obligation[] }) {
                 <p className="text-base font-semibold text-ink">{o.initiativeName}</p>
                 <p className="text-sm text-muted">
                   {o.periodLabel} <span aria-hidden="true">·</span>
-                  <span className="sr-only">,</span> <span className="font-mono">{o.initiativeCode}</span>
+                  <span className="sr-only">,</span> <span className="font-mono">
+                    <InitiativeCode o={o} codes={codes} />
+                  </span>
                 </p>
               </div>
               <StateBadge state={o.state} audience="cbo" />
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-ink-2">
               <span className="whitespace-nowrap">Due {formatDate(o.dueOn)}</span>
-              {open(o) ? <DueBadge daysPastDue={o.pastDue} /> : null}
+              {open(o) ? <DueNote days={o.pastDue} /> : null}
               <span className="num whitespace-nowrap">Award {formatCurrency(o.award)}</span>
             </div>
             <p className="mt-2">
@@ -74,7 +103,7 @@ function Rows({ rows }: { rows: Obligation[] }) {
                 <td className="px-4 py-3">
                   <p className="font-semibold text-ink">{o.initiativeName}</p>
                   <p className="font-mono text-[13px] text-muted">
-                    {o.initiativeCode}
+                    <InitiativeCode o={o} codes={codes} />
                     {o.referenceNo ? `, ${o.referenceNo}` : ""}
                   </p>
                 </td>
@@ -86,7 +115,7 @@ function Rows({ rows }: { rows: Obligation[] }) {
                 </td>
                 <td className="px-4 py-3">
                   <p className="whitespace-nowrap">{formatDate(o.dueOn)}</p>
-                  {open(o) ? <DueBadge daysPastDue={o.pastDue} /> : null}
+                  {open(o) ? <DueNote days={o.pastDue} /> : null}
                 </td>
                 <td className="num px-4 py-3 text-right">{formatCurrency(o.award)}</td>
                 <td className="px-4 py-3">
@@ -104,15 +133,14 @@ function Rows({ rows }: { rows: Obligation[] }) {
   );
 }
 
-function Group({ id, title, hint, rows }: { id: string; title: string; hint: string; rows: Obligation[] }) {
+function Group({ id, title, rows, codes }: { id: string; title: string; rows: Obligation[]; codes: Map<string, Code> }) {
   if (rows.length === 0) return null;
   return (
     <section aria-labelledby={id}>
-      <h3 id={id} className="text-[17px] font-bold leading-6 text-ink">
+      <h3 id={id} className="mb-3 text-[17px] font-bold leading-6 text-ink">
         {title} <span className="num font-semibold text-muted">({rows.length})</span>
       </h3>
-      <p className="mb-3 text-sm text-muted">{hint}</p>
-      <Rows rows={rows} />
+      <Rows rows={rows} codes={codes} />
     </section>
   );
 }
@@ -121,6 +149,7 @@ export function ObligationGroups({ obligations }: { obligations: Obligation[] })
   const needs = obligations.filter((o) => o.state === "missing" || o.state === "returned" || o.state === "draft");
   const coming = obligations.filter((o) => o.state === "not_started");
   const done = obligations.filter((o) => o.state === "submitted" || o.state === "under_review" || o.state === "accepted");
+  const codes = currentCodes(obligations);
 
   if (obligations.length === 0) {
     return <p className="py-6 text-[15px] text-muted">No reports are assigned to your organization yet. Council Finance assigns initiatives and reporting periods each fiscal year.</p>;
@@ -128,8 +157,8 @@ export function ObligationGroups({ obligations }: { obligations: Obligation[] })
 
   return (
     <div className="space-y-8">
-      <Group id="group-needs" title="Needs action" hint="Overdue, changes requested, or started and not yet submitted." rows={needs} />
-      <Group id="group-coming" title="Coming up" hint="Not started yet. You can start a report at any time before it is due." rows={coming} />
+      <Group id="group-needs" title="Needs action" rows={needs} codes={codes} />
+      <Group id="group-coming" title="Coming up" rows={coming} codes={codes} />
       {done.length > 0 ? (
         <details className="group">
           <summary className="cursor-pointer list-none text-[15px] font-bold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
@@ -139,7 +168,7 @@ export function ObligationGroups({ obligations }: { obligations: Obligation[] })
             <span className="hidden group-open:inline">Hide completed reports</span>
           </summary>
           <div className="mt-4">
-            <Group id="group-done" title="Done" hint="Submitted, in review, or accepted by Council Finance." rows={done} />
+            <Group id="group-done" title="Done" rows={done} codes={codes} />
           </div>
         </details>
       ) : null}

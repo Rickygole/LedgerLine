@@ -10,7 +10,11 @@ export const PEOPLE = {
   grace: "grace.chen@finance.example.gov",
 };
 
-export const SAVED_LABEL = /^Saved (\d{1,2}:\d{2} [AP]M|[A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M)/;
+export const SAVED_LABEL = /^Saved (\d{1,2}:\d{2} [AP]M|[A-Z][a-z]{2} \d{1,2}, (\d{4}, )?\d{1,2}:\d{2} [AP]M)/;
+
+export function savedNow(page: Page) {
+  return page.locator('[data-save-state="saved"]').getByText(SAVED_LABEL);
+}
 
 export const AUTH_DIR = "reports/auth";
 
@@ -120,7 +124,7 @@ export async function submitOverdueDraft(page: Page): Promise<string> {
     { category: "PS", description: "Mentor stipends", amount: "60000" },
     { category: "OTPS", description: "Program supplies", amount: "25000" },
   ]);
-  await expect(page.getByText(SAVED_LABEL)).toBeVisible({ timeout: 20_000 });
+  await expect(savedNow(page)).toBeVisible({ timeout: 20_000 });
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
   await page.waitForURL(/\/submitted$/);

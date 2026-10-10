@@ -1,6 +1,7 @@
 "use client";
 
-import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
+import { FieldError, Hint, Input, Label, OptionalMark, Select, Textarea } from "@/components/ui/field";
+import { questionLabel } from "@/lib/report/format";
 import { cn } from "@/lib/cn";
 import { wordCount } from "@/lib/rules/validate";
 import type { AnswerValue, Question } from "@/lib/rules/types";
@@ -56,6 +57,8 @@ export function QuestionField({
   const errorId = `${id}-error`;
   const describedBy = [question.help ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
   const numeric = ["integer", "number", "currency", "percent"].includes(question.type);
+  const required = question.required ? true : undefined;
+  const label = questionLabel(question.label);
 
   let control: React.ReactNode;
 
@@ -69,6 +72,7 @@ export function QuestionField({
           id={id}
           value={text}
           aria-invalid={error ? true : undefined}
+          aria-required={required}
           aria-describedby={[describedBy, `${id}-count`].filter(Boolean).join(" ")}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
@@ -84,7 +88,7 @@ export function QuestionField({
     );
   } else if (question.type === "select") {
     control = (
-      <Select id={id} value={asText(value)} aria-invalid={error ? true : undefined} aria-describedby={describedBy} disabled={disabled} onChange={(event) => onChange(event.target.value)} onBlur={onBlur}>
+      <Select id={id} value={asText(value)} aria-invalid={error ? true : undefined} aria-required={required} aria-describedby={describedBy} disabled={disabled} onChange={(event) => onChange(event.target.value)} onBlur={onBlur}>
         <option value="">Choose one</option>
         {(question.options ?? []).map((option) => (
           <option key={option} value={option}>
@@ -95,7 +99,7 @@ export function QuestionField({
     );
   } else if (question.type === "yesno") {
     control = (
-      <div id={id} role="radiogroup" tabIndex={-1} aria-labelledby={`${id}-legend`} aria-describedby={describedBy} className="flex gap-3">
+      <div id={id} role="radiogroup" tabIndex={-1} aria-required={required} aria-invalid={error ? true : undefined} aria-labelledby={`${id}-legend`} aria-describedby={describedBy} className="flex gap-3">
         {["Yes", "No"].map((option) => (
           <label
             key={option}
@@ -141,6 +145,7 @@ export function QuestionField({
           autoComplete={spec.autoComplete}
           value={asText(value)}
           aria-invalid={error ? true : undefined}
+          aria-required={required}
           aria-describedby={describedBy}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
@@ -158,19 +163,14 @@ export function QuestionField({
 
   return (
     <div className="max-w-2xl">
-      {question.type === "yesno" ? (
+      {question.type === "yesno" || question.type === "table" ? (
         <p id={`${id}-legend`} className="mb-1.5 text-sm font-semibold text-ink">
-          {question.label}
-          {question.required ? <span className="ml-1 font-normal text-muted">(required)</span> : null}
-        </p>
-      ) : question.type === "table" ? (
-        <p id={`${id}-legend`} className="mb-1.5 text-sm font-semibold text-ink">
-          {question.label}
-          {question.required ? <span className="ml-1 font-normal text-muted">(required)</span> : null}
+          {label}
+          {question.required ? null : <OptionalMark />}
         </p>
       ) : (
-        <Label htmlFor={id} required={question.required}>
-          {question.label}
+        <Label htmlFor={id} optional={!question.required}>
+          {label}
         </Label>
       )}
       {question.help ? <Hint id={hintId}>{question.help}</Hint> : null}

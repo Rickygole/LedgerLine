@@ -1,8 +1,7 @@
-import { Download } from "lucide-react";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
-import { displayScalar, tableRows } from "@/lib/report/format";
+import { displayScalar, questionLabel, tableRows } from "@/lib/report/format";
 import { formatBytes } from "@/lib/report/upload-rules";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "./budget-table";
@@ -38,11 +37,7 @@ export function SubmittedCopy({
     <div className="space-y-6">
       <style>{`@media print { header, footer, [data-print-hide] { display: none !important; } main { padding: 0 !important; max-width: none !important; } }`}</style>
       <Card>
-        <CardHeader
-          title="Submitted copy"
-          description="This is exactly what Council Finance received. It cannot be edited."
-          actions={<PrintButton />}
-        />
+        <CardHeader title="Submitted copy" actions={<PrintButton />} />
         <CardBody>
           <DescriptionList
             columns={3}
@@ -62,12 +57,9 @@ export function SubmittedCopy({
             ]}
           />
         </CardBody>
-      </Card>
 
-      {definition.sections.map((section) => (
-        <Card key={section.key}>
-          <CardHeader title={section.title} />
-          <CardBody>
+        {definition.sections.map((section) => (
+          <CopySection key={section.key} title={section.title}>
             {section.kind === "budget" ? (
               <BudgetTable lines={snapshot.budget} award={awardAmount} answers={snapshot.answers} />
             ) : (
@@ -79,7 +71,7 @@ export function SubmittedCopy({
                     const rows = question.type === "table" ? tableRows(question, value) : [];
                     return (
                       <div key={question.key} className="max-w-3xl">
-                        <dt className="text-[13px] font-semibold text-muted">{question.label}</dt>
+                        <dt className="text-[13px] font-semibold text-muted">{questionLabel(question.label)}</dt>
                         <dd className="mt-1 text-sm text-ink">
                           {question.type === "table" ? (
                             rows.length === 0 ? (
@@ -117,15 +109,12 @@ export function SubmittedCopy({
                   })}
               </dl>
             )}
-          </CardBody>
-        </Card>
-      ))}
+          </CopySection>
+        ))}
 
-      {snapshot.certification ? (
-        <Card>
-          <CardHeader title="Certification" />
-          <CardBody>
-            <p className="text-sm font-semibold text-ink">{snapshot.certification.statement}</p>
+        {snapshot.certification ? (
+          <CopySection title="Certification">
+            <p className="mb-4 text-sm font-semibold text-ink">{snapshot.certification.statement}</p>
             <DescriptionList
               columns={3}
               items={[
@@ -134,13 +123,10 @@ export function SubmittedCopy({
                 { label: "Certified on", value: `${formatDateTime(snapshot.certification.certifiedAt)} ET` },
               ]}
             />
-          </CardBody>
-        </Card>
-      ) : null}
+          </CopySection>
+        ) : null}
 
-      <Card>
-        <CardHeader title="Attachments" />
-        <CardBody>
+        <CopySection title="Attachments">
           {snapshot.attachments.length === 0 ? (
             <p className="text-sm text-muted">No files were attached.</p>
           ) : (
@@ -151,8 +137,7 @@ export function SubmittedCopy({
                   <span className="flex items-center gap-4 text-muted">
                     <span className="num">{formatBytes(file.bytes)}</span>
                     {files[file.path] ? (
-                      <a href={`/portal/reports/${submissionId}/files/${files[file.path]}`} className="no-print inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover" aria-label={`Download ${file.filename}`}>
-                        <Download className="h-4 w-4" aria-hidden="true" />
+                      <a href={`/portal/reports/${submissionId}/files/${files[file.path]}`} className="no-print font-semibold text-link underline underline-offset-2 hover:text-link-hover" aria-label={`Download ${file.filename}`}>
                         Download
                       </a>
                     ) : null}
@@ -161,8 +146,17 @@ export function SubmittedCopy({
               ))}
             </ul>
           )}
-        </CardBody>
+        </CopySection>
       </Card>
     </div>
+  );
+}
+
+function CopySection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-line-soft px-6 py-6">
+      <h2 className="mb-4 text-lg font-bold leading-7 text-ink">{title}</h2>
+      {children}
+    </section>
   );
 }

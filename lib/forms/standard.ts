@@ -28,7 +28,7 @@ export const STANDARD_QUESTIONS: Question[] = [
   },
   { key: "accomplishments", label: "Key accomplishments this period", type: "textarea", required: true, scope: "standard", maxWords: 500 },
   { key: "challenges", label: "Challenges and how you addressed them", type: "textarea", required: false, scope: "standard", maxWords: 300 },
-  { key: "success_story", label: "A participant success story (optional)", type: "textarea", required: false, scope: "standard", maxWords: 300 },
+  { key: "success_story", label: "A participant success story", type: "textarea", required: false, scope: "standard", maxWords: 300 },
 ];
 
 const byKey = (key: string) => {

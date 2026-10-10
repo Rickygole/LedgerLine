@@ -1,13 +1,14 @@
 import { Lock } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { Hint, Label } from "@/components/ui/field";
+import { questionLabel } from "@/lib/report/format";
 import type { FormDefinition, Question } from "@/lib/rules/types";
 
 const controlClass = "block w-full rounded-md border border-line bg-surface px-3 py-2 text-base text-muted sm:text-sm";
 
 function limitText(question: Question): string | null {
   if (question.maxWords) return `Up to ${question.maxWords} words`;
-  if (question.maxLength) return `Up to ${question.maxLength} characters`;
+  if (question.maxLength && question.maxLength < 100) return `Up to ${question.maxLength} characters`;
   return null;
 }
 
@@ -132,8 +133,8 @@ export function FormPreview({ definition, awardLabel, only }: { definition: Form
                 const condition = conditionText(definition, question);
                 return (
                   <div key={question.key}>
-                    <Label htmlFor={question.type === "yesno" ? undefined : id} required={question.required}>
-                      <span id={`${id}-label`}>{question.label}</span>
+                    <Label htmlFor={question.type === "yesno" ? undefined : id} optional={!question.required}>
+                      <span id={`${id}-label`}>{questionLabel(question.label)}</span>
                     </Label>
                     <div id={`${id}-help`}>
                       {question.help ? <Hint>{question.help}</Hint> : null}

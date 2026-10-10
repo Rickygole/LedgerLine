@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
+import { Card, CardBody, DescriptionList } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
@@ -39,27 +39,24 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
         crumbs={[{ label: "Messages", href: "/portal/messages" }, { label: "Message" }]}
         actions={
           row.submission_id ? (
-            <ButtonLink href={`/portal/reports/${row.submission_id}`} variant="secondary" >
+            <ButtonLink href={`/portal/reports/${row.submission_id}`} variant="secondary">
               View report {row.reference_no}
             </ButtonLink>
           ) : null
         }
       />
       <Card>
-        <CardHeader title="Message details" />
         <CardBody>
           <DescriptionList
             columns={2}
             items={[
-              { label: "To", value: row.to_email },
-              { label: "Created", value: formatDateTime(row.created_at) },
+              { label: "To", value: <span className="break-all">{row.to_email}</span> },
               { label: "Delivery", value: <Badge tone={deliveryState(row.status).tone}>{deliveryState(row.status).label}</Badge> },
-              { label: "Type", value: templateLabel(row.template) },
             ]}
           />
         </CardBody>
-        <CardBody className="border-t border-line">
-          <p className="mb-2 text-[13px] font-semibold text-muted">Message text</p>
+        <CardBody className="border-t border-line-soft">
+          <h2 className="sr-only">Message text</h2>
           <pre className="whitespace-pre-wrap break-words rounded-md border border-line bg-surface p-4 font-mono text-sm leading-6 text-ink">{row.body_text}</pre>
         </CardBody>
       </Card>

@@ -7,7 +7,6 @@ import { submitReport } from "@/app/portal/reports/actions";
 import { Button } from "@/components/ui/button";
 import type { ReportState } from "@/components/ui/status-badge";
 import { FieldError, Hint, Input, Label } from "@/components/ui/field";
-import { cn } from "@/lib/cn";
 import { formatTime } from "@/lib/dates";
 import { amountIssues, linesFromRows, rowsFromLines, type BudgetRow } from "@/lib/report/budget-rows";
 import { fieldTargetId, issuesBySection, reportIssues, sectionKeyForField } from "@/lib/report/issues";
@@ -183,7 +182,6 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
   const next = index < steps.length - 1 ? steps[index + 1] : null;
   const section = definition.sections.find((item) => item.key === step) ?? null;
 
-  const wide = section?.kind === "budget";
   const halted = state.kind === "stale" || state.kind === "locked";
   const shownIssues = serverIssues ?? blocking;
   const stepIssues = step === REVIEW ? [] : shownIssues.filter((issue) => stepOfField(issue.field) === step);
@@ -241,14 +239,7 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
     }
   }
 
-  const purpose =
-    step === ATTACHMENTS
-      ? "Add supporting documents such as invoices, rosters or a signed certification."
-      : step === REVIEW
-        ? "Check your answers, then send the report to Council Finance."
-        : section?.kind === "budget"
-          ? section.description || "List what the award paid for. The approved budget must add up to the award."
-          : section?.description;
+  const purpose = section?.kind === "budget" && definition.budget.mustEqualAward ? "The total must equal your award." : null;
 
   return (
     <>
@@ -292,7 +283,7 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
         </p>
       ) : null}
 
-      <div className={cn("lg:grid lg:items-start lg:gap-10", wide ? "lg:grid-cols-[260px_minmax(0,1100px)]" : "lg:grid-cols-[260px_minmax(0,760px)]")}>
+      <div className="lg:grid lg:grid-cols-[260px_minmax(0,760px)] lg:items-start lg:gap-10">
         <aside className="no-print mb-5 lg:sticky lg:top-6 lg:mb-0">
           <Stepper steps={steps} current={step} onSelect={(key) => go(key)} />
           <div className="mt-3 px-1 lg:mt-4 lg:border-t lg:border-line-soft lg:px-3 lg:pt-4">
@@ -408,12 +399,12 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                       <div className="mt-4 grid gap-4 sm:grid-cols-2">
                         <div>
                           <Label htmlFor="certifier-name">Certifier name</Label>
-                          <Input id="certifier-name" value={certName} maxLength={120} onChange={(event) => setCertName(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_name") ? true : undefined} autoComplete="name" />
+                          <Input id="certifier-name" aria-required="true" value={certName} maxLength={120} onChange={(event) => setCertName(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_name") ? true : undefined} autoComplete="name" />
                           <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_name")?.message : undefined}</FieldError>
                         </div>
                         <div>
                           <Label htmlFor="certifier-title">Certifier title</Label>
-                          <Input id="certifier-title" value={certTitle} maxLength={120} onChange={(event) => setCertTitle(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_title") ? true : undefined} autoComplete="organization-title" />
+                          <Input id="certifier-title" aria-required="true" value={certTitle} maxLength={120} onChange={(event) => setCertTitle(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_title") ? true : undefined} autoComplete="organization-title" />
                           <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_title")?.message : undefined}</FieldError>
                         </div>
                       </div>
