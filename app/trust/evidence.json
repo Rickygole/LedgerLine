@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-10-10T02:34:41.332Z",
-  "commit": "ecfc6325830185be952a925870f96632cad65fb6",
+  "generatedAt": "2026-10-10T02:50:52.350Z",
+  "commit": "0ef11c47ed0cc89a54fe1d470abb9ff15b1201c8",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 408,
-    "passed": 408,
+    "tests": 560,
+    "passed": 560,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 202,
-    "sql": 136,
-    "eval": 29,
-    "e2e": 41
+    "unit": 290,
+    "sql": 179,
+    "eval": 32,
+    "e2e": 59
   },
   "summary": {
     "verified": {
@@ -45,24 +45,6 @@
       "reason": null,
       "note": null,
       "tests": [
-        {
-          "title": "award fields inherits the administering agency from the initiative",
-          "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
-        {
-          "title": "award fields requires a registration date for registered contracts and a contract number",
-          "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
-        {
-          "title": "award fields carries funding source and sponsors through a rollover",
-          "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
         {
           "title": "initiative names are unique within a fiscal year rejects a second initiative with the same name in the same year and allows it in another",
           "file": "tests/sql/fiscal-year.test.ts",
@@ -104,6 +86,72 @@
       "note": "Standard questions come from one shared library in the application. Every form version on file embeds those same questions, and a change to the library reaches every form built afterwards. Each published version keeps its own copy, so a published form never changes underneath a report.",
       "tests": [
         {
+          "title": "form draft evaluation has labels for three templates",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation senior-digital-literacy-report.docx has a replay fixture keyed by the hash of the extracted text",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation senior-digital-literacy-report.docx replay output is schema valid, matches the labels and has fully valid citations",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation senior-digital-literacy-report.docx fallback parser has high recall and precision with valid citations",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation youth-sports-league-report.docx has a replay fixture keyed by the hash of the extracted text",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation youth-sports-league-report.docx replay output is schema valid, matches the labels and has fully valid citations",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation youth-sports-league-report.docx fallback parser has high recall and precision with valid citations",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation food-pantry-report-injected.docx has a replay fixture keyed by the hash of the extracted text",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation food-pantry-report-injected.docx replay output is schema valid, matches the labels and has fully valid citations",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation food-pantry-report-injected.docx fallback parser has high recall and precision with valid citations",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "form draft evaluation injection is not obeyed by the replay or the fallback parser",
+          "file": "tests/eval/form-draft.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
           "title": "standard questions come from one shared library embeds the same library questions in every form version on file, across both fiscal years",
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
@@ -120,6 +168,42 @@
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "a form made from an imported Word file records where it came from lets the app record the draft source and refuses values outside the allowed list",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Word import without a model reads headings, tables, choice lists and yes or no lines from a fresh file",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model puts each question under its heading and builds a valid table question",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model cleans yes or no and option text out of the labels",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model still handles plain text with section lines when no structure is available",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a Word file imported without a model keeps its headings, table and choices and is not labelled AI",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -132,6 +216,12 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "a form made from an imported Word file records where it came from lets the app record the draft source and refuses values outside the allowed list",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "forms mix shared standard questions with initiative-specific ones marks library questions as standard and adds initiative questions beside them",
           "file": "tests/unit/form-rules.test.ts",
@@ -161,6 +251,30 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "Word import without a model reads headings, tables, choice lists and yes or no lines from a fresh file",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model puts each question under its heading and builds a valid table question",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model cleans yes or no and option text out of the labels",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model still handles plain text with section lines when no structure is available",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "field types cover counts, money, percentages, dates, contacts, choices and narrative checks counts, money, percentages, dates, contacts, choices and narrative length",
           "file": "tests/unit/form-rules.test.ts",
@@ -202,6 +316,30 @@
       "note": null,
       "tests": [
         {
+          "title": "Word import without a model reads headings, tables, choice lists and yes or no lines from a fresh file",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model puts each question under its heading and builds a valid table question",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model cleans yes or no and option text out of the labels",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Word import without a model still handles plain text with section lines when no structure is available",
+          "file": "tests/unit/docx-import.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "a question can contain a table to complete accepts a table within its row limit",
           "file": "tests/unit/form-rules.test.ts",
           "status": "passed",
@@ -218,6 +356,12 @@
           "file": "tests/unit/form-rules.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "a Word file imported without a model keeps its headings, table and choices and is not labelled AI",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -247,18 +391,6 @@
       "reason": null,
       "note": "The fiscal year rollover copies forms and assignments into the new year. Finance administrators run it.",
       "tests": [
-        {
-          "title": "award fields inherits the administering agency from the initiative",
-          "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
-        {
-          "title": "award fields requires a registration date for registered contracts and a contract number",
-          "file": "tests/sql/fiscal-year.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
         {
           "title": "award fields carries funding source and sponsors through a rollover",
           "file": "tests/sql/fiscal-year.test.ts",
@@ -300,6 +432,12 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "award fields carries funding source and sponsors through a rollover",
+          "file": "tests/sql/fiscal-year.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
           "file": "tests/sql/lifecycle.test.ts",
@@ -392,6 +530,12 @@
           "file": "tests/e2e/01-maria.spec.ts",
           "status": "passed",
           "suite": "e2e"
+        },
+        {
+          "title": "a signed-out session can no longer reach the upload endpoints",
+          "file": "tests/e2e/06-upload-session.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -475,6 +619,48 @@
           "suite": "sql"
         },
         {
+          "title": "opening the start page does not create a draft has an assignment and period with no report yet",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "opening the start page does not create a draft looks up a report without writing anything",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "opening the start page does not create a draft creates the draft and writes a start audit event only when started",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes has an assignment and a period from another fiscal year",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes refuses to start or look up a report across fiscal years",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes refuses the same row from any database path",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes numbers new references in sequence per period",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "a submitter starts the report the organization owes from the portal",
           "file": "tests/e2e/01-maria.spec.ts",
           "status": "passed",
@@ -483,6 +669,12 @@
         {
           "title": "starting a report is a POST from a button and opens the new draft",
           "file": "tests/e2e/05-access.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a start link that pairs an initiative with another year's period is not found and creates nothing",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -515,8 +707,32 @@
       "note": null,
       "tests": [
         {
+          "title": "last saved label shows only the time for a save made today in New York",
+          "file": "tests/unit/saved-label.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "last saved label includes the date for an earlier day",
+          "file": "tests/unit/saved-label.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "last saved label uses the New York day, not the UTC day",
+          "file": "tests/unit/saved-label.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "answers save automatically and are still there after reload",
           "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "the resume prompt goes away once the user edits the report",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -544,7 +760,7 @@
           "suite": "sql"
         },
         {
-          "title": "a submission is locked and an emailed copy with the content is queued",
+          "title": "a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed",
           "file": "tests/e2e/01-maria.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -558,8 +774,44 @@
       "route": "/portal/messages",
       "state": "verified",
       "reason": null,
-      "note": null,
+      "note": "The full copy is created at submission and kept in Messages. It is emailed only when a delivery provider is configured (RESEND_API_KEY and EMAIL_FROM); without one the message is recorded and labelled Recorded. Delivery is proven with a mocked provider, not a live mailbox.",
       "tests": [
+        {
+          "title": "outbox delivery records a message and never marks it sent when no transport is configured",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery marks a message sent with the provider id and time when the provider accepts it",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery holds a message outside the allowlist",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery retries a failed send and stops as failed after the third attempt",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery does not email password link messages and does not let a submitter see them",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery keeps the seeded history honest",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "submitting queues an email with the submitted content writes the outbox message in the same step as the status change",
           "file": "tests/sql/workflow.test.ts",
@@ -573,7 +825,67 @@
           "suite": "sql"
         },
         {
-          "title": "a submission is locked and an emailed copy with the content is queued",
+          "title": "the email transport is off without a key and a sender",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport sends through the provider and returns its message id",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport reports a provider error as failed with a short reason",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport reports an unreachable provider as failed",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport fails an answer that carries no message id instead of claiming it was sent",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport holds a recipient outside the allowlist without calling the provider",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher records every message when no transport is configured",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher requeues a failed send and gives up after the third attempt",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher counts sent and held results and survives a throwing sender",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher never emails a password link template",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed",
           "file": "tests/e2e/01-maria.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -636,6 +948,150 @@
       "note": null,
       "tests": [
         {
+          "title": "a signed upload can be recorded once records a valid upload",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once refuses a replay of the same signed upload and keeps the stored blob",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once refuses to re-attach after the row was removed",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once refuses an expired signature",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once refuses a ticket whose database expiry has passed",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once takes the type from the signed path, not the client filename",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once refuses a blob whose content does not match the signed type",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once refuses a workbook that carries macros and deletes the blob",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once refuses a workbook that carries macros and deletes the blob",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once re-checks the file count inside the recording transaction",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once re-checks the total size inside the recording transaction",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "upload tickets in the database redeems once, only for the owner",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "signed upload paths verifies a fresh signature",
+          "file": "tests/unit/attachment-signature.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "signed upload paths refuses an expired signature",
+          "file": "tests/unit/attachment-signature.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "signed upload paths expires a default signature in about 15 minutes",
+          "file": "tests/unit/attachment-signature.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "signed upload paths refuses a pushed-out expiry, another user, another path and junk",
+          "file": "tests/unit/attachment-signature.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "signed upload paths does not sign with the raw AUTH_SECRET",
+          "file": "tests/unit/attachment-signature.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "attachments with macros are refused accepts a real workbook written by the xlsx library",
+          "file": "tests/unit/ooxml.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "attachments with macros are refused accepts a plain package with stored and deflated parts",
+          "file": "tests/unit/ooxml.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "attachments with macros are refused refuses a package that carries vbaProject.bin",
+          "file": "tests/unit/ooxml.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "attachments with macros are refused refuses a macro-enabled content type even when renamed to .xlsx",
+          "file": "tests/unit/ooxml.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "attachments with macros are refused refuses Excel 4 macro sheets",
+          "file": "tests/unit/ooxml.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "attachments with macros are refused refuses something that only starts with PK",
+          "file": "tests/unit/ooxml.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "attachments with macros are refused leaves PDF and CSV alone",
+          "file": "tests/unit/ooxml.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "Excel, Word, CSV and PDF files are accepted accepts each of the four types in any letter case",
           "file": "tests/unit/upload-limit.test.ts",
           "status": "passed",
@@ -660,19 +1116,19 @@
           "suite": "unit"
         },
         {
-          "title": "legacy Word and Excel files accepts .doc and .xls by name",
+          "title": "legacy Word and Excel files are no longer accepted rejects .doc and .xls by name",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "legacy Word and Excel files still rejects other types",
+          "title": "legacy Word and Excel files are no longer accepted still rejects other types",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "legacy file content checks is applied by contentLooksValid",
+          "title": "legacy Word and Excel files are no longer accepted still accepts the four supported types",
           "file": "tests/unit/upload-limits.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -680,6 +1136,12 @@
         {
           "title": "several supporting documents of the allowed types attach to the report",
           "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "finance staff cannot mint upload sessions",
+          "file": "tests/e2e/06-upload-session.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -695,22 +1157,58 @@
       "note": null,
       "tests": [
         {
-          "title": "[D19] opening the start page does not create a draft has an assignment and period with no report yet",
-          "file": "tests/sql/report-start.test.ts",
+          "title": "uploads are limited to 25 MB per file states the limit as 25 megabytes in both the server and the browser",
+          "file": "tests/unit/upload-limit.test.ts",
           "status": "passed",
-          "suite": "sql"
+          "suite": "unit"
         },
         {
-          "title": "[D19] opening the start page does not create a draft looks up a report without writing anything",
-          "file": "tests/sql/report-start.test.ts",
+          "title": "uploads are limited to 25 MB per file accepts a file of exactly 25 MB and refuses one byte more",
+          "file": "tests/unit/upload-limit.test.ts",
           "status": "passed",
-          "suite": "sql"
+          "suite": "unit"
         },
         {
-          "title": "[D19] opening the start page does not create a draft creates the draft and writes a start audit event only when started",
-          "file": "tests/sql/report-start.test.ts",
+          "title": "uploads are limited to 25 MB per file refuses a 31 MB file on the server and names its size",
+          "file": "tests/unit/upload-limit.test.ts",
           "status": "passed",
-          "suite": "sql"
+          "suite": "unit"
+        },
+        {
+          "title": "uploads are limited to 25 MB per file gives the browser the same answer as the server for every size",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "uploads are limited to 25 MB per file refuses an empty file",
+          "file": "tests/unit/upload-limit.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit keeps the 25 MB cap and accepts a file exactly at it",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit accepts files between 10 and 25 MB",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit never says a file over the limit equals the limit",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "upload size limit shows sizes with one decimal",
+          "file": "tests/unit/upload-limits.test.ts",
+          "status": "passed",
+          "suite": "unit"
         }
       ]
     },
@@ -894,85 +1392,85 @@
       "note": null,
       "tests": [
         {
-          "title": "[D5] integer counts rejects negatives",
+          "title": "integer counts rejects negatives",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] integer counts accepts the bounds 0 and 10,000,000 and rejects one more",
+          "title": "integer counts accepts the bounds 0 and 10,000,000 and rejects one more",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] integer counts rejects values that would lose precision",
+          "title": "integer counts rejects values that would lose precision",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] currency amounts accepts up to 999,999,999.99 and rejects more",
+          "title": "currency amounts accepts up to 999,999,999.99 and rejects more",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] currency amounts rejects negatives and a third decimal place",
+          "title": "currency amounts rejects negatives and a third decimal place",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] currency amounts checks budget amounts in cents",
+          "title": "currency amounts checks budget amounts in cents",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] percentages accepts 0 to 100 and rejects values outside it or with long fractions",
+          "title": "percentages accepts 0 to 100 and rejects values outside it or with long fractions",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] submit re-validates bounds blocks a negative table cell",
+          "title": "submit re-validates bounds blocks a negative table cell",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] submit re-validates bounds blocks a negative budget line even when the total balances",
+          "title": "submit re-validates bounds blocks a negative budget line even when the total balances",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] submit re-validates bounds blocks a negative actual spent value",
+          "title": "submit re-validates bounds blocks a negative actual spent value",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] submit re-validates bounds states the line limit with the count",
+          "title": "submit re-validates bounds states the line limit with the count",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[LL-ACTUAL] actual spent text keeps a blank actual as null and a typed one as a number",
+          "title": "actual spent text keeps a blank actual as null and a typed one as a number",
           "file": "tests/unit/report-budget-rows.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[LL-ACTUAL] actual spent text flags a third decimal place on either amount",
+          "title": "actual spent text flags a third decimal place on either amount",
           "file": "tests/unit/report-budget-rows.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[LL-ACTUAL] actual spent text caps an absurd amount so the save still goes through and submit blocks it",
+          "title": "actual spent text caps an absurd amount so the save still goes through and submit blocks it",
           "file": "tests/unit/report-budget-rows.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1048,6 +1546,12 @@
       "note": null,
       "tests": [
         {
+          "title": "confirmation email body leaves out blank table rows and formats counts",
+          "file": "tests/unit/report-format.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "required fields blocks every missing required field",
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
@@ -1060,8 +1564,50 @@
           "suite": "unit"
         },
         {
+          "title": "a required table needs a filled row blocks a table with no rows",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row blocks a table whose only row is empty",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row blocks a table of several empty rows",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row blocks a half filled row and names the missing cell",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row ignores empty rows next to a complete row",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row flags a half filled row even when the table is optional",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "submitting with required answers missing lists each one",
           "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a required table with only an empty row is refused",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1160,6 +1706,126 @@
         {
           "title": "error messages say exactly what to fix names the field, the problem and the amount to change",
           "file": "tests/unit/form-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Maria Santos",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Zoë Ñúñez",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Siobhan O'Brien-Smith",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Dr. J. R. Cho",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Marie-Claire D’Souza",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts José Ángel García Márquez",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Li",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Nguyễn Thị Hạnh",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols accepts Anna Maria von Trapp Jr.",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses <script>alert(1)</script> Zoë Ñúñez 🎉",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses Robert'); DROP TABLE users;--",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses Maria 2nd",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses R2D2",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses ...",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses - -",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses a@b.org",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses Maria\u0000Santos",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols refuses an empty, one character or overlong name with a plain message",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols applies to the person certifying a report",
+          "file": "tests/unit/person-name.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "person names accept real names and refuse markup and symbols applies to the report contact name",
+          "file": "tests/unit/person-name.test.ts",
           "status": "passed",
           "suite": "unit"
         },
@@ -1381,6 +2047,24 @@
           "suite": "sql"
         },
         {
+          "title": "one source of today returns the pinned date when one is set and the New York date otherwise",
+          "file": "tests/unit/dates-source.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "one source of today makes days past due, today checks and the saved label agree on the same day",
+          "file": "tests/unit/dates-source.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "one source of today never reads the clock for a calendar date outside lib/dates.ts",
+          "file": "tests/unit/dates-source.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "dashboard buckets puts a past due assignment with no submission in missing",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
@@ -1492,6 +2176,12 @@
           "file": "tests/e2e/02-daniel.spec.ts",
           "status": "passed",
           "suite": "e2e"
+        },
+        {
+          "title": "choosing a bucket on the submissions list updates the list within 3 seconds",
+          "file": "tests/e2e/07-same-route-navigation.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -1552,6 +2242,18 @@
       "note": null,
       "tests": [
         {
+          "title": "manual flags are refused on a report that has not been submitted",
+          "file": "tests/sql/manual-flag.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "manual flags are allowed on a submitted report",
+          "file": "tests/sql/manual-flag.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "an analyst flags a submission and it appears in the flagged items view",
           "file": "tests/e2e/02-daniel.spec.ts",
           "status": "passed",
@@ -1568,6 +2270,24 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "the analyst's own flag text reaches the drafted note carries the flag note into the concern",
+          "file": "tests/eval/return-note.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "the analyst's own flag text reaches the drafted note writes the flag text into the rule based note and leaves contact details out",
+          "file": "tests/eval/return-note.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
+        {
+          "title": "the analyst's own flag text reaches the drafted note falls back to the kind of flag when the analyst left no text",
+          "file": "tests/eval/return-note.test.ts",
+          "status": "passed",
+          "suite": "eval"
+        },
         {
           "title": "finance requests an update and the organization resubmits requires a note, returns the report, takes a second revision and then accepts",
           "file": "tests/sql/workflow.test.ts",
@@ -1601,6 +2321,12 @@
         {
           "title": "an analyst requests an update with a note, the organization resubmits, and the analyst accepts",
           "file": "tests/e2e/02-daniel.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "starting a review and accepting a report show the new state without a reload",
+          "file": "tests/e2e/06-review-refresh.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -1657,6 +2383,12 @@
           "suite": "unit"
         },
         {
+          "title": "workbook carries actual spent on the budget sheet as a number and leaves it empty when not entered",
+          "file": "tests/unit/finance-export.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "submitted data downloads as Excel and as CSV for the filtered list, for finance staff only",
           "file": "tests/e2e/02-daniel.spec.ts",
           "status": "passed",
@@ -1675,6 +2407,12 @@
       "tests": [
         {
           "title": "workbook builds a CSV of the Submissions sheet only",
+          "file": "tests/unit/finance-export.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "workbook writes award and budget total as plain numbers, not formatted text",
           "file": "tests/unit/finance-export.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1810,8 +2548,32 @@
       "route": "/finance/reminders",
       "state": "verified",
       "reason": null,
-      "note": "Reminder rules queue one email per organization per rule per day and skip reports already submitted.",
+      "note": "Reminder rules queue one message per organization per rule per day and skip reports already submitted. The daily job delivers them through the same provider when one is configured; otherwise they are recorded, not emailed. Delivery is proven with a mocked provider.",
       "tests": [
+        {
+          "title": "the reminder cron sends what is due on the real date is not configured without a secret",
+          "file": "tests/sql/cron.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the reminder cron sends what is due on the real date rejects a wrong or missing token",
+          "file": "tests/sql/cron.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the reminder cron sends what is due on the real date queues the second notice on its due date and nothing on a repeat run",
+          "file": "tests/sql/cron.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminder emails go through the same delivery path delivers a queued reminder when a transport is configured",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "reminders queue once per org per rule per day and skip submitted reports emails each owing organization once and a second run adds nothing",
           "file": "tests/sql/lifecycle.test.ts",
@@ -1847,6 +2609,48 @@
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "reminder history and wording shows what the rules that already fired sent",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminder history and wording greets the primary contact by name",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reminder history and wording greets by name in a live preview too",
+          "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "send now states who will get the reminders before queueing counts organizations and emails",
+          "file": "tests/unit/reminder-confirm.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "send now states who will get the reminders before queueing uses the singular for one",
+          "file": "tests/unit/reminder-confirm.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Add to outbox asks for confirmation with the number of organizations and queues nothing until confirmed",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "the seeded history shows what earlier rules sent",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -2794,6 +3598,36 @@
           "file": "tests/sql/access.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes has an assignment and a period from another fiscal year",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes refuses to start or look up a report across fiscal years",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes refuses the same row from any database path",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report is only started for a period the initiative owes numbers new references in sequence per period",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a start link that pairs an initiative with another year's period is not found and creates nothing",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -2843,6 +3677,102 @@
           "suite": "sql"
         },
         {
+          "title": "password links never reach the outbox keeps the live token out of every outbox row and out of non-admin reach",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password links never reach the outbox lets only an admin read reset and set-password messages",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password links never reach the outbox hides migrated historic messages too",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "password links never reach the outbox still lets an admin issue a working link end to end",
+          "file": "tests/sql/accounts.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "login throttle holds under concurrency allows exactly 8 of 40 parallel attempts on one key",
+          "file": "tests/sql/throttle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "login throttle holds under concurrency does not let one key's burst use up another key's allowance",
+          "file": "tests/sql/throttle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /..//evil.example/x",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /.//evil.example/x",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /%2e%2e//evil.example/x",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /a/..//evil.example/x",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /a/../..//evil.example",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /./\\evil.example",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /..//",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative falls back for /a/..//",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative never returns a path starting with // or /\\",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "normalised paths never become protocol-relative still returns ordinary normalised paths",
+          "file": "tests/unit/redirect.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "a submitter cannot open another organization's report by its address",
           "file": "tests/e2e/01-maria.spec.ts",
           "status": "passed",
@@ -2865,6 +3795,18 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "only failed attempts count toward the lockout checks a key without recording an attempt",
+          "file": "tests/sql/throttle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "only failed attempts count toward the lockout blocks after the limit of recorded failures and clears after a successful sign-in",
+          "file": "tests/sql/throttle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "a submitter signs in through the passcode gate with a personal account",
           "file": "tests/e2e/01-maria.spec.ts",
@@ -2890,7 +3832,13 @@
           "suite": "e2e"
         },
         {
-          "title": "the ninth sign-in attempt for one email within 15 minutes is refused with a wait notice",
+          "title": "the ninth failed sign-in for one email within 15 minutes is refused with a wait notice",
+          "file": "tests/e2e/05-access.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "switching between personas many times never locks anyone out",
           "file": "tests/e2e/05-access.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -2906,6 +3854,36 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "orphan uploads are swept after 24 hours deletes old files with no attachment row and keeps referenced and recent ones",
+          "file": "tests/sql/orphans.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "orphan uploads are swept after 24 hours is a no-op the second time",
+          "file": "tests/sql/orphans.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once re-checks the file count inside the recording transaction",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a signed upload can be recorded once re-checks the total size inside the recording transaction",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "preparing uploads is capped per user allows 60 preparations an hour and refuses the next",
+          "file": "tests/sql/uploads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "uploads are limited to 25 MB per file states the limit as 25 megabytes in both the server and the browser",
           "file": "tests/unit/upload-limit.test.ts",
@@ -2998,8 +3976,44 @@
       "route": "/portal/messages",
       "state": "verified",
       "reason": null,
-      "note": null,
+      "note": "Submission creates a message holding the full submitted content. A dispatcher outside the database transaction sends it when a provider is configured and marks it sent with the provider message id, held, or failed after three attempts. Proven with a mocked provider.",
       "tests": [
+        {
+          "title": "outbox delivery records a message and never marks it sent when no transport is configured",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery marks a message sent with the provider id and time when the provider accepts it",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery holds a message outside the allowlist",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery retries a failed send and stops as failed after the third attempt",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery does not email password link messages and does not let a submitter see them",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "outbox delivery keeps the seeded history honest",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "submitting queues an email with the submitted content writes the outbox message in the same step as the status change",
           "file": "tests/sql/workflow.test.ts",
@@ -3013,7 +4027,67 @@
           "suite": "sql"
         },
         {
-          "title": "a submission is locked and an emailed copy with the content is queued",
+          "title": "the email transport is off without a key and a sender",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport sends through the provider and returns its message id",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport reports a provider error as failed with a short reason",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport reports an unreachable provider as failed",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport fails an answer that carries no message id instead of claiming it was sent",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the email transport holds a recipient outside the allowlist without calling the provider",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher records every message when no transport is configured",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher requeues a failed send and gives up after the third attempt",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher counts sent and held results and survives a throwing sender",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the outbox dispatcher never emails a password link template",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed",
           "file": "tests/e2e/01-maria.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -3270,6 +4344,12 @@
       "note": null,
       "tests": [
         {
+          "title": "confirmation email body leaves out blank table rows and formats counts",
+          "file": "tests/unit/report-format.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "required field messages read as plain instructions asks yes or no questions without folding them into a sentence",
           "file": "tests/unit/required-message.test.ts",
           "status": "passed",
@@ -3306,8 +4386,50 @@
           "suite": "unit"
         },
         {
+          "title": "a required table needs a filled row blocks a table with no rows",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row blocks a table whose only row is empty",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row blocks a table of several empty rows",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row blocks a half filled row and names the missing cell",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row ignores empty rows next to a complete row",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a required table needs a filled row flags a half filled row even when the table is optional",
+          "file": "tests/unit/validate.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "submitting with required answers missing lists each one",
           "file": "tests/e2e/01-maria.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a required table with only an empty row is refused",
+          "file": "tests/e2e/06-qa-round-two.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -3341,25 +4463,25 @@
           "suite": "sql"
         },
         {
-          "title": "[D5] submit re-validates bounds blocks a negative table cell",
+          "title": "submit re-validates bounds blocks a negative table cell",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] submit re-validates bounds blocks a negative budget line even when the total balances",
+          "title": "submit re-validates bounds blocks a negative budget line even when the total balances",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] submit re-validates bounds blocks a negative actual spent value",
+          "title": "submit re-validates bounds blocks a negative actual spent value",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
         },
         {
-          "title": "[D5] submit re-validates bounds states the line limit with the count",
+          "title": "submit re-validates bounds states the line limit with the count",
           "file": "tests/unit/numeric-bounds.test.ts",
           "status": "passed",
           "suite": "unit"
