@@ -5,11 +5,11 @@ import { redirect } from "next/navigation";
 import { anonymous, pgCode } from "@/lib/db";
 import { hashToken, isTokenFormat, passwordProblem } from "@/lib/password";
 import { allowed, clientKey, TOO_MANY } from "@/lib/throttle";
-import type { FormState } from "@/app/actions/session";
+import type { ActionState } from "@/lib/actions";
 
 const INVALID = "This link has expired or was already used. Ask Council Finance to send a new one.";
 
-export async function setPassword(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function setPassword(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const token = String(formData.get("token") ?? "");
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");

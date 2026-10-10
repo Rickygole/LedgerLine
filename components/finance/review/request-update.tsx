@@ -68,7 +68,7 @@ export function RequestUpdate({
     }
     startTransition(async () => {
       const res = await sendUpdateAction({ submissionId, lockVersion, text, aiActionId: usedDraft });
-      if (!res.ok) return setError(res.message);
+      if (res.error) return setError(res.error);
       setSent(true);
       dialog.current?.close();
       onDone(`Update requested at ${formatTime(nowIso())}. ${contactName ?? "The organization's primary contact"} will see the note in Messages and above their report.`);

@@ -2,29 +2,30 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { CheckCircle2, Flag, Pencil } from "lucide-react";
-import { addFlagAction, correctionAction, transitionAction, type ActionResult } from "@/app/finance/submissions/[id]/actions";
+import { addFlagAction, correctionAction, transitionAction } from "@/app/finance/submissions/[id]/actions";
 import { RequestUpdate } from "@/components/finance/review/request-update";
 import { StaleNotice, isStale } from "@/components/finance/review/stale-notice";
+import type { ActionResult, ActionState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
 import type { Concern } from "@/lib/finance/review/return-note-core";
 
 export type CorrectableQuestion = { key: string; label: string; current: string };
 
-function Message({ state }: { state: ActionResult | undefined }) {
+function Message({ state }: { state: ActionState }) {
   if (!state) return <div aria-live="polite" />;
-  if (!state.ok && isStale(state.message)) return <StaleNotice />;
+  if (state.error && isStale(state.error)) return <StaleNotice />;
   return (
-    <p role={state.ok ? "status" : "alert"} className={state.ok ? "text-sm font-semibold text-ok" : "text-sm font-semibold text-bad"}>
-      {state.message}
+    <p role={state.error ? "alert" : "status"} className={state.error ? "text-sm font-semibold text-bad" : "text-sm font-semibold text-ok"}>
+      {state.error ?? state.ok}
     </p>
   );
 }
 
 function TransitionButton({ submissionId, lockVersion, action, label, variant, onDone }: { submissionId: string; lockVersion: number; action: "start_review" | "accept"; label: string; variant: "primary" | "secondary" | "ghost"; onDone: (message: string) => void }) {
-  const [state, formAction, pending] = useActionState(async (previous: ActionResult | undefined, formData: FormData) => {
+  const [state, formAction, pending] = useActionState(async (previous: ActionState, formData: FormData) => {
     const result = await transitionAction(previous, formData);
-    if (result.ok) onDone(result.message);
+    if (result.ok) onDone(result.ok);
     return result;
   }, undefined);
   return (
@@ -41,7 +42,7 @@ function TransitionButton({ submissionId, lockVersion, action, label, variant, o
 }
 
 function useGuardedAction(run: (fd: FormData) => Promise<ActionResult>) {
-  const [state, setState] = useState<ActionResult | undefined>();
+  const [state, setState] = useState<ActionState>();
   const [pending, startTransition] = useTransition();
   const submit = (fd: FormData, onOk: () => void) => {
     startTransition(async () => {
@@ -70,8 +71,8 @@ function FlagForm({ submissionId }: { submissionId: string }) {
       <Label htmlFor="flag-note">
         Flag note
       </Label>
-      <Textarea id="flag-note" aria-required="true" rows={3} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby={state && !state.ok ? "flag-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
-      {state && !state.ok ? <FieldError id="flag-error">{state.message}</FieldError> : null}
+      <Textarea id="flag-note" aria-required="true" rows={3} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby={state?.error ? "flag-error" : undefined} aria-invalid={state?.error ? true : undefined} />
+      {state?.error ? <FieldError id="flag-error">{state.error}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Flag className="h-4 w-4" aria-hidden="true" />
         {pending ? "Adding" : "Add manual flag"}
@@ -136,9 +137,9 @@ function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId
         <Label htmlFor="corr-reason">
           Reason
         </Label>
-        <Textarea id="corr-reason" aria-required="true" rows={2} value={reason} onChange={(event) => setReason(event.target.value)} aria-describedby={state && !state.ok ? "corr-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
+        <Textarea id="corr-reason" aria-required="true" rows={2} value={reason} onChange={(event) => setReason(event.target.value)} aria-describedby={state?.error ? "corr-error" : undefined} aria-invalid={state?.error ? true : undefined} />
       </div>
-      {state && !state.ok ? isStale(state.message) ? <StaleNotice /> : <FieldError id="corr-error">{state.message}</FieldError> : null}
+      {state?.error ? isStale(state.error) ? <StaleNotice /> : <FieldError id="corr-error">{state.error}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Pencil className="h-4 w-4" aria-hidden="true" />
         {pending ? "Saving" : "Save correction"}

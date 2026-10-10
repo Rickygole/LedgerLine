@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { pgCode, withClaims } from "@/lib/db";
+import { dbErrorMessage, type ErrorOverrides } from "@/lib/actions";
+import { withClaims } from "@/lib/db";
+import { logError } from "@/lib/ops/log";
 import { draftFormFromDocx, type DraftResult } from "@/lib/ai/form-draft";
 import { FIELD_TYPES, validateDefinition } from "@/lib/forms/editor/definition";
 import { checkField, mergeFields, type ProposedField } from "@/lib/forms/editor/draft-core";
@@ -39,11 +41,17 @@ function fail(...errors: string[]): Failure {
   return { ok: false, errors };
 }
 
-function mapError(error: unknown): string {
-  const code = pgCode(error);
-  if (code === "42501") return "Only finance administrators can change or publish a form.";
-  if (code === "23514") return "Only drafts can be changed or published. This version is already published.";
-  return "Something went wrong and nothing was saved. Try again.";
+const FORM_ERRORS: ErrorOverrides = {
+  codes: {
+    "42501": "Only finance administrators can change or publish a form.",
+    "23514": "Only drafts can be changed or published. This version is already published.",
+  },
+  fallback: "Something went wrong and nothing was saved. Try again.",
+};
+
+async function failFrom(event: string, error: unknown): Promise<Failure> {
+  await logError(event, error);
+  return fail(dbErrorMessage(error, FORM_ERRORS));
 }
 
 export async function saveDefinition(formId: string, definition: FormDefinition): Promise<{ ok: true } | Failure> {
@@ -72,7 +80,7 @@ export async function saveDefinition(formId: string, definition: FormDefinition)
     });
     if (!saved) return fail("This version is no longer a draft, so it cannot be changed.");
   } catch (error) {
-    return fail(mapError(error));
+    return failFrom("save_definition_failed", error);
   }
   revalidatePath(`/finance/forms/${formId}`);
   return { ok: true };
@@ -90,7 +98,7 @@ export async function publishForm(formId: string): Promise<{ ok: true; version: 
       return { ok: true as const, version: row?.version ?? 0, initiativeId: form.initiative_id };
     });
   } catch (error) {
-    return fail(mapError(error));
+    return failFrom("publish_form_failed", error);
   } finally {
     revalidatePath(`/finance/forms/${formId}`);
   }
@@ -105,7 +113,8 @@ export async function analyzeTemplate(formId: string, formData: FormData): Promi
   let paragraphs: string[];
   try {
     paragraphs = await readTemplate(Buffer.from(await file.arrayBuffer()));
-  } catch {
+  } catch (error) {
+    await logError("read_template_failed", error);
     return fail("That file could not be read as a Word document. Check that it is a .docx file.");
   }
   if (paragraphs.length === 0) return fail("No text was found in that document.");
@@ -119,7 +128,7 @@ export async function analyzeTemplate(formId: string, formData: FormData): Promi
     if (!result) return fail("Import is available only on draft versions.");
     return { ok: true, ...result };
   } catch (error) {
-    return fail(mapError(error));
+    return failFrom("analyze_template_failed", error);
   }
 }
 
@@ -184,7 +193,7 @@ export async function applyDraft(formId: string, aiActionId: string, submitted: 
       return { ok: true as const, summary };
     });
   } catch (error) {
-    return fail(mapError(error));
+    return failFrom("apply_draft_failed", error);
   }
 }
 
@@ -198,6 +207,6 @@ export async function rejectDraft(formId: string, aiActionId: string): Promise<{
       return { ok: true as const };
     });
   } catch (error) {
-    return fail(mapError(error));
+    return failFrom("reject_draft_failed", error);
   }
 }

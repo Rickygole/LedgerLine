@@ -5,6 +5,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { ActionState } from "@/lib/actions";
 import { homeFor, type Role } from "@/lib/auth";
 import { anonymous, withClaims } from "@/lib/db";
 import { safeNext } from "@/lib/redirect";
@@ -21,8 +22,6 @@ const EMAIL_FAILURE_LIMIT = 8;
 
 const DUMMY_HASH = "$2b$10$ub.I6pzHcfPjvdwuphNjf.D0PorzRHkVo7g34JoMBQE4O5FnPI8TO";
 
-export type FormState = { error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
-
 async function lookup(email: string): Promise<{ id: string; password_hash: string } | null> {
   const rows = await anonymous<{ id: string; password_hash: string }>("SELECT * FROM app.login_lookup($1)", [email]);
   return rows[0] ?? null;
@@ -34,7 +33,7 @@ function sameSecret(a: string, b: string): boolean {
   return timingSafeEqual(left, right);
 }
 
-export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function signIn(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const rawEmail = String(formData.get("email") ?? "").slice(0, 254);
   const values = { email: rawEmail };
   const parsed = loginSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
@@ -82,7 +81,7 @@ export async function signOut() {
   redirect("/login");
 }
 
-export async function unlockGate(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function unlockGate(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const ip = await clientKey();
   if (!(await allowed(`gate:${ip}`, 20))) return { error: TOO_MANY };
   const passcode = String(formData.get("passcode") ?? "").trim();

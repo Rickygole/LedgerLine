@@ -1,3 +1,4 @@
+import { logError } from "@/lib/ops/log";
 import { withClaims, type Tx } from "@/lib/db";
 import { sendEmail, transportFrom, type OutgoingEmail, type SendResult, type Transport } from "@/lib/email";
 
@@ -71,7 +72,7 @@ export async function dispatchFor(userId: string, options: { submissionId?: stri
     }
     return total;
   } catch (error) {
-    console.error("outbox dispatch failed", error);
+    await logError("outbox_dispatch_failed", error);
     return null;
   }
 }

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { isUuid } from "@/lib/ids";
-import { dbFailure, failure, firstIssue, isoDay, success, trimmed, type OpState } from "@/lib/ops/action-state";
+import { actionFailure, type ActionState, failure, firstIssue, isoDay, success, trimmed } from "@/lib/actions";
 
 const REVIEW_ERRORS = {
   "review is signed off": "This review is signed off and can no longer be changed.",
@@ -18,7 +18,7 @@ function refresh(year: string) {
   revalidatePath("/finance/rollover");
 }
 
-export async function startReview(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function startReview(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const parsed = z.object({ year: z.string().regex(/^FY\d{2}$/, "Choose a fiscal year."), reviewDate: isoDay("the review date") }).safeParse({
     year: String(formData.get("year") ?? ""),
@@ -29,13 +29,13 @@ export async function startReview(_previous: OpState, formData: FormData): Promi
     await withClaims(admin.id, (tx) => tx.query("SELECT app.start_annual_review($1, $2)", [parsed.data.year, parsed.data.reviewDate]));
     return success(`The ${parsed.data.year} review is open.`);
   } catch (error) {
-    return dbFailure(error, { annual_review_fiscal_year_id_key: `A review for ${parsed.data.year} already exists.`, "fiscal year not found": "That fiscal year does not exist." });
+    return actionFailure("start_review_failed", error, { messages: { annual_review_fiscal_year_id_key: `A review for ${parsed.data.year} already exists.`, "fiscal year not found": "That fiscal year does not exist." } });
   } finally {
     refresh(parsed.data.year);
   }
 }
 
-export async function setReviewCheck(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function setReviewCheck(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const id = String(formData.get("reviewId") ?? "");
   const item = String(formData.get("item") ?? "");
@@ -46,13 +46,13 @@ export async function setReviewCheck(_previous: OpState, formData: FormData): Pr
     await withClaims(admin.id, (tx) => tx.query("SELECT app.set_review_check($1, $2, $3)", [id, item, done]));
     return success(done ? "Ticked." : "Unticked.");
   } catch (error) {
-    return dbFailure(error, REVIEW_ERRORS);
+    return actionFailure("set_review_check_failed", error, { messages: REVIEW_ERRORS });
   } finally {
     refresh(year);
   }
 }
 
-export async function addReviewParticipant(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function addReviewParticipant(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const parsed = z
     .object({ reviewId: z.string().refine(isUuid, "That review could not be found."), year: z.string(), name: trimmed("a name", 120), affiliation: trimmed("an organization or team", 160) })
@@ -67,13 +67,13 @@ export async function addReviewParticipant(_previous: OpState, formData: FormDat
     await withClaims(admin.id, (tx) => tx.query("SELECT app.add_review_participant($1, $2, $3)", [parsed.data.reviewId, parsed.data.name, parsed.data.affiliation]));
     return success(`${parsed.data.name} added.`);
   } catch (error) {
-    return dbFailure(error, REVIEW_ERRORS);
+    return actionFailure("add_review_participant_failed", error, { messages: REVIEW_ERRORS });
   } finally {
     refresh(parsed.data.year);
   }
 }
 
-export async function addReviewDecision(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function addReviewDecision(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const parsed = z
     .object({
@@ -93,13 +93,13 @@ export async function addReviewDecision(_previous: OpState, formData: FormData):
     await withClaims(admin.id, (tx) => tx.query("SELECT app.add_review_decision($1, $2, $3)", [parsed.data.reviewId, parsed.data.area, parsed.data.decision]));
     return success("Decision recorded.");
   } catch (error) {
-    return dbFailure(error, REVIEW_ERRORS);
+    return actionFailure("add_review_decision_failed", error, { messages: REVIEW_ERRORS });
   } finally {
     refresh(parsed.data.year);
   }
 }
 
-export async function signOffReview(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function signOffReview(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const parsed = z.object({ reviewId: z.string().refine(isUuid, "That review could not be found."), year: z.string(), signedOn: isoDay("the sign-off date") }).safeParse({
     reviewId: String(formData.get("reviewId") ?? ""),
@@ -111,13 +111,13 @@ export async function signOffReview(_previous: OpState, formData: FormData): Pro
     await withClaims(admin.id, (tx) => tx.query("SELECT app.sign_off_annual_review($1, $2)", [parsed.data.reviewId, parsed.data.signedOn]));
     return success("The review is signed off.");
   } catch (error) {
-    return dbFailure(error, {
+    return actionFailure("sign_off_review_failed", error, { messages: {
       ...REVIEW_ERRORS,
       "complete every checklist item first": "Tick every checklist item before signing off.",
       "record who took part first": "Record who took part before signing off.",
       "record at least one decision first": "Record at least one decision before signing off.",
       "sign-off date must fall": "The sign-off date must be between the review date and today.",
-    });
+    } });
   } finally {
     refresh(parsed.data.year);
   }

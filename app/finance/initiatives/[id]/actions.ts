@@ -3,12 +3,10 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { plainError } from "@/lib/finance/admin/errors";
+import { actionFailure, type ActionState } from "@/lib/actions";
 import { isUuid } from "@/lib/ids";
 
-type DraftState = { error?: string } | undefined;
-
-export async function createDraftFromPublished(_prev: DraftState, formData: FormData): Promise<DraftState> {
+export async function createDraftFromPublished(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser(["finance_admin"]);
   const initiativeId = String(formData.get("initiativeId") ?? "");
   if (!isUuid(initiativeId)) return { error: "That initiative could not be found." };
@@ -36,7 +34,7 @@ export async function createDraftFromPublished(_prev: DraftState, formData: Form
       return created!.id;
     });
   } catch (error) {
-    return { error: plainError(error) };
+    return actionFailure("create_draft_from_published_failed", error);
   }
   redirect(`/finance/forms/${newId}`);
 }

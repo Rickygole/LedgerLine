@@ -16,9 +16,9 @@ export function FlagResolve({ submissionId, flagId }: { submissionId: string; fl
       <Button type="submit" name="outcome" value="dismissed" size="sm" variant="ghost" disabled={pending}>
         Dismiss
       </Button>
-      {state && !state.ok ? (
+      {state?.error ? (
         <span role="alert" className="text-sm font-semibold text-bad">
-          {state.message}
+          {state.error}
         </span>
       ) : null}
     </form>

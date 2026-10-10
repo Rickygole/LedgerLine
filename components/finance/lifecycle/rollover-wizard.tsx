@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, ArrowRight, FileText, Play } from "lucide-react";
-import { runRollover, type RolloverState } from "@/app/finance/rollover/actions";
+import { runRollover } from "@/app/finance/rollover/actions";
 import { formatCurrency, plural } from "@/lib/format";
 import type { PlanAction, RolloverInitiative } from "@/lib/lifecycle/rollover";
 import { Button, buttonClass } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/status-badge";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { RolloverSteps } from "@/components/finance/lifecycle/rollover-steps";
+import type { ActionState } from "@/lib/actions";
 
 type Choice = { action: PlanAction; name: string; group: string };
 
@@ -36,7 +37,7 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
   const [groupNames, setGroupNames] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("");
-  const [state, formAction, pending] = useActionState<RolloverState, FormData>(runRollover, undefined);
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(runRollover, undefined);
 
   useEffect(() => {
     if (state?.error) serverRef.current?.focus();

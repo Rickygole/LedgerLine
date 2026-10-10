@@ -3,11 +3,12 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Save } from "lucide-react";
-import { saveQuery, type QueryState } from "@/app/finance/queries/actions";
+import { saveQuery } from "@/app/finance/queries/actions";
 import { ORG_TYPES, REPORT_BOROUGHS, STATUS_OPTIONS } from "@/lib/domain";
 import { BUCKET_OPTIONS, CONTRACT_OPTIONS, FLAG_OPTIONS, FUNDING_OPTIONS, QUERY_KEYS, type MemberOption, type QueryErrors, type QueryParams } from "@/lib/lifecycle/queries";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select } from "@/components/ui/field";
+import type { ActionState } from "@/lib/actions";
 
 type Props = {
   params: QueryParams;
@@ -24,7 +25,7 @@ export function QueryBuilder({ params, errors, periods, categories, initiatives,
   const [values, setValues] = useState<QueryParams>(params);
   const [pending, start] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [saveState, saveAction, saving] = useActionState<QueryState, FormData>(saveQuery, undefined);
+  const [saveState, saveAction, saving] = useActionState<ActionState, FormData>(saveQuery, undefined);
 
   useEffect(() => setValues(params), [params]);
 

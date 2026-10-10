@@ -4,14 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { plainError } from "@/lib/finance/admin/errors";
+import { actionFailure, type ActionState } from "@/lib/actions";
 import { isUuid } from "@/lib/ids";
 import { loadPeriods } from "@/lib/finance/review/data";
 import { cleanParams, QUERY_KEYS, toSearch, validateParams } from "@/lib/lifecycle/queries";
 
-export type QueryState = { error?: string } | undefined;
-
-export async function saveQuery(_prev: QueryState, formData: FormData): Promise<QueryState> {
+export async function saveQuery(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser(FINANCE_ROLES);
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Enter a name for this query." };
@@ -33,7 +31,7 @@ export async function saveQuery(_prev: QueryState, formData: FormData): Promise<
     const invalid = (error as { invalidFilter?: string }).invalidFilter;
     if (invalid) return { error: `A filter is not valid: ${invalid}` };
     if ((error as { code?: string }).code === "23505") return { error: "You already have a saved query with that name. Choose another name." };
-    return { error: plainError(error) };
+    return actionFailure("save_query_failed", error);
   }
   revalidatePath("/finance/queries");
   redirect(`/finance/queries?${saved}&saved=1`);

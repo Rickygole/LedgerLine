@@ -2,9 +2,10 @@
 
 import { useActionState, useId, useRef } from "react";
 import { KeyRound, UserCheck, UserX, X } from "lucide-react";
-import { changeRole, sendPasswordReset, setActive, type UserActionState } from "@/app/finance/users/actions";
+import { changeRole, sendPasswordReset, setActive } from "@/app/finance/users/actions";
 import { Button } from "@/components/ui/button";
 import { Label, Select } from "@/components/ui/field";
+import type { ActionState } from "@/lib/actions";
 
 const ROLE_OPTIONS = [
   { value: "finance_viewer", label: "Finance (view only)" },
@@ -12,7 +13,7 @@ const ROLE_OPTIONS = [
   { value: "finance_admin", label: "Finance administrator" },
 ];
 
-function Message({ state }: { state: UserActionState }) {
+function Message({ state }: { state: ActionState }) {
   if (!state) return null;
   return (
     <div role={state.error ? "alert" : "status"} className={`text-sm font-semibold ${state.error ? "text-bad" : "text-ok"}`}>

@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { logError } from "@/lib/ops/log";
 import { NextResponse, type NextRequest } from "next/server";
 import { anonymous, withClaims } from "@/lib/db";
 import { dispatchFor } from "@/lib/outbox-dispatch";
@@ -43,8 +44,8 @@ export async function GET(request: NextRequest) {
 
   const delivery = await dispatchFor(scheduler, { limit: 100, rounds: 5 });
 
-  const orphans = await withClaims(scheduler, (tx) => sweepOrphanFiles(tx)).catch((error: unknown) => {
-    console.error("orphan sweep failed", error);
+  const orphans = await withClaims(scheduler, (tx) => sweepOrphanFiles(tx)).catch(async (error: unknown) => {
+    await logError("orphan_sweep_failed", error);
     return { checked: 0, deleted: 0, failed: true };
   });
 

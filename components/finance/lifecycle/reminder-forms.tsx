@@ -3,21 +3,22 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Mail, Plus, Save, Send } from "lucide-react";
-import { deleteRule, restoreDefaults, saveRule, sendNow, toggleRule, type ReminderState } from "@/app/finance/reminders/actions";
+import { deleteRule, restoreDefaults, saveRule, sendNow, toggleRule } from "@/app/finance/reminders/actions";
 import { PLACEHOLDERS, sendNowSummary, type RuleRow } from "@/lib/lifecycle/reminders";
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { plural } from "@/lib/format";
+import type { ActionState } from "@/lib/actions";
 
-function Status({ state }: { state: ReminderState }) {
+function Status({ state }: { state: ActionState }) {
   if (state?.error) return <p role="alert" className="text-sm font-semibold text-bad">{state.error}</p>;
   if (state?.ok) return <p role="status" className="text-sm font-semibold text-ok">{state.ok}</p>;
   return null;
 }
 
 export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: RuleRow; cancelHref?: string }) {
-  const [state, action, pending] = useActionState<ReminderState, FormData>(saveRule, undefined);
+  const [state, action, pending] = useActionState<ActionState, FormData>(saveRule, undefined);
   const days = rule ? Math.abs(rule.offset_days) : 3;
   const timing = rule && rule.offset_days > 0 ? "after" : "before";
   const errors = state?.fieldErrors ?? {};
@@ -77,8 +78,8 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
 }
 
 export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: string }) {
-  const [toggleState, toggle, toggling] = useActionState<ReminderState, FormData>(toggleRule, undefined);
-  const [deleteState, remove, deleting] = useActionState<ReminderState, FormData>(deleteRule, undefined);
+  const [toggleState, toggle, toggling] = useActionState<ActionState, FormData>(toggleRule, undefined);
+  const [deleteState, remove, deleting] = useActionState<ActionState, FormData>(deleteRule, undefined);
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Link href={editHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
@@ -104,7 +105,7 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
 
 export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs }: { period: string; date: string; dateLabel: string; today: string; count: number; fresh: number; orgs: number }) {
   const isToday = date === today;
-  const [state, action, pending] = useActionState<ReminderState, FormData>(sendNow, undefined);
+  const [state, action, pending] = useActionState<ActionState, FormData>(sendNow, undefined);
   const [confirming, setConfirming] = useState(false);
   useEffect(() => {
     if (state?.ok || state?.error) setConfirming(false);
@@ -138,7 +139,7 @@ export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs
 }
 
 export function RestoreDefaultsForm({ period }: { period: string }) {
-  const [state, action, pending] = useActionState<ReminderState, FormData>(restoreDefaults, undefined);
+  const [state, action, pending] = useActionState<ActionState, FormData>(restoreDefaults, undefined);
   return (
     <form action={action} className="flex flex-wrap items-center gap-3">
       <input type="hidden" name="period" value={period} />

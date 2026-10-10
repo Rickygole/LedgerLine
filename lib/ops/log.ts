@@ -1,6 +1,5 @@
 import { nowDate } from "@/lib/dates";
 
-
 type ErrorLogInput = {
   requestId: string | null;
   digest: string | null;
@@ -33,3 +32,26 @@ export function headerValue(headers: Record<string, string | string[] | undefine
 }
 
 export const REQUEST_ID_HEADER = "x-request-id";
+
+export function formatActionErrorLog(event: string, error: unknown, requestId: string | null, at: Date = nowDate()): string {
+  const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code: unknown }).code) : null;
+  return JSON.stringify({
+    level: "error",
+    event,
+    at: at.toISOString(),
+    requestId,
+    code,
+    message: (error instanceof Error ? error.message : String(error)).slice(0, 500),
+  });
+}
+
+export async function logError(event: string, error: unknown): Promise<void> {
+  let requestId: string | null = null;
+  try {
+    const { headers } = await import("next/headers");
+    requestId = (await headers()).get(REQUEST_ID_HEADER);
+  } catch {
+    requestId = null;
+  }
+  console.error(formatActionErrorLog(event, error, requestId));
+}

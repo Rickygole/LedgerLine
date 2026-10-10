@@ -6,13 +6,9 @@ import { personNameProblem } from "@/lib/rules/person-name";
 import { requireUser } from "@/lib/auth";
 import { appOrigin } from "@/lib/origin";
 import { pgCode, withClaims } from "@/lib/db";
-import { plainError } from "@/lib/finance/admin/errors";
+import { actionFailure, type ActionState } from "@/lib/actions";
 import { isUuid } from "@/lib/ids";
 import { STAFF_ROLES } from "@/lib/finance/admin/users";
-
-export type UserActionState = { ok?: string; error?: string; link?: string } | undefined;
-
-type CreateUserState = { ok?: string; link?: string; error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
 
 type Target = { id: string; full_name: string; role: string; active: boolean };
 
@@ -22,7 +18,7 @@ async function loadTarget(tx: Parameters<Parameters<typeof withClaims>[1]>[0], i
   return target;
 }
 
-export async function changeRole(_prev: UserActionState, formData: FormData): Promise<UserActionState> {
+export async function changeRole(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const userId = String(formData.get("userId") ?? "");
   const role = String(formData.get("role") ?? "");
@@ -38,13 +34,13 @@ export async function changeRole(_prev: UserActionState, formData: FormData): Pr
       return { ok: `Role updated for ${target.full_name}.` };
     });
   } catch (error) {
-    return { error: plainError(error) };
+    return actionFailure("change_role_failed", error);
   } finally {
     revalidatePath("/finance/users");
   }
 }
 
-export async function setActive(_prev: UserActionState, formData: FormData): Promise<UserActionState> {
+export async function setActive(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const userId = String(formData.get("userId") ?? "");
   const active = formData.get("active") === "true";
@@ -59,13 +55,13 @@ export async function setActive(_prev: UserActionState, formData: FormData): Pro
       return { ok: `${target.full_name} is now ${active ? "active" : "inactive"}.` };
     });
   } catch (error) {
-    return { error: plainError(error) };
+    return actionFailure("set_active_failed", error);
   } finally {
     revalidatePath("/finance/users");
   }
 }
 
-export async function sendPasswordReset(_prev: UserActionState, formData: FormData): Promise<UserActionState> {
+export async function sendPasswordReset(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const userId = String(formData.get("userId") ?? "");
   if (!isUuid(userId)) return { error: "That user could not be found." };
@@ -78,7 +74,7 @@ export async function sendPasswordReset(_prev: UserActionState, formData: FormDa
     });
   } catch (error) {
     if (pgCode(error) === "23514") return { error: "That user could not be found or is inactive. Activate the account first." };
-    return { error: plainError(error) };
+    return actionFailure("send_password_reset_failed", error);
   } finally {
     revalidatePath("/finance/outbox");
   }
@@ -104,7 +100,7 @@ const createSchema = z
     if (value.role === "cbo_submitter" && !isUuid(value.orgId)) ctx.addIssue({ code: "custom", path: ["orgId"], message: "Choose the organization this person reports for." });
   });
 
-export async function createUser(_prev: CreateUserState, formData: FormData): Promise<CreateUserState> {
+export async function createUser(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const values = {
     fullName: String(formData.get("fullName") ?? "").slice(0, 200),
@@ -130,7 +126,7 @@ export async function createUser(_prev: CreateUserState, formData: FormData): Pr
   } catch (error) {
     if (pgCode(error) === "23505") return { fieldErrors: { email: "An account with that email address already exists." }, values };
     if (pgCode(error) === "23503") return { fieldErrors: { orgId: "That organization could not be found." }, values };
-    return { error: plainError(error), values };
+    return actionFailure("create_user_failed", error, {}, { values });
   } finally {
     revalidatePath("/finance/users");
     revalidatePath("/finance/outbox");

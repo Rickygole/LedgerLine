@@ -6,9 +6,8 @@ import { requireUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
 import { buildDefinition } from "@/lib/forms/standard";
 import { parseAmount } from "@/lib/rules/money";
-import { plainError } from "@/lib/finance/admin/errors";
+import { actionFailure, type ActionState } from "@/lib/actions";
 import { AGENCIES } from "@/lib/domain";
-import type { FormState } from "@/lib/finance/admin/form-state";
 import { isUuid } from "@/lib/ids";
 
 const createSchema = z.object({
@@ -23,7 +22,7 @@ function fieldErrors(error: z.ZodError): Record<string, string> {
   return out;
 }
 
-export async function createInitiative(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function createInitiative(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser(["finance_admin"]);
   const values = { name: String(formData.get("name") ?? "").slice(0, 400), category: String(formData.get("category") ?? "").slice(0, 200), description: String(formData.get("description") ?? "").slice(0, 4000) };
   const parsed = createSchema.safeParse(values);
@@ -49,7 +48,7 @@ export async function createInitiative(_prev: FormState, formData: FormData): Pr
       });
     } catch (error) {
       if (pgCode(error) === "23505" && attempt < 2) continue;
-      return { error: plainError(error), values };
+      return actionFailure("create_initiative_failed", error, {}, { values });
     }
   }
   redirect(`/finance/initiatives/new?step=2&initiative=${newId}`);
@@ -62,7 +61,7 @@ const assignSchema = z.object({
     .min(1, "Add at least one organization."),
 });
 
-export async function assignOrganizations(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function assignOrganizations(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser(["finance_admin"]);
   const orgIds = formData.getAll("orgId").map(String);
   const amounts = formData.getAll("amount").map((v) => parseAmount(String(v)));
@@ -107,12 +106,12 @@ export async function assignOrganizations(_prev: FormState, formData: FormData):
     });
   } catch (error) {
     if (pgCode(error) === "23505") return { error: "One of those organizations is already assigned to this initiative." };
-    return { error: plainError(error) };
+    return actionFailure("assign_organizations_failed", error);
   }
   redirect(`/finance/initiatives/new?step=3&initiative=${parsed.data.initiativeId}`);
 }
 
-export async function chooseTemplate(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function chooseTemplate(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser(["finance_admin"]);
   const initiativeId = String(formData.get("initiativeId") ?? "");
   const mode = formData.get("mode") === "import" ? "import" : "standard";
@@ -138,7 +137,7 @@ export async function chooseTemplate(_prev: FormState, formData: FormData): Prom
       return row!.id;
     });
   } catch (error) {
-    return { error: plainError(error) };
+    return actionFailure("choose_template_failed", error);
   }
   redirect(mode === "import" ? `/finance/forms/${formId}?import=1` : `/finance/forms/${formId}`);
 }

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { isUuid } from "@/lib/ids";
-import { dbFailure, failure, firstIssue, isoDay, success, trimmed, type OpState } from "@/lib/ops/action-state";
+import { actionFailure, type ActionState, failure, firstIssue, isoDay, success, trimmed } from "@/lib/actions";
 import { plural } from "@/lib/format";
 
 const sessionSchema = z.object({
@@ -19,7 +19,7 @@ const sessionSchema = z.object({
   severity: z.enum(["minor", "major", "critical"]),
 });
 
-export async function recordUatSession(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function recordUatSession(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const parsed = sessionSchema.safeParse({
     sessionOn: String(formData.get("sessionOn") ?? ""),
@@ -51,16 +51,16 @@ export async function recordUatSession(_previous: OpState, formData: FormData): 
     );
     return success(`Session recorded as ${parsed.data.result}${defects.length ? ` with ${defects.length} ${plural(defects.length, "defect", "defects")}` : ""}.`);
   } catch (error) {
-    return dbFailure(error, {
+    return actionFailure("record_uat_session_failed", error, { messages: {
       "a passed session cannot list defects": "A passed session cannot list defects. Choose failed or blocked, or remove the defects.",
       "session date is in the future": "The session date cannot be in the future.",
-    });
+    } });
   } finally {
     revalidatePath("/finance/readiness");
   }
 }
 
-export async function fixUatDefect(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function fixUatDefect(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const id = String(formData.get("defectId") ?? "");
   const on = isoDay("the fixed date").safeParse(String(formData.get("fixedOn") ?? ""));
@@ -70,7 +70,7 @@ export async function fixUatDefect(_previous: OpState, formData: FormData): Prom
     await withClaims(admin.id, (tx) => tx.query("SELECT app.fix_uat_defect($1, $2)", [id, on.data]));
     return success("Defect marked fixed.");
   } catch (error) {
-    return dbFailure(error, { "fixed date must fall": "The fixed date must be between the session and today." });
+    return actionFailure("fix_uat_defect_failed", error, { messages: { "fixed date must fall": "The fixed date must be between the session and today." } });
   } finally {
     revalidatePath("/finance/readiness");
   }
@@ -82,7 +82,7 @@ const trainingSchema = z.object({
   completedOn: isoDay("the completed date"),
 });
 
-export async function recordTraining(_previous: OpState, formData: FormData): Promise<OpState> {
+export async function recordTraining(_previous: ActionState, formData: FormData): Promise<ActionState> {
   const admin = await requireUser(["finance_admin"]);
   const parsed = trainingSchema.safeParse({
     userId: String(formData.get("userId") ?? ""),
@@ -94,11 +94,11 @@ export async function recordTraining(_previous: OpState, formData: FormData): Pr
     await withClaims(admin.id, (tx) => tx.query("SELECT app.record_training($1, $2, $3)", [parsed.data.userId, parsed.data.module, parsed.data.completedOn]));
     return success("Training recorded.");
   } catch (error) {
-    return dbFailure(error, {
+    return actionFailure("record_training_failed", error, { messages: {
       training_record_user_id_module_key_key: "That module is already recorded for this person.",
       "completed date is in the future": "The completed date cannot be in the future.",
       "training is recorded for Finance users only": "Training is recorded for Finance users only.",
-    });
+    } });
   } finally {
     revalidatePath("/finance/readiness");
   }
