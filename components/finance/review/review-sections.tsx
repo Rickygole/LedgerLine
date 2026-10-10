@@ -169,7 +169,7 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
                       contactLine.map((part, i) => (
                         <span key={part}>
                           {i > 0 ? " · " : null}
-                          <span className="whitespace-nowrap">{part}</span>
+                          <span className={part.includes("@") ? "break-all" : "whitespace-nowrap"}>{part}</span>
                         </span>
                       ))
                     ) : (

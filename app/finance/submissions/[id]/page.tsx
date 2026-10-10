@@ -249,7 +249,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
             ].map(([label, value]) => (
               <div key={String(label)} className="min-w-0">
                 <dt className="text-sm font-semibold text-ink-2">{label}</dt>
-                <dd className="mt-0.5 truncate text-ink">{value}</dd>
+                <dd className="mt-0.5 break-words text-ink">{value}</dd>
               </div>
             ))}
           </dl>
