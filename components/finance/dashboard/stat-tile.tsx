@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export function StatTile({ label, value, of, sub, action, bad = false, meter }: { label: string; value: number; of?: number; sub: React.ReactNode; action?: { href: string; label: string }; bad?: boolean; meter?: number }) {
+export function StatTile({ label, value, of, sub, action, bad = false, meter }: { label: string; value: number | string; of?: number; sub: React.ReactNode; action?: { href: string; label: string }; bad?: boolean; meter?: number }) {
   return (
     <div className="flex min-w-0 flex-col rounded border border-line bg-white p-5">
       <p className="flex items-center gap-2 text-sm font-semibold text-[#3d4757]">
@@ -8,7 +8,7 @@ export function StatTile({ label, value, of, sub, action, bad = false, meter }: 
         {label}
       </p>
       <p className="mt-1 text-ink">
-        <span className="num text-[36px] font-extrabold leading-[44px] tracking-[-0.02em]">{value.toLocaleString("en-US")}</span>
+        <span className="num text-[36px] font-extrabold leading-[44px] tracking-[-0.02em]">{typeof value === "number" ? value.toLocaleString("en-US") : value}</span>
         {of !== undefined ? <span className="num ml-1.5 text-lg font-semibold text-[#3d4757]">of {of.toLocaleString("en-US")}</span> : null}
       </p>
       {meter !== undefined ? (

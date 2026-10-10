@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, Check, CheckCircle2, ExternalLink, FolderOpen, Landmark, Mail, MapPin, Phone, Star } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, ExternalLink, Mail, MapPin, Phone, Star } from "lucide-react";
 import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
@@ -13,7 +13,9 @@ import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Badge, StateBadge } from "@/components/ui/status-badge";
 import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
-import { Stat } from "@/components/ui/stat";
+import { StatTile } from "@/components/finance/dashboard/stat-tile";
+import { MiniDistrictMap } from "@/components/finance/map/mini-district-map";
+import { ReportingRecord } from "@/components/finance/reporting-record";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { TabNav } from "@/components/finance/admin/tab-nav";
 import { AuditSentence } from "@/components/finance/admin/audit-line";
@@ -46,7 +48,12 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
 
   const years = [...new Set(awards.map((a) => a.fiscal_year_id))].sort();
   const totalAwarded = awards.reduce((sum, a) => sum + Number(a.award_amount), 0);
-  const accepted = reports.filter((r) => r.status === "accepted").length;
+  const allPeriods = awards.flatMap((a) => a.periods ?? []);
+  const dueSoFar = allPeriods.filter((p) => daysPastDue(p.due_on) > 0).length;
+  const acceptedDue = allPeriods.filter((p) => daysPastDue(p.due_on) > 0 && p.status === "accepted").length;
+  const sponsorDistricts = [...new Set(awards.flatMap((a) => (a.sponsors ?? []).map((s) => s.district)))].sort((a, b) => a - b);
+  const mapFills: Record<number, string> = org.council_district ? { [org.council_district]: "#1f4e85" } : {};
+  const mapCaption = `${org.council_district ? `District ${org.council_district} (location).` : "No Council district on file."} ${sponsorDistricts.length ? `Funded by Council Members in ${sponsorDistricts.length === 1 ? "District" : "Districts"} ${sponsorDistricts.join(", ")}.` : "No sponsoring Council Members on file."}`;
   const overdue = awards.flatMap((a) => a.periods ?? []).filter((p) => isMissing(p.status, p.due_on)).length;
   const primary = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
   const address = `${org.address_line}, ${org.city}, ${org.state} ${org.postal_code}`;
@@ -114,16 +121,16 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
 
       {tab === "overview" ? (
         <>
-          <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <Stat label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} hint={`Across ${awards.length} ${awards.length === 1 ? "award" : "awards"}`} icon={Landmark} />
-            <Stat label="Awards" value={awards.length} hint={years.join(" and ") || "No fiscal year"} icon={FolderOpen} />
-            <Stat label="Reports accepted" value={accepted} tone="ok" hint={`${reports.length} submitted or started`} icon={CheckCircle2} />
-            <Stat label="Missing reports" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} hint="Nothing submitted and past due" icon={AlertTriangle} />
+          <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatTile label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} sub={`across ${awards.length} ${awards.length === 1 ? "award" : "awards"}${years.length ? ` (${years.join(" and ")})` : ""}`} />
+            <StatTile label="Reports accepted" value={acceptedDue} of={dueSoFar} sub={dueSoFar === 0 ? "No reports due yet" : "of reports due so far"} />
+            <StatTile label="Missing" value={overdue} bad={overdue > 0} sub="Past due, nothing submitted" action={overdue > 0 ? { href: `/finance/submissions?q=${encodeURIComponent(org.ein)}&bucket=missing`, label: overdue === 1 ? "See missing report" : "See missing reports" } : undefined} />
           </section>
           <div className="grid items-start gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader title="About" />
-              <CardBody>
+              <CardBody className="grid gap-6 md:grid-cols-[minmax(0,1fr)_200px]">
+                <div className="min-w-0">
                 <h3 className="text-[13px] font-semibold text-muted">Mission</h3>
                 <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
                 <div className="mt-5 border-t border-line pt-5">
@@ -139,6 +146,21 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                     ]}
                   />
                 </div>
+                </div>
+                <figure className="md:border-l md:border-line md:pl-6">
+                  <MiniDistrictMap fills={mapFills} outlined={sponsorDistricts} label={`Map of Council districts. ${mapCaption}`} />
+                  <figcaption className="mt-2 text-[13px] leading-5 text-muted">{mapCaption}</figcaption>
+                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-[#3d4757]" aria-hidden="true">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-3 w-4 bg-[#1f4e85]" />
+                      Location
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-3 w-4 border-2 border-action bg-[#eef2f6]" />
+                      Sponsor
+                    </span>
+                  </p>
+                </figure>
               </CardBody>
             </Card>
             <Card className="self-start">
@@ -186,6 +208,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 </Link>
               }
             />
+            <ReportingRecord awards={awards} />
             <AwardsTable awards={awards} />
           </Card>
         </>
