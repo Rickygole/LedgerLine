@@ -22,6 +22,9 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
   const report = await withClaims(user.id, (tx) => loadReport(tx, id));
   if (!report) notFound();
   const { header } = report;
+  const copy = await withClaims(user.id, (tx) =>
+    tx.one<{ status: string }>("SELECT status FROM outbox WHERE submission_id = $1 AND template = 'submission_confirmation' ORDER BY created_at DESC LIMIT 1", [id])
+  );
   if (header.status === "draft" || !header.submittedAt) redirect(`/portal/reports/${id}`);
 
   return (
@@ -35,7 +38,16 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
         <p className="num mt-1 break-all font-mono text-2xl font-bold text-ink">{header.referenceNo}</p>
       </div>
       <p className="mb-6 text-base leading-7 text-ink">
-        We are emailing a copy of this report to <span className="break-all font-semibold">{user.email}</span>. Keep your reference number in case you need to contact Council Finance.
+        A copy of this report is in{" "}
+        <Link href="/portal/messages" className="text-link underline underline-offset-2 hover:text-link-hover">
+          Messages
+        </Link>
+        {copy?.status === "sent" ? (
+          <>
+            {" "}and was emailed to <span className="break-all font-semibold">{user.email}</span>
+          </>
+        ) : null}
+        . Keep your reference number in case you need to contact Council Finance.
       </p>
       <Card>
         <CardBody className="space-y-5">
@@ -54,7 +66,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
           What happens next
         </h2>
         <p className="mt-2 text-base leading-7 text-ink">
-          Council Finance reviews reports in the order received. We will email you if anything needs to change. You can check the status in{" "}
+          Council Finance reviews reports in the order received. If anything needs to change, the request appears in Messages. You can check the status in{" "}
           <Link href="/portal" className="text-link underline underline-offset-2 hover:text-link-hover">
             My reports
           </Link>

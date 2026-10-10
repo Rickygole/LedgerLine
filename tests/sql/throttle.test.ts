@@ -37,3 +37,22 @@ describe("[BR-010] login throttle holds under concurrency", () => {
     expect(other.rows[0].ok).toBe(true);
   });
 });
+
+describe("[BR-011] only failed attempts count toward the lockout", () => {
+  it("checks a key without recording an attempt", async () => {
+    const key = `test-check-${randomUUID()}`;
+    keys.push(key);
+    for (let i = 0; i < 20; i++) await clients[0].query("SELECT app.attempts_blocked($1, 15, 8)", [key]);
+    expect((await owner.query("SELECT count(*)::int AS n FROM auth_attempt WHERE key = $1", [key])).rows[0].n).toBe(0);
+    expect((await clients[0].query("SELECT app.attempts_blocked($1, 15, 8) AS blocked", [key])).rows[0].blocked).toBe(false);
+  });
+
+  it("blocks after the limit of recorded failures and clears after a successful sign-in", async () => {
+    const key = `test-clear-${randomUUID()}`;
+    keys.push(key);
+    for (let i = 0; i < 8; i++) await clients[0].query("SELECT app.record_attempt($1, 15, 8)", [key]);
+    expect((await clients[0].query("SELECT app.attempts_blocked($1, 15, 8) AS blocked", [key])).rows[0].blocked).toBe(true);
+    await clients[0].query("SELECT app.clear_attempts($1)", [key]);
+    expect((await clients[0].query("SELECT app.attempts_blocked($1, 15, 8) AS blocked", [key])).rows[0].blocked).toBe(false);
+  });
+});

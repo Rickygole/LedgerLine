@@ -8,7 +8,8 @@ import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { templateLabel } from "@/lib/portal/messages";
+import { DELIVERY_OFF_NOTICE, deliveryState, templateLabel } from "@/lib/portal/messages";
+import { emailDeliveryOn } from "@/lib/email";
 
 export const metadata: Metadata = { title: "Messages" };
 export const runtime = "nodejs";
@@ -31,9 +32,10 @@ export default async function MessagesPage() {
     <>
       <PageHeader
         title="Messages"
-        description="Copies of the emails LedgerLine prepares for your organization, such as submission confirmations and update requests. Each one is kept here even if the email is delayed."
+        description="Copies of the messages LedgerLine has generated for your organization, such as submission confirmations and update requests."
         crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages" }]}
       />
+      {emailDeliveryOn() ? null : <p className="mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink">{DELIVERY_OFF_NOTICE}</p>}
       <Card>
         <CardHeader title="Your messages" description={`${rows.length} ${rows.length === 1 ? "message" : "messages"}, newest first.`} />
         <Table stack>
@@ -43,12 +45,13 @@ export default async function MessagesPage() {
               <TH>Type</TH>
               <TH>To</TH>
               <TH>Created</TH>
+              <TH>Delivery</TH>
               <TH>Related report</TH>
             </tr>
           </THead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={5}>No messages yet. A confirmation email appears here after you submit a report.</EmptyRow>
+              <EmptyRow colSpan={6}>No messages yet. A confirmation email appears here after you submit a report.</EmptyRow>
             ) : (
               rows.map((r) => (
                 <TR key={r.id}>
@@ -63,6 +66,9 @@ export default async function MessagesPage() {
                   </TD>
                   <TD label="To" className="break-all">{r.to_email}</TD>
                   <TD className="whitespace-nowrap" label="Created">{formatDateTime(r.created_at)}</TD>
+                  <TD label="Delivery">
+                    <Badge tone={deliveryState(r.status).tone}>{deliveryState(r.status).label}</Badge>
+                  </TD>
                   <TD label="Related report">
                     {r.submission_id ? (
                       <Link href={`/portal/reports/${r.submission_id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">

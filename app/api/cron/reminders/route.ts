@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { anonymous, withClaims } from "@/lib/db";
+import { dispatchFor } from "@/lib/outbox-dispatch";
 import { sweepOrphanFiles } from "@/lib/orphans";
 import { daysBetween, todayInNewYork } from "@/lib/dates";
 
@@ -40,11 +41,13 @@ export async function GET(request: NextRequest) {
     return queued;
   });
 
+  const delivery = await dispatchFor(scheduler, { limit: 100, rounds: 5 });
+
   const orphans = await withClaims(scheduler, (tx) => sweepOrphanFiles(tx)).catch((error: unknown) => {
     console.error("orphan sweep failed", error);
     return { checked: 0, deleted: 0, failed: true };
   });
 
   const total = Object.values(result).reduce((sum, n) => sum + n, 0);
-  return NextResponse.json({ date: today, queued: total, periods: result, orphans });
+  return NextResponse.json({ date: today, queued: total, periods: result, delivery, orphans });
 }

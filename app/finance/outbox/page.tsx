@@ -10,6 +10,8 @@ import { Input, Select } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
+import { DELIVERY_OFF_NOTICE, deliveryState } from "@/lib/portal/messages";
+import { emailDeliveryOn } from "@/lib/email";
 import { listOutbox, outboxFilterOptions, templateLabel } from "@/lib/finance/admin/outbox";
 import { one, pageNumber, PAGE_SIZE, type SearchParams, isoDate } from "@/lib/finance/admin/params";
 
@@ -38,7 +40,8 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Outbox" description="Every email LedgerLine has generated, including confirmations, update requests, reminders and password resets." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]} />
+      <PageHeader title="Outbox" description="Every message LedgerLine has generated, including confirmations, update requests, reminders and password resets." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]} />
+      {emailDeliveryOn() ? null : <p className="mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink">{DELIVERY_OFF_NOTICE}</p>}
       <Card>
         <FilterBar action={base} clearHref={base} keep={0} applied={[data.template, data.org, from, to].filter(Boolean).length}>
           <FilterField label="Template" htmlFor="template">
@@ -108,7 +111,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                     )}
                   </TD>
                   <TD label="Status">
-                    <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}</Badge>
+                    <Badge tone={deliveryState(m.status).tone}>{deliveryState(m.status).label}</Badge>
                   </TD>
                   <TD className="min-w-28" label="Created">
                     <span>{formatDateTime(m.created_at)}</span>

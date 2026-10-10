@@ -39,3 +39,15 @@ export function toIsoDate(value: string | Date): string {
   if (typeof value === "string") return value.slice(0, 10);
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
 }
+
+export function nowIso(): string {
+  return new Date().toISOString();
+}
+
+export function toIsoTimestamp(value: string | Date): string {
+  return new Date(value).toISOString();
+}
+
+export function nowEpochSeconds(): number {
+  return Math.floor(Date.now() / 1000);
+}

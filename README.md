@@ -36,7 +36,7 @@ Numbers use `formatCurrency` and `formatCount` from `lib/rules/money.ts`: thousa
 
 ## Requirement evidence
 
-`/trust` lists each requirement ID from `traceability.json` with the tests that cover it. Tests carry the ID in their title, for example `[BR-008]`. `scripts/trust.ts` reads the test results from `reports/` and writes `app/trust/evidence.json`, which the page renders. CI regenerates it on every run.
+`/trust` lists each requirement ID from `traceability.json` with the tests that cover it. Tests carry the ID in their title, for example `[BR-008]`. `scripts/trust.ts` reads the test results from `reports/` and writes `app/trust/evidence.json`, which the page renders. `pnpm evidence` produces that file locally, and the page says when a run was local. CI regenerates it and uploads it as a build artifact but does not commit it, so the file in the repository shows the last local run until someone runs `pnpm evidence` again.
 
 ## Local setup
 
@@ -73,6 +73,8 @@ You need Node 22, pnpm 10 and Docker.
 | `pnpm db:migrate` | Apply SQL files in `db/migrations` |
 | `pnpm db:role` | Set the `app_server` password from `APP_SERVER_PASSWORD` |
 | `pnpm db:seed` | Reset and load the starting data set |
+| `pnpm db:seed:live` | Reseed the hosted database. Reads the owner connection string from the first line of `.env.neon` and `NEON_PERSONA_PASSWORD` from `.env.neon-app`, prints only the host, and asks you to type the host name first |
+| `pnpm preset <scene>` | Reset one demo scene on the local database: `fresh` (full reseed), `maria` (her overdue draft back to half filled with an empty budget), `daniel` (one of her reports under review with an open flag), `priya` (remove initiatives created since the last reseed). Add `--live` to target the hosted database with the same host confirmation. Uses the owner connection only and is not part of the deployed app |
 | `pnpm cron:reminders` | Call the reminders cron route of the running app |
 | `pnpm evidence` | Run tests and regenerate `app/trust/evidence.json` |
 
@@ -91,6 +93,7 @@ The app is set up for Vercel with a Postgres database such as Neon. Run `pnpm db
 - Required: `DB_OWNER_URL` (migrations only), `APP_DATABASE_URL`, `APP_SERVER_PASSWORD`, `AUTH_SECRET`, `GATE_COOKIE_SECRET`, `GATE_PASSCODE`
 - Storage: `BLOB_READ_WRITE_TOKEN`
 - Reminders cron (`vercel.json`, daily): `CRON_SECRET`
+- Optional email delivery: `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_ALLOWLIST`. Without `RESEND_API_KEY` and `EMAIL_FROM`, nothing is emailed and every message is recorded in Messages and the Outbox with the status Recorded. With them, queued messages are delivered through the Resend HTTP API after a submission and by the daily job. A failed send is retried up to three times. `EMAIL_ALLOWLIST` is a comma separated list of addresses or domains such as `@example.org`; when it is set, only those recipients are emailed and other messages are marked Held.
 - Optional AI: `AI_PROVIDER` (`anthropic` or `ollama`), `AI_MODEL_FORM`, `AI_MODEL_NOTE`, `ANTHROPIC_API_KEY`, `OLLAMA_URL`, `AI_TIMEOUT_FACTOR`, `AI_PRICE_PER_MTOK`
 - Optional: `DEMO_TODAY`, `DB_POOL_MAX`
 
@@ -98,7 +101,7 @@ CI (`.github/workflows/ci.yml`) runs migrations, seed, lint, type check, tests, 
 
 ## Running the reminders locally
 
-The reminders job is the route `/api/cron/reminders`. On Vercel the schedule in `vercel.json` calls it once a day. Locally, set `CRON_SECRET` in `.env.local` (any string), start the app, then run `pnpm cron:reminders`. The script sends the secret as a bearer token to `APP_URL`, or to `http://localhost:3000` when that is not set, and prints the date it used and how many reminders it queued. Use `PORT` to point it at another local port. The route works out today's date in New York, finds every active rule whose date is today for periods due within 120 days, and adds one email per organization and rule to the outbox. Running it twice on the same day queues nothing the second time. Without `CRON_SECRET` the route answers 503, and with a wrong token it answers 401. The seed also loads the reminders that earlier rules already sent, so the Sent column and the outbox show history from the first run.
+The reminders job is the route `/api/cron/reminders`. On Vercel the schedule in `vercel.json` calls it once a day. Locally, set `CRON_SECRET` in `.env.local` (any string), start the app, then run `pnpm cron:reminders`. The script sends the secret as a bearer token to `APP_URL`, or to `http://localhost:3000` when that is not set, and prints the date it used and how many reminders it queued. Use `PORT` to point it at another local port. The route works out today's date in New York, finds every active rule whose date is today for periods due within 120 days, and adds one email per organization and rule to the outbox. Running it twice on the same day queues nothing the second time. Without `CRON_SECRET` the route answers 503, and with a wrong token it answers 401. The seed also loads the reminders that earlier rules already sent, so the outbox shows history from the first run. Seeded history is marked Recorded, never Sent.
 
 ## Layout
 

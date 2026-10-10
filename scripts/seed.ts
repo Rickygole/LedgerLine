@@ -870,7 +870,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       body_text: `We received your report ${base.reference_no} for ${initiative.name}.`,
       submission_id: id,
       org_id: org.id,
-      status: "sent",
+      status: "recorded",
       created_by: submitter,
       created_at: submittedAt,
     });
@@ -991,14 +991,12 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   };
 }
 
-async function main() {
-  const url = process.env.DB_OWNER_URL;
-  if (!url) throw new Error("DB_OWNER_URL is not set");
+export async function runSeed(url: string, scene = "fresh"): Promise<string> {
   const client = new Client({ connectionString: url, ssl: url.includes("localhost") ? undefined : true });
   await client.connect();
   await client.query("BEGIN");
   try {
-    await reset(client, process.argv[2] ?? "fresh");
+    await reset(client, scene);
     const summary = await seed(client);
     await client.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: summary.ids.priya })]);
     await client.query("SELECT app.ensure_scheduler()");
@@ -1006,13 +1004,19 @@ async function main() {
     await client.query("SELECT app.backfill_reminder_history($1::date)", [todayInNewYork()]);
     await client.query("SELECT set_config('request.jwt.claims', '', true)");
     await client.query("COMMIT");
-    console.log(`seeded ${summary.orgs} organizations, ${summary.initiatives} initiatives, ${summary.assignments} assignments, ${summary.submissions} submissions`);
+    return `seeded ${summary.orgs} organizations, ${summary.initiatives} initiatives, ${summary.assignments} assignments, ${summary.submissions} submissions`;
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
   } finally {
     await client.end();
   }
+}
+
+async function main() {
+  const url = process.env.DB_OWNER_URL;
+  if (!url) throw new Error("DB_OWNER_URL is not set");
+  console.log(await runSeed(url, process.argv[2] ?? "fresh"));
 }
 
 if (process.argv[1]?.endsWith("seed.ts")) {

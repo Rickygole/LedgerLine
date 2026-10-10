@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
+import { dispatchFor } from "@/lib/outbox-dispatch";
 import { plainError } from "@/lib/finance/admin/errors";
 import { isoDate, isUuid } from "@/lib/finance/admin/params";
 import { todayInNewYork } from "@/lib/dates";
@@ -93,6 +94,7 @@ export async function sendNow(_prev: ReminderState, formData: FormData): Promise
   if (date !== todayInNewYork()) return { error: "Reminders can be added to the outbox for today only. Past due notices for another date would reach organizations with the wrong timing." };
   try {
     const queued = await withClaims(admin.id, async (tx) => (await tx.one<{ n: number }>("SELECT app.queue_reminders($1, $2::date) AS n", [period, date]))?.n ?? 0);
+    await dispatchFor(admin.id, { limit: 100 });
     revalidatePath("/finance/outbox");
     revalidatePath("/finance/reminders");
     return { ok: queued === 0 ? "Nothing new to send. Every organization that qualifies was already reminded for this date." : `${queued} ${queued === 1 ? "reminder" : "reminders"} added to the outbox.` };
