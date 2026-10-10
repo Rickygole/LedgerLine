@@ -31,6 +31,10 @@ export function firstIssue(error: z.ZodError): string {
   return error.issues[0]?.message ?? "Check the form and try again.";
 }
 
+export function allIssues(error: z.ZodError): string {
+  return [...new Set(error.issues.map((issue) => issue.message))].join(" ");
+}
+
 export type ErrorOverrides = {
   messages?: Record<string, string> | readonly (readonly [RegExp, string])[];
   codes?: Record<string, string>;

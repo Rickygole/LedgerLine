@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { dispatchFor } from "@/lib/outbox-dispatch";
 import { isUuid } from "@/lib/ids";
-import { actionFailure, type ActionState, failure, firstIssue, success, trimmed } from "@/lib/actions";
+import { actionFailure, allIssues, type ActionState, failure, firstIssue, success, trimmed } from "@/lib/actions";
 
 const requestSchema = z.object({
   category: z.enum(["account", "password", "report", "data", "other"], { message: "Choose what you need help with." }),
@@ -21,7 +21,7 @@ export async function createSupportRequest(_previous: ActionState, formData: For
     subject: String(formData.get("subject") ?? ""),
     body: String(formData.get("body") ?? ""),
   });
-  if (!parsed.success) return failure(firstIssue(parsed.error));
+  if (!parsed.success) return failure(allIssues(parsed.error));
   try {
     const reference = await withClaims(user.id, async (tx) => {
       const row = await tx.one<{ id: string }>("SELECT app.create_support_request($1, $2, $3) AS id", [parsed.data.category, parsed.data.subject, parsed.data.body]);
