@@ -16,6 +16,7 @@ type SupportSeed = {
   subject: string;
   body: string;
   agoHours: number;
+  atHour: number;
   replyAfterHours: number | null;
   reply?: string;
   closeAfterHours?: number;
@@ -34,38 +35,43 @@ export async function seedOperations(client: Client) {
   const tariq = await userId(client, "tariq.lindqvist@silverbrookyouthfutures.example.org");
 
   const requests: SupportSeed[] = [
-    { requester: maria, category: "password", subject: "Password link expired before I could use it", body: "I opened the link in my invitation email an hour late and it says the link is not valid. Can you send a new one?", agoHours: 118, replyAfterHours: 2, reply: "A new link is in your messages. It works once and expires after 30 minutes, so please use it right away.", closeAfterHours: 6, responder: priya },
-    { requester: grace, category: "account", subject: "I cannot open the Users page", body: "The Users page says I do not have access. I only need to see which analysts are assigned to the year-end review.", agoHours: 96, replyAfterHours: 3, reply: "Users is limited to Finance administrators. I can send you the list of analysts directly.", closeAfterHours: 8, responder: winston },
-    { requester: await userId(client, "daniel.cho@finance.example.gov"), category: "data", subject: "Export times out for the whole year", body: "When I export every FY26 year-end report at once the download never starts. Smaller filters work.", agoHours: 40, replyAfterHours: 1, reply: "Use the period filter and export each period on its own for now. We are looking at the full-year case.", responder: priya },
-    { requester: james, category: "report", subject: "Budget total does not match our award", body: "Our budget lines add up to the award but the page still says the totals do not match. Could a rounding issue cause this?", agoHours: 33, replyAfterHours: 19, reply: "One line was entered with a trailing space in the amount, which counted as zero. Re-enter the amount and the totals will match.", responder: winston },
-    { requester: rahul, category: "report", subject: "Participant count needs a correction after submitting", body: "We submitted the year-end report with 212 participants served. The correct number is 221. How do we correct it?", agoHours: 31, replyAfterHours: null },
-    { requester: paloma, category: "other", subject: "Which browsers can we use", body: "Our staff use a mix of browsers. Is there a list of the ones LedgerLine supports?", agoHours: 29, replyAfterHours: 27, reply: "Current versions of Chrome, Edge, Firefox and Safari work. Please avoid Internet Explorer.", responder: priya },
-    { requester: tariq, category: "account", subject: "Add a second person who can submit our reports", body: "Our finance manager needs her own login so she can submit the mid-year report. What do we need to send you?", agoHours: 52, replyAfterHours: null },
-    { requester: tomas, category: "account", subject: "Move our reports to a new contact", body: "Our program director is leaving next week. Can reports for Harborview Youth Alliance go to our new director?", agoHours: 9, replyAfterHours: null },
-    { requester: maria, category: "password", subject: "Locked out after several attempts", body: "I typed the wrong password a few times and now the sign-in page asks me to wait. How long is the wait?", agoHours: 1, replyAfterHours: null },
+    { requester: maria, category: "password", subject: "Password link expired before I could use it", body: "I opened the link in my invitation email an hour late and it says the link is not valid. Can you send a new one?", agoHours: 118, atHour: 13.5, replyAfterHours: 2, reply: "A new link is in your messages. It works once and expires after 30 minutes, so please use it right away.", closeAfterHours: 4, responder: priya },
+    { requester: grace, category: "account", subject: "I cannot open the Users page", body: "The Users page says I do not have access. I only need to see which analysts are assigned to the year-end review.", agoHours: 96, atHour: 11, replyAfterHours: 3, reply: "Users is limited to Finance administrators. I can send you the list of analysts directly.", closeAfterHours: 5, responder: winston },
+    { requester: await userId(client, "daniel.cho@finance.example.gov"), category: "data", subject: "Export times out for the whole year", body: "When I export every FY26 year-end report at once the download never starts. Smaller filters work.", agoHours: 40, atHour: 16, replyAfterHours: 1, reply: "Use the period filter and export each period on its own for now. We are looking at the full-year case.", responder: priya },
+    { requester: james, category: "report", subject: "Budget total does not match our award", body: "Our budget lines add up to the award but the page still says the totals do not match. Could a rounding issue cause this?", agoHours: 33, atHour: 15.5, replyAfterHours: 19, reply: "One line was entered with a trailing space in the amount, which counted as zero. Re-enter the amount and the totals will match.", responder: winston },
+    { requester: rahul, category: "report", subject: "Participant count needs a correction after submitting", body: "We submitted the year-end report with 212 participants served. The correct number is 221. How do we correct it?", agoHours: 31, atHour: 14.25, replyAfterHours: null },
+    { requester: paloma, category: "other", subject: "Which browsers can we use", body: "Our staff use a mix of browsers. Is there a list of the ones LedgerLine supports?", agoHours: 29, atHour: 10, replyAfterHours: 27, reply: "Current versions of Chrome, Edge, Firefox and Safari work. Please avoid Internet Explorer.", responder: priya },
+    { requester: tariq, category: "account", subject: "Add a second person who can submit our reports", body: "Our finance manager needs her own login so she can submit the mid-year report. What do we need to send you?", agoHours: 52, atHour: 9.33, replyAfterHours: null },
+    { requester: tomas, category: "account", subject: "Move our reports to a new contact", body: "Our program director is leaving next week. Can reports for Harborview Youth Alliance go to our new director?", agoHours: 9, atHour: 10.67, replyAfterHours: null },
+    { requester: maria, category: "password", subject: "Locked out after several attempts", body: "I typed the wrong password a few times and now the sign-in page asks me to wait. How long is the wait?", agoHours: 1, atHour: 11, replyAfterHours: null },
   ];
   for (const request of [...requests].sort((a, b) => b.agoHours - a.agoHours)) {
-    const { rows } = await client.query<{ id: string }>(
+    const createdAt = (
+      await client.query<{ at: string }>(
+        `SELECT LEAST(
+                  (date_trunc('day', (now() - make_interval(hours => $1)) AT TIME ZONE 'America/New_York') + make_interval(mins => round($2::numeric * 60)::int)) AT TIME ZONE 'America/New_York',
+                  now() - interval '15 minutes'
+                )::text AS at`,
+        [request.agoHours, request.atHour]
+      )
+    ).rows[0].at;
+    const after = (hours: number | null) => (hours === null ? null : Math.round(hours * 60));
+    const { rows } = await client.query<{ id: string; reference: string }>(
       `INSERT INTO support_request (requester, category, subject, body, created_at, first_response_at, first_responder, closed_at)
-       VALUES ($1, $2, $3, $4, now() - make_interval(hours => $5), CASE WHEN $6::numeric IS NULL THEN NULL ELSE now() - make_interval(hours => $5) + make_interval(mins => round($6::numeric * 60)::int) END, $7,
-               CASE WHEN $8::numeric IS NULL THEN NULL ELSE now() - make_interval(hours => $5) + make_interval(mins => round($8::numeric * 60)::int) END)
-       RETURNING id`,
-      [request.requester, request.category, request.subject, request.body, request.agoHours, request.replyAfterHours, request.replyAfterHours === null ? null : request.responder, request.closeAfterHours ?? null]
+       VALUES ($1, $2, $3, $4, $5::timestamptz,
+               CASE WHEN $6::int IS NULL THEN NULL ELSE $5::timestamptz + make_interval(mins => $6::int) END, $7,
+               CASE WHEN $8::int IS NULL THEN NULL ELSE $5::timestamptz + make_interval(mins => $8::int) END)
+       RETURNING id, reference`,
+      [request.requester, request.category, request.subject, request.body, createdAt, after(request.replyAfterHours), request.replyAfterHours === null ? null : request.responder, after(request.closeAfterHours ?? null)]
     );
-    const id = rows[0].id;
-    await client.query("INSERT INTO support_message (request_id, author, from_staff, body, created_at) VALUES ($1, $2, false, $3, now() - make_interval(hours => $4))", [id, request.requester, request.body, request.agoHours]);
+    const { id, reference: ref } = rows[0];
+    await client.query("INSERT INTO support_message (request_id, author, from_staff, body, created_at) VALUES ($1, $2, false, $3, $4::timestamptz)", [id, request.requester, request.body, createdAt]);
     if (request.replyAfterHours !== null && request.reply) {
-      await client.query(
-        "INSERT INTO support_message (request_id, author, from_staff, body, created_at) VALUES ($1, $2, true, $3, now() - make_interval(hours => $4) + make_interval(mins => round($5::numeric * 60)::int))",
-        [id, request.responder, request.reply, request.agoHours, request.replyAfterHours]
-      );
+      await client.query("INSERT INTO support_message (request_id, author, from_staff, body, created_at) VALUES ($1, $2, true, $3, $4::timestamptz + make_interval(mins => $5::int))", [id, request.responder, request.reply, createdAt, after(request.replyAfterHours)]);
     }
-    const stamp = (extra: number) => `now() - interval '${request.agoHours} hours' + interval '${Math.round(extra * 60)} minutes'`;
-    const ref = (await client.query<{ reference: string }>("SELECT reference FROM support_request WHERE id = $1", [id])).rows[0].reference;
-    const created = (await client.query<{ at: string }>(`SELECT (${stamp(0)})::text AS at`)).rows[0].at;
-    await audit(client, created, request.requester, "support_request", id, "support_request_created", `${ref}: ${request.subject}`, { category: request.category });
+    await audit(client, createdAt, request.requester, "support_request", id, "support_request_created", `${ref}: ${request.subject}`, { category: request.category });
     if (request.replyAfterHours !== null && request.responder) {
-      const at = (await client.query<{ at: string }>(`SELECT (${stamp(request.replyAfterHours)})::text AS at`)).rows[0].at;
+      const at = (await client.query<{ at: string }>("SELECT ($1::timestamptz + make_interval(mins => $2::int))::text AS at", [createdAt, after(request.replyAfterHours)])).rows[0].at;
       await audit(client, at, request.responder, "support_request", id, "support_first_response", ref, { first_response: true });
     }
   }
