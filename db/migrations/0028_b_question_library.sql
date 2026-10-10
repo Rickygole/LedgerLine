@@ -10,8 +10,8 @@ ALTER TABLE question
 
 ALTER TABLE question
   ADD CONSTRAINT question_label_present CHECK (btrim(label) <> ''),
-  ADD CONSTRAINT question_select_options CHECK (field_type <> 'select' OR (jsonb_typeof(options) = 'array' AND jsonb_array_length(options) >= 2)),
-  ADD CONSTRAINT question_table_columns CHECK (field_type <> 'table' OR (jsonb_typeof(table_columns) = 'array' AND jsonb_array_length(table_columns) BETWEEN 1 AND 8));
+  ADD CONSTRAINT question_select_options CHECK (field_type <> 'select' OR coalesce(jsonb_typeof(options) = 'array' AND jsonb_array_length(options) >= 2, false)),
+  ADD CONSTRAINT question_table_columns CHECK (field_type <> 'table' OR coalesce(jsonb_typeof(table_columns) = 'array' AND jsonb_array_length(table_columns) BETWEEN 1 AND 8, false));
 
 CREATE POLICY question_admin_update ON question FOR UPDATE TO app_server
   USING (app.is_admin()) WITH CHECK (app.is_admin());
