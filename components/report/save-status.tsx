@@ -28,6 +28,10 @@ export function SaveStatus({
     text = state.message ?? "Couldn't save, retrying. Keep this tab open.";
     tone = "text-warn";
     icon = <WifiOff className="h-4 w-4" aria-hidden="true" />;
+  } else if (state.kind === "rejected") {
+    text = state.message;
+    tone = "text-bad";
+    icon = <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
   } else if (state.kind === "signed_out") {
     text = "Signed out. Sign in to save.";
     tone = "text-bad";

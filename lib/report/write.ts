@@ -1,6 +1,34 @@
 import "server-only";
 import type { Tx } from "@/lib/db";
+import { toIsoTimestamp } from "@/lib/dates";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
+
+export type TouchResult =
+  | { status: "touched"; lockVersion: number; savedAt: string }
+  | { status: "locked" }
+  | { status: "stale"; by: string | null; at: string }
+  | { status: "missing" };
+
+export async function touchDraft(
+  tx: Tx,
+  input: { submissionId: string; expectedLock: number; saveId: string },
+): Promise<TouchResult> {
+  const touched = await tx.one<{ lock_version: number; updated_at: string }>(
+    `UPDATE submission SET lock_version = lock_version + 1, updated_at = now(), updated_by = app.uid(), last_save_id = $3
+     WHERE id = $1 AND status IN ('draft', 'returned') AND (lock_version = $2 OR (last_save_id = $3 AND lock_version = $2 + 1))
+     RETURNING lock_version, updated_at`,
+    [input.submissionId, input.expectedLock, input.saveId],
+  );
+  if (touched)
+    return { status: "touched", lockVersion: touched.lock_version, savedAt: toIsoTimestamp(touched.updated_at) };
+  const current = await tx.one<{ status: string; updated_at: string; full_name: string | null }>(
+    `SELECT s.status, s.updated_at, u.full_name FROM submission s LEFT JOIN app_user u ON u.id = s.updated_by WHERE s.id = $1`,
+    [input.submissionId],
+  );
+  if (!current) return { status: "missing" };
+  if (current.status !== "draft" && current.status !== "returned") return { status: "locked" };
+  return { status: "stale", by: current.full_name, at: toIsoTimestamp(current.updated_at) };
+}
 
 export async function writeDraft(
   tx: Tx,

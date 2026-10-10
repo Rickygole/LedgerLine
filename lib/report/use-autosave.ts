@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveDraft } from "@/app/portal/reports/actions";
+import { shouldRetrySave } from "./save-retry";
 import { sessionIsAlive } from "./session-probe";
 import { newRowId } from "./budget-rows";
 import type { SaveInput, SaveResult } from "./types";
@@ -11,11 +12,12 @@ export type SaveState =
   | { kind: "saving" }
   | { kind: "saved"; at: string }
   | { kind: "retrying"; message?: string }
+  | { kind: "rejected"; message: string }
   | { kind: "signed_out" }
   | { kind: "stale"; by: string | null; at: string }
   | { kind: "locked"; message: string };
 
-type DrainOutcome = "saved" | "idle" | "retrying" | "signed_out" | "stale" | "locked";
+type DrainOutcome = "saved" | "idle" | "retrying" | "rejected" | "signed_out" | "stale" | "locked";
 
 const DEBOUNCE_MS = 1200;
 
@@ -79,6 +81,10 @@ export function useAutosave(
           return "locked";
         }
         dirty.current = true;
+        if (!shouldRetrySave(result) && result.status === "error") {
+          setState({ kind: "rejected", message: result.message });
+          return "rejected";
+        }
         attempts.current += 1;
         const delay = result.status === "signed_out" ? 8000 : Math.min(4000 * attempts.current, 30000);
         if (retry.current) clearTimeout(retry.current);

@@ -57,7 +57,7 @@ export type SaveResult =
   | { status: "stale"; by: string | null; at: string }
   | { status: "locked"; message: string }
   | { status: "signed_out" }
-  | { status: "error"; message: string };
+  | { status: "error"; message: string; retryable?: boolean };
 
 export type SubmitResult =
   | { status: "blocked"; issues: { field: string; ruleId: string; message: string; severity: "block" | "warn" }[] }

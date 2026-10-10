@@ -10,7 +10,7 @@ import { dispatchFor } from "@/lib/outbox-dispatch";
 import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
 import { reportIssues } from "@/lib/report/issues";
-import { writeDraft } from "@/lib/report/write";
+import { touchDraft, writeDraft } from "@/lib/report/write";
 import { UPLOAD_TICKET_SECONDS, attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, macroProblem, mimeFor, openSubmissionForUpload, pathSignatureValid, removeAttachmentRow, signPath } from "@/lib/report/attachments";
 import type { AttachmentItem, PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
 import { buildSnapshot } from "@/lib/snapshot";
@@ -57,7 +57,9 @@ const saveSchema = z.object({
 
 export async function saveDraft(raw: unknown): Promise<SaveResult> {
   const parsed = saveSchema.safeParse(raw);
-  if (!parsed.success) return { status: "error", message: "Some entries could not be saved. Check for very long text." };
+  if (!parsed.success) {
+    return { status: "error", message: "Some entries could not be saved. Check for very long text.", retryable: false };
+  }
   const input = parsed.data;
 
   const user = await lookupUser("save_draft_session_failed");
@@ -67,32 +69,23 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
   try {
     return await withClaims(user.id, async (tx): Promise<SaveResult> => {
       const report = await loadReport(tx, input.submissionId);
-      if (!report) return { status: "error", message: "This report could not be found." };
+      if (!report) return { status: "error", message: "This report could not be found.", retryable: false };
       const maxLines = report.definition.budget.maxLines;
       if (input.budget.length > maxLines) {
         const over = input.budget.length - maxLines;
-        return { status: "error", message: `A budget can have at most ${maxLines} lines. This one has ${input.budget.length}. Remove ${over} ${plural(over, "line", "lines")} and your changes will save.` };
+        return { status: "error", message: `A budget can have at most ${maxLines} lines. This one has ${input.budget.length}. Remove ${over} ${plural(over, "line", "lines")} and your changes will save.`, retryable: false };
       }
-      const touched = await tx.one<{ lock_version: number; updated_at: string }>(
-        `UPDATE submission SET lock_version = lock_version + 1, updated_at = now(), updated_by = app.uid(), last_save_id = $3
-         WHERE id = $1 AND status IN ('draft', 'returned') AND (lock_version = $2 OR (last_save_id = $3 AND lock_version = $2 + 1))
-         RETURNING lock_version, updated_at`,
-        [input.submissionId, input.expectedLock, input.saveId]
-      );
-      if (!touched) {
-        const current = await tx.one<{ status: string; updated_at: string; full_name: string | null }>(
-          `SELECT s.status, s.updated_at, u.full_name FROM submission s LEFT JOIN app_user u ON u.id = s.updated_by WHERE s.id = $1`,
-          [input.submissionId]
-        );
-        if (!current) return { status: "error", message: "This report could not be found." };
-        if (current.status !== "draft" && current.status !== "returned") {
-          return { status: "locked", message: "This report was already submitted and can no longer be edited." };
-        }
-        return { status: "stale", by: current.full_name, at: toIsoTimestamp(current.updated_at) };
+      const touched = await touchDraft(tx, input);
+      if (touched.status === "missing") {
+        return { status: "error", message: "This report could not be found.", retryable: false };
       }
+      if (touched.status === "locked") {
+        return { status: "locked", message: "This report was already submitted and can no longer be edited." };
+      }
+      if (touched.status === "stale") return { status: "stale", by: touched.by, at: touched.at };
       const allowedKeys = new Set([...report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)), VARIANCE_NOTE_KEY]);
       await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget, allowedKeys });
-      return { status: "saved", lockVersion: touched.lock_version, savedAt: toIsoTimestamp(touched.updated_at) };
+      return { status: "saved", lockVersion: touched.lockVersion, savedAt: touched.savedAt };
     });
   } catch (error) {
     const code = pgCode(error);
