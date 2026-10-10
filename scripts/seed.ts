@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { Client } from "pg";
 import { sslFor } from "../lib/db-ssl";
 import { buildDefinition, CATEGORY_METRICS } from "../lib/forms/standard";
+import { seedQuestionLibrary } from "./seed-library";
 import { buildSnapshot } from "../lib/snapshot";
 import { todayInNewYork } from "../lib/dates";
 import type { Answers, BudgetLine, FormDefinition } from "../lib/rules/types";
@@ -403,6 +404,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   await client.query(
     "INSERT INTO fiscal_year VALUES ('FY26', '2025-07-01', '2026-06-30'), ('FY27', '2026-07-01', '2027-06-30')",
   );
+  await seedQuestionLibrary(client);
   await insertRows(
     client,
     "reporting_period",

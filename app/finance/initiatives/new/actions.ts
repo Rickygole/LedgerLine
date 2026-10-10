@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { pgCode, withClaims } from "@/lib/db";
-import { buildDefinition } from "@/lib/forms/standard";
+import { buildDefinitionFrom } from "@/lib/forms/standard";
+import { loadLibrary } from "@/lib/forms/library";
 import { parseAmount } from "@/lib/rules/money";
 import { actionFailure, type ActionState } from "@/lib/actions";
 import { AGENCIES } from "@/lib/domain";
@@ -168,7 +169,7 @@ export async function chooseTemplate(_prev: ActionState, formData: FormData): Pr
         `SELECT coalesce(max(version), 0) + 1 AS next FROM form_version WHERE initiative_id = $1`,
         [initiativeId],
       );
-      const definition = buildDefinition(`${initiative.name} report`, []);
+      const definition = buildDefinitionFrom(`${initiative.name} report`, [], await loadLibrary(tx));
       const row = await tx.one<{ id: string }>(
         `INSERT INTO form_version (initiative_id, version, status, definition, source, created_by) VALUES ($1, $2, 'draft', $3::jsonb, 'manual', $4) RETURNING id`,
         [initiativeId, next!.next, JSON.stringify(definition), user.id],
