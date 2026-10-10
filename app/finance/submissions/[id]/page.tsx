@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2, Eye, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye } from "lucide-react";
 import { ActionsPanel, type CorrectableQuestion } from "@/components/finance/review/actions-panel";
 import { AttachmentsTab, AuditTab, BudgetTab, FlagsTab, ReportTab, RevisionsTab, TabNav } from "@/components/finance/review/review-sections";
 import { DueBadge, StateBadge } from "@/components/ui/status-badge";
@@ -74,7 +74,14 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   const balance = balanceMessage(total, row.award);
   const diff = Math.round((total - row.award) * 100) / 100;
   const budgetText = !budgetOn ? null : balance.balanced ? "Budget balanced" : row.budget.length === 0 ? "No budget lines entered" : `Budget ${diff < 0 ? "under" : "over"} by ${formatCurrency(Math.abs(diff))}`;
-  const prefill = budgetOn && !balance.balanced && row.budget.length > 0 ? `Please review the budget. The total is ${formatCurrency(Math.abs(diff))} ${diff < 0 ? "under" : "over"} the award of ${formatCurrency(row.award)}.` : "";
+  const issueText = row.issues.slice(0, 4).map((issue) => issue.message.replace(/\.$/, ""));
+  const prefill = [
+    budgetOn && !balance.balanced ? (row.budget.length > 0 ? `Please review the budget. The total is ${formatCurrency(Math.abs(diff))} ${diff < 0 ? "under" : "over"} the award of ${formatCurrency(row.award)}.` : `Please add your budget lines. The total must equal the award of ${formatCurrency(row.award)}.`) : null,
+    issueText.length > 0 ? `Please fix ${row.issues.length === 1 ? "this answer" : `these ${row.issues.length > issueText.length ? `${row.issues.length} answers, starting with` : "answers"}`}: ${issueText.join("; ")}.` : null,
+    ...row.openFlags.map((flag) => (flag.note?.trim() ? `Council Finance noted: ${flag.note.trim().replace(/\.$/, "")}.` : null)),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const checks = [
     ...(budgetText ? [{ ok: balance.balanced, text: budgetText, tab: "budget" }] : []),
     { ok: row.issues.length === 0, text: row.issues.length === 0 ? "All required answers complete" : `${row.issues.length} required ${row.issues.length === 1 ? "answer fails" : "answers fail"} a rule`, tab: "report" },
@@ -131,7 +138,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">{row.initiativeName}</h1>
-            {state}
+            {canReview ? null : state}
             {late > 0 ? <DueBadge daysPastDue={late} /> : null}
           </div>
           <p className="mt-2 text-[15px] leading-[22px] text-ink-2">
@@ -162,7 +169,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
             {checks.map((check) => (
               <li key={check.text} className={check.ok ? "flex items-center gap-1.5 text-ok" : "flex items-center gap-1.5 font-semibold text-bad"}>
-                {check.ok ? <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" /> : <XCircle className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                {check.ok ? <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" /> : <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />}
                 {check.ok ? (
                   <span>{check.text}</span>
                 ) : (

@@ -105,7 +105,7 @@ export function RequestUpdate({
               Note to the organization
             </label>
             <p id="return-note-hint" className="mb-1.5 text-sm text-muted">
-              Tell the organization exactly what to change. They see this note above their report.
+              They see this note above their report.
             </p>
             <Textarea
               ref={noteRef}
@@ -121,10 +121,10 @@ export function RequestUpdate({
             {error && isStale(error) ? <StaleNotice /> : <FieldError id="return-note-error">{error}</FieldError>}
           </div>
 
-          {concerns.length > 0 ? (
-            <details className="group rounded border border-line">
-              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">Suggest a note from the checks</summary>
-              <div className="space-y-3 border-t border-line-soft px-4 py-3">
+          {prefill !== "" && concerns.length > 0 ? (
+            <details className="group">
+              <summary className="cursor-pointer list-none text-sm font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">Suggest a different note</summary>
+              <div className="mt-3 space-y-3">
                 <fieldset>
                   <legend className="text-sm font-semibold">What needs to change</legend>
                   <ul className="mt-1.5 space-y-1">

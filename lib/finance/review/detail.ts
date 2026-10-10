@@ -35,6 +35,7 @@ export type SubmissionDetail = {
   revisions: RevisionRecord[];
   certification: Certification | null;
   fileIds: Record<string, string>;
+  earlier: { label: string; served: number } | null;
 };
 
 const ISO = (column: string) => `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
@@ -124,6 +125,17 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     "SELECT snapshot -> 'certification' AS certification FROM submission_revision WHERE submission_id = $1 ORDER BY revision DESC, id DESC LIMIT 1",
     [id]
   );
+  const earlier = await tx.one<{ label: string; value: Answers[string] }>(
+    `SELECT p.label, an.value
+     FROM submission s
+     JOIN reporting_period p ON p.id = s.period_id
+     JOIN answer an ON an.submission_id = s.id AND an.question_key = 'participants_actual'
+     WHERE s.assignment_id = $1 AND s.status IN ('submitted', 'under_review', 'accepted')
+       AND p.fiscal_year_id = (SELECT fiscal_year_id FROM reporting_period WHERE id = $2)
+       AND p.due_on < (SELECT due_on FROM reporting_period WHERE id = $2)
+     ORDER BY p.due_on DESC LIMIT 1`,
+    [base.assignment_id, base.period_id]
+  );
   const contact = await tx.one<{ full_name: string; email: string }>("SELECT full_name, email FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name LIMIT 1", [base.org_id]);
 
   const answers: Answers = {};
@@ -175,6 +187,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     flags: flagRows.map((f) => ({ id: f.id, kind: f.kind, source: f.source, note: f.note, status: f.status, createdAt: f.created_at, createdBy: f.created_by, resolvedAt: f.resolved_at, resolvedBy: f.resolved_by })),
     audit: auditRows.map((e) => ({ id: Number(e.id), at: e.at, actor: e.actor, action: e.action, note: e.note, before: e.before, after: e.after, aiActionId: e.ai_action_id, aiMode: e.ai_mode })),
     certification: certified?.certification ?? null,
+    earlier: earlier && Number.isFinite(Number(String(earlier.value ?? "").replace(/,/g, ""))) && String(earlier.value ?? "") !== "" ? { label: earlier.label, served: Number(String(earlier.value).replace(/,/g, "")) } : null,
     fileIds: Object.fromEntries(allFiles.map((f) => [f.path, f.id])),
     revisions: revisionRows.map((r) => ({ id: Number(r.id), revision: r.revision, kind: r.kind, actor: r.actor, reason: r.reason, createdAt: r.created_at, sha256: r.sha256, files: r.files ?? [] })),
   };
