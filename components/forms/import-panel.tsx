@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, BookOpen, Check, CheckCircle2, FileText, FileUp, Pencil, Undo2, X } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, FileUp, Pencil, Undo2, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { analyzeTemplate, applyDraft, rejectDraft } from "@/app/finance/forms/[formId]/actions";
 import { Button } from "@/components/ui/button";
@@ -239,7 +239,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                       >
                         <div className="px-4 py-3">
                           <p className="flex flex-wrap items-center gap-2">
-                            <Badge tone="info" icon={FileText}>
+                            <Badge tone="info">
                               Suggested
                             </Badge>
                             <span className="text-[15px] font-bold text-ink">{row.field.label || "Untitled question"}</span>
@@ -249,7 +249,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                           </p>
                           {library ? (
                             <p className="mt-1.5">
-                              <Badge tone="info" icon={BookOpen}>
+                              <Badge tone="info">
                                 Standard library: {library.label}
                               </Badge>
                             </p>

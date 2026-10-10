@@ -3,7 +3,7 @@ import { ArrowRight, CalendarRange, Landmark, Layers, Users } from "lucide-react
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
-import { formatCompactCurrency, formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/rules/money";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { fiscalYears, nextFiscalYear, validFiscalYear, yearSummary } from "@/lib/lifecycle/rollover";
 import { PageHeader } from "@/components/ui/page-header";

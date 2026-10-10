@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Check, Clock, X } from "lucide-react";
+import { Check } from "lucide-react";
 import { requireUser, roleLabel } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
@@ -96,13 +96,13 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                   <TD className="whitespace-nowrap" label="Status">
                     <span>
                       {!u.active ? (
-                        <Badge icon={X}>Deactivated</Badge>
+                        <Badge>Deactivated</Badge>
                       ) : u.can_sign_in ? (
                         <Badge tone="ok" icon={Check}>
                           Active
                         </Badge>
                       ) : (
-                        <Badge tone="info" icon={Clock}>
+                        <Badge tone="info">
                           Invited, no password yet
                         </Badge>
                       )}

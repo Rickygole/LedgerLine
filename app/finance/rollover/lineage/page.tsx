@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { requireUser, FINANCE_ROLES } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { one, pageNumber, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
@@ -89,7 +88,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
                     </div>
                   </TD>
                   <TD>
-                    <Badge tone={row.kind === "retired" || row.kind === "carried" ? "neutral" : "info"} icon={row.kind === "retired" ? undefined : ArrowRight}>
+                    <Badge tone={row.kind === "retired" || row.kind === "carried" ? "neutral" : "info"}>
                       {KIND_LABEL[row.kind]}
                     </Badge>
                   </TD>

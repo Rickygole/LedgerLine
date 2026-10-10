@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { FileText, X } from "lucide-react";
+import { X } from "lucide-react";
 import { draftNoteAction, sendUpdateAction } from "@/app/finance/submissions/[id]/actions";
 import { Badge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
@@ -147,7 +147,7 @@ export function RequestUpdate({
                 {draft ? (
                   <section aria-label="Suggested note" className="rounded border border-line bg-harbor-50 p-3">
                     <p className="flex flex-wrap items-center gap-2">
-                      <Badge tone="info" icon={FileText}>
+                      <Badge tone="info">
                         Suggested
                       </Badge>
                       <span className="text-[13px] text-muted">{live ? "Written by a language model from the checks you chose." : "Built from the report rules. No model was used."}</span>

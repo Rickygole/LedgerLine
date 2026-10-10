@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, Check, CheckCircle2, ExternalLink, Mail, MapPin, Phone, Star } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
@@ -276,7 +276,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{c.full_name}</span>
                     {c.is_primary ? (
-                      <Badge tone="info" icon={Star}>
+                      <Badge tone="info">
                         Primary
                       </Badge>
                     ) : null}
