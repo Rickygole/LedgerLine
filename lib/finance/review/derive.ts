@@ -17,10 +17,8 @@ function isSubmittedStatus(status: string | null): boolean {
   return status !== null && SUBMITTED_STATUSES.includes(status);
 }
 
-const EXPORT_STATUSES = ["submitted", "under_review", "accepted"];
-
 export function isExportable(status: string | null): boolean {
-  return status !== null && EXPORT_STATUSES.includes(status);
+  return isSubmittedStatus(status);
 }
 
 export function numberAnswer(answers: Answers, key: string): number | null {

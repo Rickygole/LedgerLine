@@ -1,5 +1,6 @@
 import { todayInNewYork } from "@/lib/dates";
 import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
+import { BUCKET_LABEL } from "@/lib/reporting";
 import type { Filters, PeriodInfo } from "./types";
 
 export const PAGE_SIZE = 50;
@@ -60,7 +61,7 @@ export function parseFilters(raw: Raw, periods: PeriodInfo[]): Filters {
     contract: CONTRACT_STATUSES.some((c) => c.value === one(raw, "contract")) ? one(raw, "contract") : "",
     agency: /^[A-Z]{2,6}$/.test(one(raw, "agency")) ? one(raw, "agency") : "",
     period: periods.some((p) => p.id === period) ? period : defaultPeriodId(periods),
-    bucket: one(raw, "bucket").slice(0, 30),
+    bucket: Object.hasOwn(BUCKET_LABEL, one(raw, "bucket")) ? one(raw, "bucket") : "",
     status: one(raw, "status").slice(0, 30),
     flag: one(raw, "flag").slice(0, 30),
     page: Number.isFinite(page) && page > 0 ? page : 1,

@@ -5,6 +5,7 @@ import {
   completionByCategory,
   countBuckets,
   finishRow,
+  isExportable,
   paginate,
 } from "@/lib/finance/review/derive";
 import { filtersToParams, parseFilters } from "@/lib/finance/review/filters";
@@ -304,6 +305,19 @@ describe("pagination and parameters", () => {
     expect(filters).toMatchObject({ period: "FY26-YE", q: "mott", page: 3, borough: "Bronx" });
     expect(filtersToParams(filters).toString()).toBe("q=mott&borough=Bronx&period=FY26-YE");
     expect(filtersToParams(filters, { page: true }).get("page")).toBe("3");
+  });
+
+  it("ignores a bucket that does not exist", () => {
+    expect(parseFilters({ bucket: "nope" }, periods).bucket).toBe("");
+    expect(parseFilters({ bucket: "constructor" }, periods).bucket).toBe("");
+    expect(parseFilters({ bucket: "returned" }, periods).bucket).toBe("returned");
+  });
+});
+
+describe("[US-046][US-047] export scope", () => {
+  it("includes every submitted report, including those with an update requested", () => {
+    for (const status of ["submitted", "under_review", "returned", "accepted"]) expect(isExportable(status)).toBe(true);
+    for (const status of [null, "draft"]) expect(isExportable(status)).toBe(false);
   });
 });
 

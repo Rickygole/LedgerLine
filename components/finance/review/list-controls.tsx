@@ -67,7 +67,7 @@ export function ExportMenu({ items }: { items: { label: string; href: string }[]
         Export
         <ChevronDown className="h-4 w-4 group-open:rotate-180" aria-hidden="true" />
       </summary>
-      <ul className="absolute right-0 z-20 mt-1 w-56 rounded border border-line bg-white py-1 shadow-[0_4px_16px_rgba(10,26,48,0.16)]">
+      <ul className="absolute right-0 z-20 mt-1 w-64 rounded border border-line bg-white py-1 shadow-[0_4px_16px_rgba(10,26,48,0.16)]">
         {items.map((item) => (
           <li key={item.label}>
             <a
@@ -79,6 +79,10 @@ export function ExportMenu({ items }: { items: { label: string; href: string }[]
             </a>
           </li>
         ))}
+        <li className="border-t border-line-soft px-4 pb-1.5 pt-2.5 text-sm text-muted">
+          Includes every report that matches these filters and has been submitted. Reports not yet submitted have no
+          answers to export.
+        </li>
       </ul>
     </details>
   );
