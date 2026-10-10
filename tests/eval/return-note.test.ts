@@ -97,7 +97,7 @@ describe.each(cases)("return note, $name", (c) => {
   });
 });
 
-describe("[US-044] the analyst's own flag text reaches the drafted note", () => {
+describe("[US-044] the analyst's own flag text stays out of the drafted note", () => {
   const flagged = { ...cases[4], flags: [{ id: "f9", kind: "manual", note: "Youth age-group table was submitted blank, ask for the real counts. Contact alex@example.org or 718-555-0142." }] };
   const concerns = concernsFor(flagged);
 
@@ -105,10 +105,11 @@ describe("[US-044] the analyst's own flag text reaches the drafted note", () => 
     expect(concerns.find((c) => c.kind === "flag")?.detail).toBe("Youth age-group table was submitted blank, ask for the real counts. Contact [email removed] or [phone removed].");
   });
 
-  it("writes the flag text into the rule based note and leaves contact details out", async () => {
+  it("tells the organization only that Council Finance has a question, without the flag text or contact details", async () => {
     const draft = await draftReturnNote(fakeTx(), { submissionId: "s1", concerns });
     expect(draft.mode).toBe("fallback");
-    expect(draft.text).toContain("Youth age-group table was submitted blank, ask for the real counts.");
+    expect(draft.text).toContain("Council Finance has a question about this report. Please review it and respond.");
+    expect(draft.text).not.toContain("age-group table was submitted blank");
     expect(draft.text).not.toMatch(/alex@|718-555|555-0142/);
   });
 

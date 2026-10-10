@@ -252,7 +252,7 @@ function sectionForHeading(heading: string | undefined, label: string, type: str
   return detectSection(label, type);
 }
 
-const HEADING_PREFIX = /^\s*(?:section|part|module)\s+[0-9a-z]{1,4}\s*[:.\-–—]\s*/i;
+const HEADING_PREFIX = /^\s*(?:section|part|module)\s+[0-9a-z]{1,4}\s*[:.\-\u2013\u2014]\s*/i;
 
 function headingTitle(text: string): string {
   const cleaned = collapse(text.replace(HEADING_PREFIX, "")).replace(/[:.\s]+$/, "");
