@@ -7,6 +7,7 @@ type Requirement = {
   summary: string;
   route: string | null;
   fallback: "demonstrated" | "planned";
+  commitment?: boolean;
   note?: string;
 };
 type Suite = "unit" | "sql" | "eval" | "e2e";
@@ -17,10 +18,10 @@ type TestResult = {
   retried: boolean;
   suite: Suite;
 };
-type State = "verified" | "failing" | "demonstrated" | "planned";
+type State = "verified" | "supporting" | "failing" | "demonstrated" | "planned";
 
 const TAG = /\[((?:US|BR)-\d{3})\]/g;
-const STATES: State[] = ["verified", "failing", "demonstrated", "planned"];
+const STATES: State[] = ["verified", "supporting", "failing", "demonstrated", "planned"];
 
 function readVitest(path: string): TestResult[] {
   if (!existsSync(path)) return [];
@@ -106,7 +107,7 @@ function main() {
       else if (skipped.length)
         [state, reason] = ["failing", `${skipped.length} skipped test${skipped.length > 1 ? "s" : ""}`];
       else if (flaky.length) [state, reason] = ["failing", "passed only on retry"];
-      else state = "verified";
+      else state = req.commitment ? "supporting" : "verified";
     } else {
       state = req.fallback;
     }
@@ -151,9 +152,11 @@ function main() {
     requirements: rows,
   };
   writeFileSync("app/trust/evidence.json", `${JSON.stringify(evidence, null, 2)}\n`);
-  const v = evidence.summary.verified;
+  const storyTotal = rows.filter((r) => r.id.startsWith("US")).length;
+  const ruleTotal = rows.length - storyTotal;
+  const sum = (state: State) => count(state, "US") + count(state, "BR");
   console.log(
-    `traceability: ${v.stories} of ${count("verified", "US") + count("failing", "US") + count("demonstrated", "US") + count("planned", "US")} stories and ${v.rules} of ${rows.filter((r) => r.id.startsWith("BR")).length} rules verified by ${tests.length} tests (${evidence.origin})`,
+    `traceability: ${sum("verified")} of ${rows.length} verified by test, ${sum("supporting")} supporting tools built for contract commitments, ${sum("demonstrated")} demonstrated, ${sum("planned")} planned, ${sum("failing")} failing (${storyTotal} stories, ${ruleTotal} rules; ${tests.length} tests, ${evidence.origin})`,
   );
 }
 

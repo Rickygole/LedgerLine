@@ -1,6 +1,6 @@
 # LedgerLine on Azure: service mapping, portability and delivery
 
-Prepared October 2026 for Estrada Consulting. This describes how the LedgerLine proof of concept would be hosted in Azure for the NYC Council Initiative Reporting System (PIN 102202709162026), what carries over unchanged, what must change, and a delivery plan to a February 1, 2027 go-live.
+Prepared October 2026 for Estrada Consulting. This describes how the LedgerLine proof of concept would be hosted in Azure for the NYC Council Initiative Reporting System (PIN 102202709162026), what carries over unchanged, what must change, and a delivery plan to a February 1, 2027 go-live. ECI's high-level architecture is cloud neutral, Azure Government or AWS GovCloud, selected with the Council. Azure is mapped here because it is the example in that document; every service below has an equivalent on AWS GovCloud, and section 2 says which parts are provider specific.
 
 Every Azure Government availability statement below is marked "verify". Service availability, feature parity and authorization levels in Azure Government change over time and differ by region. Each one must be confirmed against Microsoft's current Azure Government documentation and the City's cloud policy before it is relied on in a proposal.
 
@@ -55,13 +55,22 @@ These are the parts that carry the business rules, and none of them depends on V
 | Database TLS | The server connection already requires TLS for any host that is not localhost. The Flexible Server CA certificate must be trusted | One day |
 | Demo only features | The presets script and the passcode gate are removed from the deployed build | Half a day |
 
-## 5. The .NET question
+## 5. How this lands in ECI's stack, including .NET
 
-The City or ECI may prefer a .NET stack. The design allows it.
+ECI's architecture separates a web and application layer, a business rules layer and a relational data layer. LedgerLine follows the same split, and the layer that carries the rules is the one that moves without rework.
 
-The rules and the state live in SQL, in the policies, functions and triggers listed in section 3, and in one small rule evaluator (`lib/rules`, about 760 lines of TypeScript) that checks a report before submit. The Next.js layer renders pages, calls those functions, and enforces nothing that the database does not also enforce. A .NET API (ASP.NET Core with Npgsql) could replace the Next server layer and call the same functions, with Razor or a separate front end on top. The evaluator would be ported once, and the existing test cases in `tests/unit/validate.test.ts` and the SQL tests would be reused to confirm the port gives the same answers.
+**What moves to Azure Database for PostgreSQL unchanged.** The SQL rules, row level security, the submission state machine (`app.transition_submission`, which now also refuses an unbalanced submit inside the database, migration 0025), the corrections and publishing functions, and the append-only audit triggers. They are the same files in `db/migrations`, applied with the same command. A .NET API (ASP.NET Core with Npgsql) can call the same database functions and set the same per-transaction claims that `withClaims` in `lib/db.ts` sets today, so access and status rules stay in one place whichever web layer sits on top.
 
-The cost is real: the front end and the server actions are rewritten, and the work is about six to eight additional weeks. It would not fit the February 1 date unless it began before award. The recommendation is to deliver the first release on the existing stack and treat a .NET API as a later option, since the database, which holds the rules, would not move.
+**What the web layer is today.** Next.js renders pages and calls those functions. It also holds one small rule evaluator (`lib/rules`, about 900 lines of TypeScript) that checks a report before submit so the user sees every problem at once. The database re-checks the rules that guard a status change, and the server re-checks the rest when data is written. The evaluator is the only business logic that would be ported to another language.
+
+**Two paths and their honest cost.**
+
+| Path | What is reused | What is built | Cost |
+| --- | --- | --- | --- |
+| Next.js web layer on Azure App Service or Container Apps | Everything in this repository | Sign-in, storage, mail and model adapters from section 4 | The section 4 sizes, about six to eight weeks of work in total, much of it in parallel |
+| ASP.NET Core API and web layer on the same PostgreSQL database | The database and all its tests, the form and rule definitions, the evaluator's test cases (`tests/unit/validate.test.ts` and the SQL tests) as the acceptance check for the port | The API, the pages or a separate front end, the server actions, and the evaluator port | The section 4 work plus about six to eight additional weeks for the web layer. Starting after award, it competes with the testing and training periods in the RFP schedule; starting before award, it does not |
+
+Either way the same SQL and database tests run against the Azure database, so behavior can be compared directly. The choice is ECI's: it turns on who maintains the code after go-live and which skills the team has, and both paths keep the database design.
 
 ## 6. NIST SP 800-53 mapping of controls that exist in the code
 
@@ -97,20 +106,20 @@ This lists only controls implemented in the proof of concept, with the place whe
 
 ## 8. Delivery timeline to go-live on February 1, 2027
 
-Dates assume award and contract registration in time to start on Monday, November 16, 2026. If the start moves, the plan moves day for day, and the go-live date has no slack beyond the last week. This is the main schedule risk, not a technical one.
+The RFP schedule (pp. 8 and 9) has award in October and November 2026, testing and revisions in November and December 2026, training from December 2026 to January 2027, and a target go-live of February 1, 2027. The plan below follows it. It assumes award and contract registration in time to start on Monday, November 16, 2026. If the start moves, the plan moves day for day, and the go-live date has no slack beyond the last week. This is the main schedule risk, not a technical one, and it is tighter than a plan that tests in January: testing begins as soon as a staging environment exists, and the Azure build finishes in the first two weeks of it.
 
 | Dates | Phase | Output |
 | --- | --- | --- |
 | Oct 20, 2026 | Proposal due | Submission |
 | Oct 26 to Nov 13 | Orals and award; contract registration | Not under ECI control |
-| Nov 16 to Dec 4 | Confirm requirements with Council Finance. Load the real initiative, organization and award lists into a mapping sheet. Settle open questions on who signs in with what | Signed requirements baseline, data mapping, Azure subscription and Entra tenant access |
-| Dec 7 to Dec 31 | Build on Azure: infrastructure as code, database, application hosting, Entra sign-in, Blob storage, mail transport, model adapter. Holiday week is reduced capacity | Staging environment running the full test suite |
-| Jan 4 to Jan 15 | User acceptance testing with Finance staff and a pilot group of funded organizations. Accessibility review. Security review and penetration test. Load test | Defect list closed or accepted, test report |
-| Jan 18 to Jan 22 | Load production data, create accounts, send invitations, training sessions and a short guide for organizations | Production environment populated |
+| Nov 16 to Nov 25 | Confirm requirements with Council Finance. Load the real initiative, organization and award lists into a mapping sheet. Settle open questions on who signs in with what. Start the Azure build: infrastructure as code, database, hosting | Signed requirements baseline, data mapping, Azure subscription and Entra tenant access |
+| Nov 30 to Dec 23 | Testing and revisions (RFP: November to December). Finish the Azure build in the first two weeks: Entra sign-in, Blob storage, mail transport, model adapter. User acceptance testing with Finance staff and a pilot group of funded organizations, accessibility review, security review and penetration test, load test, then revisions and retest | Staging environment running the full test suite, defect list closed or accepted, test report |
+| Dec 14 to Jan 22 | Training (RFP: December to January). Role based sessions for Finance, then the short guide and sessions for organizations. The holiday week is reduced capacity | Training records, guide |
+| Jan 4 to Jan 22 | Load production data, create accounts, send invitations | Production environment populated |
 | Jan 25 to Jan 29 | Dress rehearsal, go or no-go meeting, change freeze | Signed go decision |
 | Feb 1, 2027 | Go-live | Support begins |
 | Feb 1 onward | Hypercare for 30 days with daily check-ins, then a monthly review | Support log, defect fixes |
 
-Dependencies the City controls: data lists in usable form by December 4, a named Finance approver for each phase gate, an Entra tenant and the Azure subscription by the start of December, and security review slots in January.
+Dependencies the City controls: data lists in usable form by November 25, a named Finance approver for each phase gate, an Entra tenant and the Azure subscription by the start of the build, and security review slots in December.
 
-Items the plan deliberately leaves out of the first release if time is short, in this order: a .NET rewrite, the PDF export, optional AI features. The required reporting tasks, review, audit, Excel export and access controls are in the first release.
+If time runs short, the item to cut from the first release is the optional AI features. The required reporting tasks, review, audit, PDF export, Excel export and access controls are shall requirements and stay in the first release.

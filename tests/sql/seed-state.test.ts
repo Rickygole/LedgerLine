@@ -18,7 +18,7 @@ describe("[US-065][US-066] the starting data matches a system that has not gone 
   it("holds no training or test session yet and lists the scheduled ones", async () => {
     expect(await count("SELECT count(*)::int AS n FROM training_record")).toBe(0);
     expect(await count("SELECT count(*)::int AS n FROM uat_session")).toBe(0);
-    expect(await count("SELECT count(*)::int AS n FROM readiness_schedule WHERE scheduled_on < '2027-01-01'")).toBe(0);
+    expect(await count("SELECT count(*)::int AS n FROM readiness_schedule WHERE scheduled_on < '2026-11-30'")).toBe(0);
     expect(await count("SELECT count(*)::int AS n FROM readiness_schedule WHERE kind = 'test'")).toBeGreaterThan(0);
     expect(await count("SELECT count(*)::int AS n FROM readiness_schedule WHERE kind = 'training'")).toBeGreaterThan(0);
   });

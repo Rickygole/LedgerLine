@@ -38,10 +38,13 @@ test.describe("requirements traceability page", () => {
       await page.getByRole("link", { name: "Requirements traceability" }).click();
       await expect(page).toHaveURL(/\/trust$/);
       await expect(page.getByRole("heading", { name: "Requirements traceability", level: 1 })).toBeVisible();
-      for (const label of ["Verified by test", "Demonstrated", "Planned"])
+      for (const label of ["Verified by test", "Supporting tool built", "Demonstrated", "Planned"])
         await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
       await expect(page.getByText("Build", { exact: true })).toBeVisible();
       await expect(page.getByText("Generated", { exact: true })).toBeVisible();
+      await expect(
+        page.getByText(/\d+ verified by test, \d+ supporting tools built, \d+ delivery commitments/),
+      ).toBeVisible();
       await expect(page.locator("tbody tr")).toHaveCount(95);
     });
 

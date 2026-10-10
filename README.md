@@ -83,7 +83,7 @@ The app is set up for Vercel with a Postgres database such as Neon. Run `pnpm db
 
 ## Architecture
 
-Next.js 15 (App Router, server components and server actions), React 19, Tailwind 4 and TypeScript, on Postgres 16. The browser never talks to the database; every read and write goes through a server component or action, and the database enforces the rules whether or not the application remembers to.
+Next.js 15 (App Router, server components and server actions), React 19, Tailwind 4 and TypeScript, on Postgres 16. The browser never talks to the database; every read and write goes through a server component or action. Access and status changes are decided inside the database, and the budget balance and the lock version are checked there on submit as well as in the application.
 
 **Access is decided in Postgres.** Row level security policies on every report table filter rows by the user and role set for the current transaction. `withClaims` in `lib/db.ts` opens a transaction, sets those claims locally, runs the query and commits, so a pooled connection never carries one user's identity into another request. The app connects as `app_server`, a role that holds only the column and function grants it needs. It cannot read password hashes, and it cannot insert or change audit rows except through the audit function, which it may call. Row level security and the definer functions protect against application bugs and against other organizations; they are not a defense against a fully compromised application server, which can still call every function the role has been granted.
 
@@ -136,7 +136,7 @@ docs/         runbook, azure, ai-eval
 
 ## Requirements traceability
 
-`/trust`, visible to Finance admins, lists each requirement ID from `traceability.json` with the tests that cover it. The IDs are the client's user stories (US-nnn) and business rules (BR-nnn). Tests carry the ID in their title, for example `[BR-008]`. `scripts/trust.ts` reads the test results from `reports/` and writes `app/trust/evidence.json`, which the page renders. A requirement is Verified when a tagged test passed on its first attempt, Failing when one did not, and otherwise Demonstrated or Planned according to its entry in `traceability.json`. `pnpm evidence` produces the file locally and the page says when a run was local. CI regenerates it and uploads it as a build artifact but does not commit it, so the file in the repository shows the last local run.
+`/trust`, visible to Finance admins, lists each requirement ID from `traceability.json` with the tests that cover it. The IDs are the client's user stories (US-nnn) and business rules (BR-nnn). Tests carry the ID in their title, for example `[BR-008]`. `scripts/trust.ts` reads the test results from `reports/` and writes `app/trust/evidence.json`, which the page renders. A requirement is Verified when a tagged test passed on its first attempt and Failing when one did not. Ten requirements are contract or service commitments (support, breach notification, the testing and training periods, the annual review). For those, passing tests show only that the supporting tool exists, so they are marked Supporting tool built and not Verified. Requirements with no tagged test are Demonstrated or Planned according to their entry in `traceability.json`; the Planned ones are delivery and hosting commitments that this application cannot show. The page headline gives the counts. `pnpm evidence` produces the file locally and the page says when a run was local. CI regenerates it and uploads it as a build artifact but does not commit it, so the file in the repository shows the last local run.
 
 ## Interface conventions
 
@@ -160,7 +160,7 @@ The council district and borough shapes in `lib/geo` come from NYC Open Data, pu
 
 - Email goes out through Resend only when it is configured. Otherwise messages are recorded in the outbox and shown as Recorded.
 - Live AI was evaluated with local Ollama models on three templates and five note cases (`docs/ai-eval.md`), not with a hosted API. The deployed site has no model.
-- Azure Government is the production path I would propose for a real engagement (`docs/azure.md`). This is not deployed there and has no compliance review behind it.
+- A government cloud, Azure Government or AWS GovCloud as the Council selects, is the production target. `docs/azure.md` maps Azure. This is not deployed there and has no compliance review behind it.
 - Staff sign in with a password and no second factor. The shared passcode gate is an interim access measure.
 - Autosave waits 1.2 seconds after the last edit. Leaving the page before the Saved label appears can lose that edit.
 - Word form import accepts .docx files up to 2 MB.

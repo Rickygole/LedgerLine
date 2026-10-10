@@ -11,7 +11,7 @@ export type EvidenceRow = {
   area: string;
   summary: string;
   route: string | null;
-  state: "verified" | "failing" | "demonstrated" | "planned";
+  state: "verified" | "supporting" | "failing" | "demonstrated" | "planned";
   reason: string | null;
   note: string | null;
   tests: { title: string; file: string; status: string; suite: string }[];
@@ -19,6 +19,7 @@ export type EvidenceRow = {
 
 const BADGE: Record<EvidenceRow["state"], { label: string; tone: "ok" | "warn" | "info" | "neutral" }> = {
   verified: { label: "Verified by test", tone: "ok" },
+  supporting: { label: "Supporting tool built", tone: "info" },
   failing: { label: "Test failing", tone: "warn" },
   demonstrated: { label: "Demonstrated", tone: "info" },
   planned: { label: "Planned", tone: "neutral" },
@@ -77,6 +78,7 @@ export function RequirementTable({
             <Select id="trust-state" value={state} onChange={(e) => setState(e.target.value)} className="h-9 w-44">
               <option value="">All statuses</option>
               <option value="verified">Verified by test</option>
+              <option value="supporting">Supporting tool built</option>
               <option value="failing">Test failing</option>
               <option value="demonstrated">Demonstrated</option>
               <option value="planned">Planned</option>

@@ -157,7 +157,7 @@ describe("[US-066] training records and the readiness summary", () => {
       expect(empty.uat).toEqual({ scenarios: 0, passed: 0, percent: null });
       expect(empty.sessions).toEqual([]);
       expect(empty.schedule.length).toBeGreaterThan(0);
-      expect(empty.schedule.every((s) => s.scheduled_on >= "2027-01-04")).toBe(true);
+      expect(empty.schedule.every((s) => s.scheduled_on >= "2026-11-30")).toBe(true);
 
       const analyst = empty.users.find((u) => u.role === "finance_analyst")!;
       for (const mod of empty.modules.filter((m) => m.audience.includes(analyst.role)))

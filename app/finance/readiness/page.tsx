@@ -38,7 +38,7 @@ export default async function ReadinessPage() {
     <>
       <PageHeader
         title="Go-live readiness"
-        description="Test sessions and training records for Council Finance staff ahead of the February 1, 2027 target. The formal test window runs January 4 to 15, 2027 and training runs January 11 to 22, 2027. Sessions that have not happened yet are listed under Scheduled sessions."
+        description="Test sessions and training for Council Finance staff ahead of the February 1, 2027 target. Following the RFP schedule, testing and revisions run November 30 to December 23, 2026 and training runs December 14, 2026 to January 22, 2027. Sessions that have not happened yet are listed under Scheduled sessions."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Go-live readiness" }]}
       />
       <ul className="mb-6 list-disc space-y-1 pl-5 text-sm">
