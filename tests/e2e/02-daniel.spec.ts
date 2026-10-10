@@ -65,12 +65,14 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
 
 test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({ page, browser }) => {
   await page.goto(`/finance/submissions/${submissionId}`);
-  await page.getByRole("button", { name: "Request update" }).click();
-  await page.getByRole("button", { name: "Send to organization" }).click();
+  await page.getByRole("button", { name: "Request an update" }).click();
+  await expect(page.getByRole("dialog", { name: /Request an update/ })).toBeVisible();
+  await page.getByLabel("Note to the organization").fill("");
+  await page.getByRole("button", { name: "Send request" }).click();
   await expect(page.getByText(/Write a note before sending/)).toBeVisible();
   await page.getByLabel("Note to the organization").fill(NOTE);
-  await page.getByRole("button", { name: "Send to organization" }).click();
-  await expect(page.getByText("Update request sent. The organization will see the note above its report.")).toBeVisible();
+  await page.getByRole("button", { name: "Send request" }).click();
+  await expect(page.getByText(/Update requested\. .+ was emailed at \d{1,2}:\d{2} [AP]M\./)).toBeVisible();
 
   const [row] = await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]);
   expect(row.status).toBe("returned");

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Eye } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Eye, XCircle } from "lucide-react";
 import { ActionsPanel, type CorrectableQuestion } from "@/components/finance/review/actions-panel";
 import { AttachmentsTab, AuditTab, BudgetTab, FlagsTab, ReportTab, RevisionsTab, TabNav } from "@/components/finance/review/review-sections";
 import { DueBadge, StateBadge } from "@/components/ui/status-badge";
 import { AuditTimeline } from "@/components/finance/review/audit-timeline";
-import { ProfileHeader } from "@/components/ui/profile-header";
+import { Breadcrumbs } from "@/components/ui/page-header";
+import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { FINANCE_ROLES, REVIEW_ROLES, requireUser } from "@/lib/auth";
 import { formatDate, formatDateTime } from "@/lib/dates";
@@ -15,7 +16,8 @@ import { loadSubmissionDetail } from "@/lib/finance/review/detail";
 import { buildConcerns, PRESET_CONCERNS } from "@/lib/finance/review/return-note-core";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency } from "@/lib/rules/money";
-import { isVisible } from "@/lib/rules/validate";
+import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
+import { sponsorNames } from "@/lib/finance/awards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +34,14 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   const requested = Array.isArray(raw.tab) ? raw.tab[0] : raw.tab;
   const tab = requested && TABS.includes(requested) ? requested : "report";
 
-  const detail = await withClaims(user.id, (tx) => loadSubmissionDetail(tx, id));
+  const queued = (Array.isArray(raw.queue) ? raw.queue[0] : raw.queue) === "waiting";
+  const { detail, waiting } = await withClaims(user.id, async (tx) => {
+    const detail = await loadSubmissionDetail(tx, id);
+    const waiting = detail && queued
+      ? (await tx.query<{ id: string }>("SELECT id FROM submission WHERE period_id = $1 AND status = 'submitted' ORDER BY submitted_at NULLS LAST, id", [detail.row.periodId])).map((r) => r.id)
+      : [];
+    return { detail, waiting };
+  });
   if (!detail || !detail.row.definition) notFound();
   const { row } = detail;
   const canReview = REVIEW_ROLES.includes(user.role);
@@ -56,49 +65,119 @@ export default async function ReviewPage({ params, searchParams }: Props) {
 
   const flagCount = row.flags.length;
   const late = row.status === "draft" || row.status === "returned" ? row.daysPastDue : 0;
-
   const state = <StateBadge state={reportState(row.status, row.dueOn)} />;
   const recent = detail.audit.slice(-5);
+  const queryTail = queued ? "&queue=waiting" : "";
+
+  const budgetOn = row.definition?.budget.enabled ?? false;
+  const total = budgetTotals(row.budget).total;
+  const balance = balanceMessage(total, row.award);
+  const diff = Math.round((total - row.award) * 100) / 100;
+  const budgetText = !budgetOn ? null : balance.balanced ? "Budget balanced" : row.budget.length === 0 ? "No budget lines entered" : `Budget ${diff < 0 ? "under" : "over"} by ${formatCurrency(Math.abs(diff))}`;
+  const prefill = budgetOn && !balance.balanced && row.budget.length > 0 ? `Please review the budget. The total is ${formatCurrency(Math.abs(diff))} ${diff < 0 ? "under" : "over"} the award of ${formatCurrency(row.award)}.` : "";
+  const checks = [
+    ...(budgetText ? [{ ok: balance.balanced, text: budgetText, tab: "budget" }] : []),
+    { ok: row.issues.length === 0, text: row.issues.length === 0 ? "All required answers complete" : `${row.issues.length} required ${row.issues.length === 1 ? "answer fails" : "answers fail"} a rule`, tab: "report" },
+    { ok: row.openFlags.length === 0, text: `${row.openFlags.length} open ${row.openFlags.length === 1 ? "flag" : "flags"}`, tab: "flags" },
+  ];
+
+  const lastOf = (action: string) => [...detail.audit].reverse().find((a) => a.action === action);
+  const since = row.status === "returned" ? (lastOf("request_update") ? formatDate(lastOf("request_update")!.at) : null) : row.status === "accepted" && lastOf("accept") ? `Accepted by ${lastOf("accept")!.actor ?? "Finance"}, ${formatDate(lastOf("accept")!.at)}` : null;
+
+  const at = waiting.indexOf(id);
+  const nextId = at >= 0 ? waiting[at + 1] : waiting[0];
+  const prevId = at > 0 ? waiting[at - 1] : null;
+  const sponsor = row.fundingSource === "speaker" ? "Speaker's allocation" : row.fundingSource === "citywide" ? "Citywide initiative" : row.sponsors.length === 1 ? `Council Member ${row.sponsors[0].name}, District ${row.sponsors[0].district}` : row.sponsors.length > 1 ? `Delegation: ${sponsorNames(row.sponsors)}` : null;
 
   return (
     <>
-      <ProfileHeader
-        title={row.initiativeName}
-        crumbs={[{ label: "Submissions", href: "/finance/submissions" }, { label: row.referenceNo ?? "Report" }]}
-        subtitle={
-          <>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Breadcrumbs crumbs={[{ label: "Submissions", href: `/finance/submissions?period=${encodeURIComponent(row.periodId)}` }, { label: row.referenceNo ?? "Report" }]} />
+        {queued ? (
+          <nav aria-label="Review queue" className="flex flex-wrap items-center gap-4">
+            <p className="text-[15px] text-[#3d4757]">
+              {at >= 0 ? (
+                <>
+                  <span className="num font-semibold text-ink">{at + 1}</span> of <span className="num">{waiting.length}</span> waiting for review
+                </>
+              ) : (
+                <>
+                  <span className="num font-semibold text-ink">{waiting.length}</span> waiting for review
+                </>
+              )}
+            </p>
+            {prevId ? (
+              <Link href={`/finance/submissions/${prevId}?queue=waiting`} className="inline-flex items-center gap-1 text-[15px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Previous
+              </Link>
+            ) : null}
+            {nextId ? (
+              <Link id="queue-next" href={`/finance/submissions/${nextId}?queue=waiting`} className={buttonClass("secondary", "md")}>
+                Next submission
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            ) : (
+              <span className="text-[15px] text-muted">No more waiting</span>
+            )}
+          </nav>
+        ) : null}
+      </div>
+
+      <header className="mb-6 rounded border border-line bg-white">
+        <div className="px-5 pb-4 pt-5 sm:px-6">
+          <p className="text-sm font-semibold leading-5 text-muted">
+            {detail.periodLabel} report · <span className="font-mono">{row.referenceNo}</span>
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">{row.initiativeName}</h1>
+            {state}
+            {late > 0 ? <DueBadge daysPastDue={late} /> : null}
+          </div>
+          <p className="mt-2 text-[15px] leading-[22px] text-[#3d4757]">
             <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
               {row.orgName}
             </Link>
-            <span className="text-muted">, {row.borough}</span>
-          </>
-        }
-        meta={[
-          state,
-          late > 0 ? <DueBadge key="due" daysPastDue={late} /> : null,
-          <span key="ref" className="whitespace-nowrap font-mono text-[13px]">{row.referenceNo}</span>,
-          <span key="ein" className="whitespace-nowrap">
-            EIN <span className="font-mono text-[13px]">{row.ein}</span>
-          </span>,
-          <span key="rev" className="num whitespace-nowrap">Revision {row.revision}</span>,
-          <span key="period" className="whitespace-nowrap">{detail.periodLabel}</span>,
-        ]}
-        tabs={<TabNav id={id} current={tab} counts={{ attachments: detail.attachments.length, flags: flagCount, audit: detail.audit.length, revisions: detail.revisions.length }} />}
-      >
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-5 py-4 text-sm sm:px-6 md:grid-cols-4">
-          {[
-            ["Award", <span key="a" className="num font-semibold">{formatCurrency(row.award)}</span>],
-            ["Due", formatDate(row.dueOn)],
-            ["Submitted by", detail.submittedBy ?? "Not submitted"],
-            ["Submitted", row.submittedAt ? formatDateTime(row.submittedAt) : "Not submitted"],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="min-w-0">
-              <dt className="text-[13px] font-semibold text-muted">{label}</dt>
-              <dd className="mt-1 truncate text-ink">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      </ProfileHeader>
+            {" · "}
+            {row.borough}
+            {row.councilDistrict ? ` · District ${row.councilDistrict}` : ""}
+            {sponsor ? ` · Sponsor: ${sponsor}` : ""}
+          </p>
+          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-[15px] md:grid-cols-4">
+            {[
+              ["Award", <span key="a" className="num font-semibold">{formatCurrency(row.award)}</span>],
+              ["Due", formatDate(row.dueOn)],
+              ["Submitted by", detail.submittedBy ?? "Not submitted"],
+              ["Submitted at", row.submittedAt ? formatDateTime(row.submittedAt) : "Not submitted"],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="min-w-0">
+                <dt className="text-sm font-semibold text-[#3d4757]">{label}</dt>
+                <dd className="mt-0.5 truncate text-ink">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <div className="border-t border-[#e3e7ec] bg-navy-50/50 px-5 py-3 sm:px-6">
+          <h2 className="sr-only">Automated checks</h2>
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
+            {checks.map((check) => (
+              <li key={check.text} className={check.ok ? "flex items-center gap-1.5 text-ok" : "flex items-center gap-1.5 font-semibold text-bad"}>
+                {check.ok ? <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" /> : <XCircle className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                {check.ok ? (
+                  <span>{check.text}</span>
+                ) : (
+                  <Link href={`/finance/submissions/${id}?tab=${check.tab}${queryTail}`} className="underline underline-offset-2">
+                    {check.text}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="border-t border-line px-3 sm:px-4">
+          <TabNav id={id} current={tab} query={queryTail} counts={{ attachments: detail.attachments.length, flags: flagCount, audit: detail.audit.length, revisions: detail.revisions.length }} />
+        </div>
+      </header>
 
       <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
         <div className="order-2 min-w-0 lg:order-1 lg:col-span-8">
@@ -109,9 +188,20 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           {tab === "audit" ? <AuditTab audit={detail.audit} labels={labels} /> : null}
           {tab === "revisions" ? <RevisionsTab revisions={detail.revisions} submissionId={id} fileIds={detail.fileIds} /> : null}
         </div>
-        <aside className="order-1 space-y-4 lg:sticky lg:top-4 lg:order-2 lg:col-span-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:pb-1" aria-label="Review actions">
+        <aside className="order-1 space-y-4 lg:sticky lg:top-6 lg:order-2 lg:col-span-4 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:pb-1" aria-label="Review actions">
           {canReview ? (
-            <ActionsPanel submissionId={id} status={row.status ?? "draft"} lockVersion={row.lockVersion} concerns={concerns} questions={questions} badge={state} />
+            <ActionsPanel
+              submissionId={id}
+              status={row.status ?? "draft"}
+              lockVersion={row.lockVersion}
+              concerns={concerns}
+              questions={questions}
+              badge={state}
+              orgName={row.orgName}
+              contactName={detail.primaryContact?.name ?? null}
+              prefill={prefill}
+              since={since}
+            />
           ) : (
             <Card>
               <CardBody className="flex items-start gap-3 text-sm">
@@ -122,9 +212,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           )}
           <Card>
             <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
-              <h2 className="text-[15px] font-semibold text-ink">Audit timeline</h2>
+              <h2 className="text-[17px] font-bold text-ink">Audit timeline</h2>
               {detail.audit.length > recent.length ? (
-                <Link href={`/finance/submissions/${id}?tab=audit`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                <Link href={`/finance/submissions/${id}?tab=audit${queryTail}`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                   All {detail.audit.length}
                 </Link>
               ) : null}
