@@ -26,6 +26,7 @@ import {
   BUDGET_KEY,
   budgetAudit,
   parseBudgetCorrection,
+  tableAsText,
   parseTableCorrection,
   sameJson,
 } from "@/lib/finance/review/correction-input";
@@ -310,7 +311,7 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
       } else if (question!.type === "table") {
         const parsed = parseTableCorrection(rawValue, question!);
         if (!parsed.ok) return parsed.message;
-        const was = row.answers[key] ?? [];
+        const was = tableAsText(row.answers[key], question!);
         if (sameJson(was, parsed.value))
           return "The table is the same as the current table. Change a row to correct it.";
         nextAnswers = { ...row.answers, [key]: parsed.value };

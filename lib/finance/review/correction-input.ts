@@ -94,6 +94,14 @@ export function parseTableCorrection(raw: string, question: Question): Correctio
   return { ok: true, value: rows };
 }
 
+export function tableAsText(value: AnswerValue | undefined, question: Question): Array<Record<string, string>> {
+  const columns = question.columns ?? [];
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => Object.fromEntries(columns.map((column) => [column.key, String(item[column.key] ?? "").trim()])))
+    .filter((row) => Object.values(row).some((cell) => cell !== ""));
+}
+
 export function sameJson(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
