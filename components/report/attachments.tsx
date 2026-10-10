@@ -1,15 +1,16 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import { AlertCircle, CheckCircle2, Download, FileText, Loader2, Paperclip, Trash2, X } from "lucide-react";
+import { AlertCircle, FileSpreadsheet, FileText, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { prepareUpload, recordBlobUpload, removeAttachment, uploadLocalAttachment } from "@/app/portal/reports/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { formatDateTime } from "@/lib/dates";
 import type { AttachmentItem, UploadActionResult } from "@/lib/report/types";
 import { ACCEPT_ATTRIBUTE, MAX_UPLOAD_BYTES, clientCheckUpload, formatBytes } from "@/lib/report/upload-rules";
 
-type Pending = { key: string; name: string; bytes: number; state: "uploading" | "rejected"; reason?: string };
+type Pending = { key: string; name: string; bytes: number; state: "uploading" | "rejected"; reason?: string; progress?: number };
 
 async function sessionIsAlive(): Promise<boolean> {
   try {
@@ -44,7 +45,7 @@ export function Attachments({
     setPending((list) => (next === null ? list.filter((item) => item.key !== key) : list.map((item) => (item.key === key ? { ...item, ...next } : item))));
   }
 
-  async function sendOne(file: File): Promise<UploadActionResult> {
+  async function sendOne(file: File, key: string): Promise<UploadActionResult> {
     if (storage === "local") {
       const form = new FormData();
       form.set("submissionId", submissionId);
@@ -59,6 +60,7 @@ export function Attachments({
       clientPayload: JSON.stringify({ submissionId, signature: prepared.signature }),
       contentType: prepared.contentType,
       multipart: file.size > 8 * 1024 * 1024,
+      onUploadProgress: ({ percentage }) => patch(key, { progress: percentage }),
     });
     return recordBlobUpload({ submissionId, pathname: prepared.pathname, signature: prepared.signature, filename: file.name });
   }
@@ -74,7 +76,7 @@ export function Attachments({
       }
       setPending((current) => [...current, { key, name: file.name, bytes: file.size, state: "uploading" }]);
       try {
-        const result = await sendOne(file);
+        const result = await sendOne(file, key);
         if (result.status === "ok") {
           patch(key, null);
           onAdded(result.attachment);
@@ -119,71 +121,79 @@ export function Attachments({
           setDragging(false);
           void handleFiles(event.dataTransfer.files);
         }}
-        className={cn("rounded-md border border-dashed px-5 py-6 text-center", dragging ? "border-navy-600 bg-navy-50" : "border-line-strong bg-surface/50")}
+        className={cn(
+          "flex min-h-[160px] flex-col items-center justify-center rounded border-2 border-dashed px-5 py-6 text-center",
+          dragging ? "border-action bg-navy-100" : "border-line-strong bg-navy-50/50"
+        )}
       >
-        <Paperclip className="mx-auto h-6 w-6 text-muted" aria-hidden="true" />
-        <p className="mt-2 text-sm text-ink">Drag files here or choose them from your computer.</p>
-        <p className="mt-1 text-sm text-muted">PDF, Word (.docx), Excel (.xlsx) or CSV. No macros. Up to 25 MB each.</p>
-        <input ref={input} id="attachment-input" type="file" multiple accept={ACCEPT_ATTRIBUTE} className="sr-only" onChange={(event) => event.target.files && void handleFiles(event.target.files)} />
-        <label
-          htmlFor="attachment-input"
-          className="mt-3 inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-line-strong/70 bg-white px-4 text-sm font-semibold text-ink shadow-sm hover:bg-surface has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-navy-600"
-        >
-          Choose files
-        </label>
+        <Upload className="h-6 w-6 text-muted" aria-hidden="true" />
+        <p className="mt-2 text-[17px] font-bold leading-6 text-ink">
+          Drag files here or{" "}
+          <label
+            className="cursor-pointer text-link underline underline-offset-2 hover:text-link-hover has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus"
+          >
+            choose files
+            <input ref={input} id="attachment-input" type="file" multiple accept={ACCEPT_ATTRIBUTE} className="sr-only" onChange={(event) => event.target.files && void handleFiles(event.target.files)} />
+          </label>
+        </p>
+        <p className="mt-1 text-[15px] text-[#3d4757]">PDF, Word, Excel or CSV. Up to 25 MB each. Files with macros are not accepted.</p>
       </div>
 
       {removeError ? <p role="alert" className="mt-3 text-sm font-semibold text-bad">{removeError}</p> : null}
 
-      <div className="mt-4 rounded-md border border-line" aria-live="polite">
-        <div className="flex h-10 items-center justify-between border-b border-line bg-surface px-4 text-[13px] font-semibold text-muted">
-          <span>Files</span>
-          <span className="num normal-case tracking-normal">{attachments.length} attached</span>
+      <div className="mt-5" aria-live="polite">
+        <div className="flex items-baseline justify-between border-b border-line pb-2">
+          <h3 className="text-[17px] font-bold leading-6 text-ink">Files</h3>
+          <span className="num text-sm font-medium text-muted">{attachments.length} attached</span>
         </div>
         {empty ? (
-          <p className="px-4 py-8 text-center text-sm text-muted">No files attached yet. Attachments are optional unless Council Finance asked for supporting documents.</p>
+          <p className="py-6 text-[15px] text-muted">No files attached yet. Attachments are optional unless Council Finance asked for supporting documents.</p>
         ) : (
-          <ul className="divide-y divide-line">
+          <ul className="divide-y divide-[#e3e7ec]">
             {attachments.map((item) => (
-              <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-                <FileText className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
-                <div className="min-w-0 flex-1 basis-40">
-                  <p className="truncate text-sm font-semibold text-ink" title={item.filename}>
+              <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+                <FileIcon name={item.filename} />
+                <div className="min-w-0 flex-1 basis-56">
+                  <a
+                    href={`/portal/reports/${submissionId}/files/${item.id}`}
+                    className="block truncate text-[15px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    title={item.filename}
+                    aria-label={`Download ${item.filename}`}
+                  >
                     {item.filename}
-                  </p>
-                  <p className="mt-0.5 flex items-center gap-2 text-xs text-muted">
-                    <span className="num">{formatBytes(item.bytes)}</span>
-                    <span className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" />
-                    <span className="inline-flex items-center gap-1 text-ok">
-                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      Uploaded
-                    </span>
-                  </p>
-                </div>
-                <div className="flex gap-1">
-                  <a href={`/portal/reports/${submissionId}/files/${item.id}`} className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-semibold text-navy-800 hover:bg-navy-50" aria-label={`Download ${item.filename}`}>
-                    <Download className="h-4 w-4" aria-hidden="true" />
-                    Download
                   </a>
-                  <Button variant="ghost" size="sm" onClick={() => void remove(item)} aria-label={`Remove ${item.filename}`}>
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    Remove
-                  </Button>
+                  <p className="mt-0.5 text-sm text-muted">
+                    <span className="num">{formatBytes(item.bytes)}</span>
+                    <span aria-hidden="true"> · </span>
+                    <span className="sr-only">, </span>
+                    Uploaded{item.uploadedByName ? ` by ${item.uploadedByName}` : ""}, {formatDateTime(item.uploadedAt)}
+                  </p>
                 </div>
+                <Button variant="ghost" size="sm" onClick={() => void remove(item)} aria-label={`Remove ${item.filename}`}>
+                  Remove
+                </Button>
               </li>
             ))}
             {pending.map((item) => (
-              <li key={item.key} className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3", item.state === "rejected" && "bg-bad-bg/40")}>
-                <FileText className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
-                <div className="min-w-0 flex-1 basis-40">
-                  <p className="truncate text-sm font-semibold text-ink" title={item.name}>
+              <li key={item.key} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+                <FileIcon name={item.name} />
+                <div className="min-w-0 flex-1 basis-56">
+                  <p className="truncate text-[15px] font-semibold text-ink" title={item.name}>
                     {item.name}
                   </p>
                   {item.state === "uploading" ? (
-                    <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-muted">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                      Uploading <span className="num">{formatBytes(item.bytes)}</span>
-                    </p>
+                    <div className="mt-1.5">
+                      <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-sm bg-navy-100" role="progressbar" aria-label={`Uploading ${item.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.progress === undefined ? undefined : Math.round(item.progress)}>
+                        {item.progress === undefined ? (
+                          <div className="h-full w-1/3 animate-pulse bg-action motion-reduce:animate-none" />
+                        ) : (
+                          <div className="h-full w-full origin-left bg-action" style={{ transform: `scaleX(${item.progress / 100})` }} />
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-muted">
+                        Uploading <span className="num">{formatBytes(item.bytes)}</span>
+                      </p>
+                    </div>
                   ) : (
                     <p className="mt-0.5 flex items-start gap-1.5 text-sm font-semibold text-bad">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -204,4 +214,10 @@ export function Attachments({
       </div>
     </div>
   );
+}
+
+function FileIcon({ name }: { name: string }) {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  const Icon = ext === "csv" || ext === "xlsx" ? FileSpreadsheet : FileText;
+  return <Icon className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />;
 }
