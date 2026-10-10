@@ -20,7 +20,18 @@ type Props = {
   selected?: boolean;
 };
 
-export function QuestionEditor({ question, index, count, definition, readOnly, problems, onChange, onMove, onRemove, selected }: Props) {
+export function QuestionEditor({
+  question,
+  index,
+  count,
+  definition,
+  readOnly,
+  problems,
+  onChange,
+  onMove,
+  onRemove,
+  selected,
+}: Props) {
   const [open, setOpen] = useState(false);
   const itemRef = useRef<HTMLLIElement>(null);
 
@@ -46,25 +57,49 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
   }
 
   return (
-    <li ref={itemRef} id={`question-${question.key}`} className={`scroll-mt-4 rounded-lg border bg-white ${problems.length ? "border-bad" : selected ? "border-harbor-600 ring-2 ring-harbor-600/15" : "border-line"}`}>
+    <li
+      ref={itemRef}
+      id={`question-${question.key}`}
+      className={`scroll-mt-4 rounded-lg border bg-white ${problems.length ? "border-bad" : selected ? "border-harbor-600 ring-2 ring-harbor-600/15" : "border-line"}`}
+    >
       <div className="flex items-start gap-3 px-4 py-3">
         <span className="num mt-0.5 w-6 shrink-0 text-right text-sm text-muted">{index + 1}</span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">{question.label || "Untitled question"}</p>
           <p className="mt-1 text-xs text-muted">
-            {[TYPE_LABEL[question.type], question.required ? "required" : "optional", shared ? "from standard library" : null, question.visibleWhen ? "shown only when a condition is met" : null, question.citation ? `from template paragraph ${question.citation.paragraph}` : null]
+            {[
+              TYPE_LABEL[question.type],
+              question.required ? "required" : "optional",
+              shared ? "from standard library" : null,
+              question.visibleWhen ? "shown only when a condition is met" : null,
+              question.citation ? `from template paragraph ${question.citation.paragraph}` : null,
+            ]
               .filter(Boolean)
               .join(", ")}
           </p>
-          {question.citation ? <p className="mt-1.5 text-xs italic text-muted">&ldquo;{question.citation.quote}&rdquo;</p> : null}
+          {question.citation ? (
+            <p className="mt-1.5 text-xs italic text-muted">&ldquo;{question.citation.quote}&rdquo;</p>
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {!readOnly ? (
             <>
-              <Button variant="ghost" size="sm" aria-label={`Move question ${index + 1} up`} disabled={index === 0} onClick={() => onMove(-1)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Move question ${index + 1} up`}
+                disabled={index === 0}
+                onClick={() => onMove(-1)}
+              >
                 <ArrowUp className="h-4 w-4" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="sm" aria-label={`Move question ${index + 1} down`} disabled={index === count - 1} onClick={() => onMove(1)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Move question ${index + 1} down`}
+                disabled={index === count - 1}
+                onClick={() => onMove(1)}
+              >
                 <ArrowDown className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button variant="ghost" size="sm" aria-label={`Remove question ${index + 1}`} onClick={onRemove}>
@@ -72,8 +107,21 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
               </Button>
             </>
           ) : null}
-          <Button variant="secondary" size="sm" className="w-9 px-0" aria-expanded={open} aria-controls={`${id}-body`} aria-label={`${open ? "Hide" : editable ? "Edit" : "Show"} details for question ${index + 1}, ${question.label || "untitled"}`} title={open ? "Hide details" : "Show details"} onClick={() => setOpen(!open)}>
-            {open ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-9 px-0"
+            aria-expanded={open}
+            aria-controls={`${id}-body`}
+            aria-label={`${open ? "Hide" : editable ? "Edit" : "Show"} details for question ${index + 1}, ${question.label || "untitled"}`}
+            title={open ? "Hide details" : "Show details"}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? (
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            )}
           </Button>
         </div>
       </div>
@@ -88,7 +136,8 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
         <div id={`${id}-body`} className="grid gap-4 border-t border-line bg-surface/50 px-4 py-4 sm:grid-cols-2">
           {shared ? (
             <p className="text-sm text-muted sm:col-span-2">
-              This is a standard library question. It is shared by reference with every initiative, so it can be moved or removed here but not reworded. Key: <span className="font-mono">{question.key}</span>
+              This is a standard library question. It is shared by reference with every initiative, so it can be moved
+              or removed here but not reworded. Key: <span className="font-mono">{question.key}</span>
             </p>
           ) : (
             <p className="text-sm text-muted sm:col-span-2">
@@ -97,15 +146,34 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
           )}
           <div className="sm:col-span-2">
             <Label htmlFor={`${id}-label`}>Label</Label>
-            <Input id={`${id}-label`} value={question.label} disabled={!editable} onChange={(e) => onChange({ label: e.target.value })} aria-describedby={problems.length ? errorId : undefined} />
+            <Input
+              id={`${id}-label`}
+              value={question.label}
+              disabled={!editable}
+              onChange={(e) => onChange({ label: e.target.value })}
+              aria-describedby={problems.length ? errorId : undefined}
+            />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor={`${id}-help`} optional>Help text</Label>
-            <Textarea id={`${id}-help`} className="min-h-16" value={question.help ?? ""} disabled={!editable} onChange={(e) => onChange({ help: e.target.value || undefined })} />
+            <Label htmlFor={`${id}-help`} optional>
+              Help text
+            </Label>
+            <Textarea
+              id={`${id}-help`}
+              className="min-h-16"
+              value={question.help ?? ""}
+              disabled={!editable}
+              onChange={(e) => onChange({ help: e.target.value || undefined })}
+            />
           </div>
           <div>
             <Label htmlFor={`${id}-type`}>Answer type</Label>
-            <Select id={`${id}-type`} value={question.type} disabled={!editable} onChange={(e) => changeType(e.target.value as FieldType)}>
+            <Select
+              id={`${id}-type`}
+              value={question.type}
+              disabled={!editable}
+              onChange={(e) => changeType(e.target.value as FieldType)}
+            >
               {FIELD_TYPES.filter((type) => type !== "table" || question.type === "table").map((type) => (
                 <option key={type} value={type}>
                   {TYPE_LABEL[type]}
@@ -115,7 +183,13 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
           </div>
           <div className="flex items-end">
             <label className="flex items-center gap-2 pb-2.5 text-sm font-semibold text-ink">
-              <input type="checkbox" checked={question.required} disabled={!editable} onChange={(e) => onChange({ required: e.target.checked })} className="h-4 w-4 rounded border-line" />
+              <input
+                type="checkbox"
+                checked={question.required}
+                disabled={!editable}
+                onChange={(e) => onChange({ required: e.target.checked })}
+                className="h-4 w-4 rounded border-line"
+              />
               Required
             </label>
           </div>
@@ -123,29 +197,59 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
             <div className="sm:col-span-2">
               <Label htmlFor={`${id}-options`}>Choices</Label>
               <Hint>One choice per line. At least two.</Hint>
-              <Textarea id={`${id}-options`} className="min-h-24" value={(question.options ?? []).join("\n")} disabled={!editable} onChange={(e) => onChange({ options: e.target.value.split("\n") })} />
+              <Textarea
+                id={`${id}-options`}
+                className="min-h-24"
+                value={(question.options ?? []).join("\n")}
+                disabled={!editable}
+                onChange={(e) => onChange({ options: e.target.value.split("\n") })}
+              />
             </div>
           ) : null}
           {question.type === "textarea" ? (
             <div>
               <Label htmlFor={`${id}-words`}>Maximum words</Label>
-              <Input id={`${id}-words`} type="number" min={1} className="num" value={question.maxWords ?? ""} disabled={!editable} onChange={(e) => onChange({ maxWords: e.target.value ? Number(e.target.value) : undefined })} />
+              <Input
+                id={`${id}-words`}
+                type="number"
+                min={1}
+                className="num"
+                value={question.maxWords ?? ""}
+                disabled={!editable}
+                onChange={(e) => onChange({ maxWords: e.target.value ? Number(e.target.value) : undefined })}
+              />
             </div>
           ) : null}
           {question.type === "text" ? (
             <div>
               <Label htmlFor={`${id}-length`}>Maximum characters</Label>
-              <Input id={`${id}-length`} type="number" min={1} className="num" value={question.maxLength ?? ""} disabled={!editable} onChange={(e) => onChange({ maxLength: e.target.value ? Number(e.target.value) : undefined })} />
+              <Input
+                id={`${id}-length`}
+                type="number"
+                min={1}
+                className="num"
+                value={question.maxLength ?? ""}
+                disabled={!editable}
+                onChange={(e) => onChange({ maxLength: e.target.value ? Number(e.target.value) : undefined })}
+              />
             </div>
           ) : null}
           <div className="sm:col-span-2">
-            <Label htmlFor={`${id}-when`} optional>Show only when</Label>
+            <Label htmlFor={`${id}-when`} optional>
+              Show only when
+            </Label>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_8rem]">
               <Select
                 id={`${id}-when`}
                 value={question.visibleWhen?.key ?? ""}
                 disabled={!editable}
-                onChange={(e) => onChange({ visibleWhen: e.target.value ? { key: e.target.value, equals: question.visibleWhen?.equals ?? "Yes" } : undefined })}
+                onChange={(e) =>
+                  onChange({
+                    visibleWhen: e.target.value
+                      ? { key: e.target.value, equals: question.visibleWhen?.equals ?? "Yes" }
+                      : undefined,
+                  })
+                }
               >
                 <option value="">Always shown</option>
                 {earlier.map((candidate) => (
@@ -154,7 +258,15 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
                   </option>
                 ))}
               </Select>
-              <Select aria-label="Answer that shows this question" value={question.visibleWhen?.equals ?? "Yes"} disabled={!editable || !question.visibleWhen} onChange={(e) => question.visibleWhen && onChange({ visibleWhen: { key: question.visibleWhen.key, equals: e.target.value } })}>
+              <Select
+                aria-label="Answer that shows this question"
+                value={question.visibleWhen?.equals ?? "Yes"}
+                disabled={!editable || !question.visibleWhen}
+                onChange={(e) =>
+                  question.visibleWhen &&
+                  onChange({ visibleWhen: { key: question.visibleWhen.key, equals: e.target.value } })
+                }
+              >
                 <option>Yes</option>
                 <option>No</option>
               </Select>

@@ -2,7 +2,10 @@ import "server-only";
 import type { Tx } from "@/lib/db";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
 
-export async function writeDraft(tx: Tx, input: { submissionId: string; answers: Answers; budget: BudgetLine[]; allowedKeys: Set<string> }) {
+export async function writeDraft(
+  tx: Tx,
+  input: { submissionId: string; answers: Answers; budget: BudgetLine[]; allowedKeys: Set<string> },
+) {
   const keys: string[] = [];
   const values: string[] = [];
   for (const [key, value] of Object.entries(input.answers)) {
@@ -17,7 +20,7 @@ export async function writeDraft(tx: Tx, input: { submissionId: string; answers:
        ON CONFLICT (submission_id, question_key) DO UPDATE
          SET value = excluded.value, updated_by = excluded.updated_by, updated_at = now()
          WHERE answer.value IS DISTINCT FROM excluded.value`,
-      [input.submissionId, keys, values]
+      [input.submissionId, keys, values],
     );
   }
   const lines = input.budget.map((line, index) => ({
@@ -32,8 +35,19 @@ export async function writeDraft(tx: Tx, input: { submissionId: string; answers:
        SELECT $1, t.r, t.p, t.c, t.d, t.a, t.s FROM unnest($2::uuid[], $3::int[], $4::text[], $5::text[], $6::numeric[], $7::numeric[]) AS t(r, p, c, d, a, s)
        ON CONFLICT (submission_id, row_id) DO UPDATE
          SET position = excluded.position, category = excluded.category, description = excluded.description, amount = excluded.amount, actual_spent = excluded.actual_spent`,
-      [input.submissionId, lines.map((l) => l.rowId), lines.map((l) => l.position), lines.map((l) => l.category), lines.map((l) => l.description), lines.map((l) => l.amount), lines.map((l) => l.actual)]
+      [
+        input.submissionId,
+        lines.map((l) => l.rowId),
+        lines.map((l) => l.position),
+        lines.map((l) => l.category),
+        lines.map((l) => l.description),
+        lines.map((l) => l.amount),
+        lines.map((l) => l.actual),
+      ],
     );
   }
-  await tx.query("DELETE FROM budget_line WHERE submission_id = $1 AND NOT (row_id = ANY($2::uuid[]))", [input.submissionId, lines.map((l) => l.rowId)]);
+  await tx.query("DELETE FROM budget_line WHERE submission_id = $1 AND NOT (row_id = ANY($2::uuid[]))", [
+    input.submissionId,
+    lines.map((l) => l.rowId),
+  ]);
 }

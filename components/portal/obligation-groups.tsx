@@ -16,14 +16,27 @@ function open(o: Obligation) {
 }
 
 function DueNote({ days }: { days: number }) {
-  if (days > 0) return <span className="whitespace-nowrap text-sm font-semibold text-bad">{days} {plural(days, "day", "days")} past due</span>;
-  if (days > -14) return <span className="whitespace-nowrap text-sm font-semibold text-warn">Due in {-days} {days === -1 ? "day" : "days"}</span>;
+  if (days > 0)
+    return (
+      <span className="whitespace-nowrap text-sm font-semibold text-bad">
+        {days} {plural(days, "day", "days")} past due
+      </span>
+    );
+  if (days > -14)
+    return (
+      <span className="whitespace-nowrap text-sm font-semibold text-warn">
+        Due in {-days} {days === -1 ? "day" : "days"}
+      </span>
+    );
   return null;
 }
 
 function ActionLink({ o }: { o: Obligation }) {
   return (
-    <Link href={actionFor(o).href} className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover">
+    <Link
+      href={actionFor(o).href}
+      className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover"
+    >
       {linkLabel(o)}
       <span className="sr-only">
         {" "}
@@ -45,9 +58,7 @@ function Rows({ rows }: { rows: Obligation[] }) {
                 <p className="text-sm text-muted">
                   {o.periodLabel}
                   <span aria-hidden="true"> ·</span>
-                  <span className="sr-only">,</span> <span className="font-mono">
-                    {o.initiativeCode}
-                  </span>
+                  <span className="sr-only">,</span> <span className="font-mono">{o.initiativeCode}</span>
                 </p>
               </div>
               <StateBadge state={o.state} audience="cbo" />
@@ -67,11 +78,21 @@ function Rows({ rows }: { rows: Obligation[] }) {
         <table className="w-full table-fixed border-collapse text-[15px] leading-[22px]">
           <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
             <tr className="h-11">
-              <th scope="col" className="w-[28%] px-4 font-semibold">Initiative</th>
-              <th scope="col" className="w-[22%] px-4 font-semibold">Period</th>
-              <th scope="col" className="w-[17%] px-4 font-semibold">Due</th>
-              <th scope="col" className="w-[13%] px-4 text-right font-semibold">Award</th>
-              <th scope="col" className="w-[12%] px-4 font-semibold">Status</th>
+              <th scope="col" className="w-[28%] px-4 font-semibold">
+                Initiative
+              </th>
+              <th scope="col" className="w-[22%] px-4 font-semibold">
+                Period
+              </th>
+              <th scope="col" className="w-[17%] px-4 font-semibold">
+                Due
+              </th>
+              <th scope="col" className="w-[13%] px-4 text-right font-semibold">
+                Award
+              </th>
+              <th scope="col" className="w-[12%] px-4 font-semibold">
+                Status
+              </th>
               <th scope="col" className="w-[8%] px-4 text-right font-semibold">
                 <span className="sr-only">Action</span>
               </th>
@@ -128,10 +149,17 @@ function Group({ id, title, rows }: { id: string; title: string; rows: Obligatio
 export function ObligationGroups({ obligations }: { obligations: Obligation[] }) {
   const needs = obligations.filter((o) => o.state === "missing" || o.state === "returned" || o.state === "draft");
   const coming = obligations.filter((o) => o.state === "not_started");
-  const done = obligations.filter((o) => o.state === "submitted" || o.state === "under_review" || o.state === "accepted");
+  const done = obligations.filter(
+    (o) => o.state === "submitted" || o.state === "under_review" || o.state === "accepted",
+  );
 
   if (obligations.length === 0) {
-    return <p className="py-6 text-[15px] text-muted">No reports are assigned to your organization yet. Council Finance assigns initiatives and reporting periods each fiscal year.</p>;
+    return (
+      <p className="py-6 text-[15px] text-muted">
+        No reports are assigned to your organization yet. Council Finance assigns initiatives and reporting periods each
+        fiscal year.
+      </p>
+    );
   }
 
   return (

@@ -8,7 +8,8 @@ export function templateLabel(template: string): string {
   return LABELS[template] ?? template.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
 
-export const DELIVERY_OFF_NOTICE = "Email delivery is not turned on in this environment. Each message is recorded here.";
+export const DELIVERY_OFF_NOTICE =
+  "Email delivery is not turned on in this environment. Each message is recorded here.";
 
 const DELIVERY: Record<string, { label: string; tone: "ok" | "bad" | "neutral" }> = {
   sent: { label: "Emailed", tone: "ok" },

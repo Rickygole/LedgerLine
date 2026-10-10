@@ -8,5 +8,7 @@ test("[US-041] choosing a bucket on the submissions list updates the list within
   const buckets = page.getByRole("navigation", { name: "Filter by bucket" });
   await buckets.getByRole("link", { name: /^Missing/ }).click();
   await expect(page).toHaveURL(/bucket=missing/, { timeout: 3000 });
-  await expect(buckets.getByRole("link", { name: /^Missing/ })).toHaveAttribute("aria-current", "true", { timeout: 3000 });
+  await expect(buckets.getByRole("link", { name: /^Missing/ })).toHaveAttribute("aria-current", "true", {
+    timeout: 3000,
+  });
 });

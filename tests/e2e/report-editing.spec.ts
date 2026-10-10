@@ -9,14 +9,16 @@ async function openAnyDraft(page: Page): Promise<string> {
   const [draft] = await ownerQuery<{ id: string }>(
     `SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id
      WHERE s.status = 'draft' AND a.org_id = (SELECT org_id FROM app_user WHERE email = $1) ORDER BY s.reference_no LIMIT 1`,
-    [PEOPLE.maria]
+    [PEOPLE.maria],
   );
   await page.goto(`/portal/reports/${draft.id}`);
   await expect(page.getByRole("navigation", { name: "Report sections" })).toBeVisible();
   return draft.id;
 }
 
-test("[BR-009][US-016] a start link that pairs an initiative with another year's period is not found and creates nothing", async ({ browser }) => {
+test("[BR-009][US-016] a start link that pairs an initiative with another year's period is not found and creates nothing", async ({
+  browser,
+}) => {
   const [cross] = await ownerQuery<{ assignment_id: string; period_id: string }>(
     `SELECT a.id AS assignment_id, p.id AS period_id
      FROM assignment a JOIN initiative i ON i.id = a.initiative_id
@@ -24,19 +26,28 @@ test("[BR-009][US-016] a start link that pairs an initiative with another year's
      WHERE a.org_id = (SELECT org_id FROM app_user WHERE email = $1)
        AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = p.id)
      LIMIT 1`,
-    [PEOPLE.maria]
+    [PEOPLE.maria],
   );
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+  });
   const page = await context.newPage();
   const response = await page.goto(`/portal/reports/new?assignment=${cross.assignment_id}&period=${cross.period_id}`);
   expect(response?.status()).toBe(404);
-  const rows = await ownerQuery("SELECT 1 FROM submission WHERE assignment_id = $1 AND period_id = $2", [cross.assignment_id, cross.period_id]);
+  const rows = await ownerQuery("SELECT 1 FROM submission WHERE assignment_id = $1 AND period_id = $2", [
+    cross.assignment_id,
+    cross.period_id,
+  ]);
   expect(rows).toHaveLength(0);
   await context.close();
 });
 
 test("[BR-021][US-031] a required table with only an empty row is refused", async ({ browser }) => {
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+  });
   const page = await context.newPage();
   await openAnyDraft(page);
   await gotoStep(page, "Program performance");
@@ -46,12 +57,17 @@ test("[BR-021][US-031] a required table with only an empty row is refused", asyn
   await page.getByRole("button", { name: "Add row" }).first().click();
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
-  await expect(page.getByRole("alert").getByText("Fill in the participants under 18 by age group table.").first()).toBeVisible();
+  await expect(
+    page.getByRole("alert").getByText("Fill in the participants under 18 by age group table.").first(),
+  ).toBeVisible();
   await context.close();
 });
 
 test("[US-018] reopening a report lands on the section edited last", async ({ browser }) => {
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+  });
   const page = await context.newPage();
   const id = await openAnyDraft(page);
   await gotoStep(page, "Narrative");

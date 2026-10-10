@@ -14,12 +14,24 @@ describe("[BR-023][US-033] report EIN check", () => {
   });
 
   it("flags a well-formed EIN that is not the organization's", () => {
-    const issues = reportIssues({ definition, answers: { ...base, org_ein: "12-3456789" }, budget: [], awardAmount: 85000, orgEin: "00-1040217" });
+    const issues = reportIssues({
+      definition,
+      answers: { ...base, org_ein: "12-3456789" },
+      budget: [],
+      awardAmount: 85000,
+      orgEin: "00-1040217",
+    });
     expect(issues.some((issue) => issue.field === "org_ein" && issue.message === EIN_NOT_ON_LIST)).toBe(true);
   });
 
   it("does not add a second EIN issue for a malformed value", () => {
-    const issues = reportIssues({ definition, answers: { ...base, org_ein: "12" }, budget: [], awardAmount: 85000, orgEin: "00-1040217" });
+    const issues = reportIssues({
+      definition,
+      answers: { ...base, org_ein: "12" },
+      budget: [],
+      awardAmount: 85000,
+      orgEin: "00-1040217",
+    });
     expect(issues.filter((issue) => issue.field === "org_ein")).toHaveLength(1);
   });
 });
@@ -37,8 +49,18 @@ describe("[BR-023] legal name and EIN are checked against the master list", () =
   const master = { orgEin: "00-1040217", orgName: "Mott Haven Youth Futures, Inc." };
 
   it("blocks a legal name that is not the master list name", () => {
-    const issues = reportIssues({ definition, answers: { ...base, org_legal_name: "Totally Different Org LLC" }, budget: [], awardAmount: 85000, ...master });
-    expect(issues.some((issue) => issue.field === "org_legal_name" && issue.severity === "block" && issue.message === NAME_NOT_ON_LIST)).toBe(true);
+    const issues = reportIssues({
+      definition,
+      answers: { ...base, org_legal_name: "Totally Different Org LLC" },
+      budget: [],
+      awardAmount: 85000,
+      ...master,
+    });
+    expect(
+      issues.some(
+        (issue) => issue.field === "org_legal_name" && issue.severity === "block" && issue.message === NAME_NOT_ON_LIST,
+      ),
+    ).toBe(true);
   });
 
   it("ignores case, spacing and punctuation differences in the legal name", () => {
@@ -48,7 +70,9 @@ describe("[BR-023] legal name and EIN are checked against the master list", () =
   });
 
   it("accepts the master list values", () => {
-    const issues = reportIssues({ definition, answers: base, budget: [], awardAmount: 85000, ...master }).filter((issue) => issue.field.startsWith("org_"));
+    const issues = reportIssues({ definition, answers: base, budget: [], awardAmount: 85000, ...master }).filter(
+      (issue) => issue.field.startsWith("org_"),
+    );
     expect(issues).toEqual([]);
   });
 

@@ -26,7 +26,9 @@ export function statusLabel(status: string, audience: Audience = "finance"): str
   return status in STATE_LABEL ? STATE_LABEL[status as ReportState][audience] : status;
 }
 
-export const STATUS_OPTIONS: { value: string; label: string }[] = (["not_started", "draft", "submitted", "under_review", "returned", "accepted"] as const).map((value) => ({
+export const STATUS_OPTIONS: { value: string; label: string }[] = (
+  ["not_started", "draft", "submitted", "under_review", "returned", "accepted"] as const
+).map((value) => ({
   value,
   label: STATE_LABEL[value].finance,
 }));
@@ -40,4 +42,20 @@ export function orgTypeLabel(value: string): string {
   return ORG_TYPES.find((t) => t.value === value)?.label ?? value;
 }
 
-export const AGENCIES = ["ACS", "DCLA", "DCWP", "DFTA", "DHS", "DOE", "DOHMH", "DOP", "DPR", "DYCD", "HPD", "HRA", "MOCJ", "MOIA", "SBS"] as const;
+export const AGENCIES = [
+  "ACS",
+  "DCLA",
+  "DCWP",
+  "DFTA",
+  "DHS",
+  "DOE",
+  "DOHMH",
+  "DOP",
+  "DPR",
+  "DYCD",
+  "HPD",
+  "HRA",
+  "MOCJ",
+  "MOIA",
+  "SBS",
+] as const;

@@ -4,7 +4,13 @@ import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { applyFilters, isExportable, sortRows } from "@/lib/finance/review/derive";
-import { buildWorkbook, exportFilename, submissionsToCsv, workbookToBuffer, type ExportSubmission } from "@/lib/finance/review/export";
+import {
+  buildWorkbook,
+  exportFilename,
+  submissionsToCsv,
+  workbookToBuffer,
+  type ExportSubmission,
+} from "@/lib/finance/review/export";
 import { STATUS_OPTIONS } from "@/lib/domain";
 import { FLAG_LABEL, filtersToParams, parseFilters } from "@/lib/finance/review/filters";
 import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
@@ -29,15 +35,18 @@ function describeFilters(filters: ReturnType<typeof parseFilters>): string[] {
   if (filters.contract) lines.push(`contract status = ${contractLabel(filters.contract)}`);
   if (filters.agency) lines.push(`agency = ${filters.agency}`);
   if (filters.bucket) lines.push(`bucket = ${BUCKET_LABEL[filters.bucket as Bucket] ?? filters.bucket}`);
-  if (filters.status) lines.push(`status = ${STATUS_OPTIONS.find((s) => s.value === filters.status)?.label ?? filters.status}`);
-  if (filters.flag) lines.push(`flag = ${filters.flag === "any" ? "Any flag" : (FLAG_LABEL[filters.flag] ?? filters.flag)}`);
+  if (filters.status)
+    lines.push(`status = ${STATUS_OPTIONS.find((s) => s.value === filters.status)?.label ?? filters.status}`);
+  if (filters.flag)
+    lines.push(`flag = ${filters.flag === "any" ? "Any flag" : (FLAG_LABEL[filters.flag] ?? filters.flag)}`);
   return lines;
 }
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in to export reports." }, { status: 401 });
-  if (!FINANCE_ROLES.includes(user.role)) return NextResponse.json({ error: "Only Council Finance staff can export reports." }, { status: 403 });
+  if (!FINANCE_ROLES.includes(user.role))
+    return NextResponse.json({ error: "Only Council Finance staff can export reports." }, { status: 403 });
 
   const query = Object.fromEntries(request.nextUrl.searchParams.entries());
   const format = query.format === "csv" ? "csv" : "xlsx";
@@ -91,7 +100,13 @@ export async function GET(request: NextRequest) {
     contractNumber: row.contractNumber ?? "",
     contractRegisteredOn: row.contractRegisteredOn ?? "",
     answers: row.definition ? visibleAnswers(row.definition, row.answers) : {},
-    budget: row.budget.map(({ position, category, description, amount, actual }) => ({ position, category, description, amount, actual })),
+    budget: row.budget.map(({ position, category, description, amount, actual }) => ({
+      position,
+      category,
+      description,
+      amount,
+      actual,
+    })),
   }));
 
   const book = buildWorkbook(submissions, {
@@ -104,7 +119,9 @@ export async function GET(request: NextRequest) {
 
   const headers = { "Cache-Control": "no-store", "Content-Disposition": `attachment; filename="${result.filename}"` };
   if (format === "csv") {
-    return new NextResponse(submissionsToCsv(book), { headers: { ...headers, "Content-Type": "text/csv; charset=utf-8" } });
+    return new NextResponse(submissionsToCsv(book), {
+      headers: { ...headers, "Content-Type": "text/csv; charset=utf-8" },
+    });
   }
   return new NextResponse(new Uint8Array(workbookToBuffer(book)), {
     headers: { ...headers, "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },

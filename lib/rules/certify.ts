@@ -23,20 +23,45 @@ export function certificationIssues(input: Partial<CertificationInput> | null | 
   const name = (input?.name ?? "").trim();
   const title = (input?.title ?? "").trim();
   if (!input?.accepted) {
-    issues.push({ field: "certification", ruleId: CERT_RULE, severity: "block", message: "Check the box to certify that this report is accurate and complete." });
+    issues.push({
+      field: "certification",
+      ruleId: CERT_RULE,
+      severity: "block",
+      message: "Check the box to certify that this report is accurate and complete.",
+    });
   }
   if (name.length < 2) {
-    issues.push({ field: "certifier_name", ruleId: CERT_RULE, severity: "block", message: "Enter the name of the person certifying this report." });
+    issues.push({
+      field: "certifier_name",
+      ruleId: CERT_RULE,
+      severity: "block",
+      message: "Enter the name of the person certifying this report.",
+    });
   } else if (name.length > 120) {
-    issues.push({ field: "certifier_name", ruleId: CERT_RULE, severity: "block", message: "The certifier name must be 120 characters or fewer." });
+    issues.push({
+      field: "certifier_name",
+      ruleId: CERT_RULE,
+      severity: "block",
+      message: "The certifier name must be 120 characters or fewer.",
+    });
   } else {
     const problem = personNameProblem(name, "certifier name");
     if (problem) issues.push({ field: "certifier_name", ruleId: CERT_RULE, severity: "block", message: problem });
   }
   if (title.length < 2) {
-    issues.push({ field: "certifier_title", ruleId: CERT_RULE, severity: "block", message: "Enter the title of the person certifying this report." });
+    issues.push({
+      field: "certifier_title",
+      ruleId: CERT_RULE,
+      severity: "block",
+      message: "Enter the title of the person certifying this report.",
+    });
   } else if (title.length > 120) {
-    issues.push({ field: "certifier_title", ruleId: CERT_RULE, severity: "block", message: "The certifier title must be 120 characters or fewer." });
+    issues.push({
+      field: "certifier_title",
+      ruleId: CERT_RULE,
+      severity: "block",
+      message: "The certifier title must be 120 characters or fewer.",
+    });
   }
   return issues;
 }

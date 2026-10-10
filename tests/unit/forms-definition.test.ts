@@ -13,6 +13,8 @@ describe("form definitions keep the budget rules", () => {
   it("refuses to turn off the budget, the award rule or drop the budget section", () => {
     expect(validateDefinition({ ...base, budget: { ...base.budget, enabled: false } })).toContain(message);
     expect(validateDefinition({ ...base, budget: { ...base.budget, mustEqualAward: false } })).toContain(message);
-    expect(validateDefinition({ ...base, sections: base.sections.filter((section) => section.kind !== "budget") })).toContain(message);
+    expect(
+      validateDefinition({ ...base, sections: base.sections.filter((section) => section.kind !== "budget") }),
+    ).toContain(message);
   });
 });

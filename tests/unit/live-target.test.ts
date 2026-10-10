@@ -15,7 +15,10 @@ function folder(first: string, app: string): string {
 
 describe("live reseed target", () => {
   it("reads a keyed or bare connection string from the first line and the persona password from the app file", () => {
-    for (const first of ["NEON_OWNER_URL=postgresql://owner:secret@ep-test.neon.tech/db?sslmode=require\n", "postgresql://owner:secret@ep-test.neon.tech/db?sslmode=require\n"]) {
+    for (const first of [
+      "NEON_OWNER_URL=postgresql://owner:secret@ep-test.neon.tech/db?sslmode=require\n",
+      "postgresql://owner:secret@ep-test.neon.tech/db?sslmode=require\n",
+    ]) {
       vi.stubEnv("NEON_ENV_DIR", folder(first, "OTHER=1\nNEON_PERSONA_PASSWORD=persona-pass\n"));
       const target = liveTarget();
       expect(target.host).toBe("ep-test.neon.tech");

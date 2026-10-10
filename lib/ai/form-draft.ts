@@ -50,7 +50,11 @@ const MODE_LABEL: Record<AiMode, string> = {
   fallback: "Drafted by rule-based parser",
 };
 
-export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; paragraphs: string[] }): Promise<DraftResult> {
+export async function draftFormFromDocx(input: {
+  tx: Tx;
+  initiativeId: string;
+  paragraphs: string[];
+}): Promise<DraftResult> {
   const { tx, initiativeId, paragraphs } = input;
   const inputSha256 = templateSha(paragraphs);
   const notices = injectionNotices(paragraphs);
@@ -63,14 +67,15 @@ export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; p
   const switchOn = await aiEnabled(tx);
   let live: Awaited<ReturnType<typeof callStructured>> = null;
   try {
-    if (switchOn) live = await callStructured({
-      feature: "form_draft",
-      system: SYSTEM_PROMPT,
-      user: `Template text:\n${quotedData(paragraphs)}`,
-      schema: JSON_SCHEMA,
-      maxTokens: 4000,
-      timeoutMs: 45_000,
-    });
+    if (switchOn)
+      live = await callStructured({
+        feature: "form_draft",
+        system: SYSTEM_PROMPT,
+        user: `Template text:\n${quotedData(paragraphs)}`,
+        schema: JSON_SCHEMA,
+        maxTokens: 4000,
+        timeoutMs: 45_000,
+      });
   } catch {
     live = null;
   }
@@ -118,5 +123,15 @@ export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; p
     ...usage,
   });
 
-  return { mode, modeLabel: MODE_LABEL[mode], model, inputSha256, paragraphs, fields, notices, aiActionId, schemaValid };
+  return {
+    mode,
+    modeLabel: MODE_LABEL[mode],
+    model,
+    inputSha256,
+    paragraphs,
+    fields,
+    notices,
+    aiActionId,
+    schemaValid,
+  };
 }

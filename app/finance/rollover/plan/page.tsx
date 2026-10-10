@@ -27,9 +27,12 @@ export default async function RolloverPlanPage({ searchParams }: { searchParams:
        FROM form_version f JOIN initiative i ON i.id = f.initiative_id
        WHERE i.fiscal_year_id = $1 AND f.status = 'published'
        ORDER BY f.initiative_id, f.version DESC`,
-      [from]
+      [from],
     );
-    return { initiatives, forms: forms.map((f) => ({ initiativeId: f.initiative_id, version: f.version, questions: f.questions })) };
+    return {
+      initiatives,
+      forms: forms.map((f) => ({ initiativeId: f.initiative_id, version: f.version, questions: f.questions })),
+    };
   });
   if (!data) redirect("/finance/rollover");
   const { initiatives, forms } = data;
@@ -38,7 +41,11 @@ export default async function RolloverPlanPage({ searchParams }: { searchParams:
       <PageHeader
         title={`Roll ${from} into ${to}`}
         description="Decide what happens to each initiative, check the forms that come along, then confirm. Nothing is saved until the last step."
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Annual rollover", href: `/finance/rollover?from=${from}&to=${to}` }, { label: "Plan and confirm" }]}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          { label: "Annual rollover", href: `/finance/rollover?from=${from}&to=${to}` },
+          { label: "Plan and confirm" },
+        ]}
       />
       <RolloverWizard from={from} to={to} initiatives={initiatives} forms={forms} />
     </>

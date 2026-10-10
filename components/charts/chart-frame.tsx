@@ -38,7 +38,21 @@ export function ChartLegend({ totals, className }: { totals: Record<Bucket, numb
   );
 }
 
-export function ChartFrame({ title, description, children, table, source, className }: { title: string; description?: string; children: React.ReactNode; table: React.ReactNode; source: string; className?: string }) {
+export function ChartFrame({
+  title,
+  description,
+  children,
+  table,
+  source,
+  className,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  table: React.ReactNode;
+  source: string;
+  className?: string;
+}) {
   return (
     <figure className={cn("flex min-w-0 flex-col rounded border border-line bg-white", className)}>
       <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">

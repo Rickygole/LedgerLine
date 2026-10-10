@@ -16,7 +16,9 @@ describe("[LL-RANGE-DAYS] days cannot exceed the days in the period", () => {
     const issues = rangeIssues({ definition: food, answers: { pantry_days: "783" }, period });
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({ ruleId: "LL-RANGE-DAYS", severity: "block", field: "pantry_days" });
-    expect(issues[0].message).toBe("Pantry distribution days cannot be more than the 181 days in this reporting period.");
+    expect(issues[0].message).toBe(
+      "Pantry distribution days cannot be more than the 181 days in this reporting period.",
+    );
   });
 
   it("accepts a count equal to the period length", () => {
@@ -30,20 +32,41 @@ describe("[LL-RANGE-DAYS] days cannot exceed the days in the period", () => {
 
 describe("[LL-RANGE-SUBCOUNT] a sub-count cannot exceed the total", () => {
   it("blocks under-18 counts that add up to more than participants served", () => {
-    const answers = { participants_actual: "50", served_youth: "Yes", youth_breakdown: [{ age_group: "5 to 9", count: "30" }, { age_group: "10 to 14", count: "30" }] };
+    const answers = {
+      participants_actual: "50",
+      served_youth: "Yes",
+      youth_breakdown: [
+        { age_group: "5 to 9", count: "30" },
+        { age_group: "10 to 14", count: "30" },
+      ],
+    };
     const issues = rangeIssues({ definition: legal, answers, period });
-    expect(issues.find((i) => i.ruleId === "LL-RANGE-SUBCOUNT")).toMatchObject({ severity: "block", field: "youth_breakdown" });
+    expect(issues.find((i) => i.ruleId === "LL-RANGE-SUBCOUNT")).toMatchObject({
+      severity: "block",
+      field: "youth_breakdown",
+    });
   });
 
   it("accepts counts that add up to the total", () => {
-    const answers = { participants_actual: "60", served_youth: "Yes", youth_breakdown: [{ age_group: "5 to 9", count: "30" }, { age_group: "10 to 14", count: "30" }] };
+    const answers = {
+      participants_actual: "60",
+      served_youth: "Yes",
+      youth_breakdown: [
+        { age_group: "5 to 9", count: "30" },
+        { age_group: "10 to 14", count: "30" },
+      ],
+    };
     expect(rangeIssues({ definition: legal, answers, period })).toEqual([]);
   });
 });
 
 describe("[LL-RANGE-SERVED][LL-RANGE-PAIR] soft warnings", () => {
   it("warns when served is more than twice the target", () => {
-    const issues = rangeIssues({ definition: legal, answers: { participants_actual: "500", participants_target: "100" }, period });
+    const issues = rangeIssues({
+      definition: legal,
+      answers: { participants_actual: "500", participants_target: "100" },
+      period,
+    });
     expect(issues).toHaveLength(1);
     expect(issues[0].severity).toBe("warn");
   });

@@ -30,7 +30,12 @@ export function numberAnswer(answers: Answers, key: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function computeIssues(definition: FormDefinition | null, answers: Answers, budget: BudgetLine[], award: number): Issue[] {
+function computeIssues(
+  definition: FormDefinition | null,
+  answers: Answers,
+  budget: BudgetLine[],
+  award: number,
+): Issue[] {
   if (!definition) return [];
   return blockingIssues(validateSubmission({ definition, answers, budget, awardAmount: award }));
 }
@@ -42,10 +47,16 @@ export function outcomeFlag(status: string | null, stored: Answers, definition: 
   const target = numberAnswer(answers, "participants_target");
   if (actual === null) return null;
   if (actual === 0) {
-    return { reason: "zero_outcomes", evidence: target ? `Participants served 0 of ${target} targeted` : "Participants served 0" };
+    return {
+      reason: "zero_outcomes",
+      evidence: target ? `Participants served 0 of ${target} targeted` : "Participants served 0",
+    };
   }
   if (target && target > 0 && actual < target * 0.4) {
-    return { reason: "low_outcomes", evidence: `Participants served ${actual} of ${target} targeted (${Math.round((actual / target) * 100)}%, below 40%)` };
+    return {
+      reason: "low_outcomes",
+      evidence: `Participants served ${actual} of ${target} targeted (${Math.round((actual / target) * 100)}%, below 40%)`,
+    };
   }
   return null;
 }
@@ -97,13 +108,19 @@ function flagsForRow(input: {
 
   if (input.bucket === "missing") {
     const state = status === null ? "Not started" : "Draft saved but not submitted";
-    flags.push({ reason: "missing", evidence: `${state}, ${input.daysPastDue} ${plural(input.daysPastDue, "day", "days")} past due` });
+    flags.push({
+      reason: "missing",
+      evidence: `${state}, ${input.daysPastDue} ${plural(input.daysPastDue, "day", "days")} past due`,
+    });
   }
 
   if (status === "submitted" || status === "under_review" || status === "accepted") {
     if (input.issues.length > 0) {
       const shown = input.issues.slice(0, 2).map((issue) => issue.message.replace(/\.$/, ""));
-      flags.push({ reason: "validation", evidence: `${input.issues.length} ${plural(input.issues.length, "rule fails", "rules fail")}: ${shown.join("; ")}` });
+      flags.push({
+        reason: "validation",
+        evidence: `${input.issues.length} ${plural(input.issues.length, "rule fails", "rules fail")}: ${shown.join("; ")}`,
+      });
     }
   }
 
@@ -125,7 +142,17 @@ export function finishRow(base: Omit<ReportRow, "issues" | "bucket" | "daysPastD
   const issues = computeIssues(base.definition, base.answers, base.budget, base.award);
   const late = daysPastDue(base.dueOn);
   const bucket = bucketFor(base.status, base.dueOn);
-  const flags = flagsForRow({ status: base.status, bucket, daysPastDue: late, award: base.award, budget: base.budget, answers: base.answers, definition: base.definition, issues, openFlags: base.openFlags });
+  const flags = flagsForRow({
+    status: base.status,
+    bucket,
+    daysPastDue: late,
+    award: base.award,
+    budget: base.budget,
+    answers: base.answers,
+    definition: base.definition,
+    issues,
+    openFlags: base.openFlags,
+  });
   return { ...base, issues, bucket, daysPastDue: late, flags };
 }
 
@@ -139,7 +166,6 @@ function statusKey(row: Pick<ReportRow, "status">): string {
   return row.status ?? "not_started";
 }
 
-
 export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip: (keyof Filters)[] = []): ReportRow[] {
   const use = (key: keyof Filters) => !skip.includes(key) && Boolean(filters[key]);
   const q = (filters.q ?? "").toLowerCase();
@@ -148,17 +174,27 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
   const initiative = (filters.initiative ?? "").toLowerCase();
   return rows.filter((row) => {
     if (use("q")) {
-      const text = [row.orgName, row.initiativeName, row.initiativeCode, row.referenceNo, row.contractNumber].some((value) => (value ?? "").toLowerCase().includes(q));
+      const text = [row.orgName, row.initiativeName, row.initiativeCode, row.referenceNo, row.contractNumber].some(
+        (value) => (value ?? "").toLowerCase().includes(q),
+      );
       const einMatch = einLike && einQuery.length >= 2 && row.ein.replace(/[^0-9]/g, "").includes(einQuery);
       if (!text && !einMatch) return false;
     }
     if (use("initiative")) {
       if (isUuid(initiative)) {
         if (row.initiativeId.toLowerCase() !== initiative) return false;
-      } else if (!row.initiativeName.toLowerCase().includes(initiative) && !row.initiativeCode.toLowerCase().includes(initiative)) return false;
+      } else if (
+        !row.initiativeName.toLowerCase().includes(initiative) &&
+        !row.initiativeCode.toLowerCase().includes(initiative)
+      )
+        return false;
     }
     if (use("category") && row.category !== filters.category) return false;
-    if (use("borough") && !(filters.borough === CITYWIDE ? row.fundingSource === "citywide" : row.borough === filters.borough)) return false;
+    if (
+      use("borough") &&
+      !(filters.borough === CITYWIDE ? row.fundingSource === "citywide" : row.borough === filters.borough)
+    )
+      return false;
     if (use("district") && !matchesDistrict(row, filters.district!, filters.by ?? "")) return false;
     if (use("member") && !row.sponsors.some((s) => String(s.district) === filters.member)) return false;
     if (use("funding") && row.fundingSource !== filters.funding) return false;
@@ -182,18 +218,39 @@ export function paginate<T>(items: T[], page: number, size = PAGE_SIZE) {
   const pages = Math.max(1, Math.ceil(items.length / size));
   const current = Math.min(Math.max(1, page), pages);
   const start = (current - 1) * size;
-  return { items: items.slice(start, start + size), page: current, pages, total: items.length, from: items.length === 0 ? 0 : start + 1, to: Math.min(items.length, start + size) };
+  return {
+    items: items.slice(start, start + size),
+    page: current,
+    pages,
+    total: items.length,
+    from: items.length === 0 ? 0 : start + 1,
+    to: Math.min(items.length, start + size),
+  };
 }
 
 export function sortRows(rows: ReportRow[]): ReportRow[] {
-  return [...rows].sort((a, b) => a.orgName.localeCompare(b.orgName) || a.initiativeName.localeCompare(b.initiativeName));
+  return [...rows].sort(
+    (a, b) => a.orgName.localeCompare(b.orgName) || a.initiativeName.localeCompare(b.initiativeName),
+  );
 }
 
-const URGENCY: Record<Bucket, number> = { missing: 0, submitted: 1, returned: 2, in_review: 3, outstanding: 4, accepted: 5 };
+const URGENCY: Record<Bucket, number> = {
+  missing: 0,
+  submitted: 1,
+  returned: 2,
+  in_review: 3,
+  outstanding: 4,
+  accepted: 5,
+};
 
 export function sortByUrgency(rows: ReportRow[]): ReportRow[] {
   return [...rows].sort(
-    (a, b) => URGENCY[a.bucket] - URGENCY[b.bucket] || a.dueOn.localeCompare(b.dueOn) || (a.submittedAt ?? "").localeCompare(b.submittedAt ?? "") || b.award - a.award || a.orgName.localeCompare(b.orgName)
+    (a, b) =>
+      URGENCY[a.bucket] - URGENCY[b.bucket] ||
+      a.dueOn.localeCompare(b.dueOn) ||
+      (a.submittedAt ?? "").localeCompare(b.submittedAt ?? "") ||
+      b.award - a.award ||
+      a.orgName.localeCompare(b.orgName),
   );
 }
 
@@ -220,7 +277,12 @@ export function completionByCategory(rows: ReportRow[]) {
   return [...grouped.entries()]
     .map(([category, list]) => {
       const done = list.filter((r) => isSubmittedStatus(r.status)).length;
-      return { category, expected: list.length, submitted: done, rate: list.length === 0 ? 0 : Math.round((done / list.length) * 1000) / 10 };
+      return {
+        category,
+        expected: list.length,
+        submitted: done,
+        rate: list.length === 0 ? 0 : Math.round((done / list.length) * 1000) / 10,
+      };
     })
     .sort((a, b) => b.rate - a.rate || a.category.localeCompare(b.category));
 }

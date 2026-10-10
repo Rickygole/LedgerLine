@@ -1,7 +1,7 @@
 export async function onRequestError(
   error: unknown,
   request: { path: string; method: string; headers: Record<string, string | string[] | undefined> },
-  context: { routePath: string; routeType: string }
+  context: { routePath: string; routeType: string },
 ) {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { formatErrorLog, headerValue, REQUEST_ID_HEADER } = await import("@/lib/ops/log");
@@ -15,6 +15,6 @@ export async function onRequestError(
       route: context?.routePath ?? null,
       routeType: context?.routeType ?? null,
       message: err?.message ?? String(error),
-    })
+    }),
   );
 }

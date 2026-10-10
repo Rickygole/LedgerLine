@@ -12,7 +12,9 @@ import { formatDate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const metadata: Metadata = { title: { absolute: "Report on your City Council initiative funding | LedgerLine" } };
+export const metadata: Metadata = {
+  title: { absolute: "Report on your City Council initiative funding | LedgerLine" },
+};
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -28,7 +30,9 @@ function nextDay(iso: string) {
 
 function covers(period: CalendarPeriod) {
   const sameYear = period.startsOn.slice(0, 4) === period.endsOn.slice(0, 4);
-  return sameYear ? `Covers ${shortDate(period.startsOn)} to ${formatDate(period.endsOn)}` : `Covers ${formatDate(period.startsOn)} to ${formatDate(period.endsOn)}`;
+  return sameYear
+    ? `Covers ${shortDate(period.startsOn)} to ${formatDate(period.endsOn)}`
+    : `Covers ${formatDate(period.startsOn)} to ${formatDate(period.endsOn)}`;
 }
 
 function fiscalYearName(id: string) {
@@ -51,9 +55,12 @@ export default async function StartPage() {
       <div className="border-b border-line-soft bg-harbor-50 py-12 sm:py-14">
         <div className="mx-auto max-w-[1120px] px-4 sm:px-8">
           <p className="eyebrow mb-2">New York City Council discretionary funding</p>
-          <h1 className="max-w-[760px] text-[32px] font-extrabold leading-10 tracking-[-0.015em] text-ink sm:text-[44px] sm:leading-[52px]">Report on your City Council initiative funding</h1>
+          <h1 className="max-w-[760px] text-[32px] font-extrabold leading-10 tracking-[-0.015em] text-ink sm:text-[44px] sm:leading-[52px]">
+            Report on your City Council initiative funding
+          </h1>
           <p className="mt-4 max-w-[720px] text-lg leading-7 text-ink sm:text-xl sm:leading-[30px]">
-            File mid-year and year-end reports for programs funded through City Council initiatives, see what your organization still owes, and answer requests from Council Finance.
+            File mid-year and year-end reports for programs funded through City Council initiatives, see what your
+            organization still owes, and answer requests from Council Finance.
           </p>
           <ButtonLink href="/login" size="lg" className="mt-7">
             Start now
@@ -75,7 +82,8 @@ export default async function StartPage() {
             {fiscalYearName(fiscalYear.id)} reporting calendar
           </h2>
           <p className="mt-1 text-[15px] leading-[22px] text-muted">
-            New York City fiscal years run July 1 to June 30. {fiscalYear.id} runs {formatDate(fiscalYear.startsOn)} to {formatDate(fiscalYear.endsOn)}.
+            New York City fiscal years run July 1 to June 30. {fiscalYear.id} runs {formatDate(fiscalYear.startsOn)} to{" "}
+            {formatDate(fiscalYear.endsOn)}.
           </p>
           <FiscalYearTimeline
             className="mt-6"
@@ -100,13 +108,17 @@ export default async function StartPage() {
             <ul className="mt-3 list-disc space-y-1 pl-6">
               <li>your organization&apos;s EIN (nine digits, for example 13-4027118)</li>
               <li>program results for the reporting period, such as participants served</li>
-              <li>spending by budget line, split into personal services (PS) and other than personal services (OTPS)</li>
+              <li>
+                spending by budget line, split into personal services (PS) and other than personal services (OTPS)
+              </li>
               <li>supporting documents: PDF, Word, Excel or CSV, up to 25 MB each</li>
             </ul>
 
             <h2 className="mt-9 text-2xl font-bold leading-8">What happens after you submit</h2>
             <p className="mt-3 max-w-[70ch]">
-              You get a reference number that starts with LL-, and a copy of what you submitted is saved in Messages. Council Finance reviews each report. If anything needs to change, Council Finance tells you what and reopens the report for you.
+              You get a reference number that starts with LL-, and a copy of what you submitted is saved in Messages.
+              Council Finance reviews each report. If anything needs to change, Council Finance tells you what and
+              reopens the report for you.
             </p>
 
             <p className="mt-8 text-base leading-6">
@@ -133,7 +145,13 @@ export default async function StartPage() {
                     <p className="text-sm leading-[22px] text-muted">{covers(period)}</p>
                     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-[22px] text-muted">
                       <span>{passed ? `Was due ${formatDate(period.dueOn)}` : `Due ${formatDate(period.dueOn)}`}</span>
-                      {passed ? <Badge tone="bad">Past due</Badge> : open ? <Badge tone="ok">Open now</Badge> : next ? <Badge tone="info">Opens {shortDate(nextDay(period.endsOn))}</Badge> : null}
+                      {passed ? (
+                        <Badge tone="bad">Past due</Badge>
+                      ) : open ? (
+                        <Badge tone="ok">Open now</Badge>
+                      ) : next ? (
+                        <Badge tone="info">Opens {shortDate(nextDay(period.endsOn))}</Badge>
+                      ) : null}
                     </p>
                   </li>
                 );

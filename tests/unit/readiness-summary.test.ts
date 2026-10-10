@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { latestPerScenario, passRate, percent, requiredModules, trainedShare, type TrainingModule } from "@/lib/ops/readiness";
+import {
+  latestPerScenario,
+  passRate,
+  percent,
+  requiredModules,
+  trainedShare,
+  type TrainingModule,
+} from "@/lib/ops/readiness";
 
 const modules: TrainingModule[] = [
   { key: "a", title: "Orientation", audience: ["finance_viewer", "finance_analyst", "finance_admin"] },
@@ -41,16 +48,29 @@ describe("[US-066] training progress is the share of Finance users who finished 
 });
 
 describe("[US-065] the test pass rate uses the latest session of each scenario", () => {
-  const entry = (scenario: string, session_on: string, result: string, recorded_at = `${session_on}T20:00:00Z`) => ({ scenario, session_on, result, recorded_at });
+  const entry = (scenario: string, session_on: string, result: string, recorded_at = `${session_on}T20:00:00Z`) => ({
+    scenario,
+    session_on,
+    result,
+    recorded_at,
+  });
 
   it("lets a passing retest replace an earlier failure", () => {
-    const entries = [entry("Upload", "2026-09-24", "failed"), entry("Upload", "2026-10-05", "passed"), entry("Export", "2026-10-02", "passed"), entry("Rollover", "2026-10-01", "blocked")];
+    const entries = [
+      entry("Upload", "2026-09-24", "failed"),
+      entry("Upload", "2026-10-05", "passed"),
+      entry("Export", "2026-10-02", "passed"),
+      entry("Rollover", "2026-10-01", "blocked"),
+    ];
     expect(latestPerScenario(entries)).toHaveLength(3);
     expect(passRate(entries)).toEqual({ scenarios: 3, passed: 2, percent: 67 });
   });
 
   it("breaks a tie on the same day by the time it was recorded", () => {
-    const entries = [entry("Print", "2026-10-07", "passed", "2026-10-07T15:00:00Z"), entry("Print", "2026-10-07", "failed", "2026-10-07T18:00:00Z")];
+    const entries = [
+      entry("Print", "2026-10-07", "passed", "2026-10-07T15:00:00Z"),
+      entry("Print", "2026-10-07", "failed", "2026-10-07T18:00:00Z"),
+    ];
     expect(passRate(entries)).toEqual({ scenarios: 1, passed: 0, percent: 0 });
   });
 

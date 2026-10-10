@@ -15,9 +15,25 @@ const tones: Record<Tone, string> = {
   ai_draft: "bg-info-bg text-info ring-info/20",
 };
 
-export function Badge({ tone = "neutral", icon: Icon, children, className }: { tone?: Tone; icon?: ComponentType<{ className?: string }>; children: React.ReactNode; className?: string }) {
+export function Badge({
+  tone = "neutral",
+  icon: Icon,
+  children,
+  className,
+}: {
+  tone?: Tone;
+  icon?: ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[13px] font-semibold leading-5 ring-1 ring-inset whitespace-nowrap", tones[tone], className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[13px] font-semibold leading-5 ring-1 ring-inset whitespace-nowrap",
+        tones[tone],
+        className,
+      )}
+    >
       {Icon && (tone === "bad" || tone === "ok") ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : null}
       {children}
     </span>
@@ -46,8 +62,18 @@ export function StateBadge({ state, audience = "finance" }: { state: ReportState
 }
 
 export function DueBadge({ daysPastDue }: { daysPastDue: number }) {
-  if (daysPastDue > 0) return <Badge tone="bad" icon={AlertTriangle}>{daysPastDue} {plural(daysPastDue, "day", "days")} past due</Badge>;
-  if (daysPastDue > -14) return <Badge tone="warn">Due in {Math.abs(daysPastDue)} {plural(Math.abs(daysPastDue), "day", "days")}</Badge>;
+  if (daysPastDue > 0)
+    return (
+      <Badge tone="bad" icon={AlertTriangle}>
+        {daysPastDue} {plural(daysPastDue, "day", "days")} past due
+      </Badge>
+    );
+  if (daysPastDue > -14)
+    return (
+      <Badge tone="warn">
+        Due in {Math.abs(daysPastDue)} {plural(Math.abs(daysPastDue), "day", "days")}
+      </Badge>
+    );
   return null;
 }
 

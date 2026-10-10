@@ -44,14 +44,21 @@ export function Stat({
       </p>
       <p className="num mt-1.5 text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-ink">{shown}</p>
       {meter ? (
-        <div className="mt-2.5 h-2 overflow-hidden rounded-sm bg-harbor-100" role="img" aria-label={meter.label ?? `${Math.round(ratio * 100)} percent`}>
+        <div
+          className="mt-2.5 h-2 overflow-hidden rounded-sm bg-harbor-100"
+          role="img"
+          aria-label={meter.label ?? `${Math.round(ratio * 100)} percent`}
+        >
           <div className="h-full bg-ok" style={{ width: `${ratio * 100}%` }} />
         </div>
       ) : null}
       {caption ? <p className="mt-1.5 text-sm leading-5 text-muted">{caption}</p> : null}
       {action ? (
         <p className="mt-auto pt-3">
-          <Link href={action.href} className="text-sm font-bold text-link underline underline-offset-2 hover:text-link-hover">
+          <Link
+            href={action.href}
+            className="text-sm font-bold text-link underline underline-offset-2 hover:text-link-hover"
+          >
             {action.label}
           </Link>
         </p>

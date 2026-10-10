@@ -6,7 +6,13 @@ import { createDraftFromPublished } from "@/app/finance/initiatives/[id]/actions
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 
-export function CreateDraftForm({ initiativeId, label = "Edit form (creates a draft)" }: { initiativeId: string; label?: string }) {
+export function CreateDraftForm({
+  initiativeId,
+  label = "Edit form (creates a draft)",
+}: {
+  initiativeId: string;
+  label?: string;
+}) {
   const [state, action, pending] = useActionState(createDraftFromPublished, undefined);
   return (
     <form action={action}>

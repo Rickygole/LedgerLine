@@ -59,7 +59,9 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
   const headline = dashboardHeadline(period, counts, rows.length);
   const timeline = cycleTimeline(period.fiscalYearId, periods);
 
-  const waiting = rows.filter((r) => r.status === "submitted" && r.submissionId).sort((a, b) => (a.submittedAt ?? "").localeCompare(b.submittedAt ?? ""));
+  const waiting = rows
+    .filter((r) => r.status === "submitted" && r.submissionId)
+    .sort((a, b) => (a.submittedAt ?? "").localeCompare(b.submittedAt ?? ""));
   const next = waiting[0];
   const acceptedPct = rows.length === 0 ? 0 : Math.round((counts.accepted / rows.length) * 100);
   const remindersHref = `/finance/reminders?period=${encodeURIComponent(period.id)}`;
@@ -69,12 +71,19 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
     .sort((a, b) => b.award - a.award || a.orgName.localeCompare(b.orgName))
     .slice(0, 6);
 
-  const stack = (key: (row: ReportRow) => string): StackDatum[] => [...groupBy(rows, key).entries()].map(([name, group]) => ({ name, href: list({ category: name }), ...countBuckets(group) }));
+  const stack = (key: (row: ReportRow) => string): StackDatum[] =>
+    [...groupBy(rows, key).entries()].map(([name, group]) => ({
+      name,
+      href: list({ category: name }),
+      ...countBuckets(group),
+    }));
 
   return (
     <>
       <div className="mb-7 grid grid-cols-1 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-6 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <p className="self-center text-sm font-semibold leading-5 text-muted sm:col-start-1 sm:row-start-1">{periodEyebrow(period)}</p>
+        <p className="self-center text-sm font-semibold leading-5 text-muted sm:col-start-1 sm:row-start-1">
+          {periodEyebrow(period)}
+        </p>
         <AutoSelect
           id="period"
           name="period"
@@ -85,17 +94,25 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           className="order-last mt-4 flex items-center gap-2 sm:order-none sm:col-start-2 sm:row-start-1 sm:mt-0 sm:justify-self-end"
         />
         <div className="min-w-0 sm:col-span-2 sm:row-start-2 lg:col-span-1">
-          <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">{headline.title}</h1>
+          <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">
+            {headline.title}
+          </h1>
           <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">{headline.lede}</p>
         </div>
         <div className="mt-4 flex flex-col-reverse gap-3 sm:col-span-2 sm:row-start-3 sm:flex-row sm:flex-wrap sm:items-center lg:col-span-1 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:self-end">
           {canRemind ? (
-            <Link href={remindersHref} className={buttonClass("secondary", "md", "h-11 w-full px-5 text-base sm:w-auto")}>
+            <Link
+              href={remindersHref}
+              className={buttonClass("secondary", "md", "h-11 w-full px-5 text-base sm:w-auto")}
+            >
               Send reminders
             </Link>
           ) : null}
           {next ? (
-            <Link href={`/finance/submissions/${next.submissionId}?queue=waiting`} className={buttonClass("primary", "md", "h-11 w-full px-5 text-base sm:w-auto")}>
+            <Link
+              href={`/finance/submissions/${next.submissionId}?queue=waiting`}
+              className={buttonClass("primary", "md", "h-11 w-full px-5 text-base sm:w-auto")}
+            >
               Review next submission
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
@@ -103,22 +120,43 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
         </div>
       </div>
 
-      <section aria-label="Key figures" className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line-soft xl:grid-cols-4">
-        <Stat className="rounded-none border-0" label="Missing" value={counts.missing} tone={counts.missing > 0 ? "bad" : "neutral"} sub="Past due, nothing submitted" action={{ href: list({ bucket: "missing" }), label: "Chase missing reports" }} />
+      <section
+        aria-label="Key figures"
+        className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line-soft xl:grid-cols-4"
+      >
+        <Stat
+          className="rounded-none border-0"
+          label="Missing"
+          value={counts.missing}
+          tone={counts.missing > 0 ? "bad" : "neutral"}
+          sub="Past due, nothing submitted"
+          action={{ href: list({ bucket: "missing" }), label: "Chase missing reports" }}
+        />
         <Stat
           className="rounded-none border-0"
           label="Waiting for review"
           value={counts.submitted}
-          sub={next?.submittedAt ? `Oldest ${formatShortDate(next.submittedAt)} · ${counts.in_review} already in review` : `${counts.in_review} already in review`}
+          sub={
+            next?.submittedAt
+              ? `Oldest ${formatShortDate(next.submittedAt)} · ${counts.in_review} already in review`
+              : `${counts.in_review} already in review`
+          }
           action={{ href: list({ bucket: "submitted" }), label: "Open review queue" }}
         />
-        <Stat className="rounded-none border-0" label="Update requested" value={counts.returned} sub="Waiting on the organization" action={{ href: list({ bucket: "returned" }), label: "See requests" }} />
+        <Stat
+          className="rounded-none border-0"
+          label="Update requested"
+          value={counts.returned}
+          sub="Waiting on the organization"
+          action={{ href: list({ bucket: "returned" }), label: "See requests" }}
+        />
         <Stat
           className="rounded-none border-0"
           label="Accepted"
           value={
             <>
-              {formatCount(counts.accepted)} <span className="text-lg font-semibold tracking-normal text-ink-2">of {formatCount(rows.length)}</span>
+              {formatCount(counts.accepted)}{" "}
+              <span className="text-lg font-semibold tracking-normal text-ink-2">of {formatCount(rows.length)}</span>
             </>
           }
           meter={{ value: counts.accepted, max: rows.length, label: `${acceptedPct} percent accepted` }}
@@ -132,7 +170,13 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-12 lg:items-start">
-        <StatusStackChart title="Status by initiative category" dimension="Category" data={stack((row) => row.category)} periodLabel={period.label} className="lg:col-span-8" />
+        <StatusStackChart
+          title="Status by initiative category"
+          dimension="Category"
+          data={stack((row) => row.category)}
+          periodLabel={period.label}
+          className="lg:col-span-8"
+        />
         <section aria-labelledby="largest-title" className="min-w-0 rounded border border-line bg-white lg:col-span-4">
           <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
             <h2 id="largest-title" className="text-xl font-bold leading-7 text-ink">
@@ -146,7 +190,10 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
               {largest.map((row) => (
                 <li key={row.assignmentId} className="flex items-baseline justify-between gap-4 px-5 py-3 sm:px-6">
                   <div className="min-w-0">
-                    <Link href={`/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`/finance/organizations/${row.orgId}`}
+                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {row.orgName}
                     </Link>
                     <p className="text-[13px] leading-5 text-muted">
@@ -154,14 +201,19 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
                       {row.councilDistrict ? ` · District ${row.councilDistrict}` : ""}
                     </p>
                   </div>
-                  <span className="num shrink-0 text-right text-[15px] font-semibold text-ink">{formatWholeDollars(row.award)}</span>
+                  <span className="num shrink-0 text-right text-[15px] font-semibold text-ink">
+                    {formatWholeDollars(row.award)}
+                  </span>
                 </li>
               ))}
             </ol>
           )}
           {counts.missing > 0 && canRemind ? (
             <div className="border-t border-line-soft px-5 py-3 text-sm sm:px-6">
-              <Link href={remindersHref} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+              <Link
+                href={remindersHref}
+                className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+              >
                 Send reminders to all {counts.missing}
               </Link>
             </div>

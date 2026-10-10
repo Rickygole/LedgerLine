@@ -1,6 +1,22 @@
 import { Breadcrumbs, type Crumb } from "./page-header";
 
-export function ProfileHeader({ title, subtitle, crumbs, meta, actions, tabs, children }: { title: string; subtitle?: React.ReactNode; crumbs?: Crumb[]; meta?: React.ReactNode[]; actions?: React.ReactNode; tabs?: React.ReactNode; children?: React.ReactNode }) {
+export function ProfileHeader({
+  title,
+  subtitle,
+  crumbs,
+  meta,
+  actions,
+  tabs,
+  children,
+}: {
+  title: string;
+  subtitle?: React.ReactNode;
+  crumbs?: Crumb[];
+  meta?: React.ReactNode[];
+  actions?: React.ReactNode;
+  tabs?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
   const items = (meta ?? []).filter(Boolean);
   return (
     <div className="mb-6">

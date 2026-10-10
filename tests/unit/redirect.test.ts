@@ -19,7 +19,16 @@ describe("safe post sign-in redirects", () => {
 });
 
 describe("[BR-010] normalised paths never become protocol-relative", () => {
-  const payloads = ["/..//evil.example/x", "/.//evil.example/x", "/%2e%2e//evil.example/x", "/a/..//evil.example/x", "/a/../..//evil.example", "/./\\evil.example", "/..//", "/a/..//"];
+  const payloads = [
+    "/..//evil.example/x",
+    "/.//evil.example/x",
+    "/%2e%2e//evil.example/x",
+    "/a/..//evil.example/x",
+    "/a/../..//evil.example",
+    "/./\\evil.example",
+    "/..//",
+    "/a/..//",
+  ];
 
   it.each(payloads)("falls back for %s", (payload) => {
     expect(safeNext(payload, "/home")).toBe("/home");

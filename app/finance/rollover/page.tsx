@@ -72,8 +72,18 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               </div>
               <div>
                 <Label htmlFor="to">Roll over to</Label>
-                <Hint id="to-hint">Enter FY and two digits, for example FY28. The year and its two reporting periods are created if they do not exist.</Hint>
-                <Input id="to" name="to" defaultValue={to} pattern="FY[0-9]{2}" maxLength={4} aria-describedby="to-hint" />
+                <Hint id="to-hint">
+                  Enter FY and two digits, for example FY28. The year and its two reporting periods are created if they
+                  do not exist.
+                </Hint>
+                <Input
+                  id="to"
+                  name="to"
+                  defaultValue={to}
+                  pattern="FY[0-9]{2}"
+                  maxLength={4}
+                  aria-describedby="to-hint"
+                />
               </div>
               <Button type="submit" variant="secondary">
                 Show this year
@@ -86,13 +96,25 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
             <CardHeader
               title={`${from} structure review`}
               description="The annual review decides what to keep, rename, combine or retire before this rollover."
-              actions={review ? review.status === "signed_off" ? <Badge tone="ok">Signed off {formatDate(review.signed_off_on)}</Badge> : <Badge tone="warn">In progress</Badge> : <Badge>Not started</Badge>}
+              actions={
+                review ? (
+                  review.status === "signed_off" ? (
+                    <Badge tone="ok">Signed off {formatDate(review.signed_off_on)}</Badge>
+                  ) : (
+                    <Badge tone="warn">In progress</Badge>
+                  )
+                ) : (
+                  <Badge>Not started</Badge>
+                )
+              }
             />
             <CardBody className="space-y-3 text-sm">
               {review ? (
                 <>
                   <p>
-                    {checklistDone(review)} of {CHECKLIST.length} checklist items ticked, {review.participants} {plural(review.participants, "participant", "participants")}, {review.decisions} {plural(review.decisions, "decision", "decisions")}.
+                    {checklistDone(review)} of {CHECKLIST.length} checklist items ticked, {review.participants}{" "}
+                    {plural(review.participants, "participant", "participants")}, {review.decisions}{" "}
+                    {plural(review.decisions, "decision", "decisions")}.
                   </p>
                   {decisions.length > 0 ? (
                     <ul className="list-disc space-y-1 pl-5">
@@ -101,7 +123,9 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
                       ))}
                     </ul>
                   ) : null}
-                  {review.status !== "signed_off" ? <p className="font-semibold text-warn">The review is not signed off yet.</p> : null}
+                  {review.status !== "signed_off" ? (
+                    <p className="font-semibold text-warn">The review is not signed off yet.</p>
+                  ) : null}
                 </>
               ) : (
                 <p className="font-semibold text-warn">No structure review has been started for {from}.</p>
@@ -112,20 +136,38 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
             </CardBody>
           </Card>
           <Card>
-            <CardHeader title={`${from} at a glance`} description={`What will be offered for carry forward into ${to || "the new year"}.`} />
+            <CardHeader
+              title={`${from} at a glance`}
+              description={`What will be offered for carry forward into ${to || "the new year"}.`}
+            />
             <CardBody>
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <Stat label="Initiatives" value={summary.initiatives} icon={Layers} hint={`Active in ${from}`} />
                 <Stat label="Organizations" value={summary.organizations} icon={Users} hint="With at least one award" />
-                <Stat label="Awards" value={summary.assignments} icon={CalendarRange} hint="One per organization and initiative" />
-                <Stat label="Funding" value={formatCompactCurrency(summary.totalFunding)} icon={Landmark} hint={`Total awarded in ${from}`} />
+                <Stat
+                  label="Awards"
+                  value={summary.assignments}
+                  icon={CalendarRange}
+                  hint="One per organization and initiative"
+                />
+                <Stat
+                  label="Funding"
+                  value={formatCompactCurrency(summary.totalFunding)}
+                  icon={Landmark}
+                  hint={`Total awarded in ${from}`}
+                />
               </div>
               {targetSummary && targetSummary.initiatives > 0 ? (
                 <p className="mt-4 rounded-md border border-warn/30 bg-warn-bg px-3 py-2 text-sm text-warn">
-                  {to} already has {targetSummary.initiatives} active initiatives. Initiatives that were already rolled over will be skipped.
+                  {to} already has {targetSummary.initiatives} active initiatives. Initiatives that were already rolled
+                  over will be skipped.
                 </p>
               ) : null}
-              {invalid ? <p className="mt-4 text-sm font-semibold text-bad">The new year must look like FY28 and come after {from}.</p> : null}
+              {invalid ? (
+                <p className="mt-4 text-sm font-semibold text-bad">
+                  The new year must look like FY28 and come after {from}.
+                </p>
+              ) : null}
               <div className="mt-5 flex justify-end">
                 {invalid ? (
                   <Button disabled>

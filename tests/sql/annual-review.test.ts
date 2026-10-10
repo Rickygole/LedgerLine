@@ -72,7 +72,8 @@ describe("[US-064][BR-028] annual structure review with Finance", () => {
       };
       const id = (await run("SELECT app.start_annual_review('FY30', '2026-04-10') AS id"))[0].id as string;
       expect(await attempt("SELECT app.sign_off_annual_review($1, '2026-04-12')", [id])).toBe("23514");
-      for (const item of CHECKLIST.map((c) => c.key)) await run("SELECT app.set_review_check($1, $2, true)", [id, item]);
+      for (const item of CHECKLIST.map((c) => c.key))
+        await run("SELECT app.set_review_check($1, $2, true)", [id, item]);
       expect(await attempt("SELECT app.sign_off_annual_review($1, '2026-04-12')", [id])).toBe("23514");
       await run("SELECT app.add_review_participant($1, 'Winston Kellerman', 'Council Finance')", [id]);
       expect(await attempt("SELECT app.sign_off_annual_review($1, '2026-04-12')", [id])).toBe("23514");
@@ -80,9 +81,13 @@ describe("[US-064][BR-028] annual structure review with Finance", () => {
       expect(await attempt("SELECT app.sign_off_annual_review($1, '2026-04-01')", [id])).toBe("23514");
       expect(await attempt("SELECT app.sign_off_annual_review($1, '2999-01-01')", [id])).toBe("23514");
       await run("SELECT app.sign_off_annual_review($1, '2026-04-12')", [id]);
-      const signed = (await run("SELECT status, signed_off_by, signed_off_on::text AS on FROM annual_review WHERE id = $1", [id]))[0];
+      const signed = (
+        await run("SELECT status, signed_off_by, signed_off_on::text AS on FROM annual_review WHERE id = $1", [id])
+      )[0];
       expect(signed).toEqual({ status: "signed_off", signed_off_by: winston, on: "2026-04-12" });
-      const audit = (await run("SELECT action FROM audit_event WHERE entity = 'annual_review' AND entity_id = $1 ORDER BY id", [id])).map((r) => r.action);
+      const audit = (
+        await run("SELECT action FROM audit_event WHERE entity = 'annual_review' AND entity_id = $1 ORDER BY id", [id])
+      ).map((r) => r.action);
       expect(audit[0]).toBe("review_started");
       expect(audit.filter((a) => a === "review_check")).toHaveLength(5);
       expect(audit[audit.length - 1]).toBe("review_signed_off");
@@ -98,7 +103,9 @@ describe("[US-064][BR-028] annual structure review with Finance", () => {
   it("is limited to finance administrators, while Finance staff can read reviews", async () => {
     await asUser(app, daniel, async () => {
       expect(await code(() => app.query("SELECT app.start_annual_review('FY27', '2026-10-20')"))).toBe("42501");
-      const seen = (await app.query("SELECT fiscal_year_id FROM annual_review ORDER BY 1")).rows.map((r) => r.fiscal_year_id);
+      const seen = (await app.query("SELECT fiscal_year_id FROM annual_review ORDER BY 1")).rows.map(
+        (r) => r.fiscal_year_id,
+      );
       expect(seen).toEqual(["FY26", "FY27"]);
     });
     const maria = await userId(owner, "maria.santos");

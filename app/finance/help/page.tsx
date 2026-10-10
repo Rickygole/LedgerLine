@@ -10,5 +10,12 @@ export const metadata: Metadata = { title: "Get help" };
 export default async function FinanceHelp({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser(FINANCE_ROLES);
   const params = await searchParams;
-  return <HelpPage user={user} home={{ label: "Dashboard", href: "/finance" }} base="/finance/help" selected={one(params, "request")} />;
+  return (
+    <HelpPage
+      user={user}
+      home={{ label: "Dashboard", href: "/finance" }}
+      base="/finance/help"
+      selected={one(params, "request")}
+    />
+  );
 }

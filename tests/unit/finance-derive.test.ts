@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { applyFilters, boroughSeries, completionByCategory, countBuckets, finishRow, paginate } from "@/lib/finance/review/derive";
+import {
+  applyFilters,
+  boroughSeries,
+  completionByCategory,
+  countBuckets,
+  finishRow,
+  paginate,
+} from "@/lib/finance/review/derive";
 import { filtersToParams, parseFilters } from "@/lib/finance/review/filters";
 import type { ReportRow } from "@/lib/finance/review/types";
 import { buildDefinition } from "@/lib/forms/standard";
@@ -91,8 +98,12 @@ describe("[US-040] dashboard buckets", () => {
   it("[US-040] defines missing once: nothing submitted or a draft, past due", () => {
     expect(row().bucket).toBe("missing");
     expect(row({ submissionId: "s1", status: "draft" }).bucket).toBe("missing");
-    expect(row({ submissionId: "s1", status: "returned", answers: completeAnswers, budget: budget(90000) }).bucket).toBe("returned");
-    expect(row({ submissionId: "s1", status: "submitted", answers: completeAnswers, budget: budget(90000) }).bucket).toBe("submitted");
+    expect(
+      row({ submissionId: "s1", status: "returned", answers: completeAnswers, budget: budget(90000) }).bucket,
+    ).toBe("returned");
+    expect(
+      row({ submissionId: "s1", status: "submitted", answers: completeAnswers, budget: budget(90000) }).bucket,
+    ).toBe("submitted");
     expect(row({ dueOn: "2026-10-30" }).bucket).toBe("outstanding");
   });
 
@@ -103,7 +114,11 @@ describe("[US-040] dashboard buckets", () => {
   });
 
   it("counts every bucket and sums to the number of rows", () => {
-    const rows = [row(), row({ submissionId: "s1", status: "accepted", answers: completeAnswers, budget: budget(90000) }), row({ submissionId: "s2", status: "submitted", answers: completeAnswers, budget: budget(90000) })];
+    const rows = [
+      row(),
+      row({ submissionId: "s1", status: "accepted", answers: completeAnswers, budget: budget(90000) }),
+      row({ submissionId: "s2", status: "submitted", answers: completeAnswers, budget: budget(90000) }),
+    ];
     const counts = countBuckets(rows);
     expect(counts.missing).toBe(1);
     expect(counts.accepted).toBe(1);
@@ -125,11 +140,28 @@ describe("[US-042] flag evidence", () => {
   });
 
   it("flags zero and low outcomes on submitted reports", () => {
-    const zero = row({ submissionId: "s1", status: "submitted", answers: { ...completeAnswers, participants_actual: "0" }, budget: budget(90000) });
-    expect(zero.flags.find((f) => f.reason === "zero_outcomes")?.evidence).toBe("Participants served 0 of 100 targeted");
-    const low = row({ submissionId: "s2", status: "accepted", answers: { ...completeAnswers, participants_actual: "30" }, budget: budget(90000) });
+    const zero = row({
+      submissionId: "s1",
+      status: "submitted",
+      answers: { ...completeAnswers, participants_actual: "0" },
+      budget: budget(90000),
+    });
+    expect(zero.flags.find((f) => f.reason === "zero_outcomes")?.evidence).toBe(
+      "Participants served 0 of 100 targeted",
+    );
+    const low = row({
+      submissionId: "s2",
+      status: "accepted",
+      answers: { ...completeAnswers, participants_actual: "30" },
+      budget: budget(90000),
+    });
     expect(low.flags.find((f) => f.reason === "low_outcomes")?.evidence).toContain("30 of 100");
-    const fine = row({ submissionId: "s3", status: "accepted", answers: { ...completeAnswers, participants_actual: "40" }, budget: budget(90000) });
+    const fine = row({
+      submissionId: "s3",
+      status: "accepted",
+      answers: { ...completeAnswers, participants_actual: "40" },
+      budget: budget(90000),
+    });
     expect(fine.flags).toEqual([]);
   });
 
@@ -138,15 +170,29 @@ describe("[US-042] flag evidence", () => {
       ...definition,
       sections: definition.sections.map((section) => ({
         ...section,
-        questions: section.questions.map((q) => (q.key === "participants_actual" ? { ...q, visibleWhen: { key: "served_youth", equals: "Yes" } } : q)),
+        questions: section.questions.map((q) =>
+          q.key === "participants_actual" ? { ...q, visibleWhen: { key: "served_youth", equals: "Yes" } } : q,
+        ),
       })),
     };
-    const r = row({ submissionId: "s1", status: "submitted", definition: branched, answers: { ...completeAnswers, participants_actual: "0" }, budget: budget(90000) });
+    const r = row({
+      submissionId: "s1",
+      status: "submitted",
+      definition: branched,
+      answers: { ...completeAnswers, participants_actual: "0" },
+      budget: budget(90000),
+    });
     expect(r.flags.find((f) => f.reason === "zero_outcomes")).toBeUndefined();
   });
 
   it("adds open manual flags with their note", () => {
-    const r = row({ submissionId: "s1", status: "submitted", answers: completeAnswers, budget: budget(90000), openFlags: [{ id: "f1", kind: "manual", note: "Check the vendor invoice" }] });
+    const r = row({
+      submissionId: "s1",
+      status: "submitted",
+      answers: completeAnswers,
+      budget: budget(90000),
+      openFlags: [{ id: "f1", kind: "manual", note: "Check the vendor invoice" }],
+    });
     expect(r.flags).toEqual([{ reason: "manual", evidence: "Flagged by Finance: Check the vendor invoice" }]);
   });
 });
@@ -159,7 +205,19 @@ const periods = [
 describe("[US-041] filters", () => {
   const rows = [
     row(),
-    row({ orgName: "Harborview Youth Alliance", ein: "00-1109729", borough: "Brooklyn", category: "Health", initiativeId: "22222222-2222-2222-2222-222222222222", initiativeName: "Diabetes Prevention", initiativeCode: "CI-050", submissionId: "s2", status: "accepted", answers: completeAnswers, budget: budget(90000) }),
+    row({
+      orgName: "Harborview Youth Alliance",
+      ein: "00-1109729",
+      borough: "Brooklyn",
+      category: "Health",
+      initiativeId: "22222222-2222-2222-2222-222222222222",
+      initiativeName: "Diabetes Prevention",
+      initiativeCode: "CI-050",
+      submissionId: "s2",
+      status: "accepted",
+      answers: completeAnswers,
+      budget: budget(90000),
+    }),
   ];
 
   it("matches organization name or EIN", () => {
@@ -169,14 +227,29 @@ describe("[US-041] filters", () => {
   });
 
   it("[US-041] finds a report by reference number, contract number or initiative", () => {
-    const withRef = row({ submissionId: "s9", referenceNo: "LL-26YE-00148", status: "accepted", answers: completeAnswers, budget: budget(90000) });
+    const withRef = row({
+      submissionId: "s9",
+      referenceNo: "LL-26YE-00148",
+      status: "accepted",
+      answers: completeAnswers,
+      budget: budget(90000),
+    });
     expect(applyFilters([withRef, ...rows], { q: "LL-26YE-00148" })).toHaveLength(1);
     expect(applyFilters(rows, { q: "dyCD-26-04218" })).toHaveLength(2);
     expect(applyFilters(rows, { q: "diabetes" })).toHaveLength(1);
   });
 
   it("[US-041] filters by sponsoring Council Member, funding source and contract status", () => {
-    const other = row({ orgName: "Larkspur Youth Alliance", sponsors: [{ district: 33, name: "Walter Pennington", amount: 90000 }], fundingSource: "local", contractStatus: "pending", submissionId: "s3", status: "accepted", answers: completeAnswers, budget: budget(90000) });
+    const other = row({
+      orgName: "Larkspur Youth Alliance",
+      sponsors: [{ district: 33, name: "Walter Pennington", amount: 90000 }],
+      fundingSource: "local",
+      contractStatus: "pending",
+      submissionId: "s3",
+      status: "accepted",
+      answers: completeAnswers,
+      budget: budget(90000),
+    });
     const all = [...rows, other];
     expect(applyFilters(all, { member: "33" }).map((r) => r.orgName)).toEqual(["Larkspur Youth Alliance"]);
     expect(applyFilters(all, { member: "8" })).toHaveLength(2);
@@ -236,7 +309,17 @@ describe("pagination and parameters", () => {
 
 describe("[US-051] chart series", () => {
   it("builds borough and category summaries", () => {
-    const rows = [row(), row({ borough: "Queens", category: "Health", submissionId: "s2", status: "accepted", answers: completeAnswers, budget: budget(90000) })];
+    const rows = [
+      row(),
+      row({
+        borough: "Queens",
+        category: "Health",
+        submissionId: "s2",
+        status: "accepted",
+        answers: completeAnswers,
+        budget: budget(90000),
+      }),
+    ];
     expect(boroughSeries(rows).map((b) => b.borough)).toEqual(["Bronx", "Queens"]);
     const completion = completionByCategory(rows);
     expect(completion[0]).toMatchObject({ category: "Health", rate: 100 });

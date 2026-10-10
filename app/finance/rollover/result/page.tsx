@@ -40,7 +40,11 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
       <PageHeader
         title={`Rollover into ${to} is complete`}
         description={`Initiatives from ${from} now continue in ${to}. Each change was written to the audit log.`}
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Annual rollover", href: "/finance/rollover" }, { label: "Result" }]}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          { label: "Annual rollover", href: "/finance/rollover" },
+          { label: "Result" },
+        ]}
         actions={
           <>
             <ButtonLink href="/finance/rollover/lineage" variant="secondary">
@@ -54,7 +58,10 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
       <Card className="mb-6">
         <CardBody>
           <p className="flex items-center gap-2 text-sm font-semibold text-ok">
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {result.created} {plural(result.created, "initiative", "initiatives")}, {result.assignments} {plural(result.assignments, "award", "awards")} and {result.forms} forms now exist in {to}. Saved in one transaction.
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {result.created}{" "}
+            {plural(result.created, "initiative", "initiatives")}, {result.assignments}{" "}
+            {plural(result.assignments, "award", "awards")} and {result.forms} forms now exist in {to}. Saved in one
+            transaction.
           </p>
           <dl className="mt-4 grid gap-4 sm:grid-cols-4 lg:grid-cols-7">
             {tiles.map(([label, value]) => (
@@ -67,7 +74,18 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
         </CardBody>
       </Card>
       <Card>
-        <CardHeader title={`${to} reporting periods`} description="Reminder rules for these periods can be set up next." actions={<Link href="/finance/reminders" className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">Open reminders</Link>} />
+        <CardHeader
+          title={`${to} reporting periods`}
+          description="Reminder rules for these periods can be set up next."
+          actions={
+            <Link
+              href="/finance/reminders"
+              className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+            >
+              Open reminders
+            </Link>
+          }
+        />
         <Table>
           <THead>
             <tr>

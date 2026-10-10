@@ -35,7 +35,9 @@ describe("council district geometry", () => {
       "Staten Island": range(49, 51),
     };
     for (const [borough, ids] of Object.entries(expected)) {
-      const got = COUNCIL_DISTRICT_SHAPES.filter((d) => d.borough === borough).map((d) => d.district).sort((a, b) => a - b);
+      const got = COUNCIL_DISTRICT_SHAPES.filter((d) => d.borough === borough)
+        .map((d) => d.district)
+        .sort((a, b) => a - b);
       expect(got).toEqual(ids);
     }
   });

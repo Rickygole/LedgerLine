@@ -12,12 +12,15 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in to export data." }, { status: 401 });
-  if (user.role !== "finance_admin") return NextResponse.json({ error: "Only Finance administrators can export all data." }, { status: 403 });
+  if (user.role !== "finance_admin")
+    return NextResponse.json({ error: "Only Finance administrators can export all data." }, { status: 403 });
 
   const generatedAt = nowDate();
   const filename = `ledgerline-data-package-${todayInNewYork()}.zip`;
   const { catalog, rows } = await withClaims(user.id, async (tx) => {
-    const catalog = await tx.query<CatalogColumn>("SELECT table_name, column_name, data_type, is_nullable, ordinal FROM app.export_catalog()");
+    const catalog = await tx.query<CatalogColumn>(
+      "SELECT table_name, column_name, data_type, is_nullable, ordinal FROM app.export_catalog()",
+    );
     const rows: PackageRows = {};
     for (const table of new Set(catalog.map((c) => c.table_name))) {
       const result = await tx.query<{ row: Record<string, unknown> }>("SELECT app.export_rows($1) AS row", [table]);

@@ -26,25 +26,27 @@ export async function recordIncident(_previous: ActionState, formData: FormData)
   if (!parsed.success) return failure(firstIssue(parsed.error));
   try {
     const result = await withClaims(admin.id, async (tx) => {
-      const row = await tx.one<{ id: string }>("SELECT app.record_incident($1::timestamp AT TIME ZONE 'America/New_York', $2, $3, $4) AS id", [
-        parsed.data.detectedAt,
-        parsed.data.description,
-        parsed.data.affectedData,
-        parsed.data.severity,
-      ]);
+      const row = await tx.one<{ id: string }>(
+        "SELECT app.record_incident($1::timestamp AT TIME ZONE 'America/New_York', $2, $3, $4) AS id",
+        [parsed.data.detectedAt, parsed.data.description, parsed.data.affectedData, parsed.data.severity],
+      );
       return tx.one<{ reference: string; contacts: number; on_time: boolean }>(
         "SELECT reference, contacts_notified AS contacts, notified_at <= notify_due_at AS on_time FROM security_incident WHERE id = $1",
-        [row?.id]
+        [row?.id],
       );
     });
     await dispatchFor(admin.id);
     const late = result?.on_time ? "" : " The notification deadline had already passed when it was recorded.";
-    return success(`${result?.reference} recorded. ${result?.contacts} designated ${result?.contacts === 1 ? "contact was" : "contacts were"} notified through the outbox.${late}`);
+    return success(
+      `${result?.reference} recorded. ${result?.contacts} designated ${result?.contacts === 1 ? "contact was" : "contacts were"} notified through the outbox.${late}`,
+    );
   } catch (error) {
-    return actionFailure("record_incident_failed", error, { messages: {
-      "no designated contacts": "Add at least one active designated contact before recording an incident.",
-      "detection time is in the future": "The detection time cannot be in the future.",
-    } });
+    return actionFailure("record_incident_failed", error, {
+      messages: {
+        "no designated contacts": "Add at least one active designated contact before recording an incident.",
+        "detection time is in the future": "The detection time cannot be in the future.",
+      },
+    });
   } finally {
     revalidatePath("/finance/incidents");
     revalidatePath("/finance/outbox");
@@ -71,12 +73,24 @@ export async function recordRemediation(_previous: ActionState, formData: FormDa
   if (!parsed.success) return failure(firstIssue(parsed.error));
   try {
     await withClaims(admin.id, (tx) =>
-      tx.query("SELECT app.record_remediation($1, $2, $3, $4, $5)", [parsed.data.incidentId, parsed.data.rootCause, parsed.data.actions, parsed.data.prevention, parsed.data.completedOn || null])
+      tx.query("SELECT app.record_remediation($1, $2, $3, $4, $5)", [
+        parsed.data.incidentId,
+        parsed.data.rootCause,
+        parsed.data.actions,
+        parsed.data.prevention,
+        parsed.data.completedOn || null,
+      ]),
     );
     await dispatchFor(admin.id);
-    return success(parsed.data.completedOn ? "Remediation report saved and marked complete. The designated contacts were notified." : "Remediation report saved. The designated contacts were notified.");
+    return success(
+      parsed.data.completedOn
+        ? "Remediation report saved and marked complete. The designated contacts were notified."
+        : "Remediation report saved. The designated contacts were notified.",
+    );
   } catch (error) {
-    return actionFailure("record_remediation_failed", error, { messages: { "completed date must fall": "The completed date must be between the detection date and today." } });
+    return actionFailure("record_remediation_failed", error, {
+      messages: { "completed date must fall": "The completed date must be between the detection date and today." },
+    });
   } finally {
     revalidatePath(`/finance/incidents/${parsed.data.incidentId}`);
     revalidatePath("/finance/incidents");
@@ -87,7 +101,12 @@ export async function recordRemediation(_previous: ActionState, formData: FormDa
 const contactSchema = z.object({
   name: trimmed("a name", 120),
   title: trimmed("a title", 120),
-  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254, "Use 254 characters or fewer for the email address."),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter a valid email address.")
+    .max(254, "Use 254 characters or fewer for the email address."),
 });
 
 export async function addIncidentContact(_previous: ActionState, formData: FormData): Promise<ActionState> {
@@ -99,7 +118,9 @@ export async function addIncidentContact(_previous: ActionState, formData: FormD
   });
   if (!parsed.success) return failure(firstIssue(parsed.error));
   try {
-    await withClaims(admin.id, (tx) => tx.query("SELECT app.add_incident_contact($1, $2, $3)", [parsed.data.name, parsed.data.title, parsed.data.email]));
+    await withClaims(admin.id, (tx) =>
+      tx.query("SELECT app.add_incident_contact($1, $2, $3)", [parsed.data.name, parsed.data.title, parsed.data.email]),
+    );
     return success(`${parsed.data.name} will receive incident notices.`);
   } catch (error) {
     return actionFailure("add_incident_contact_failed", error);
@@ -117,7 +138,9 @@ export async function setIncidentContactActive(_previous: ActionState, formData:
     await withClaims(admin.id, (tx) => tx.query("SELECT app.set_incident_contact_active($1, $2)", [id, active]));
     return success(active ? "Contact is active." : "Contact is switched off.");
   } catch (error) {
-    return actionFailure("set_incident_contact_active_failed", error, { messages: { "at least one contact must stay active": "At least one contact must stay active." } });
+    return actionFailure("set_incident_contact_active_failed", error, {
+      messages: { "at least one contact must stay active": "At least one contact must stay active." },
+    });
   } finally {
     revalidatePath("/finance/incidents");
   }

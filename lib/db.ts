@@ -52,11 +52,16 @@ export async function withClaims<T>(sub: string, fn: (tx: Tx) => Promise<T>): Pr
   }
 }
 
-export async function anonymous<T extends QueryResultRow = QueryResultRow>(sql: string, params: unknown[] = []): Promise<T[]> {
+export async function anonymous<T extends QueryResultRow = QueryResultRow>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<T[]> {
   const result = await pool().query<T>(sql, params);
   return result.rows;
 }
 
 export function pgCode(error: unknown): string | undefined {
-  return typeof error === "object" && error !== null && "code" in error ? String((error as { code: unknown }).code) : undefined;
+  return typeof error === "object" && error !== null && "code" in error
+    ? String((error as { code: unknown }).code)
+    : undefined;
 }

@@ -20,7 +20,10 @@ export async function allowedWithin(key: string, minutes: number, limit: number)
 }
 
 export async function blocked(key: string, limit: number): Promise<boolean> {
-  const rows = await anonymous<{ blocked: boolean }>("SELECT app.attempts_blocked($1, 15, $2) AS blocked", [key, limit]);
+  const rows = await anonymous<{ blocked: boolean }>("SELECT app.attempts_blocked($1, 15, $2) AS blocked", [
+    key,
+    limit,
+  ]);
   return rows[0]?.blocked === true;
 }
 

@@ -50,6 +50,9 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Refusal ? error.message : "The upload could not start." }, { status: 400 });
+    return NextResponse.json(
+      { error: error instanceof Refusal ? error.message : "The upload could not start." },
+      { status: 400 },
+    );
   }
 }

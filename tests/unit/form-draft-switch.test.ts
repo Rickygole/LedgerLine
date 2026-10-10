@@ -22,7 +22,11 @@ function fakeTx(aiEnabled: boolean | null): Tx {
   } as unknown as Tx;
 }
 
-const paragraphs = ["Food Pantry Report", "1. How many households did you serve this quarter?", "2. Describe your outreach work."];
+const paragraphs = [
+  "Food Pantry Report",
+  "1. How many households did you serve this quarter?",
+  "2. Describe your outreach work.",
+];
 
 describe("[US-003] the AI switch covers form drafting", () => {
   beforeEach(() => callStructured.mockReset());

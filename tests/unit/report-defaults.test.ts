@@ -13,8 +13,12 @@ describe("[US-034][BR-024] organization details fill in where possible", () => {
 
   it("treats a blank answer as missing and keeps anything the organization already typed", async () => {
     const { withOrgDefaults } = await import("@/lib/report/data");
-    expect(withOrgDefaults({ org_legal_name: "   " }, "Legal Name Inc.", "00-1").org_legal_name).toBe("Legal Name Inc.");
-    expect(withOrgDefaults({ org_legal_name: "Typed Name" }, "Legal Name Inc.", "00-1").org_legal_name).toBe("Typed Name");
+    expect(withOrgDefaults({ org_legal_name: "   " }, "Legal Name Inc.", "00-1").org_legal_name).toBe(
+      "Legal Name Inc.",
+    );
+    expect(withOrgDefaults({ org_legal_name: "Typed Name" }, "Legal Name Inc.", "00-1").org_legal_name).toBe(
+      "Typed Name",
+    );
   });
 });
 
@@ -22,7 +26,11 @@ describe("[BR-013] work can be paused and resumed", () => {
   it("reopens the section that was edited last", async () => {
     const { resumeSectionFor } = await import("@/lib/report/data");
     const definition = buildDefinition("Resume", []);
-    const resume = resumeSectionFor(definition, { contact_name: "2026-07-19T10:00:00Z", accomplishments: "2026-07-19T10:37:00Z", participants_actual: "2026-07-19T10:20:00Z" });
+    const resume = resumeSectionFor(definition, {
+      contact_name: "2026-07-19T10:00:00Z",
+      accomplishments: "2026-07-19T10:37:00Z",
+      participants_actual: "2026-07-19T10:20:00Z",
+    });
     expect(resume).toBe("narrative");
   });
 

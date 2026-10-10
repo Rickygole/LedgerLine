@@ -33,7 +33,9 @@ export const PLACEHOLDERS = ["{contact}", "{organization}", "{initiative}", "{pe
 
 export function longDate(isoDate: string): string {
   const [y, m, d] = isoDate.slice(0, 10).split("-").map(Number);
-  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d)));
+  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(y, m - 1, d)),
+  );
 }
 
 export function renderSubject(template: string, period: { label: string; dueOn: string }): string {
@@ -76,7 +78,7 @@ export async function listRules(tx: Tx, periodId: string): Promise<RuleRow[]> {
             (SELECT count(*)::int FROM outbox o WHERE o.reminder_key LIKE r.id::text || ':%') AS sent,
             (SELECT max(o.created_at)::text FROM outbox o WHERE o.reminder_key LIKE r.id::text || ':%') AS last_sent
      FROM reminder_rule r WHERE r.period_id = $1 ORDER BY r.offset_days`,
-    [periodId]
+    [periodId],
   );
 }
 

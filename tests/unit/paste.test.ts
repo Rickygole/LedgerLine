@@ -3,7 +3,8 @@ import { parseBudgetPaste } from "@/lib/rules/paste";
 
 describe("[US-025] budget paste from Excel", () => {
   it("skips a header row and maps category, description and amount", () => {
-    const text = "Category\tDescription\tAmount\nPS\tProgram Director (0.5 FTE)\t$32,500.00\nOTPS\tCurriculum materials\t4,200";
+    const text =
+      "Category\tDescription\tAmount\nPS\tProgram Director (0.5 FTE)\t$32,500.00\nOTPS\tCurriculum materials\t4,200";
     const { rows, skipped } = parseBudgetPaste(text);
     expect(skipped).toEqual([]);
     expect(rows).toEqual([

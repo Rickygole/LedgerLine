@@ -27,7 +27,12 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Initiative" };
 
 const FORM_TONE = { published: "ok", draft: "neutral", superseded: "neutral" } as const;
-const SOURCE_LABEL: Record<string, string> = { seed: "Imported", manual: "Manual", ai_draft: "Imported from Word, AI draft", rule_draft: "Imported from Word" };
+const SOURCE_LABEL: Record<string, string> = {
+  seed: "Imported",
+  manual: "Manual",
+  ai_draft: "Imported from Word, AI draft",
+  rule_draft: "Imported from Word",
+};
 
 export default async function InitiativeDetail({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser(FINANCE_ROLES);
@@ -46,22 +51,46 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
   const draft = forms.find((f) => f.status === "draft");
   const admin = user.role === "finance_admin";
   const perDistrict = new Map<number, number>();
-  for (const f of funded) if (f.council_district) perDistrict.set(f.council_district, (perDistrict.get(f.council_district) ?? 0) + 1);
-  const fills = Object.fromEntries([...perDistrict.entries()].map(([d, n]) => [d, n >= 3 ? "#173962" : n === 2 ? "#2b64a8" : "#9db8dc"]));
+  for (const f of funded)
+    if (f.council_district) perDistrict.set(f.council_district, (perDistrict.get(f.council_district) ?? 0) + 1);
+  const fills = Object.fromEntries(
+    [...perDistrict.entries()].map(([d, n]) => [d, n >= 3 ? "#173962" : n === 2 ? "#2b64a8" : "#9db8dc"]),
+  );
   const districtList = [...perDistrict.keys()].sort((a, b) => a - b);
-  const mapCaption = districtList.length === 0 ? "No funded organizations have a Council district on file." : `Funded organizations are located in ${plural(districtList.length, "District", "Districts")} ${districtList.join(", ")}.`;
+  const mapCaption =
+    districtList.length === 0
+      ? "No funded organizations have a Council district on file."
+      : `Funded organizations are located in ${plural(districtList.length, "District", "Districts")} ${districtList.join(", ")}.`;
 
   return (
     <>
       <ProfileHeader
         title={initiative.name}
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives", href: "/finance/initiatives" }, { label: initiative.code }]}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          { label: "Initiatives", href: "/finance/initiatives" },
+          { label: initiative.code },
+        ]}
         meta={[
-          <span key="code" className="whitespace-nowrap font-mono text-[13px]">{initiative.code}</span>,
+          <span key="code" className="whitespace-nowrap font-mono text-[13px]">
+            {initiative.code}
+          </span>,
           <Badge key="category">{initiative.category}</Badge>,
-          <Badge key="status" tone={initiative.status === "active" ? "ok" : "neutral"} icon={initiative.status === "active" ? CheckCircle2 : undefined}>{initiative.status === "active" ? "Active" : "Retired"}</Badge>,
-          <span key="fy" className="whitespace-nowrap">{initiative.fiscal_year_id}</span>,
-          <span key="agency" className="whitespace-nowrap">{initiative.administering_agency ? `Administered by ${initiative.administering_agency}` : "No administering agency"}</span>,
+          <Badge
+            key="status"
+            tone={initiative.status === "active" ? "ok" : "neutral"}
+            icon={initiative.status === "active" ? CheckCircle2 : undefined}
+          >
+            {initiative.status === "active" ? "Active" : "Retired"}
+          </Badge>,
+          <span key="fy" className="whitespace-nowrap">
+            {initiative.fiscal_year_id}
+          </span>,
+          <span key="agency" className="whitespace-nowrap">
+            {initiative.administering_agency
+              ? `Administered by ${initiative.administering_agency}`
+              : "No administering agency"}
+          </span>,
           ...lineageMeta(lineage),
         ]}
         actions={<PrintButton label="Print" />}
@@ -71,7 +100,9 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <dl className="grid grid-cols-2 content-start gap-4 lg:border-l lg:border-line lg:pl-6">
             <div>
               <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
-              <dd className="num mt-1 text-lg font-bold text-ink">{formatCurrency(Number(initiative.total_funding), { cents: false })}</dd>
+              <dd className="num mt-1 text-lg font-bold text-ink">
+                {formatCurrency(Number(initiative.total_funding), { cents: false })}
+              </dd>
             </div>
             <div>
               <dt className="text-[13px] font-semibold text-muted">Organizations</dt>
@@ -80,14 +111,23 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           </dl>
           <figure>
             <p className="text-[13px] font-semibold text-muted">Where funded organizations are</p>
-            <MiniDistrictMap fills={fills} label={`Map of Council districts. ${mapCaption}`} className="mt-1 block h-auto w-[200px] max-w-full" />
-            <figcaption className="mt-1 text-[13px] leading-5 text-muted">{mapCaption} Darker means more organizations.</figcaption>
+            <MiniDistrictMap
+              fills={fills}
+              label={`Map of Council districts. ${mapCaption}`}
+              className="mt-1 block h-auto w-[200px] max-w-full"
+            />
+            <figcaption className="mt-1 text-[13px] leading-5 text-muted">
+              {mapCaption} Darker means more organizations.
+            </figcaption>
           </figure>
         </div>
       </ProfileHeader>
 
       <Card className="mb-6">
-        <CardHeader title="Funded organizations" description={`${funded.length} ${plural(funded.length, "organization receives", "organizations receive")} funding through this initiative.`} />
+        <CardHeader
+          title="Funded organizations"
+          description={`${funded.length} ${plural(funded.length, "organization receives", "organizations receive")} funding through this initiative.`}
+        />
         <Table density="compact">
           <THead>
             <tr>
@@ -107,14 +147,19 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
               funded.map((f) => (
                 <TR key={f.assignment_id}>
                   <TD className="min-w-[12rem]">
-                    <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`/finance/organizations/${f.org_id}`}
+                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {f.legal_name}
                     </Link>
                     <span className="block font-mono text-[13px] text-muted">{f.ein}</span>
                   </TD>
                   <TD>
                     {f.borough}
-                    {f.council_district ? <span className="block text-[13px] text-muted">District {f.council_district}</span> : null}
+                    {f.council_district ? (
+                      <span className="block text-[13px] text-muted">District {f.council_district}</span>
+                    ) : null}
                   </TD>
                   <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
                   <TD>
@@ -122,7 +167,11 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                   </TD>
                   <TD>{f.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
                   <TD>
-                    <ContractCell status={f.contract_status} number={f.contract_number} registeredOn={f.contract_registered_on} />
+                    <ContractCell
+                      status={f.contract_status}
+                      number={f.contract_number}
+                      registeredOn={f.contract_registered_on}
+                    />
                   </TD>
                   <TD>
                     <AwardPeriods periods={f.periods} />
@@ -141,17 +190,24 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             This initiative has no report form yet.
           </h2>
           <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">
-            Funded organizations cannot report until a form is published. Import the Word template the Council has used so far, or start from the standard questions every initiative shares.
+            Funded organizations cannot report until a form is published. Import the Word template the Council has used
+            so far, or start from the standard questions every initiative shares.
           </p>
           <div className="mt-4">
             {!admin ? (
               <p className="text-[15px] text-muted">A Finance administrator can build the form.</p>
             ) : draft ? (
               <div className="flex flex-wrap items-center gap-3">
-                <a href={`/finance/forms/${draft.id}?import=1`} className={buttonClass("primary", "md", "h-11 px-5 text-base")}>
+                <a
+                  href={`/finance/forms/${draft.id}?import=1`}
+                  className={buttonClass("primary", "md", "h-11 px-5 text-base")}
+                >
                   Import a Word template
                 </a>
-                <a href={`/finance/forms/${draft.id}`} className={buttonClass("secondary", "md", "h-11 px-5 text-base")}>
+                <a
+                  href={`/finance/forms/${draft.id}`}
+                  className={buttonClass("secondary", "md", "h-11 px-5 text-base")}
+                >
                   Continue the draft (version {draft.version})
                 </a>
               </div>
@@ -166,7 +222,11 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
         <CardHeader
           title="Report form"
           description="Each version is frozen once published. Edit a draft, then publish it to replace the current version."
-          actions={user.role === "finance_admin" && !hasDraft && hasSource ? <CreateDraftForm initiativeId={initiative.id} /> : null}
+          actions={
+            user.role === "finance_admin" && !hasDraft && hasSource ? (
+              <CreateDraftForm initiativeId={initiative.id} />
+            ) : null
+          }
         />
         <Table>
           <THead>
@@ -190,17 +250,32 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                 <TR key={f.id}>
                   <TD align="right">v{f.version}</TD>
                   <TD>
-                    <Badge tone={FORM_TONE[f.status]}>{f.status === "published" ? "Published" : f.status === "draft" ? "Draft" : "Superseded"}</Badge>
+                    <Badge tone={FORM_TONE[f.status]}>
+                      {f.status === "published" ? "Published" : f.status === "draft" ? "Draft" : "Superseded"}
+                    </Badge>
                   </TD>
                   <TD>{SOURCE_LABEL[f.source] ?? f.source}</TD>
                   <TD>
-                    {formatDateTime(f.published_at && new Date(f.published_at) < new Date(f.created_at) ? f.published_at : f.created_at)}
+                    {formatDateTime(
+                      f.published_at && new Date(f.published_at) < new Date(f.created_at)
+                        ? f.published_at
+                        : f.created_at,
+                    )}
                     {f.created_by_name ? <div className="text-xs text-muted">{f.created_by_name}</div> : null}
                   </TD>
                   <TD>{f.published_by_name ?? <span className="text-muted">Not published</span>}</TD>
-                  <TD>{f.published_at ? formatDateTime(f.published_at) : <span className="text-muted">Not published</span>}</TD>
                   <TD>
-                    <Link href={`/finance/forms/${f.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    {f.published_at ? (
+                      formatDateTime(f.published_at)
+                    ) : (
+                      <span className="text-muted">Not published</span>
+                    )}
+                  </TD>
+                  <TD>
+                    <Link
+                      href={`/finance/forms/${f.id}`}
+                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {f.status === "draft" ? "Edit" : "View"}
                       <span className="sr-only"> version {f.version}</span>
                     </Link>

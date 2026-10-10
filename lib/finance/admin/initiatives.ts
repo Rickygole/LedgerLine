@@ -47,13 +47,30 @@ export async function listInitiatives(tx: Tx, today: string, periodId: string, f
      GROUP BY i.id, fv.version, fv.status
      ORDER BY i.code
      LIMIT ${PAGE_SIZE} OFFSET $8`,
-    [today, periodId, filters.q, likePattern(filters.q), filters.category, filters.status, filters.agency, (filters.page - 1) * PAGE_SIZE, filters.form ?? ""]
+    [
+      today,
+      periodId,
+      filters.q,
+      likePattern(filters.q),
+      filters.category,
+      filters.status,
+      filters.agency,
+      (filters.page - 1) * PAGE_SIZE,
+      filters.form ?? "",
+    ],
   );
   return { rows, total: rows[0]?.full_count ?? 0 };
 }
 
 export async function categorySummary(tx: Tx, today: string, periodId: string) {
-  return tx.query<{ category: string; initiatives: number; funding: string; accepted: number; assignments: number; missing: number }>(
+  return tx.query<{
+    category: string;
+    initiatives: number;
+    funding: string;
+    accepted: number;
+    assignments: number;
+    missing: number;
+  }>(
     `WITH ${ASSIGNMENT_STATE},
      per_cat AS (
        SELECT i.category, count(*)::int AS initiatives, sum(i.total_funding) AS funding
@@ -70,18 +87,20 @@ export async function categorySummary(tx: Tx, today: string, periodId: string) {
      SELECT c.category, c.initiatives, c.funding, coalesce(a.accepted, 0) AS accepted, coalesce(a.assignments, 0) AS assignments, coalesce(a.missing, 0) AS missing
      FROM per_cat c LEFT JOIN per_assign a ON a.category = c.category
      ORDER BY c.category`,
-    [today, periodId]
+    [today, periodId],
   );
 }
 
 export async function listAgencies(tx: Tx) {
-  const rows = await tx.query<{ agency: string }>(`SELECT DISTINCT administering_agency AS agency FROM initiative WHERE administering_agency IS NOT NULL ORDER BY 1`);
+  const rows = await tx.query<{ agency: string }>(
+    `SELECT DISTINCT administering_agency AS agency FROM initiative WHERE administering_agency IS NOT NULL ORDER BY 1`,
+  );
   return rows.map((r) => r.agency);
 }
 
 export async function nextInitiativeCode(tx: Tx, fiscalYearId: string): Promise<string> {
   const row = await tx.one<{ next: number }>(
-    `SELECT coalesce(max(substring(code from '[0-9]+$')::int), 0) + 1 AS next FROM initiative WHERE code ~ '^CI-[0-9]{2}-[0-9]+$'`
+    `SELECT coalesce(max(substring(code from '[0-9]+$')::int), 0) + 1 AS next FROM initiative WHERE code ~ '^CI-[0-9]{2}-[0-9]+$'`,
   );
   return `CI-${fiscalYearId.replace(/\D/g, "")}-${String(row?.next ?? 1).padStart(3, "0")}`;
 }
@@ -136,7 +155,7 @@ type FormVersionRow = {
 export async function loadInitiative(tx: Tx, id: string) {
   const initiative = await tx.one<InitiativeDetail>(
     `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status, administering_agency FROM initiative WHERE id = $1`,
-    [id]
+    [id],
   );
   if (!initiative) return null;
   const funded = await tx.query<FundedOrg>(
@@ -148,7 +167,7 @@ export async function loadInitiative(tx: Tx, id: string) {
      JOIN organization o ON o.id = a.org_id
      WHERE a.initiative_id = $1
      ORDER BY o.legal_name`,
-    [id]
+    [id],
   );
   const forms = await tx.query<FormVersionRow>(
     `SELECT f.id, f.version, f.status, f.source, f.created_at, f.published_at, cu.full_name AS created_by_name, pu.full_name AS published_by_name
@@ -157,7 +176,7 @@ export async function loadInitiative(tx: Tx, id: string) {
      LEFT JOIN app_user pu ON pu.id = f.published_by
      WHERE f.initiative_id = $1
      ORDER BY f.version DESC`,
-    [id]
+    [id],
   );
   return { initiative, funded, forms };
 }
@@ -182,11 +201,42 @@ export type SetupStatus = {
 export async function setupStatus(tx: Tx, today: string): Promise<SetupStatus> {
   const fy = await tx.one<{ id: string; starts_on: string; ends_on: string }>(
     "SELECT id, starts_on::text, ends_on::text FROM fiscal_year WHERE starts_on <= $1::date AND ends_on >= $1::date ORDER BY starts_on DESC LIMIT 1",
-    [today]
+    [today],
   );
-  if (!fy) return { fiscalYear: null, previousYear: null, total: 0, carried: 0, carriedOn: null, created: 0, createdWithoutOrgs: 0, needForm: 0, firstNeedForm: null, noOrgs: 0, firstNoOrgs: null, awards: 0, funding: 0, midYear: null };
-  const prev = await tx.one<{ id: string }>("SELECT id FROM fiscal_year WHERE ends_on < $1::date ORDER BY ends_on DESC LIMIT 1", [fy.starts_on]);
-  const counts = await tx.one<{ total: number; carried: number; carried_on: string | null; created: number; created_no_orgs: number; need_form: number; first_need_form: string | null; no_orgs: number; first_no_orgs: string | null; awards: number; funding: string }>(
+  if (!fy)
+    return {
+      fiscalYear: null,
+      previousYear: null,
+      total: 0,
+      carried: 0,
+      carriedOn: null,
+      created: 0,
+      createdWithoutOrgs: 0,
+      needForm: 0,
+      firstNeedForm: null,
+      noOrgs: 0,
+      firstNoOrgs: null,
+      awards: 0,
+      funding: 0,
+      midYear: null,
+    };
+  const prev = await tx.one<{ id: string }>(
+    "SELECT id FROM fiscal_year WHERE ends_on < $1::date ORDER BY ends_on DESC LIMIT 1",
+    [fy.starts_on],
+  );
+  const counts = await tx.one<{
+    total: number;
+    carried: number;
+    carried_on: string | null;
+    created: number;
+    created_no_orgs: number;
+    need_form: number;
+    first_need_form: string | null;
+    no_orgs: number;
+    first_no_orgs: string | null;
+    awards: number;
+    funding: string;
+  }>(
     `WITH fyi AS (
        SELECT i.id, i.code, i.status,
               EXISTS (SELECT 1 FROM initiative_lineage l WHERE l.successor_id = i.id) AS carried,
@@ -207,11 +257,11 @@ export async function setupStatus(tx: Tx, today: string): Promise<SetupStatus> {
             coalesce(sum(awards), 0)::int AS awards,
             coalesce(sum(funding), 0)::text AS funding
      FROM fyi`,
-    [fy.id]
+    [fy.id],
   );
   const mid = await tx.one<{ id: string; ends_on: string; due_on: string }>(
     "SELECT id, ends_on::text, due_on::text FROM reporting_period WHERE fiscal_year_id = $1 ORDER BY due_on LIMIT 1",
-    [fy.id]
+    [fy.id],
   );
   return {
     fiscalYear: { id: fy.id, startsOn: fy.starts_on, endsOn: fy.ends_on },

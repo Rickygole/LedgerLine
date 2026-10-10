@@ -21,7 +21,10 @@ function isBlank(value: AnswerValue | undefined): boolean {
   return false;
 }
 
-export function isBlankRow(row: Record<string, string | number | null> | null | undefined, columns: Array<{ key: string }>): boolean {
+export function isBlankRow(
+  row: Record<string, string | number | null> | null | undefined,
+  columns: Array<{ key: string }>,
+): boolean {
   if (!row) return true;
   return columns.every((column) => {
     const cell = row[column.key];
@@ -86,9 +89,15 @@ function checkType(question: Question, value: AnswerValue): string | null {
     case "percent":
       return numericProblem(question.type, text, question.label);
     case "date":
-      return /^\d{4}-\d{2}-\d{2}$/.test(text) && !Number.isNaN(Date.parse(text)) && new Date(text).toISOString().startsWith(text) ? null : `${question.label} must be a date.`;
+      return /^\d{4}-\d{2}-\d{2}$/.test(text) &&
+        !Number.isNaN(Date.parse(text)) &&
+        new Date(text).toISOString().startsWith(text)
+        ? null
+        : `${question.label} must be a date.`;
     case "email":
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? null : `${question.label} must be an email address, like name@example.org.`;
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)
+        ? null
+        : `${question.label} must be an email address, like name@example.org.`;
     case "phone":
       return /^\d{10}$/.test(text.replace(/\D/g, "")) ? null : `${question.label} must be a 10-digit phone number.`;
     case "ein":
@@ -103,10 +112,16 @@ function checkType(question: Question, value: AnswerValue): string | null {
 function questionIssues(question: Question, answers: Answers): Issue[] {
   const issues: Issue[] = [];
   const value = answers[question.key];
-  const tableAnswered = question.type === "table" && Array.isArray(value) && value.some((row) => !isBlankRow(row, question.columns ?? []));
+  const tableAnswered =
+    question.type === "table" && Array.isArray(value) && value.some((row) => !isBlankRow(row, question.columns ?? []));
   if (isBlank(value) || (question.type === "table" && !tableAnswered)) {
     if (question.required) {
-      issues.push({ field: question.key, ruleId: RULES.required, severity: "block", message: requiredMessage(question) });
+      issues.push({
+        field: question.key,
+        ruleId: RULES.required,
+        severity: "block",
+        message: requiredMessage(question),
+      });
     }
     return issues;
   }
@@ -114,7 +129,12 @@ function questionIssues(question: Question, answers: Answers): Issue[] {
   if (question.type === "table") {
     const rows = Array.isArray(value) ? value : [];
     if (question.maxRows && rows.length > question.maxRows) {
-      issues.push({ field: question.key, ruleId: RULES.length, severity: "block", message: `${question.label} can have at most ${question.maxRows} rows.` });
+      issues.push({
+        field: question.key,
+        ruleId: RULES.length,
+        severity: "block",
+        message: `${question.label} can have at most ${question.maxRows} rows.`,
+      });
     }
     const columns = question.columns ?? [];
     rows.forEach((row, index) => {
@@ -143,13 +163,23 @@ function questionIssues(question: Question, answers: Answers): Issue[] {
   }
 
   if (question.type === "select" && question.options && !question.options.includes(String(value))) {
-    issues.push({ field: question.key, ruleId: RULES.options, severity: "block", message: `Choose one of the listed options for ${question.label}.` });
+    issues.push({
+      field: question.key,
+      ruleId: RULES.options,
+      severity: "block",
+      message: `Choose one of the listed options for ${question.label}.`,
+    });
     return issues;
   }
 
   const typeError = checkType(question, value as AnswerValue);
   if (typeError) {
-    issues.push({ field: question.key, ruleId: question.type === "ein" ? RULES.ein : RULES.type, severity: "block", message: typeError });
+    issues.push({
+      field: question.key,
+      ruleId: question.type === "ein" ? RULES.ein : RULES.type,
+      severity: "block",
+      message: typeError,
+    });
     return issues;
   }
 
@@ -162,12 +192,22 @@ function questionIssues(question: Question, answers: Answers): Issue[] {
     }
   }
   if (question.maxLength && text.length > question.maxLength) {
-    issues.push({ field: question.key, ruleId: RULES.length, severity: "block", message: `${question.label} must be ${question.maxLength} characters or fewer (now ${text.length}).` });
+    issues.push({
+      field: question.key,
+      ruleId: RULES.length,
+      severity: "block",
+      message: `${question.label} must be ${question.maxLength} characters or fewer (now ${text.length}).`,
+    });
   }
   if (question.maxWords) {
     const words = wordCount(text);
     if (words > question.maxWords) {
-      issues.push({ field: question.key, ruleId: RULES.length, severity: "block", message: `${question.label} must be ${question.maxWords} words or fewer (now ${words}).` });
+      issues.push({
+        field: question.key,
+        ruleId: RULES.length,
+        severity: "block",
+        message: `${question.label} must be ${question.maxWords} words or fewer (now ${words}).`,
+      });
     }
   }
   return issues;
@@ -193,21 +233,38 @@ function budgetIssues(definition: FormDefinition, lines: BudgetLine[], award: nu
   if (!definition.budget.enabled) return [];
   const issues: Issue[] = [];
   if (lines.length === 0) {
-    issues.push({ field: "budget", ruleId: RULES.required, severity: "block", message: "Add at least one budget line." });
+    issues.push({
+      field: "budget",
+      ruleId: RULES.required,
+      severity: "block",
+      message: "Add at least one budget line.",
+    });
     return issues;
   }
   if (lines.length > definition.budget.maxLines) {
-    issues.push({ field: "budget", ruleId: RULES.budgetLines, severity: "block", message: `The budget can have at most ${definition.budget.maxLines} lines. This budget has ${lines.length}.` });
+    issues.push({
+      field: "budget",
+      ruleId: RULES.budgetLines,
+      severity: "block",
+      message: `The budget can have at most ${definition.budget.maxLines} lines. This budget has ${lines.length}.`,
+    });
   }
   lines.forEach((line) => {
     if (line.description.trim() === "") {
-      issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.required, severity: "block", message: `Line ${line.position}: enter a description.` });
+      issues.push({
+        field: `budget.${line.rowId}`,
+        ruleId: RULES.required,
+        severity: "block",
+        message: `Line ${line.position}: enter a description.`,
+      });
     }
     const problem = amountBoundsProblem(line.amount, `Line ${line.position}: the amount`);
-    if (problem) issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.type, severity: "block", message: problem });
+    if (problem)
+      issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.type, severity: "block", message: problem });
     if (line.actual !== null && line.actual !== undefined) {
       const actualProblem = amountBoundsProblem(line.actual, `Line ${line.position}: actual spent`);
-      if (actualProblem) issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.type, severity: "block", message: actualProblem });
+      if (actualProblem)
+        issues.push({ field: `budget.${line.rowId}`, ruleId: RULES.type, severity: "block", message: actualProblem });
     }
   });
   if (definition.budget.mustEqualAward) {

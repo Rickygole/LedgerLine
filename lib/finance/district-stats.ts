@@ -20,7 +20,8 @@ export type DistrictStats = {
   totalMissing: number;
 };
 
-type Row = Pick<ReportRow, "bucket" | "fundingSource" | "sponsors" | "councilDistrict"> & Partial<Pick<ReportRow, "borough">>;
+type Row = Pick<ReportRow, "bucket" | "fundingSource" | "sponsors" | "councilDistrict"> &
+  Partial<Pick<ReportRow, "borough">>;
 
 const empty = (): Tally => ({ due: 0, missing: 0, waiting: 0, accepted: 0 });
 
@@ -41,7 +42,11 @@ export function sponsorDistricts(row: Pick<ReportRow, "fundingSource" | "sponsor
   return [...new Set(row.sponsors.map((s) => s.district))];
 }
 
-export function matchesDistrict(row: Pick<ReportRow, "fundingSource" | "sponsors" | "councilDistrict">, district: string, by: MapMode | ""): boolean {
+export function matchesDistrict(
+  row: Pick<ReportRow, "fundingSource" | "sponsors" | "councilDistrict">,
+  district: string,
+  by: MapMode | "",
+): boolean {
   if (by === "sponsor") return sponsorDistricts(row).some((d) => String(d) === district);
   return String(row.councilDistrict ?? "") === district;
 }
@@ -95,7 +100,12 @@ export function districtStats(rows: Row[], mode: MapMode, members: Map<number, s
 
   return {
     mode,
-    districts: DISTRICT_NUMBERS.map((district) => ({ district, member: members.get(district) ?? null, boroughs: boroughLabel(district), ...byDistrict.get(district)! })),
+    districts: DISTRICT_NUMBERS.map((district) => ({
+      district,
+      member: members.get(district) ?? null,
+      boroughs: boroughLabel(district),
+      ...byDistrict.get(district)!,
+    })),
     speaker,
     citywide,
     noDistrict,
@@ -118,7 +128,9 @@ export function binFor(missing: number, due: number): 0 | 1 | 2 | 3 | 4 {
 }
 
 export function byMostMissing(a: DistrictStat, b: DistrictStat): number {
-  return b.missing - a.missing || b.missing / Math.max(1, b.due) - a.missing / Math.max(1, a.due) || a.district - b.district;
+  return (
+    b.missing - a.missing || b.missing / Math.max(1, b.due) - a.missing / Math.max(1, a.due) || a.district - b.district
+  );
 }
 
 export function rankDistricts(stats: DistrictStat[], borough: string, limit = 6): DistrictStat[] {
@@ -129,6 +141,8 @@ export function rankDistricts(stats: DistrictStat[], borough: string, limit = 6)
 }
 
 export async function loadCouncilMembers(tx: Tx): Promise<Map<number, string>> {
-  const rows = await tx.query<{ district: number; full_name: string }>("SELECT district, full_name FROM council_member ORDER BY district");
+  const rows = await tx.query<{ district: number; full_name: string }>(
+    "SELECT district, full_name FROM council_member ORDER BY district",
+  );
   return new Map(rows.map((r) => [r.district, r.full_name]));
 }

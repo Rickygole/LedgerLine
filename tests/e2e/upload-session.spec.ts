@@ -18,7 +18,11 @@ test("[US-013] a signed-out session can no longer reach the upload endpoints", a
   const stale = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
 
   await page.goto("/portal");
-  await page.getByRole("group").filter({ has: page.getByLabel(/Account menu for/) }).locator("summary").click();
+  await page
+    .getByRole("group")
+    .filter({ has: page.getByLabel(/Account menu for/) })
+    .locator("summary")
+    .click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await page.waitForURL(/\/login/);
 
@@ -28,7 +32,15 @@ test("[US-013] a signed-out session can no longer reach the upload endpoints", a
 
   const token = await page.request.post("/api/upload", {
     headers: { cookie: stale, "content-type": "application/json" },
-    data: { type: "blob.generate-client-token", payload: { pathname: "x/y/z.pdf", clientPayload: "{}", multipart: false, callbackUrl: "http://localhost/api/upload" } },
+    data: {
+      type: "blob.generate-client-token",
+      payload: {
+        pathname: "x/y/z.pdf",
+        clientPayload: "{}",
+        multipart: false,
+        callbackUrl: "http://localhost/api/upload",
+      },
+    },
   });
   expect(token.status()).toBe(400);
   expect(["Sign in to upload files.", "The upload could not start."]).toContain((await token.json()).error);

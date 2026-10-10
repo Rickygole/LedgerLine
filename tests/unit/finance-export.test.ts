@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
-import { buildWorkbook, exportFilename, guardFormula, questionColumns, submissionsToCsv, workbookToBuffer, type ExportSubmission } from "@/lib/finance/review/export";
+import {
+  buildWorkbook,
+  exportFilename,
+  guardFormula,
+  questionColumns,
+  submissionsToCsv,
+  workbookToBuffer,
+  type ExportSubmission,
+} from "@/lib/finance/review/export";
 
 const sample = (over: Partial<ExportSubmission> = {}): ExportSubmission => ({
   referenceNo: "LL-26YE-00001",
@@ -21,12 +29,22 @@ const sample = (over: Partial<ExportSubmission> = {}): ExportSubmission => ({
   contractStatus: "Registered",
   contractNumber: "DYCD-26-04218",
   contractRegisteredOn: "2025-10-14",
-  answers: { participants_actual: "120", accomplishments: "=HYPERLINK(\"http://x\")", youth_breakdown: [{ age_group: "Under 10", count: 5 }] },
+  answers: {
+    participants_actual: "120",
+    accomplishments: '=HYPERLINK("http://x")',
+    youth_breakdown: [{ age_group: "Under 10", count: 5 }],
+  },
   budget: [{ position: 1, category: "PS", description: "Coordinator", amount: 40000 }],
   ...over,
 });
 
-const meta = { periodLabel: "FY26 Year-End", filters: ["borough = Bronx"], generatedOn: "2026-10-14", numericKeys: new Set(["participants_actual"]), rowCount: 1 };
+const meta = {
+  periodLabel: "FY26 Year-End",
+  filters: ["borough = Bronx"],
+  generatedOn: "2026-10-14",
+  numericKeys: new Set(["participants_actual"]),
+  rowCount: 1,
+};
 
 describe("formula injection guard", () => {
   it("prefixes text that starts with a formula character", () => {
@@ -61,7 +79,14 @@ describe("workbook", () => {
 
   it("[US-046] carries the award fields: funding source, Council Member, agency and contract", () => {
     const sheet = book.Sheets["Submissions"];
-    expect([sheet["M1"].v, sheet["N1"].v, sheet["O1"].v, sheet["P1"].v, sheet["Q1"].v, sheet["R1"].v]).toEqual(["funding_source", "council_members", "agency", "contract_status", "contract_number", "contract_registered_on"]);
+    expect([sheet["M1"].v, sheet["N1"].v, sheet["O1"].v, sheet["P1"].v, sheet["Q1"].v, sheet["R1"].v]).toEqual([
+      "funding_source",
+      "council_members",
+      "agency",
+      "contract_status",
+      "contract_number",
+      "contract_registered_on",
+    ]);
     expect(sheet["N2"].v).toBe("Delia Cordero (District 8)");
     expect(sheet["Q2"].v).toBe("DYCD-26-04218");
   });
@@ -91,7 +116,9 @@ describe("workbook", () => {
     expect(readme).toContain("Exported from LedgerLine.");
     expect(readme).toContain("borough = Bronx");
     const budget = XLSX.utils.sheet_to_json<Record<string, unknown>>(parsed.Sheets["Budget lines"]);
-    expect(budget).toEqual([{ reference_no: "LL-26YE-00001", position: 1, category: "PS", description: "Coordinator", amount: 40000 }]);
+    expect(budget).toEqual([
+      { reference_no: "LL-26YE-00001", position: 1, category: "PS", description: "Coordinator", amount: 40000 },
+    ]);
   });
 
   it("[US-047] builds a CSV of the Submissions sheet only", () => {

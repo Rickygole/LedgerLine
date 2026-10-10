@@ -12,8 +12,18 @@ import { plural } from "@/lib/format";
 import type { ActionState } from "@/lib/actions";
 
 function Status({ state }: { state: ActionState }) {
-  if (state?.error) return <p role="alert" className="text-sm font-semibold text-bad">{state.error}</p>;
-  if (state?.ok) return <p role="status" className="text-sm font-semibold text-ok">{state.ok}</p>;
+  if (state?.error)
+    return (
+      <p role="alert" className="text-sm font-semibold text-bad">
+        {state.error}
+      </p>
+    );
+  if (state?.ok)
+    return (
+      <p role="status" className="text-sm font-semibold text-ok">
+        {state.ok}
+      </p>
+    );
   return null;
 }
 
@@ -29,13 +39,28 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
   }, [state]);
   return (
     <form action={action} className="space-y-4" noValidate>
-      <ErrorSummary ref={summaryRef} title={summary.length > 0 ? problemsTitle(summary.length, "you save") : "The rule was not saved"} items={summary.length > 0 ? summary : state?.error ? [{ message: state.error }] : []} className="mb-0" />
+      <ErrorSummary
+        ref={summaryRef}
+        title={summary.length > 0 ? problemsTitle(summary.length, "you save") : "The rule was not saved"}
+        items={summary.length > 0 ? summary : state?.error ? [{ message: state.error }] : []}
+        className="mb-0"
+      />
       <input type="hidden" name="period" value={period} />
       {rule ? <input type="hidden" name="id" value={rule.id} /> : null}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="rule-days">Days</Label>
-          <Input id="rule-days" aria-required="true" name="days" type="number" min={0} max={365} defaultValue={days} aria-invalid={Boolean(errors.days)} aria-describedby={errors.days ? "rule-days-error" : undefined} />
+          <Input
+            id="rule-days"
+            aria-required="true"
+            name="days"
+            type="number"
+            min={0}
+            max={365}
+            defaultValue={days}
+            aria-invalid={Boolean(errors.days)}
+            aria-describedby={errors.days ? "rule-days-error" : undefined}
+          />
           <FieldError id="rule-days-error">{errors.days}</FieldError>
         </div>
         <div>
@@ -49,17 +74,37 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
       </div>
       <div>
         <Label htmlFor="rule-subject">Subject</Label>
-        <Input id="rule-subject" aria-required="true" name="subject" defaultValue={rule?.template_subject ?? ""} aria-invalid={Boolean(errors.subject)} aria-describedby={errors.subject ? "rule-subject-error" : undefined} />
+        <Input
+          id="rule-subject"
+          aria-required="true"
+          name="subject"
+          defaultValue={rule?.template_subject ?? ""}
+          aria-invalid={Boolean(errors.subject)}
+          aria-describedby={errors.subject ? "rule-subject-error" : undefined}
+        />
         <FieldError id="rule-subject-error">{errors.subject}</FieldError>
       </div>
       <div>
         <Label htmlFor="rule-body">Message</Label>
         <Hint id="rule-body-hint">Placeholders you can use: {PLACEHOLDERS.join(", ")}.</Hint>
-        <Textarea id="rule-body" aria-required="true" name="body" rows={7} defaultValue={rule?.template_body ?? ""} aria-invalid={Boolean(errors.body)} aria-describedby={errors.body ? "rule-body-error rule-body-hint" : "rule-body-hint"} />
+        <Textarea
+          id="rule-body"
+          aria-required="true"
+          name="body"
+          rows={7}
+          defaultValue={rule?.template_body ?? ""}
+          aria-invalid={Boolean(errors.body)}
+          aria-describedby={errors.body ? "rule-body-error rule-body-hint" : "rule-body-hint"}
+        />
         <FieldError id="rule-body-error">{errors.body}</FieldError>
       </div>
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="active" defaultChecked={rule?.active ?? true} className="h-4 w-4 rounded border-line" />
+        <input
+          type="checkbox"
+          name="active"
+          defaultChecked={rule?.active ?? true}
+          className="h-4 w-4 rounded border-line"
+        />
         Rule is on
       </label>
       <div className="flex flex-wrap items-center gap-3">
@@ -68,7 +113,10 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
           {pending ? "Saving" : rule ? "Save rule" : "Add rule"}
         </Button>
         {cancelHref ? (
-          <Link href={cancelHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+          <Link
+            href={cancelHref}
+            className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+          >
             Cancel
           </Link>
         ) : null}
@@ -82,7 +130,10 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
   const [deleteState, remove, deleting] = useActionState<ActionState, FormData>(deleteRule, undefined);
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Link href={editHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+      <Link
+        href={editHref}
+        className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+      >
         Edit
       </Link>
       <form action={toggle}>
@@ -94,7 +145,13 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
       </form>
       <form action={remove}>
         <input type="hidden" name="id" value={rule.id} />
-        <Button type="submit" variant="ghost" size="sm" disabled={deleting} aria-label={`Delete the rule for ${rule.offset_days} days`}>
+        <Button
+          type="submit"
+          variant="ghost"
+          size="sm"
+          disabled={deleting}
+          aria-label={`Delete the rule for ${rule.offset_days} days`}
+        >
           Delete
         </Button>
       </form>
@@ -103,7 +160,23 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
   );
 }
 
-export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs }: { period: string; date: string; dateLabel: string; today: string; count: number; fresh: number; orgs: number }) {
+export function SendNowForm({
+  period,
+  date,
+  dateLabel,
+  today,
+  count,
+  fresh,
+  orgs,
+}: {
+  period: string;
+  date: string;
+  dateLabel: string;
+  today: string;
+  count: number;
+  fresh: number;
+  orgs: number;
+}) {
   const isToday = date === today;
   const [state, action, pending] = useActionState<ActionState, FormData>(sendNow, undefined);
   const [confirming, setConfirming] = useState(false);
@@ -115,10 +188,17 @@ export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs
       <input type="hidden" name="period" value={period} />
       <input type="hidden" name="date" value={date} />
       {confirming ? (
-        <div role="alertdialog" aria-label="Confirm adding reminders to the outbox" className="flex w-full flex-wrap items-center gap-3 rounded-md border border-line bg-surface px-3 py-2">
-          <p className="text-sm font-semibold text-ink">{sendNowSummary(orgs, fresh, dateLabel)} Add them to the outbox?</p>
+        <div
+          role="alertdialog"
+          aria-label="Confirm adding reminders to the outbox"
+          className="flex w-full flex-wrap items-center gap-3 rounded-md border border-line bg-surface px-3 py-2"
+        >
+          <p className="text-sm font-semibold text-ink">
+            {sendNowSummary(orgs, fresh, dateLabel)} Add them to the outbox?
+          </p>
           <Button type="submit" disabled={pending}>
-            <Send className="h-4 w-4" aria-hidden="true" /> {pending ? "Adding" : `Yes, add for ${orgs} ${plural(orgs, "organization", "organizations")}`}
+            <Send className="h-4 w-4" aria-hidden="true" />{" "}
+            {pending ? "Adding" : `Yes, add for ${orgs} ${plural(orgs, "organization", "organizations")}`}
           </Button>
           <Button type="button" variant="secondary" disabled={pending} onClick={() => setConfirming(false)}>
             Cancel
@@ -131,7 +211,9 @@ export function SendNowForm({ period, date, dateLabel, today, count, fresh, orgs
       )}
       <span className="text-sm text-muted">
         <Mail className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-        {isToday ? `${fresh} of ${count} will be added to the outbox` : "Reminders can be added to the outbox for today only. This is a preview of another date."}
+        {isToday
+          ? `${fresh} of ${count} will be added to the outbox`
+          : "Reminders can be added to the outbox for today only. This is a preview of another date."}
       </span>
       <Status state={state} />
     </form>

@@ -17,7 +17,7 @@ function sortKeys(value: unknown): unknown {
     return Object.fromEntries(
       Object.keys(value as Record<string, unknown>)
         .sort()
-        .map((key) => [key, sortKeys((value as Record<string, unknown>)[key])])
+        .map((key) => [key, sortKeys((value as Record<string, unknown>)[key])]),
     );
   }
   return value;

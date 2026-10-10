@@ -27,7 +27,14 @@ export function reportIssues(input: ReportIssueInput): Issue[] {
     }
   }
   if (input.definition.budget.enabled) {
-    issues.push(...spendIssues({ lines: input.budget, award: input.awardAmount, answers: input.answers, phase: input.phase ?? "submit" }));
+    issues.push(
+      ...spendIssues({
+        lines: input.budget,
+        award: input.awardAmount,
+        answers: input.answers,
+        phase: input.phase ?? "submit",
+      }),
+    );
   }
   issues.push(...rangeIssues({ definition: input.definition, answers: input.answers, period: input.period }));
   return issues;

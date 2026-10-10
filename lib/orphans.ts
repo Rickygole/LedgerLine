@@ -10,7 +10,9 @@ export async function sweepOrphanFiles(tx: Tx, now: Date = new Date()): Promise<
   let deleted = 0;
   for (let i = 0; i < old.length; i += 200) {
     const batch = old.slice(i, i + 200);
-    const rows = await tx.query<{ path: string }>("SELECT path FROM attachment WHERE path = ANY($1::text[])", [batch.map((file) => file.pathname)]);
+    const rows = await tx.query<{ path: string }>("SELECT path FROM attachment WHERE path = ANY($1::text[])", [
+      batch.map((file) => file.pathname),
+    ]);
     const kept = new Set(rows.map((row) => row.path));
     for (const file of batch) {
       if (kept.has(file.pathname)) continue;

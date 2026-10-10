@@ -8,11 +8,36 @@ import { REPORT_BOROUGHS } from "@/lib/domain";
 import { FLAG_LABEL, FLAG_ORDER } from "@/lib/finance/review/filters";
 import type { Filters, PeriodInfo } from "@/lib/finance/review/types";
 
-type Field = "q" | "period" | "borough" | "district" | "member" | "initiative" | "category" | "funding" | "contract" | "agency" | "flag";
+type Field =
+  | "q"
+  | "period"
+  | "borough"
+  | "district"
+  | "member"
+  | "initiative"
+  | "category"
+  | "funding"
+  | "contract"
+  | "agency"
+  | "flag";
 
 const control = "block h-10 w-full rounded-sm border border-field bg-white px-3 text-base text-ink sm:text-[15px]";
 
-function Select({ id, name, label, value, children, onChange }: { id: string; name: string; label: string; value: string; children: React.ReactNode; onChange: () => void }) {
+function Select({
+  id,
+  name,
+  label,
+  value,
+  children,
+  onChange,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  children: React.ReactNode;
+  onChange: () => void;
+}) {
   return (
     <div className="min-w-0">
       <label htmlFor={id} className="mb-1 block text-sm font-semibold text-ink">
@@ -57,19 +82,30 @@ export function SubmissionFilters({
   const moreCount = more.filter(has).length;
   const top = (["q", "period", "borough", "district", "member"] as Field[]).filter(has).length;
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   return (
-    <Form ref={form} action={action} role="search" aria-label="Filter reports" className="mb-4 rounded border border-line bg-white p-4">
+    <Form
+      ref={form}
+      action={action}
+      role="search"
+      aria-label="Filter reports"
+      className="mb-4 rounded border border-line bg-white p-4"
+    >
       {Object.entries(keep)
         .filter(([, v]) => v)
         .map(([k, v]) => (
           <input key={k} type="hidden" name={k} value={v} />
         ))}
       {filters.by && filters.district ? <input type="hidden" name="by" value={filters.by} /> : null}
-      <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1.2fr)_minmax(13.75rem,1.2fr)]" : top === 4 ? "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)]"}`}>
+      <div
+        className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1.2fr)_minmax(13.75rem,1.2fr)]" : top === 4 ? "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)]"}`}
+      >
         {has("q") ? (
           <div className="min-w-0 sm:col-span-2 lg:col-span-1">
             <label htmlFor="f-q" className="mb-1 block text-sm font-semibold text-ink">
@@ -146,7 +182,14 @@ export function SubmissionFilters({
                   <label htmlFor="f-initiative" className="mb-1 block text-sm font-semibold text-ink">
                     Initiative
                   </label>
-                  <input id="f-initiative" name="initiative" defaultValue={filters.initiative} placeholder="Name or code" className={control} onBlur={(e) => e.currentTarget.value !== filters.initiative && submit()} />
+                  <input
+                    id="f-initiative"
+                    name="initiative"
+                    defaultValue={filters.initiative}
+                    placeholder="Name or code"
+                    className={control}
+                    onBlur={(e) => e.currentTarget.value !== filters.initiative && submit()}
+                  />
                 </div>
               ) : null}
               {has("category") ? (
@@ -170,7 +213,13 @@ export function SubmissionFilters({
                 </Select>
               ) : null}
               {has("contract") ? (
-                <Select id="f-contract" name="contract" label="Contract status" value={filters.contract} onChange={submit}>
+                <Select
+                  id="f-contract"
+                  name="contract"
+                  label="Contract status"
+                  value={filters.contract}
+                  onChange={submit}
+                >
                   <option value="">All contract statuses</option>
                   {CONTRACT_STATUSES.map((c) => (
                     <option key={c.value} value={c.value}>
@@ -180,7 +229,13 @@ export function SubmissionFilters({
                 </Select>
               ) : null}
               {has("agency") ? (
-                <Select id="f-agency" name="agency" label="Administering agency" value={filters.agency} onChange={submit}>
+                <Select
+                  id="f-agency"
+                  name="agency"
+                  label="Administering agency"
+                  value={filters.agency}
+                  onChange={submit}
+                >
                   <option value="">All agencies</option>
                   {agencies.map((a) => (
                     <option key={a} value={a}>
@@ -203,11 +258,17 @@ export function SubmissionFilters({
             </div>
           </details>
         ) : null}
-        <button type="submit" className="sr-only focus:not-sr-only focus:text-sm focus:font-semibold focus:text-link focus:underline">
+        <button
+          type="submit"
+          className="sr-only focus:not-sr-only focus:text-sm focus:font-semibold focus:text-link focus:underline"
+        >
           Apply filters
         </button>
         {active ? (
-          <Link href={clearHref} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+          <Link
+            href={clearHref}
+            className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+          >
             Clear all
           </Link>
         ) : null}

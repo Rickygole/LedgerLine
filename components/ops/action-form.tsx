@@ -35,7 +35,11 @@ export function ActionForm({
     if (state?.ok && resetOnSuccess) ref.current?.reset();
   }, [state, resetOnSuccess]);
   return (
-    <form ref={ref} action={formAction} className={className ?? (inline ? "flex flex-wrap items-end gap-3" : "space-y-4")}>
+    <form
+      ref={ref}
+      action={formAction}
+      className={className ?? (inline ? "flex flex-wrap items-end gap-3" : "space-y-4")}
+    >
       {Object.entries(hidden ?? {}).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}

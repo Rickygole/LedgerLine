@@ -10,5 +10,12 @@ export const metadata: Metadata = { title: "Get help" };
 export default async function PortalHelp({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser(["cbo_submitter"]);
   const params = await searchParams;
-  return <HelpPage user={user} home={{ label: "My reports", href: "/portal" }} base="/portal/help" selected={one(params, "request")} />;
+  return (
+    <HelpPage
+      user={user}
+      home={{ label: "My reports", href: "/portal" }}
+      base="/portal/help"
+      selected={one(params, "request")}
+    />
+  );
 }

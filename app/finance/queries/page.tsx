@@ -5,7 +5,17 @@ import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
-import { cleanParams, countMatches, describe, enteredParams, exportHref, listSaved, queryOptions, resultsHref, validateParams } from "@/lib/lifecycle/queries";
+import {
+  cleanParams,
+  countMatches,
+  describe,
+  enteredParams,
+  exportHref,
+  listSaved,
+  queryOptions,
+  resultsHref,
+  validateParams,
+} from "@/lib/lifecycle/queries";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
@@ -38,25 +48,49 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
         description="Saved queries are private to you."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Saved queries" }]}
       />
-      {one(raw, "saved") === "1" ? <p role="status" className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">Query saved.</p> : null}
+      {one(raw, "saved") === "1" ? (
+        <p
+          role="status"
+          className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok"
+        >
+          Query saved.
+        </p>
+      ) : null}
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
           <Card className="lg:col-span-8">
             <CardHeader title="Query builder" />
             <CardBody>
               {problems.length > 0 ? (
-                <p role="alert" className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm font-semibold text-bad">
-                  {problems.length === 1 ? "One filter is not valid and was ignored." : `${problems.length} filters are not valid and were ignored.`} Fix the marked fields to see the count.
+                <p
+                  role="alert"
+                  className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm font-semibold text-bad"
+                >
+                  {problems.length === 1
+                    ? "One filter is not valid and was ignored."
+                    : `${problems.length} filters are not valid and were ignored.`}{" "}
+                  Fix the marked fields to see the count.
                 </p>
               ) : null}
-              <QueryBuilder params={entered} errors={errors} periods={options.periods} categories={options.categories} initiatives={options.initiatives} members={options.members} />
+              <QueryBuilder
+                params={entered}
+                errors={errors}
+                periods={options.periods}
+                categories={options.categories}
+                initiatives={options.initiatives}
+                members={options.members}
+              />
             </CardBody>
           </Card>
           <Card className="border-l-[3px] border-l-navy-600 lg:sticky lg:top-4 lg:col-span-4">
             <CardBody className="space-y-4">
               <div>
                 <p className="text-[13px] font-semibold text-muted">Matching reports</p>
-                <p className="num mt-1 text-[28px] font-bold leading-8 text-ink" aria-live="polite" data-testid="match-count">
+                <p
+                  className="num mt-1 text-[28px] font-bold leading-8 text-ink"
+                  aria-live="polite"
+                  data-testid="match-count"
+                >
                   {count ?? "None"}
                 </p>
               </div>
@@ -64,9 +98,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                 <p className="mb-1.5 text-xs text-muted">Criteria</p>
                 <div className="flex flex-wrap gap-1.5">
                   {lines.map((line) => (
-                    <Badge key={line}>
-                      {line}
-                    </Badge>
+                    <Badge key={line}>{line}</Badge>
                   ))}
                 </div>
               </div>
@@ -114,7 +146,10 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                           <ButtonLink href={resultsHref(p)} variant="secondary" size="sm">
                             <Play className="h-3.5 w-3.5" aria-hidden="true" /> Run
                           </ButtonLink>
-                          <Link href={`/finance/queries?${new URLSearchParams(p as Record<string, string>).toString()}`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                          <Link
+                            href={`/finance/queries?${new URLSearchParams(p as Record<string, string>).toString()}`}
+                            className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                          >
                             Edit
                           </Link>
                           <form action={deleteQuery}>

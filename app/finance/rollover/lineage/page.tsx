@@ -36,7 +36,11 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
       <PageHeader
         title="Initiative lineage"
         description="How each initiative continues from one fiscal year to the next. Renamed and combined initiatives keep a link to their history."
-        crumbs={[{ label: "Dashboard", href: "/finance" }, ...(user.role === "finance_admin" ? [{ label: "Annual rollover", href: "/finance/rollover" }] : []), { label: "Lineage" }]}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          ...(user.role === "finance_admin" ? [{ label: "Annual rollover", href: "/finance/rollover" }] : []),
+          { label: "Lineage" },
+        ]}
       />
       <Card>
         <FilterBar action={base} clearHref={base} applied={[kind, year].filter(Boolean).length}>
@@ -75,12 +79,19 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
           </THead>
           <tbody>
             {data.rows.length === 0 ? (
-              <EmptyRow colSpan={4}>{years.length === 0 ? "No rollover has been run yet. Lineage appears here after the first one." : "No lineage matches these filters."}</EmptyRow>
+              <EmptyRow colSpan={4}>
+                {years.length === 0
+                  ? "No rollover has been run yet. Lineage appears here after the first one."
+                  : "No lineage matches these filters."}
+              </EmptyRow>
             ) : (
               data.rows.map((row) => (
                 <TR key={row.id}>
                   <TD>
-                    <Link href={`/finance/initiatives/${row.predecessor_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`/finance/initiatives/${row.predecessor_id}`}
+                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {row.predecessor_name}
                     </Link>
                     <div className="text-xs text-muted">
@@ -95,7 +106,10 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
                   <TD>
                     {row.successor_id ? (
                       <>
-                        <Link href={`/finance/initiatives/${row.successor_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                        <Link
+                          href={`/finance/initiatives/${row.successor_id}`}
+                          className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                        >
                           {row.successor_name}
                         </Link>
                         <div className="text-xs text-muted">

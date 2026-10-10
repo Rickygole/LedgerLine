@@ -20,7 +20,15 @@ export const FLAG_LABEL: Record<string, string> = {
   manual: "Manual flags",
 };
 
-export const FLAG_ORDER = ["unbalanced", "incomplete", "missing", "validation", "zero_outcomes", "low_outcomes", "manual"] as const;
+export const FLAG_ORDER = [
+  "unbalanced",
+  "incomplete",
+  "missing",
+  "validation",
+  "zero_outcomes",
+  "low_outcomes",
+  "manual",
+] as const;
 
 type Raw = Record<string, string | string[] | undefined>;
 
@@ -39,7 +47,10 @@ export function parseFilters(raw: Raw, periods: PeriodInfo[]): Filters {
     initiative: one(raw, "initiative").slice(0, 120),
     category: one(raw, "category").slice(0, 80),
     borough: one(raw, "borough").slice(0, 40),
-    district: /^\d{1,2}$/.test(one(raw, "district")) && Number(one(raw, "district")) >= 1 && Number(one(raw, "district")) <= 51 ? String(Number(one(raw, "district"))) : "",
+    district:
+      /^\d{1,2}$/.test(one(raw, "district")) && Number(one(raw, "district")) >= 1 && Number(one(raw, "district")) <= 51
+        ? String(Number(one(raw, "district")))
+        : "",
     by: one(raw, "by") === "sponsor" ? "sponsor" : one(raw, "by") === "location" ? "location" : "",
     orgType: ["cbo", "agency"].includes(one(raw, "org_type")) ? one(raw, "org_type") : "",
     awardMin: /^\d{1,10}(\.\d{1,2})?$/.test(one(raw, "award_min")) ? one(raw, "award_min") : "",
@@ -71,8 +82,30 @@ export function withoutEmptyParams(raw: Raw): string | null {
 
 export function filtersToParams(filters: Partial<Filters>, include: { page?: boolean } = {}): URLSearchParams {
   const params = new URLSearchParams();
-  const keys: (keyof Filters)[] = ["q", "initiative", "category", "borough", "district", "by", "member", "funding", "contract", "agency", "orgType", "awardMin", "awardMax", "period", "bucket", "status", "flag"];
-  const names: Partial<Record<keyof Filters, string>> = { orgType: "org_type", awardMin: "award_min", awardMax: "award_max" };
+  const keys: (keyof Filters)[] = [
+    "q",
+    "initiative",
+    "category",
+    "borough",
+    "district",
+    "by",
+    "member",
+    "funding",
+    "contract",
+    "agency",
+    "orgType",
+    "awardMin",
+    "awardMax",
+    "period",
+    "bucket",
+    "status",
+    "flag",
+  ];
+  const names: Partial<Record<keyof Filters, string>> = {
+    orgType: "org_type",
+    awardMin: "award_min",
+    awardMax: "award_max",
+  };
   for (const key of keys) {
     const value = filters[key];
     if (typeof value === "string" && value !== "") params.set(names[key] ?? key, value);
@@ -81,12 +114,33 @@ export function filtersToParams(filters: Partial<Filters>, include: { page?: boo
   return params;
 }
 
-export function hrefWith(base: string, filters: Partial<Filters>, changes: Partial<Filters>, include: { page?: boolean } = {}): string {
+export function hrefWith(
+  base: string,
+  filters: Partial<Filters>,
+  changes: Partial<Filters>,
+  include: { page?: boolean } = {},
+): string {
   const params = filtersToParams({ ...filters, ...changes }, include);
   const query = params.toString();
   return query ? `${base}?${query}` : base;
 }
 
 export function activeFilterCount(filters: Filters): number {
-  return [filters.q, filters.initiative, filters.category, filters.borough, filters.district, filters.member, filters.funding, filters.contract, filters.agency, filters.orgType, filters.awardMin, filters.awardMax, filters.bucket, filters.status, filters.flag].filter((v) => v !== "").length;
+  return [
+    filters.q,
+    filters.initiative,
+    filters.category,
+    filters.borough,
+    filters.district,
+    filters.member,
+    filters.funding,
+    filters.contract,
+    filters.agency,
+    filters.orgType,
+    filters.awardMin,
+    filters.awardMax,
+    filters.bucket,
+    filters.status,
+    filters.flag,
+  ].filter((v) => v !== "").length;
 }

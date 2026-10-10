@@ -47,14 +47,19 @@ export async function recordUatSession(_previous: ActionState, formData: FormDat
         parsed.data.result,
         parsed.data.notes || null,
         JSON.stringify(defects),
-      ])
+      ]),
     );
-    return success(`Session recorded as ${parsed.data.result}${defects.length ? ` with ${defects.length} ${plural(defects.length, "defect", "defects")}` : ""}.`);
+    return success(
+      `Session recorded as ${parsed.data.result}${defects.length ? ` with ${defects.length} ${plural(defects.length, "defect", "defects")}` : ""}.`,
+    );
   } catch (error) {
-    return actionFailure("record_uat_session_failed", error, { messages: {
-      "a passed session cannot list defects": "A passed session cannot list defects. Choose failed or blocked, or remove the defects.",
-      "session date is in the future": "The session date cannot be in the future.",
-    } });
+    return actionFailure("record_uat_session_failed", error, {
+      messages: {
+        "a passed session cannot list defects":
+          "A passed session cannot list defects. Choose failed or blocked, or remove the defects.",
+        "session date is in the future": "The session date cannot be in the future.",
+      },
+    });
   } finally {
     revalidatePath("/finance/readiness");
   }
@@ -70,7 +75,9 @@ export async function fixUatDefect(_previous: ActionState, formData: FormData): 
     await withClaims(admin.id, (tx) => tx.query("SELECT app.fix_uat_defect($1, $2)", [id, on.data]));
     return success("Defect marked fixed.");
   } catch (error) {
-    return actionFailure("fix_uat_defect_failed", error, { messages: { "fixed date must fall": "The fixed date must be between the session and today." } });
+    return actionFailure("fix_uat_defect_failed", error, {
+      messages: { "fixed date must fall": "The fixed date must be between the session and today." },
+    });
   } finally {
     revalidatePath("/finance/readiness");
   }
@@ -91,14 +98,22 @@ export async function recordTraining(_previous: ActionState, formData: FormData)
   });
   if (!parsed.success) return failure(firstIssue(parsed.error));
   try {
-    await withClaims(admin.id, (tx) => tx.query("SELECT app.record_training($1, $2, $3)", [parsed.data.userId, parsed.data.module, parsed.data.completedOn]));
+    await withClaims(admin.id, (tx) =>
+      tx.query("SELECT app.record_training($1, $2, $3)", [
+        parsed.data.userId,
+        parsed.data.module,
+        parsed.data.completedOn,
+      ]),
+    );
     return success("Training recorded.");
   } catch (error) {
-    return actionFailure("record_training_failed", error, { messages: {
-      training_record_user_id_module_key_key: "That module is already recorded for this person.",
-      "completed date is in the future": "The completed date cannot be in the future.",
-      "training is recorded for Finance users only": "Training is recorded for Finance users only.",
-    } });
+    return actionFailure("record_training_failed", error, {
+      messages: {
+        training_record_user_id_module_key_key: "That module is already recorded for this person.",
+        "completed date is in the future": "The completed date cannot be in the future.",
+        "training is recorded for Finance users only": "Training is recorded for Finance users only.",
+      },
+    });
   } finally {
     revalidatePath("/finance/readiness");
   }

@@ -10,11 +10,22 @@ import { homeFor, type Role } from "@/lib/auth";
 import { anonymous, withClaims } from "@/lib/db";
 import { safeNext } from "@/lib/redirect";
 import { allowed, blocked, clearAttempts, clientKey, TOO_MANY } from "@/lib/throttle";
-import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession, verifySessionClaims } from "@/lib/session";
+import {
+  GATE_COOKIE,
+  SESSION_COOKIE,
+  sessionCookieOptions,
+  signGate,
+  signSession,
+  verifySessionClaims,
+} from "@/lib/session";
 import { writeAudit } from "@/lib/audit";
 
 const loginSchema = z.object({
-  email: z.string().trim().min(1, "Enter your work email.").email("Enter a work email address in the right format, like name@example.org."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Enter your work email.")
+    .email("Enter a work email address in the right format, like name@example.org."),
   password: z.string().min(1, "Enter your password."),
 });
 
@@ -47,7 +58,8 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
   const email = parsed.data.email.toLowerCase();
   const ipKey = `login-ip:${ip}`;
   const emailKey = `login-email:${email}`;
-  if ((await blocked(ipKey, IP_FAILURE_LIMIT)) || (await blocked(emailKey, EMAIL_FAILURE_LIMIT))) return { error: TOO_MANY, values };
+  if ((await blocked(ipKey, IP_FAILURE_LIMIT)) || (await blocked(emailKey, EMAIL_FAILURE_LIMIT)))
+    return { error: TOO_MANY, values };
 
   const account = await lookup(email);
   const valid = await bcrypt.compare(parsed.data.password, account?.password_hash ?? DUMMY_HASH);
@@ -60,7 +72,9 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
   await clearAttempts(emailKey);
 
   const session = await withClaims(account.id, async (tx) => {
-    const row = await tx.one<{ role: Role; version: number }>("SELECT role, app.current_session_version() AS version FROM app_user WHERE id = app.uid()");
+    const row = await tx.one<{ role: Role; version: number }>(
+      "SELECT role, app.current_session_version() AS version FROM app_user WHERE id = app.uid()",
+    );
     await writeAudit(tx, { entity: "user", entityId: account.id, action: "sign_in" });
     return row;
   });
@@ -76,7 +90,9 @@ export async function signOut() {
   const store = await cookies();
   const claims = await verifySessionClaims(store.get(SESSION_COOKIE)?.value);
   if (claims) {
-    await withClaims(claims.sub, (tx) => tx.query("SELECT app.revoke_session($1::uuid, $2::timestamptz)", [claims.jti, claims.expiresAt.toISOString()]));
+    await withClaims(claims.sub, (tx) =>
+      tx.query("SELECT app.revoke_session($1::uuid, $2::timestamptz)", [claims.jti, claims.expiresAt.toISOString()]),
+    );
   }
   store.delete(SESSION_COOKIE);
   redirect("/login");
@@ -93,6 +109,7 @@ export async function unlockGate(_prev: ActionState, formData: FormData): Promis
   const requested = safeNext(formData.get("next"), "/");
   const target = requested === "/" || /^\/[^/\\]/.test(requested) ? requested : "/";
   const needsSession = target.startsWith("/portal") || target.startsWith("/finance");
-  if (needsSession && !(await verifySessionClaims(store.get(SESSION_COOKIE)?.value))) redirect(`/login?next=${encodeURIComponent(target)}`);
+  if (needsSession && !(await verifySessionClaims(store.get(SESSION_COOKIE)?.value)))
+    redirect(`/login?next=${encodeURIComponent(target)}`);
   redirect(target);
 }

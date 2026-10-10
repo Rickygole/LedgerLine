@@ -29,8 +29,16 @@ beforeAll(async () => {
   process.env.LOCAL_STORAGE_DIR = dir;
   owner = await connect(ownerUrl());
   maria = await userId(owner, "maria.santos");
-  submission = (await owner.query("SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id WHERE a.org_id = (SELECT org_id FROM app_user WHERE id = $1) LIMIT 1", [maria])).rows[0].id;
-  await owner.query("INSERT INTO attachment (submission_id, path, filename, bytes, mime, uploaded_by) VALUES ($1, $2, 'kept.pdf', 1, 'application/pdf', $3)", [submission, kept, maria]);
+  submission = (
+    await owner.query(
+      "SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id WHERE a.org_id = (SELECT org_id FROM app_user WHERE id = $1) LIMIT 1",
+      [maria],
+    )
+  ).rows[0].id;
+  await owner.query(
+    "INSERT INTO attachment (submission_id, path, filename, bytes, mime, uploaded_by) VALUES ($1, $2, 'kept.pdf', 1, 'application/pdf', $3)",
+    [submission, kept, maria],
+  );
 });
 
 afterAll(async () => {

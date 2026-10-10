@@ -24,11 +24,19 @@ export async function createSupportRequest(_previous: ActionState, formData: For
   if (!parsed.success) return failure(allIssues(parsed.error));
   try {
     const reference = await withClaims(user.id, async (tx) => {
-      const row = await tx.one<{ id: string }>("SELECT app.create_support_request($1, $2, $3) AS id", [parsed.data.category, parsed.data.subject, parsed.data.body]);
-      const created = await tx.one<{ reference: string }>("SELECT reference FROM support_request WHERE id = $1", [row?.id]);
+      const row = await tx.one<{ id: string }>("SELECT app.create_support_request($1, $2, $3) AS id", [
+        parsed.data.category,
+        parsed.data.subject,
+        parsed.data.body,
+      ]);
+      const created = await tx.one<{ reference: string }>("SELECT reference FROM support_request WHERE id = $1", [
+        row?.id,
+      ]);
       return created?.reference ?? "";
     });
-    return success(`Your request was sent. The reference is ${reference}. Finance support aims to reply within 24 hours.`);
+    return success(
+      `Your request was sent. The reference is ${reference}. Finance support aims to reply within 24 hours.`,
+    );
   } catch (error) {
     return actionFailure("create_support_request_failed", error);
   } finally {
@@ -49,7 +57,12 @@ export async function replyToSupportRequest(_previous: ActionState, formData: Fo
     await dispatchFor(user.id);
     return success("Your message was sent.");
   } catch (error) {
-    return actionFailure("reply_to_support_request_failed", error, { messages: { "request is closed": "This request is closed. Send a new request instead.", "request not found": "That request could not be found." } });
+    return actionFailure("reply_to_support_request_failed", error, {
+      messages: {
+        "request is closed": "This request is closed. Send a new request instead.",
+        "request not found": "That request could not be found.",
+      },
+    });
   } finally {
     revalidatePath("/portal/help");
     revalidatePath("/finance/help");

@@ -78,12 +78,21 @@ export function dbErrorMessage(error: unknown, overrides: ErrorOverrides = {}): 
   return BY_CODE[code] ?? overrides.fallback ?? FALLBACK;
 }
 
-export async function actionFailure(event: string, error: unknown, overrides: ErrorOverrides = {}, extra: Extra = {}): Promise<ActionResult> {
+export async function actionFailure(
+  event: string,
+  error: unknown,
+  overrides: ErrorOverrides = {},
+  extra: Extra = {},
+): Promise<ActionResult> {
   await logError(event, error);
   return failure(dbErrorMessage(error, overrides), extra);
 }
 
 export const trimmed = (label: string, max: number) =>
-  z.string().trim().min(1, `Enter ${label}.`).max(max, `Use ${formatCount(max)} characters or fewer for ${label}.`);
+  z
+    .string()
+    .trim()
+    .min(1, `Enter ${label}.`)
+    .max(max, `Use ${formatCount(max)} characters or fewer for ${label}.`);
 
 export const isoDay = (label: string) => z.string().regex(/^\d{4}-\d{2}-\d{2}$/, `Enter ${label} as a date.`);

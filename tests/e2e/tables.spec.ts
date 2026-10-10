@@ -28,7 +28,7 @@ async function overflowing(page: import("@playwright/test").Page) {
         const caption = table.closest("section, [id]")?.querySelector("h2, h3")?.textContent ?? "";
         return { caption: caption.trim(), scrollWidth: box.scrollWidth, clientWidth: box.clientWidth };
       })
-      .filter((t) => t.clientWidth > 0 && t.scrollWidth > t.clientWidth)
+      .filter((t) => t.clientWidth > 0 && t.scrollWidth > t.clientWidth),
   );
 }
 
@@ -57,10 +57,19 @@ test("the reminder preview table fits on a date that has recipients", async ({ p
 });
 
 test("no finance detail table scrolls sideways at 1440 with the sidebar open", async ({ page }) => {
-  const [org] = await ownerQuery<{ id: string }>("SELECT org_id AS id FROM assignment GROUP BY org_id ORDER BY count(*) DESC LIMIT 1");
-  const [initiative] = await ownerQuery<{ id: string }>("SELECT initiative_id AS id FROM assignment GROUP BY initiative_id ORDER BY count(*) DESC LIMIT 1");
+  const [org] = await ownerQuery<{ id: string }>(
+    "SELECT org_id AS id FROM assignment GROUP BY org_id ORDER BY count(*) DESC LIMIT 1",
+  );
+  const [initiative] = await ownerQuery<{ id: string }>(
+    "SELECT initiative_id AS id FROM assignment GROUP BY initiative_id ORDER BY count(*) DESC LIMIT 1",
+  );
   const [message] = await ownerQuery<{ id: string }>("SELECT id FROM outbox ORDER BY created_at DESC LIMIT 1");
-  const paths = [`/finance/organizations/${org.id}`, `/finance/organizations/${org.id}?tab=awards`, `/finance/organizations/${org.id}?tab=reports`, `/finance/initiatives/${initiative.id}`];
+  const paths = [
+    `/finance/organizations/${org.id}`,
+    `/finance/organizations/${org.id}?tab=awards`,
+    `/finance/organizations/${org.id}?tab=reports`,
+    `/finance/initiatives/${initiative.id}`,
+  ];
   if (message) paths.push(`/finance/outbox/${message.id}`);
   for (const path of paths) {
     await page.goto(path);

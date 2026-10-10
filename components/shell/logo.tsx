@@ -23,7 +23,11 @@ export function Logo({ className, compact = false }: { className?: string; compa
       <Mark className="h-8 w-8 shrink-0" />
       <span className="flex min-w-0 flex-col">
         <span className="text-[21px] font-extrabold leading-6 tracking-[-0.01em] text-white">LedgerLine</span>
-        {compact ? null : <span className="hidden truncate text-[12.5px] font-medium leading-4 text-harbor-200 min-[400px]:block">{TAGLINE}</span>}
+        {compact ? null : (
+          <span className="hidden truncate text-[12.5px] font-medium leading-4 text-harbor-200 min-[400px]:block">
+            {TAGLINE}
+          </span>
+        )}
       </span>
     </span>
   );

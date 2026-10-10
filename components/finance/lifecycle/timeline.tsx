@@ -8,9 +8,14 @@ export function Timeline({ items }: { items: Milestone[] }) {
     <ol className="relative space-y-0">
       {items.map((item, index) => (
         <li key={item.title} className="relative flex gap-4 pb-6 last:pb-0">
-          {index < items.length - 1 ? <span className="absolute left-[0.8125rem] top-7 h-[calc(100%-1.25rem)] w-px bg-line" aria-hidden="true" /> : null}
+          {index < items.length - 1 ? (
+            <span className="absolute left-[0.8125rem] top-7 h-[calc(100%-1.25rem)] w-px bg-line" aria-hidden="true" />
+          ) : null}
           <span
-            className={cn("relative z-10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold", item.goal ? "border-navy-800 bg-navy-800 text-white" : "border-line bg-white text-navy-800")}
+            className={cn(
+              "relative z-10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold",
+              item.goal ? "border-navy-800 bg-navy-800 text-white" : "border-line bg-white text-navy-800",
+            )}
             aria-hidden="true"
           >
             {item.goal ? <Flag className="h-3.5 w-3.5" /> : index + 1}

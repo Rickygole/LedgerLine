@@ -27,7 +27,11 @@ export function remediationDueAt(detectedAt: Date | string): Date {
 
 export type DeadlineState = "met" | "late" | "due_soon" | "on_track" | "overdue";
 
-export function notificationDeadline(input: { detectedAt: Date | string; notifiedAt: Date | string | null; now: Date }): { state: DeadlineState; dueAt: Date; minutes: number } {
+export function notificationDeadline(input: {
+  detectedAt: Date | string;
+  notifiedAt: Date | string | null;
+  now: Date;
+}): { state: DeadlineState; dueAt: Date; minutes: number } {
   const dueAt = notifyDueAt(input.detectedAt);
   if (input.notifiedAt) {
     const delta = Math.round((new Date(input.notifiedAt).getTime() - dueAt.getTime()) / 60_000);
@@ -38,11 +42,19 @@ export function notificationDeadline(input: { detectedAt: Date | string; notifie
   return { state: delta <= 4 * 60 ? "due_soon" : "on_track", dueAt, minutes: delta };
 }
 
-export function remediationDeadline(input: { detectedAt: Date | string; completedOn: string | null; now: Date }): { state: DeadlineState; dueAt: Date; minutes: number } {
+export function remediationDeadline(input: { detectedAt: Date | string; completedOn: string | null; now: Date }): {
+  state: DeadlineState;
+  dueAt: Date;
+  minutes: number;
+} {
   const dueAt = remediationDueAt(input.detectedAt);
   if (input.completedOn) {
     const dueDay = toIsoDate(dueAt);
-    return { state: input.completedOn <= dueDay ? "met" : "late", dueAt, minutes: Math.abs(daysBetween(dueDay, input.completedOn)) * 1440 };
+    return {
+      state: input.completedOn <= dueDay ? "met" : "late",
+      dueAt,
+      minutes: Math.abs(daysBetween(dueDay, input.completedOn)) * 1440,
+    };
   }
   const delta = Math.round((dueAt.getTime() - input.now.getTime()) / 60_000);
   if (delta < 0) return { state: "overdue", dueAt, minutes: -delta };
@@ -56,7 +68,11 @@ export function incidentStatus(latest: { completed_on: string | null } | null): 
   return latest.completed_on ? "closed" : "remediating";
 }
 
-export const STATUS_LABEL: Record<IncidentStatus, string> = { open: "Awaiting remediation report", remediating: "Remediation in progress", closed: "Remediated" };
+export const STATUS_LABEL: Record<IncidentStatus, string> = {
+  open: "Awaiting remediation report",
+  remediating: "Remediation in progress",
+  closed: "Remediated",
+};
 
 type IncidentRow = {
   id: string;
@@ -94,13 +110,21 @@ export async function loadIncident(tx: Tx, id: string): Promise<IncidentRow | nu
   return tx.one<IncidentRow>(`${SELECT} WHERE i.id = $1`, [id]);
 }
 
-type RemediationRow = { id: string; root_cause: string; actions: string; prevention: string; completed_on: string | null; recorded_by_name: string; recorded_at: string };
+type RemediationRow = {
+  id: string;
+  root_cause: string;
+  actions: string;
+  prevention: string;
+  completed_on: string | null;
+  recorded_by_name: string;
+  recorded_at: string;
+};
 
 export async function loadRemediations(tx: Tx, id: string): Promise<RemediationRow[]> {
   return tx.query<RemediationRow>(
     `SELECT r.id::text, r.root_cause, r.actions, r.prevention, r.completed_on::text AS completed_on, u.full_name AS recorded_by_name, ${iso("r.recorded_at")} AS recorded_at
      FROM incident_remediation r JOIN app_user u ON u.id = r.recorded_by WHERE r.incident_id = $1 ORDER BY r.id DESC`,
-    [id]
+    [id],
   );
 }
 
@@ -109,14 +133,16 @@ type EventRow = { id: string; at: string; actor_name: string; kind: string; deta
 export async function loadEvents(tx: Tx, id: string): Promise<EventRow[]> {
   return tx.query<EventRow>(
     `SELECT e.id::text, ${iso("e.at")} AS at, u.full_name AS actor_name, e.kind, e.detail FROM incident_event e JOIN app_user u ON u.id = e.actor WHERE e.incident_id = $1 ORDER BY e.id`,
-    [id]
+    [id],
   );
 }
 
 type ContactRow = { id: string; full_name: string; title: string; email: string; active: boolean };
 
 export async function listContacts(tx: Tx): Promise<ContactRow[]> {
-  return tx.query<ContactRow>("SELECT id, full_name, title, email, active FROM incident_contact ORDER BY active DESC, created_at, id");
+  return tx.query<ContactRow>(
+    "SELECT id, full_name, title, email, active FROM incident_contact ORDER BY active DESC, created_at, id",
+  );
 }
 
 export const EVENT_LABEL: Record<string, string> = {

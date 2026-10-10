@@ -22,7 +22,8 @@ function authorized(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  if (!process.env.CRON_SECRET) return NextResponse.json({ error: "The scheduler is not configured." }, { status: 503 });
+  if (!process.env.CRON_SECRET)
+    return NextResponse.json({ error: "The scheduler is not configured." }, { status: 503 });
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
   const today = todayInNewYork();
@@ -32,7 +33,9 @@ export async function GET(request: NextRequest) {
   const result = await withClaims(scheduler, async (tx) => {
     const who = await tx.one<{ email: string }>("SELECT email FROM app_user WHERE id = app.uid()");
     if (who?.email !== SCHEDULER_EMAIL) throw new Error("scheduler identity mismatch");
-    const periods = await tx.query<{ id: string; due_on: string }>("SELECT id, due_on::text FROM reporting_period ORDER BY due_on");
+    const periods = await tx.query<{ id: string; due_on: string }>(
+      "SELECT id, due_on::text FROM reporting_period ORDER BY due_on",
+    );
     const open = periods.filter((p) => Math.abs(daysBetween(p.due_on, today)) <= OPEN_WINDOW_DAYS);
     const queued: Record<string, number> = {};
     for (const period of open) {

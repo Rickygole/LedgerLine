@@ -4,7 +4,9 @@ import type { NextConfig } from "next";
 function commit(): string {
   if (process.env.BUILD_COMMIT) return process.env.BUILD_COMMIT;
   try {
-    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
   } catch {
     return "";
   }

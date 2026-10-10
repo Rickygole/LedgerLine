@@ -12,7 +12,11 @@ describe("confirmation email body", () => {
       ein: "00-1040217",
       awardAmount: 1000,
       definition: buildDefinition("t", []),
-      answers: { contact_name: "Maria Santos", served_youth: "Yes", youth_breakdown: [{ age_group: "13 to 17", count: "98" }] },
+      answers: {
+        contact_name: "Maria Santos",
+        served_youth: "Yes",
+        youth_breakdown: [{ age_group: "13 to 17", count: "98" }],
+      },
       budget: [{ position: 1, category: "PS", description: "Director", amount: 1000 }],
       attachments: [{ filename: "roster.pdf", bytes: 2048 }],
     });
@@ -33,7 +37,14 @@ describe("confirmation email body", () => {
       ein: "00-1040217",
       awardAmount: 1000,
       definition: buildDefinition("t", []),
-      answers: { contact_name: "Maria Santos", served_youth: "Yes", youth_breakdown: [{ age_group: "13 to 17", count: "1136" }, { age_group: "", count: "" }] },
+      answers: {
+        contact_name: "Maria Santos",
+        served_youth: "Yes",
+        youth_breakdown: [
+          { age_group: "13 to 17", count: "1136" },
+          { age_group: "", count: "" },
+        ],
+      },
       budget: [{ position: 1, category: "PS", description: "Director", amount: 1000 }],
       attachments: [],
     });

@@ -99,7 +99,8 @@ function emittedActions(): { actions: Set<string>; entities: Set<string> } {
       if (/^'[a-z_]+'$/.test(action)) actions.add(action.slice(1, -1));
       else if (/^'([a-z_]+)'\s*\|\|\s*v_planned\.action$/.test(action)) {
         const prefix = action.match(/^'([a-z_]+)'/)![1];
-        for (const kind of sql.matchAll(/rp\.action IN \(([^)]*)\)/g)) for (const k of literals(kind[1], "'")) if (k !== "retire") actions.add(`${prefix}${k}`);
+        for (const kind of sql.matchAll(/rp\.action IN \(([^)]*)\)/g))
+          for (const k of literals(kind[1], "'")) if (k !== "retire") actions.add(`${prefix}${k}`);
       } else if (/^CASE WHEN [^']+THEN '[a-z_]+' ELSE '[a-z_]+' END$/.test(action)) {
         literals(action, "'").forEach((a) => actions.add(a));
       } else if (action === "p_action") {
@@ -139,8 +140,11 @@ function emittedActions(): { actions: Set<string>; entities: Set<string> } {
       const call = code.slice(open, closeAt(code, open) + 1);
       const entity = call.match(/\bentity: "([a-z_]+)"/);
       const action = call.match(/\baction: ([^,\n}]+)/);
-      const found = action ? literals(action[1].includes("?") ? action[1].slice(action[1].indexOf("?") + 1) : action[1], '"') : [];
-      if (!entity || found.length === 0) throw new Error(`Could not read the audit call in ${file}: ${call.slice(0, 120)}`);
+      const found = action
+        ? literals(action[1].includes("?") ? action[1].slice(action[1].indexOf("?") + 1) : action[1], '"')
+        : [];
+      if (!entity || found.length === 0)
+        throw new Error(`Could not read the audit call in ${file}: ${call.slice(0, 120)}`);
       entities.add(entity[1]);
       found.forEach((a) => actions.add(a));
     }
@@ -153,7 +157,28 @@ describe("audit action vocabulary", () => {
   const { actions, entities } = emittedActions();
 
   it("finds the actions the database and the app write", () => {
-    for (const known of ["submit", "accept", "reopen", "correction", "export", "form_edit", "user_create", "role_change", "password_set", "reminders_queued", "rollover_carry", "rollover_rename", "rollover_retire", "sign_in", "attachment_removed", "flag_resolve", "flag_dismiss", "activate", "deactivate", "delete"]) {
+    for (const known of [
+      "submit",
+      "accept",
+      "reopen",
+      "correction",
+      "export",
+      "form_edit",
+      "user_create",
+      "role_change",
+      "password_set",
+      "reminders_queued",
+      "rollover_carry",
+      "rollover_rename",
+      "rollover_retire",
+      "sign_in",
+      "attachment_removed",
+      "flag_resolve",
+      "flag_dismiss",
+      "activate",
+      "deactivate",
+      "delete",
+    ]) {
       expect(actions, `scanner missed ${known}`).toContain(known);
     }
   });
@@ -196,8 +221,12 @@ describe("audit action vocabulary", () => {
   it("words account and export events as plain sentences", () => {
     const created = auditPhrase(row({ entity: "app_user", action: "user_create", label: "Jordan Lee" }));
     expect(`${created.actor} ${created.verb} ${created.subject}`).toBe("Priya Raman created an account for Jordan Lee");
-    const exported = auditPhrase(row({ entity: "export", entity_id: "FY26-YE", action: "export", after: { rows: 357 } }));
-    expect(`${exported.actor} ${exported.verb} ${exported.subject}`).toBe("Priya Raman exported FY26-YE submissions (357 rows)");
+    const exported = auditPhrase(
+      row({ entity: "export", entity_id: "FY26-YE", action: "export", after: { rows: 357 } }),
+    );
+    expect(`${exported.actor} ${exported.verb} ${exported.subject}`).toBe(
+      "Priya Raman exported FY26-YE submissions (357 rows)",
+    );
     const queued = auditPhrase(row({ entity: "reporting_period", entity_id: "FY26-YE", action: "reminders_queued" }));
     expect(`${queued.verb} ${queued.subject}`).toBe("queued reminders for FY26-YE");
   });

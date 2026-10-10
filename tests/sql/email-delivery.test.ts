@@ -28,14 +28,16 @@ afterAll(async () => {
 async function queueRow(to = "maria@example.org", template = "submission_confirmation"): Promise<string> {
   const { rows } = await owner.query<{ id: string }>(
     "INSERT INTO outbox (to_email, template, subject, body_text, org_id, created_by) VALUES ($1, $2, 'Report received: test', 'Full report body', $3, $4) RETURNING id",
-    [to, template, orgId, maria]
+    [to, template, orgId, maria],
   );
   created.push(rows[0].id);
   return rows[0].id;
 }
 
 async function state(id: string) {
-  return (await owner.query("SELECT status, provider_id, sent_at, failure_reason, attempts FROM outbox WHERE id = $1", [id])).rows[0];
+  return (
+    await owner.query("SELECT status, provider_id, sent_at, failure_reason, attempts FROM outbox WHERE id = $1", [id])
+  ).rows[0];
 }
 
 async function run() {
@@ -88,7 +90,10 @@ describe("[US-020][BR-014] outbox delivery", () => {
     vi.stubEnv("RESEND_API_KEY", "re_fake");
     vi.stubEnv("EMAIL_FROM", "no-reply@example.org");
     vi.stubEnv("EMAIL_ALLOWLIST", "");
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ message: "rate limited" }), { status: 429 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ message: "rate limited" }), { status: 429 })),
+    );
     const id = await queueRow();
     await run();
     expect(await state(id)).toMatchObject({ status: "queued", attempts: 1 });
@@ -114,9 +119,13 @@ describe("[US-020][BR-014] outbox delivery", () => {
   });
 
   it("keeps the seeded history honest", async () => {
-    const { rows } = await owner.query("SELECT count(*)::int AS n FROM outbox WHERE status = 'sent' AND provider_id IS NULL");
+    const { rows } = await owner.query(
+      "SELECT count(*)::int AS n FROM outbox WHERE status = 'sent' AND provider_id IS NULL",
+    );
     expect(rows[0].n).toBe(0);
-    await expect(owner.query("UPDATE outbox SET status = 'sent' WHERE id = $1", [created[0]])).rejects.toMatchObject({ code: "23514" });
+    await expect(owner.query("UPDATE outbox SET status = 'sent' WHERE id = $1", [created[0]])).rejects.toMatchObject({
+      code: "23514",
+    });
   });
 });
 
@@ -125,7 +134,10 @@ describe("[US-052] reminder emails go through the same delivery path", () => {
     vi.stubEnv("RESEND_API_KEY", "re_fake");
     vi.stubEnv("EMAIL_FROM", "no-reply@example.org");
     vi.stubEnv("EMAIL_ALLOWLIST", "");
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ id: "msg_fake_reminder" }), { status: 200 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ id: "msg_fake_reminder" }), { status: 200 })),
+    );
     const id = await queueRow("maria@example.org", "reminder");
     await run();
     expect(await state(id)).toMatchObject({ status: "sent", provider_id: "msg_fake_reminder" });

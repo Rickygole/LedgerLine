@@ -3,8 +3,11 @@ import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow, 
 import { authFile, PEOPLE } from "./support/app";
 import { ownerQuery } from "./support/db";
 
-test("[US-003][US-007] a Word file imported without a model keeps its headings, table and choices and is not labelled AI", async ({ browser }) => {
-  const cell = (text: string) => new TableCell({ width: { size: 3000, type: WidthType.DXA }, children: [new Paragraph(text)] });
+test("[US-003][US-007] a Word file imported without a model keeps its headings, table and choices and is not labelled AI", async ({
+  browser,
+}) => {
+  const cell = (text: string) =>
+    new TableCell({ width: { size: 3000, type: WidthType.DXA }, children: [new Paragraph(text)] });
   const buffer = await Packer.toBuffer(
     new Document({
       sections: [
@@ -19,12 +22,15 @@ test("[US-003][US-007] a Word file imported without a model keeps its headings, 
             new Paragraph("4. List each lending location below."),
             new Table({
               width: { size: 9000, type: WidthType.DXA },
-              rows: [new TableRow({ children: [cell("Location"), cell("Sessions held")] }), new TableRow({ children: [cell(""), cell("")] })],
+              rows: [
+                new TableRow({ children: [cell("Location"), cell("Sessions held")] }),
+                new TableRow({ children: [cell(""), cell("")] }),
+              ],
             }),
           ],
         },
       ],
-    })
+    }),
   );
   const [form] = await ownerQuery<{ id: string; initiative_id: string }>(
     `INSERT INTO form_version (initiative_id, version, status, definition, source, created_by)
@@ -32,9 +38,12 @@ test("[US-003][US-007] a Word file imported without a model keeps its headings, 
      FROM form_version f JOIN initiative i ON i.id = f.initiative_id
      WHERE i.fiscal_year_id = 'FY27' AND i.status = 'active' AND NOT EXISTS (SELECT 1 FROM form_version d WHERE d.initiative_id = f.initiative_id AND d.status = 'draft')
      GROUP BY f.initiative_id ORDER BY f.initiative_id LIMIT 1 RETURNING id, initiative_id`,
-    [PEOPLE.priya]
+    [PEOPLE.priya],
   );
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("priya") });
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("priya"),
+  });
   const page = await context.newPage();
   await page.goto(`/finance/forms/${form.id}?import=1`);
   await page.locator('input[type="file"]').setInputFiles({
@@ -50,17 +59,29 @@ test("[US-003][US-007] a Word file imported without a model keeps its headings, 
   await expect(page.getByText(/Columns: Location \(Short text\), Sessions held \(Whole number\)/)).toBeVisible();
   await expect(page.getByText("Which tool types were lent most?", { exact: true })).toBeVisible();
   await expect(page.getByText("Lending").first()).toBeVisible();
-  for (let n = 0; n < 4; n += 1) await page.getByRole("button", { name: /^Accept / }).first().click();
+  for (let n = 0; n < 4; n += 1)
+    await page
+      .getByRole("button", { name: /^Accept / })
+      .first()
+      .click();
   await page.getByRole("button", { name: /^Add 4 accepted questions/ }).click();
   await expect
-    .poll(async () => (await ownerQuery<{ source: string }>("SELECT source FROM form_version WHERE id = $1", [form.id]))[0].source)
+    .poll(
+      async () =>
+        (await ownerQuery<{ source: string }>("SELECT source FROM form_version WHERE id = $1", [form.id]))[0].source,
+    )
     .toBe("rule_draft");
-  const [saved] = await ownerQuery<{ definition: { sections: { title: string; questions: { type: string; label: string }[] }[] } }>("SELECT definition FROM form_version WHERE id = $1", [form.id]);
+  const [saved] = await ownerQuery<{
+    definition: { sections: { title: string; questions: { type: string; label: string }[] }[] };
+  }>("SELECT definition FROM form_version WHERE id = $1", [form.id]);
   const titles = saved.definition.sections.map((section) => section.title);
   expect(titles).toEqual(expect.arrayContaining(["Lending", "Locations"]));
   const locations = saved.definition.sections.find((section) => section.title === "Locations");
   expect(locations?.questions.map((q) => q.type)).toEqual(["table"]);
-  const [audit] = await ownerQuery<{ note: string }>("SELECT note FROM audit_event WHERE entity_id = $1 AND action = 'ai_draft_applied' ORDER BY at DESC LIMIT 1", [form.id]);
+  const [audit] = await ownerQuery<{ note: string }>(
+    "SELECT note FROM audit_event WHERE entity_id = $1 AND action = 'ai_draft_applied' ORDER BY at DESC LIMIT 1",
+    [form.id],
+  );
   expect(audit.note).toContain("from the uploaded Word file");
   await context.close();
 });

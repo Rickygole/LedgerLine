@@ -8,7 +8,7 @@ test("[US-044] starting a review and accepting a report show the new state witho
   const candidates = await ownerQuery<{ id: string }>(
     `SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id
      WHERE s.status = 'submitted' AND a.org_id <> (SELECT org_id FROM app_user WHERE email = 'maria.santos@motthavenyouth.example.org')
-     ORDER BY s.reference_no LIMIT 12`
+     ORDER BY s.reference_no LIMIT 12`,
   );
   expect(candidates.length).toBeGreaterThan(0);
 

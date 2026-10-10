@@ -14,7 +14,9 @@ export async function closeSupportRequest(_previous: ActionState, formData: Form
     await withClaims(admin.id, (tx) => tx.query("SELECT app.close_support_request($1)", [id]));
     return success("The request is closed.");
   } catch (error) {
-    return actionFailure("close_support_request_failed", error, { messages: { "respond before closing": "Reply to the request before closing it." } });
+    return actionFailure("close_support_request_failed", error, {
+      messages: { "respond before closing": "Reply to the request before closing it." },
+    });
   } finally {
     revalidatePath("/finance/support");
     revalidatePath(`/finance/support/${id}`);

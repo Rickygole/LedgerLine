@@ -22,7 +22,13 @@ export function fillMonths(points: { month: string; onTime: number; late: number
   for (;;) {
     const key = `${year}-${String(month).padStart(2, "0")}`;
     const point = byMonth.get(key);
-    out.push({ month: key, label: monthLabel(key), onTime: point?.onTime ?? 0, late: point?.late ?? 0, total: (point?.onTime ?? 0) + (point?.late ?? 0) });
+    out.push({
+      month: key,
+      label: monthLabel(key),
+      onTime: point?.onTime ?? 0,
+      late: point?.late ?? 0,
+      total: (point?.onTime ?? 0) + (point?.late ?? 0),
+    });
     if (key === last) break;
     month += 1;
     if (month > 12) {
@@ -37,7 +43,10 @@ export function sharePercent(part: number, whole: number): number {
   return whole === 0 ? 0 : Math.round((part / whole) * 1000) / 10;
 }
 
-export async function monthlySubmissions(tx: Tx, filters: Pick<TrendFilters, "category" | "borough">): Promise<MonthPoint[]> {
+export async function monthlySubmissions(
+  tx: Tx,
+  filters: Pick<TrendFilters, "category" | "borough">,
+): Promise<MonthPoint[]> {
   const rows = await tx.query<{ month: string; on_time: number; late: number }>(
     `SELECT to_char(s.submitted_at AT TIME ZONE 'America/New_York', 'YYYY-MM') AS month,
             count(*) FILTER (WHERE (s.submitted_at AT TIME ZONE 'America/New_York')::date <= rp.due_on)::int AS on_time,
@@ -49,7 +58,7 @@ export async function monthlySubmissions(tx: Tx, filters: Pick<TrendFilters, "ca
      JOIN reporting_period rp ON rp.id = s.period_id
      WHERE s.submitted_at IS NOT NULL AND ($1 = '' OR i.category = $1) AND ($2 = '' OR o.borough = $2)
      GROUP BY 1 ORDER BY 1`,
-    [filters.category, filters.borough]
+    [filters.category, filters.borough],
   );
   return fillMonths(rows.map((r) => ({ month: r.month, onTime: r.on_time, late: r.late })));
 }
@@ -66,7 +75,9 @@ export async function submissionShareByGroup(tx: Tx, filters: TrendFilters): Pro
      JOIN organization o ON o.id = a.org_id
      WHERE ob.period_id = $1 AND ($2 = '' OR i.category = $2) AND ($3 = '' OR o.borough = $3)
      GROUP BY 1 ORDER BY 1`,
-    [filters.period, filters.category, filters.borough]
+    [filters.period, filters.category, filters.borough],
   );
-  return rows.map((r) => ({ ...r, share: sharePercent(r.submitted, r.due) })).sort((a, b) => b.share - a.share || a.name.localeCompare(b.name));
+  return rows
+    .map((r) => ({ ...r, share: sharePercent(r.submitted, r.due) }))
+    .sort((a, b) => b.share - a.share || a.name.localeCompare(b.name));
 }

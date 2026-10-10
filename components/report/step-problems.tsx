@@ -12,7 +12,10 @@ function problemsHeading(count: number, scope: "report" | "step") {
   return `There ${plural(count, "is", "are")} ${count} ${noun} to fix before you submit`;
 }
 
-export const StepProblems = forwardRef<HTMLDivElement, { issues: Issue[]; onSelect: (field: string) => void; scope: "report" | "step"; alert?: boolean }>(function StepProblems({ issues, onSelect, scope, alert = false }, ref) {
+export const StepProblems = forwardRef<
+  HTMLDivElement,
+  { issues: Issue[]; onSelect: (field: string) => void; scope: "report" | "step"; alert?: boolean }
+>(function StepProblems({ issues, onSelect, scope, alert = false }, ref) {
   if (issues.length === 0) return null;
   const titleId = `problems-${scope}`;
   return (
@@ -21,7 +24,10 @@ export const StepProblems = forwardRef<HTMLDivElement, { issues: Issue[]; onSele
       tabIndex={-1}
       role={alert ? "alert" : "region"}
       aria-labelledby={titleId}
-      className={cn("rounded border border-l-4 border-line border-l-bad bg-white p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-bad/30", scope === "step" && "mb-6")}
+      className={cn(
+        "rounded border border-l-4 border-line border-l-bad bg-white p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-bad/30",
+        scope === "step" && "mb-6",
+      )}
     >
       <h3 id={titleId} className="flex items-start gap-2 text-[17px] font-bold leading-6 text-ink">
         <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-bad" aria-hidden="true" />

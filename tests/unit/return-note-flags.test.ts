@@ -1,10 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { buildAiInput, buildConcerns, noteText, templateSentences } from "@/lib/finance/review/return-note-core";
 
-const manual = { id: "f1", kind: "manual", reason: "manual", note: "Director is under investigation. Call 718 555 0142 before the board meets.", createdAt: "2026-10-09T12:00:00Z" } as never;
+const manual = {
+  id: "f1",
+  kind: "manual",
+  reason: "manual",
+  note: "Director is under investigation. Call 718 555 0142 before the board meets.",
+  createdAt: "2026-10-09T12:00:00Z",
+} as never;
 
 function concerns() {
-  return buildConcerns({ definition: null, issues: [], budget: [], award: 90000, status: "submitted", answers: {}, openFlags: [manual] });
+  return buildConcerns({
+    definition: null,
+    issues: [],
+    budget: [],
+    award: 90000,
+    status: "submitted",
+    answers: {},
+    openFlags: [manual],
+  });
 }
 
 describe("[US-044] internal flag notes stay internal", () => {

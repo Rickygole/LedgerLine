@@ -4,7 +4,8 @@ import { daysPastDue } from "@/lib/dates";
 export type Bucket = "outstanding" | "missing" | "submitted" | "in_review" | "returned" | "accepted";
 
 export function reportState(status: string | null, dueOn: string): ReportState {
-  if (status === null || status === "draft") return daysPastDue(dueOn) > 0 ? "missing" : status === null ? "not_started" : "draft";
+  if (status === null || status === "draft")
+    return daysPastDue(dueOn) > 0 ? "missing" : status === null ? "not_started" : "draft";
   return status as ReportState;
 }
 

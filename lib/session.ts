@@ -27,7 +27,13 @@ export async function verifySessionClaims(token: string | undefined): Promise<Se
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, key("AUTH_SECRET"), { issuer: "ledgerline" });
-    if (typeof payload.sub !== "string" || typeof payload.jti !== "string" || typeof payload.sv !== "number" || typeof payload.exp !== "number") return null;
+    if (
+      typeof payload.sub !== "string" ||
+      typeof payload.jti !== "string" ||
+      typeof payload.sv !== "number" ||
+      typeof payload.exp !== "number"
+    )
+      return null;
     return { sub: payload.sub, jti: payload.jti, version: payload.sv, expiresAt: new Date(payload.exp * 1000) };
   } catch {
     return null;

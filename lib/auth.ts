@@ -36,7 +36,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       `SELECT u.id, u.email, u.full_name, u.title, u.role, u.org_id, o.legal_name, o.ein
        FROM app_user u LEFT JOIN organization o ON o.id = u.org_id
        WHERE u.id = app.uid() AND u.active AND app.session_valid($1::uuid, $2::int)`,
-      [claims.jti, claims.version]
+      [claims.jti, claims.version],
     );
     if (!row) return null;
     return {

@@ -25,7 +25,8 @@ export async function middleware(request: NextRequest) {
 
   const gated = await verifyGate(request.cookies.get(GATE_COOKIE)?.value);
   if (!gated) {
-    if (pathname.startsWith("/api")) return withHeaders(new NextResponse("Passcode required", { status: 401 }), header, csp, requestId);
+    if (pathname.startsWith("/api"))
+      return withHeaders(new NextResponse("Passcode required", { status: 401 }), header, csp, requestId);
     const url = request.nextUrl.clone();
     url.pathname = "/gate";
     url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(`${pathname}${request.nextUrl.search}`)}`;
@@ -50,7 +51,10 @@ function withHeaders(response: NextResponse, cspName: string, csp: string, reque
   response.headers.set("X-Robots-Tag", "noindex, nofollow");
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+  );
   response.headers.set("X-Content-Type-Options", "nosniff");
   return response;
 }

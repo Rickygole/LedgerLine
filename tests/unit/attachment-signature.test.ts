@@ -32,7 +32,9 @@ describe("[US-023] signed upload paths", () => {
   it("refuses a pushed-out expiry, another user, another path and junk", () => {
     const [, mac] = signPath(USER, SUBMISSION, PATH).split(".");
     expect(pathSignatureValid(USER, SUBMISSION, PATH, `${now() + 99999}.${mac}`)).toBe(false);
-    expect(pathSignatureValid("33333333-3333-4333-8333-333333333333", SUBMISSION, PATH, signPath(USER, SUBMISSION, PATH))).toBe(false);
+    expect(
+      pathSignatureValid("33333333-3333-4333-8333-333333333333", SUBMISSION, PATH, signPath(USER, SUBMISSION, PATH)),
+    ).toBe(false);
     expect(pathSignatureValid(USER, SUBMISSION, `${PATH}x`, signPath(USER, SUBMISSION, PATH))).toBe(false);
     expect(pathSignatureValid(USER, SUBMISSION, PATH, "not-a-signature")).toBe(false);
     expect(pathSignatureValid(USER, SUBMISSION, PATH, mac)).toBe(false);
@@ -40,7 +42,9 @@ describe("[US-023] signed upload paths", () => {
 
   it("does not sign with the raw AUTH_SECRET", () => {
     const expiry = now() + 600;
-    const raw = createHmac("sha256", process.env.AUTH_SECRET as string).update(`${USER}|${SUBMISSION}|${PATH}|${expiry}`).digest("hex");
+    const raw = createHmac("sha256", process.env.AUTH_SECRET as string)
+      .update(`${USER}|${SUBMISSION}|${PATH}|${expiry}`)
+      .digest("hex");
     expect(pathSignatureValid(USER, SUBMISSION, PATH, `${expiry}.${raw}`)).toBe(false);
   });
 });

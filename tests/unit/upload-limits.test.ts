@@ -26,8 +26,12 @@ describe("[BR-012][US-024] upload size limit", () => {
   });
 
   it("names the size of a file that is too large and never says it equals the limit", () => {
-    expect(checkUpload("scan.pdf", 31 * MB)).toBe("This file is 31.0 MB, which is over the 25.0 MB limit for one file.");
-    expect(checkUpload("big.pdf", MAX_UPLOAD_BYTES + 109)).toBe("This file is 25.1 MB, which is over the 25.0 MB limit for one file.");
+    expect(checkUpload("scan.pdf", 31 * MB)).toBe(
+      "This file is 31.0 MB, which is over the 25.0 MB limit for one file.",
+    );
+    expect(checkUpload("big.pdf", MAX_UPLOAD_BYTES + 109)).toBe(
+      "This file is 25.1 MB, which is over the 25.0 MB limit for one file.",
+    );
     expect(oversizeMessage(MAX_UPLOAD_BYTES + 1)).not.toMatch(/\b25\.0 MB\./);
   });
 
@@ -49,11 +53,30 @@ describe("[BR-012][US-024] upload size limit", () => {
 
 describe("[US-023] Excel, Word, CSV and PDF files are accepted", () => {
   it("accepts each of the four types in any letter case", () => {
-    for (const name of ["roster.csv", "Budget.XLSX", "narrative.docx", "Invoice.PDF", "a.pdf", "a.docx", "a.xlsx", "a.csv"]) expect(checkUpload(name, 2048)).toBeNull();
+    for (const name of [
+      "roster.csv",
+      "Budget.XLSX",
+      "narrative.docx",
+      "Invoice.PDF",
+      "a.pdf",
+      "a.docx",
+      "a.xlsx",
+      "a.csv",
+    ])
+      expect(checkUpload(name, 2048)).toBeNull();
   });
 
   it("refuses legacy Word and Excel files and other types in plain words", () => {
-    for (const name of ["setup.exe", "photo.png", "notes.txt", "archive.zip", "macro.xlsm", "noextension", "minutes.doc", "ledger.xls"]) {
+    for (const name of [
+      "setup.exe",
+      "photo.png",
+      "notes.txt",
+      "archive.zip",
+      "macro.xlsm",
+      "noextension",
+      "minutes.doc",
+      "ledger.xls",
+    ]) {
       expect(checkUpload(name, 2048)).toBe("Use PDF, Word (.docx), Excel (.xlsx) or CSV.");
     }
     expect(ALLOWED_TYPES.doc).toBeUndefined();
@@ -63,7 +86,9 @@ describe("[US-023] Excel, Word, CSV and PDF files are accepted", () => {
   it("refuses a file whose content does not match its extension", () => {
     expect(contentLooksValid("fake.pdf", Buffer.from("MZ binary"))).toBe("This file does not look like a PDF.");
     expect(contentLooksValid("fake.docx", Buffer.from("%PDF-1.4"))).toBe("This file does not look like a Word file.");
-    expect(contentLooksValid("fake.xlsx", Buffer.from("%PDF-1.4"))).toMatch(/^This file does not look like an? Excel file\.$/);
+    expect(contentLooksValid("fake.xlsx", Buffer.from("%PDF-1.4"))).toMatch(
+      /^This file does not look like an? Excel file\.$/,
+    );
     expect(contentLooksValid("real.pdf", Buffer.from("%PDF-1.7\n"))).toBeNull();
     expect(contentLooksValid("real.xlsx", Buffer.from("PK\u0003\u0004"))).toBeNull();
   });

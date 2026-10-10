@@ -18,7 +18,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Audit log" };
 
-const DAY = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const DAY = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
 const TIME = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
 const dayLabel = (at: string | Date) => DAY.format(new Date(at));
 const timeLabel = (at: string | Date) => TIME.format(new Date(at));
@@ -44,9 +50,18 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Audit log" description="A permanent record of who did what and when. Entries cannot be edited or removed." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Audit log" }]} />
+      <PageHeader
+        title="Audit log"
+        description="A permanent record of who did what and when. Entries cannot be edited or removed."
+        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Audit log" }]}
+      />
       <Card>
-        <FilterBar action={base} clearHref={base} keep={0} applied={[data.actor, data.entity, data.action, from, to].filter(Boolean).length}>
+        <FilterBar
+          action={base}
+          clearHref={base}
+          keep={0}
+          applied={[data.actor, data.entity, data.action, from, to].filter(Boolean).length}
+        >
           <FilterField label="Actor" htmlFor="actor" className="min-w-48">
             <Select id="actor" name="actor" defaultValue={data.actor}>
               <option value="">Everyone</option>
@@ -104,7 +119,11 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                   <Fragment key={row.id}>
                     {newDay ? (
                       <tr>
-                        <th colSpan={4} scope="colgroup" className="sticky top-9 z-[5] border-b border-line bg-navy-50 px-4 py-1.5 text-left text-xs font-semibold text-navy-900">
+                        <th
+                          colSpan={4}
+                          scope="colgroup"
+                          className="sticky top-9 z-[5] border-b border-line bg-navy-50 px-4 py-1.5 text-left text-xs font-semibold text-navy-900"
+                        >
                           {day}
                         </th>
                       </tr>

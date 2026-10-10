@@ -25,7 +25,10 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
     return orgs.filter((o) => !chosen.has(o.id) && (o.name.toLowerCase().includes(q) || o.ein.includes(q))).slice(0, 8);
   }, [orgs, query, rows]);
   const fe = state?.fieldErrors ?? {};
-  const summary = [...(state?.error ? [{ id: "", message: state.error }] : []), ...Object.entries(fe).map(([key, message]) => ({ id: key, message }))];
+  const summary = [
+    ...(state?.error ? [{ id: "", message: state.error }] : []),
+    ...Object.entries(fe).map(([key, message]) => ({ id: key, message })),
+  ];
   const total = rows.reduce((sum, r) => sum + Math.max(0, Number(r.amount.replace(/[$,\s]/g, "")) || 0), 0);
 
   return (
@@ -34,8 +37,20 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
       <ErrorSummary errors={summary} />
       <div className="max-w-xl">
         <Label htmlFor="org-search">Find an organization</Label>
-        <Input id="org-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or EIN" autoComplete="off" aria-controls="org-matches" />
-        <ul id="org-matches" aria-label="Matching organizations" className="mt-2 divide-y divide-line rounded-md border border-line bg-white empty:hidden">
+        <Input
+          id="org-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name or EIN"
+          autoComplete="off"
+          aria-controls="org-matches"
+        />
+        <ul
+          id="org-matches"
+          aria-label="Matching organizations"
+          className="mt-2 divide-y divide-line rounded-md border border-line bg-white empty:hidden"
+        >
           {matches.map((o) => (
             <li key={o.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
               <span>
@@ -58,7 +73,9 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
             </li>
           ))}
         </ul>
-        {query.trim() && matches.length === 0 ? <p className="mt-2 text-sm text-muted">No unassigned organization matches that search.</p> : null}
+        {query.trim() && matches.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">No unassigned organization matches that search.</p>
+        ) : null}
       </div>
 
       <div className="mt-6 overflow-hidden rounded-lg border border-line">
@@ -100,7 +117,9 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
                         className="num w-40 text-right"
                         aria-invalid={error ? true : undefined}
                         aria-describedby={error ? `amount-${index}-error` : undefined}
-                        onChange={(e) => setRows((all) => all.map((r, i) => (i === index ? { ...r, amount: e.target.value } : r)))}
+                        onChange={(e) =>
+                          setRows((all) => all.map((r, i) => (i === index ? { ...r, amount: e.target.value } : r)))
+                        }
                       />
                       <FieldError id={`amount-${index}-error`}>{error}</FieldError>
                     </TD>
@@ -108,7 +127,15 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
                       <Label htmlFor={`agency-${index}`} className="sr-only">
                         Administering agency for {org.name}
                       </Label>
-                      <Select id={`agency-${index}`} name="agency" value={row.agency} className="w-40" onChange={(e) => setRows((all) => all.map((r, i) => (i === index ? { ...r, agency: e.target.value } : r)))}>
+                      <Select
+                        id={`agency-${index}`}
+                        name="agency"
+                        value={row.agency}
+                        className="w-40"
+                        onChange={(e) =>
+                          setRows((all) => all.map((r, i) => (i === index ? { ...r, agency: e.target.value } : r)))
+                        }
+                      >
                         <option value="">Initiative default</option>
                         {AGENCIES.map((a) => (
                           <option key={a} value={a}>
@@ -118,7 +145,12 @@ export function AssignOrgsForm({ initiativeId, orgs }: { initiativeId: string; o
                       </Select>
                     </TD>
                     <TD align="right">
-                      <Button variant="ghost" size="sm" aria-label={`Remove ${org.name}`} onClick={() => setRows((all) => all.filter((_, i) => i !== index))}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Remove ${org.name}`}
+                        onClick={() => setRows((all) => all.filter((_, i) => i !== index))}
+                      >
                         <X className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </TD>

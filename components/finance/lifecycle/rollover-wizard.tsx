@@ -28,7 +28,17 @@ const ACTION_LABEL: Record<PlanAction, string> = {
 
 const GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-export function RolloverWizard({ from, to, initiatives, forms }: { from: string; to: string; initiatives: RolloverInitiative[]; forms: RolloverForm[] }) {
+export function RolloverWizard({
+  from,
+  to,
+  initiatives,
+  forms,
+}: {
+  from: string;
+  to: string;
+  initiatives: RolloverInitiative[];
+  forms: RolloverForm[];
+}) {
   const [step, setStep] = useState<2 | 3 | 4>(2);
   const [tried, setTried] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -60,7 +70,8 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
 
   const eligible = useMemo(() => initiatives.filter((i) => !i.alreadyRolled), [initiatives]);
   const choiceFor = (id: string): Choice => choices[id] ?? { action: "carry", name: "", group: "A" };
-  const update = (id: string, patch: Partial<Choice>) => setChoices((prev) => ({ ...prev, [id]: { ...choiceFor(id), ...patch } }));
+  const update = (id: string, patch: Partial<Choice>) =>
+    setChoices((prev) => ({ ...prev, [id]: { ...choiceFor(id), ...patch } }));
 
   const visible = initiatives.filter((i) => {
     const text = `${i.code} ${i.name} ${i.category}`.toLowerCase();
@@ -90,12 +101,15 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
   const problems: { id: string; message: string }[] = [];
   for (const i of eligible) {
     const c = choiceFor(i.id);
-    if (c.action === "rename" && !c.name.trim()) problems.push({ id: `name-${i.id}`, message: `Enter a new name for ${i.name}.` });
+    if (c.action === "rename" && !c.name.trim())
+      problems.push({ id: `name-${i.id}`, message: `Enter a new name for ${i.name}.` });
   }
   for (const [group, members] of grouped) {
-    if (members.length < 2) problems.push({ id: "", message: `Group ${group} needs at least two initiatives to combine.` });
+    if (members.length < 2)
+      problems.push({ id: "", message: `Group ${group} needs at least two initiatives to combine.` });
   }
-  if (eligible.length === 0) problems.push({ id: "", message: "Every initiative in this year has already been rolled over." });
+  if (eligible.length === 0)
+    problems.push({ id: "", message: "Every initiative in this year has already been rolled over." });
 
   const plan = eligible.map((i) => {
     const c = choiceFor(i.id);
@@ -127,7 +141,10 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
       <>
         <RolloverSteps current={3} />
         <Card>
-          <CardHeader title="Forms that come along" description={`Each new initiative starts ${to} with a copy of its published report form.`} />
+          <CardHeader
+            title="Forms that come along"
+            description={`Each new initiative starts ${to} with a copy of its published report form.`}
+          />
           <CardBody>
             <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <Summary label="Forms copied" value={formsCopied} />
@@ -136,7 +153,13 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
               <Summary label="No published form" value={formRows.length - formsCopied} />
             </dl>
           </CardBody>
-          {notable.length > 0 ? <FormTable rows={notable} to={to} groupNames={groupNames} grouped={grouped} /> : <p className="border-t border-line px-5 py-4 text-sm text-muted">Every form is copied unchanged. Nothing here needs a closer look.</p>}
+          {notable.length > 0 ? (
+            <FormTable rows={notable} to={to} groupNames={groupNames} grouped={grouped} />
+          ) : (
+            <p className="border-t border-line px-5 py-4 text-sm text-muted">
+              Every form is copied unchanged. Nothing here needs a closer look.
+            </p>
+          )}
           {formRows.length > notable.length ? (
             <details className="group border-t border-line">
               <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover [&::-webkit-details-marker]:hidden">
@@ -164,32 +187,55 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
     return (
       <>
         <RolloverSteps current={4} />
-        <ErrorSummary ref={serverRef} title="The rollover did not run" items={state?.error ? [{ message: state.error }] : []} />
+        <ErrorSummary
+          ref={serverRef}
+          title="The rollover did not run"
+          items={state?.error ? [{ message: state.error }] : []}
+        />
         <form action={formAction} className="space-y-6">
           <input type="hidden" name="from" value={from} />
           <input type="hidden" name="to" value={to} />
           <input type="hidden" name="plan" value={JSON.stringify(plan)} />
           <Card>
-            <CardHeader title="Confirm" description={`Rolling ${from} into ${to}. Everything happens in one transaction, so if any part fails nothing is saved.`} />
+            <CardHeader
+              title="Confirm"
+              description={`Rolling ${from} into ${to}. Everything happens in one transaction, so if any part fails nothing is saved.`}
+            />
             <CardBody>
               <p className="mb-5 rounded-lg border border-l-4 border-line border-l-navy-800 bg-surface/60 px-4 py-3 text-[15px] text-ink">
-                <span className="num font-semibold">{newInitiatives}</span> {plural(newInitiatives, "initiative", "initiatives")}, {grouped.size > 0 ? "up to " : ""}
-                <span className="num font-semibold">{assignments}</span> {plural(assignments, "award", "awards")} and <span className="num font-semibold">{formsCopied}</span> {plural(formsCopied, "form", "forms")} will be copied to {to}.
+                <span className="num font-semibold">{newInitiatives}</span>{" "}
+                {plural(newInitiatives, "initiative", "initiatives")}, {grouped.size > 0 ? "up to " : ""}
+                <span className="num font-semibold">{assignments}</span> {plural(assignments, "award", "awards")} and{" "}
+                <span className="num font-semibold">{formsCopied}</span> {plural(formsCopied, "form", "forms")} will be
+                copied to {to}.
               </p>
               <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <Summary label="Carried forward" value={counts.carry} />
                 <Summary label="Renamed" value={counts.rename} />
-                <Summary label="Combined into" value={`${grouped.size} (from ${eligible.filter((i) => choiceFor(i.id).action === "combine").length})`} />
+                <Summary
+                  label="Combined into"
+                  value={`${grouped.size} (from ${eligible.filter((i) => choiceFor(i.id).action === "combine").length})`}
+                />
                 <Summary label="Retired" value={counts.retire} />
                 <Summary label="New initiatives" value={newInitiatives} />
               </dl>
               <p className="mt-4 text-sm text-muted">
-                Funding moving into {to}: <span className="num font-semibold text-ink">{formatCurrency(carriedFunding)}</span>. Funded organizations, awards and published report forms are copied. New codes follow the pattern CI-{to.slice(2)}-001.
+                Funding moving into {to}:{" "}
+                <span className="num font-semibold text-ink">{formatCurrency(carriedFunding)}</span>. Funded
+                organizations, awards and published report forms are copied. New codes follow the pattern CI-
+                {to.slice(2)}-001.
               </p>
             </CardBody>
           </Card>
           <Card>
-            <CardHeader title="Changes from the default" description={changes.length === 0 ? "Every initiative will be carried forward unchanged." : `${changes.length} initiatives are not simply carried forward.`} />
+            <CardHeader
+              title="Changes from the default"
+              description={
+                changes.length === 0
+                  ? "Every initiative will be carried forward unchanged."
+                  : `${changes.length} initiatives are not simply carried forward.`
+              }
+            />
             {changes.length > 0 ? (
               <Table>
                 <THead>
@@ -211,7 +257,9 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
                         <TD>{ACTION_LABEL[c.action]}</TD>
                         <TD>
                           {c.action === "rename" ? `New name: ${c.name}` : null}
-                          {c.action === "combine" ? `Group ${c.group}: ${groupNames[c.group]?.trim() || "named after the first initiative"}` : null}
+                          {c.action === "combine"
+                            ? `Group ${c.group}: ${groupNames[c.group]?.trim() || "named after the first initiative"}`
+                            : null}
                           {c.action === "retire" ? "No successor. Stays in the history." : null}
                         </TD>
                       </TR>
@@ -226,7 +274,8 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
               <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
             </Button>
             <Button type="submit" disabled={pending || problems.length > 0}>
-              <Play className="h-4 w-4" aria-hidden="true" /> {pending ? `Creating ${to} records` : `Create ${to} records`}
+              <Play className="h-4 w-4" aria-hidden="true" />{" "}
+              {pending ? `Creating ${to} records` : `Create ${to} records`}
             </Button>
           </div>
         </form>
@@ -238,138 +287,183 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
     <>
       <RolloverSteps current={2} />
       <div className="space-y-6">
-      <ErrorSummary ref={summaryRef} title={problemsTitle(problems.length, "you continue")} items={tried ? problems.map((p) => ({ target: p.id || undefined, message: p.message })) : []} className="mb-0" />
-      <Card>
-        <CardHeader
-          title="Initiatives"
-          description={`${eligible.length} initiatives to plan. Carry forward keeps the name, funded organizations and the published form.`}
-          actions={
-            <>
-              <Button variant="secondary" size="sm" onClick={() => setChoices({})}>
-                Carry all
-              </Button>
-            </>
-          }
+        <ErrorSummary
+          ref={summaryRef}
+          title={problemsTitle(problems.length, "you continue")}
+          items={tried ? problems.map((p) => ({ target: p.id || undefined, message: p.message })) : []}
+          className="mb-0"
         />
-        <div className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-3">
-          <div className="min-w-64 flex-1">
-            <label htmlFor="plan-search" className="mb-1 block text-[13px] font-semibold text-muted">
-              Search
-            </label>
-            <Input id="plan-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Code, name or category" />
-          </div>
-          <div>
-            <label htmlFor="plan-filter" className="mb-1 block text-[13px] font-semibold text-muted">
-              Show action
-            </label>
-            <Select id="plan-filter" value={filter} onChange={(e) => setFilter(e.target.value)}>
-              <option value="">All actions</option>
-              {(Object.keys(ACTION_LABEL) as PlanAction[]).map((a) => (
-                <option key={a} value={a}>
-                  {ACTION_LABEL[a]}
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
-        <Table>
-          <THead>
-            <tr>
-              <TH>Initiative</TH>
-              <TH>Category</TH>
-              <TH align="right">Organizations</TH>
-              <TH align="right">Funding</TH>
-              <TH>Action</TH>
-              <TH>Detail</TH>
-            </tr>
-          </THead>
-          <tbody>
-            {visible.length === 0 ? (
-              <EmptyRow colSpan={6}>No initiatives match.</EmptyRow>
-            ) : (
-              visible.map((i) => {
-                const c = choiceFor(i.id);
-                return (
-                  <TR key={i.id}>
-                    <TD>
-                      <span className="font-semibold">{i.name}</span>
-                      <div className="font-mono text-xs text-muted">{i.code}</div>
-                    </TD>
-                    <TD className="whitespace-nowrap">{i.category}</TD>
-                    <TD align="right">{i.orgs}</TD>
-                    <TD align="right">{formatCurrency(i.funding)}</TD>
-                    <TD>
-                      {i.alreadyRolled ? (
-                        <Badge>Already rolled over</Badge>
-                      ) : (
-                        <Select aria-label={`Action for ${i.name}`} value={c.action} onChange={(e) => update(i.id, { action: e.target.value as PlanAction })} className="w-40">
-                          {(Object.keys(ACTION_LABEL) as PlanAction[]).map((a) => (
-                            <option key={a} value={a}>
-                              {ACTION_LABEL[a]}
-                            </option>
-                          ))}
-                        </Select>
-                      )}
-                    </TD>
-                    <TD>
-                      {c.action === "rename" && !i.alreadyRolled ? (
-                        <Input id={`name-${i.id}`} aria-label={`New name for ${i.name}`} value={c.name} onChange={(e) => update(i.id, { name: e.target.value })} placeholder="New name" className="min-w-56" />
-                      ) : null}
-                      {c.action === "combine" && !i.alreadyRolled ? (
-                        <Select aria-label={`Group for ${i.name}`} value={c.group} onChange={(e) => update(i.id, { group: e.target.value })} className="w-32">
-                          {GROUPS.map((g) => (
-                            <option key={g} value={g}>
-                              Group {g}
-                            </option>
-                          ))}
-                        </Select>
-                      ) : null}
-                      {c.action === "retire" && !i.alreadyRolled ? <span className="text-sm text-muted">No successor</span> : null}
-                    </TD>
-                  </TR>
-                );
-              })
-            )}
-          </tbody>
-        </Table>
-      </Card>
-      {grouped.size > 0 ? (
         <Card>
-          <CardHeader title="Combined initiatives" description="Each group becomes one new initiative. Awards are summed per organization, and the form comes from the first initiative in the group." />
-          <CardBody className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {[...grouped.entries()]
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([group, members]) => (
-                <div key={group} className="rounded-md border border-line p-3">
-                  <label htmlFor={`group-${group}`} className="text-sm font-semibold">
-                    Group {group} name
-                  </label>
-                  <Input id={`group-${group}`} value={groupNames[group] ?? ""} onChange={(e) => setGroupNames((prev) => ({ ...prev, [group]: e.target.value }))} placeholder={members[0]?.name} className="mt-1" />
-                  <ul className="mt-2 list-disc pl-5 text-sm text-muted">
-                    {members.map((m) => (
-                      <li key={m.id}>{m.name}</li>
-                    ))}
-                  </ul>
-                  {members.length < 2 ? <p className="mt-2 text-sm font-semibold text-bad">Add at least one more initiative to this group.</p> : null}
-                </div>
-              ))}
-          </CardBody>
+          <CardHeader
+            title="Initiatives"
+            description={`${eligible.length} initiatives to plan. Carry forward keeps the name, funded organizations and the published form.`}
+            actions={
+              <>
+                <Button variant="secondary" size="sm" onClick={() => setChoices({})}>
+                  Carry all
+                </Button>
+              </>
+            }
+          />
+          <div className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-3">
+            <div className="min-w-64 flex-1">
+              <label htmlFor="plan-search" className="mb-1 block text-[13px] font-semibold text-muted">
+                Search
+              </label>
+              <Input
+                id="plan-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Code, name or category"
+              />
+            </div>
+            <div>
+              <label htmlFor="plan-filter" className="mb-1 block text-[13px] font-semibold text-muted">
+                Show action
+              </label>
+              <Select id="plan-filter" value={filter} onChange={(e) => setFilter(e.target.value)}>
+                <option value="">All actions</option>
+                {(Object.keys(ACTION_LABEL) as PlanAction[]).map((a) => (
+                  <option key={a} value={a}>
+                    {ACTION_LABEL[a]}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+          <Table>
+            <THead>
+              <tr>
+                <TH>Initiative</TH>
+                <TH>Category</TH>
+                <TH align="right">Organizations</TH>
+                <TH align="right">Funding</TH>
+                <TH>Action</TH>
+                <TH>Detail</TH>
+              </tr>
+            </THead>
+            <tbody>
+              {visible.length === 0 ? (
+                <EmptyRow colSpan={6}>No initiatives match.</EmptyRow>
+              ) : (
+                visible.map((i) => {
+                  const c = choiceFor(i.id);
+                  return (
+                    <TR key={i.id}>
+                      <TD>
+                        <span className="font-semibold">{i.name}</span>
+                        <div className="font-mono text-xs text-muted">{i.code}</div>
+                      </TD>
+                      <TD className="whitespace-nowrap">{i.category}</TD>
+                      <TD align="right">{i.orgs}</TD>
+                      <TD align="right">{formatCurrency(i.funding)}</TD>
+                      <TD>
+                        {i.alreadyRolled ? (
+                          <Badge>Already rolled over</Badge>
+                        ) : (
+                          <Select
+                            aria-label={`Action for ${i.name}`}
+                            value={c.action}
+                            onChange={(e) => update(i.id, { action: e.target.value as PlanAction })}
+                            className="w-40"
+                          >
+                            {(Object.keys(ACTION_LABEL) as PlanAction[]).map((a) => (
+                              <option key={a} value={a}>
+                                {ACTION_LABEL[a]}
+                              </option>
+                            ))}
+                          </Select>
+                        )}
+                      </TD>
+                      <TD>
+                        {c.action === "rename" && !i.alreadyRolled ? (
+                          <Input
+                            id={`name-${i.id}`}
+                            aria-label={`New name for ${i.name}`}
+                            value={c.name}
+                            onChange={(e) => update(i.id, { name: e.target.value })}
+                            placeholder="New name"
+                            className="min-w-56"
+                          />
+                        ) : null}
+                        {c.action === "combine" && !i.alreadyRolled ? (
+                          <Select
+                            aria-label={`Group for ${i.name}`}
+                            value={c.group}
+                            onChange={(e) => update(i.id, { group: e.target.value })}
+                            className="w-32"
+                          >
+                            {GROUPS.map((g) => (
+                              <option key={g} value={g}>
+                                Group {g}
+                              </option>
+                            ))}
+                          </Select>
+                        ) : null}
+                        {c.action === "retire" && !i.alreadyRolled ? (
+                          <span className="text-sm text-muted">No successor</span>
+                        ) : null}
+                      </TD>
+                    </TR>
+                  );
+                })
+              )}
+            </tbody>
+          </Table>
         </Card>
-      ) : null}
-      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-3 shadow-lg">
-        <Link href={`/finance/rollover?from=${from}&to=${to}`} className={buttonClass("secondary", "md")}>
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
-        </Link>
-        <div className="flex items-center gap-4">
-          <p className="text-sm text-muted" aria-live="polite">
-            <span className="num font-semibold text-ink">{counts.carry}</span> carry, <span className="num font-semibold text-ink">{counts.rename}</span> rename, <span className="num font-semibold text-ink">{counts.combine}</span> combine,{" "}
-            <span className="num font-semibold text-ink">{counts.retire}</span> retire
-          </p>
-          <Button onClick={nextFromPlan}>
-            Continue to forms <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Button>
+        {grouped.size > 0 ? (
+          <Card>
+            <CardHeader
+              title="Combined initiatives"
+              description="Each group becomes one new initiative. Awards are summed per organization, and the form comes from the first initiative in the group."
+            />
+            <CardBody className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {[...grouped.entries()]
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([group, members]) => (
+                  <div key={group} className="rounded-md border border-line p-3">
+                    <label htmlFor={`group-${group}`} className="text-sm font-semibold">
+                      Group {group} name
+                    </label>
+                    <Input
+                      id={`group-${group}`}
+                      value={groupNames[group] ?? ""}
+                      onChange={(e) => setGroupNames((prev) => ({ ...prev, [group]: e.target.value }))}
+                      placeholder={members[0]?.name}
+                      className="mt-1"
+                    />
+                    <ul className="mt-2 list-disc pl-5 text-sm text-muted">
+                      {members.map((m) => (
+                        <li key={m.id}>{m.name}</li>
+                      ))}
+                    </ul>
+                    {members.length < 2 ? (
+                      <p className="mt-2 text-sm font-semibold text-bad">
+                        Add at least one more initiative to this group.
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+            </CardBody>
+          </Card>
+        ) : null}
+        <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-3 shadow-lg">
+          <Link href={`/finance/rollover?from=${from}&to=${to}`} className={buttonClass("secondary", "md")}>
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
+          </Link>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted" aria-live="polite">
+              <span className="num font-semibold text-ink">{counts.carry}</span> carry,{" "}
+              <span className="num font-semibold text-ink">{counts.rename}</span> rename,{" "}
+              <span className="num font-semibold text-ink">{counts.combine}</span> combine,{" "}
+              <span className="num font-semibold text-ink">{counts.retire}</span> retire
+            </p>
+            <Button onClick={nextFromPlan}>
+              Continue to forms <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
-      </div>
       </div>
     </>
   );
@@ -386,7 +480,17 @@ function Summary({ label, value }: { label: string; value: React.ReactNode }) {
 
 type FormRow = { initiative: RolloverInitiative; choice: Choice; form: RolloverForm | null };
 
-function FormTable({ rows, to, groupNames, grouped }: { rows: FormRow[]; to: string; groupNames: Record<string, string>; grouped: Map<string, RolloverInitiative[]> }) {
+function FormTable({
+  rows,
+  to,
+  groupNames,
+  grouped,
+}: {
+  rows: FormRow[];
+  to: string;
+  groupNames: Record<string, string>;
+  grouped: Map<string, RolloverInitiative[]>;
+}) {
   return (
     <Table>
       <THead>
@@ -401,10 +505,18 @@ function FormTable({ rows, to, groupNames, grouped }: { rows: FormRow[]; to: str
         {rows.map(({ initiative, choice, form }) => (
           <TR key={initiative.id}>
             <TD className="min-w-48">
-              <span className="font-semibold">{choice.action === "rename" ? choice.name : choice.action === "combine" ? groupNames[choice.group]?.trim() || initiative.name : initiative.name}</span>
+              <span className="font-semibold">
+                {choice.action === "rename"
+                  ? choice.name
+                  : choice.action === "combine"
+                    ? groupNames[choice.group]?.trim() || initiative.name
+                    : initiative.name}
+              </span>
             </TD>
             <TD className="min-w-48 text-muted">
-              {choice.action === "combine" ? `Group ${choice.group}, ${grouped.get(choice.group)?.length ?? 0} initiatives` : initiative.name}
+              {choice.action === "combine"
+                ? `Group ${choice.group}, ${grouped.get(choice.group)?.length ?? 0} initiatives`
+                : initiative.name}
               <span className="block font-mono text-xs">{initiative.code}</span>
             </TD>
             <TD className="whitespace-nowrap">
@@ -414,7 +526,9 @@ function FormTable({ rows, to, groupNames, grouped }: { rows: FormRow[]; to: str
                   Version <span className="num">{form.version}</span>
                 </span>
               ) : (
-                <Badge tone="warn" icon={AlertTriangle}>No published form</Badge>
+                <Badge tone="warn" icon={AlertTriangle}>
+                  No published form
+                </Badge>
               )}
             </TD>
             <TD align="right">{form ? form.questions : <span className="text-muted">0</span>}</TD>

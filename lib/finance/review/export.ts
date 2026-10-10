@@ -25,7 +25,13 @@ const BUDGET_COLUMNS = ["reference_no", "position", "category", "description", "
 
 const DISCLAIMER = "Exported from LedgerLine. Figures reflect submissions on file at the time of export.";
 
-type ExportBudgetLine = { position: number; category: string; description: string; amount: number; actual?: number | null };
+type ExportBudgetLine = {
+  position: number;
+  category: string;
+  description: string;
+  amount: number;
+  actual?: number | null;
+};
 
 export type ExportSubmission = {
   referenceNo: string;
@@ -95,7 +101,7 @@ function describeValue(value: unknown): string {
       .map((row) =>
         Object.values(row as Record<string, unknown>)
           .map((v) => String(v ?? ""))
-          .join(" ")
+          .join(" "),
       )
       .join("; ");
   }
@@ -118,7 +124,10 @@ export function questionColumns(submissions: ExportSubmission[]): string[] {
 }
 
 function setRange(sheet: XLSX.WorkSheet, rows: number, cols: number) {
-  sheet["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(rows - 1, 0), c: Math.max(cols - 1, 0) } });
+  sheet["!ref"] = XLSX.utils.encode_range({
+    s: { r: 0, c: 0 },
+    e: { r: Math.max(rows - 1, 0), c: Math.max(cols - 1, 0) },
+  });
 }
 
 function submissionsSheet(submissions: ExportSubmission[], numericKeys: Set<string>): XLSX.WorkSheet {
@@ -151,14 +160,19 @@ function submissionsSheet(submissions: ExportSubmission[], numericKeys: Set<stri
       textCell(s.contractRegisteredOn),
     ];
     for (const column of extra) {
-      const key = column.endsWith("_answer") && (FIXED_COLUMNS as readonly string[]).includes(column.slice(0, -7)) ? column.slice(0, -7) : column;
+      const key =
+        column.endsWith("_answer") && (FIXED_COLUMNS as readonly string[]).includes(column.slice(0, -7))
+          ? column.slice(0, -7)
+          : column;
       cells.push(answerCell(s.answers[key], numericKeys.has(key)));
     }
     cells.forEach((cell, c) => {
       if (cell) sheet[XLSX.utils.encode_cell({ r, c })] = cell;
     });
   });
-  const widths = header.map((name, c) => ({ wch: Math.min(48, Math.max(name.length + 2, c === 2 || c === 3 ? 32 : 14)) }));
+  const widths = header.map((name, c) => ({
+    wch: Math.min(48, Math.max(name.length + 2, c === 2 || c === 3 ? 32 : 14)),
+  }));
   sheet["!cols"] = widths;
   setRange(sheet, submissions.length + 1, header.length);
   return sheet;
@@ -177,7 +191,8 @@ function budgetSheet(submissions: ExportSubmission[]): XLSX.WorkSheet {
       sheet[XLSX.utils.encode_cell({ r, c: 2 })] = textCell(line.category);
       sheet[XLSX.utils.encode_cell({ r, c: 3 })] = textCell(line.description);
       sheet[XLSX.utils.encode_cell({ r, c: 4 })] = numberCell(line.amount, "#,##0.00");
-      if (line.actual !== null && line.actual !== undefined) sheet[XLSX.utils.encode_cell({ r, c: 5 })] = numberCell(line.actual, "#,##0.00");
+      if (line.actual !== null && line.actual !== undefined)
+        sheet[XLSX.utils.encode_cell({ r, c: 5 })] = numberCell(line.actual, "#,##0.00");
       r += 1;
     }
   }
@@ -192,21 +207,30 @@ function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
     [DISCLAIMER],
     [],
     ["Sheet", "What it contains"],
-    ["Submissions", "One row per submitted report. Drafts and reports returned to the organization are not included. Fixed columns first, then one column per question key found in the answers."],
-    ["Budget lines", "One row per budget line, linked to Submissions by reference_no. Amounts and actual spent are numbers in US dollars; actual_spent is empty where the organization has not entered it."],
+    [
+      "Submissions",
+      "One row per submitted report. Drafts and reports returned to the organization are not included. Fixed columns first, then one column per question key found in the answers.",
+    ],
+    [
+      "Budget lines",
+      "One row per budget line, linked to Submissions by reference_no. Amounts and actual spent are numbers in US dollars; actual_spent is empty where the organization has not entered it.",
+    ],
     ["README", "This sheet."],
     [],
     ["Reporting period", meta.periodLabel],
     ["Filters applied", meta.filters.length > 0 ? meta.filters.join("; ") : "None"],
     ["Submission rows", String(meta.rowCount)],
     ["Generated on", meta.generatedOn],
-    ["Notes", "EIN values are stored as text. Text that begins with = + - or @ has a leading apostrophe added so spreadsheets do not run it as a formula."],
+    [
+      "Notes",
+      "EIN values are stored as text. Text that begins with = + - or @ has a leading apostrophe added so spreadsheets do not run it as a formula.",
+    ],
   ];
   const sheet: XLSX.WorkSheet = {};
   lines.forEach((row, r) =>
     row.forEach((value, c) => {
       sheet[XLSX.utils.encode_cell({ r, c })] = { t: "s", v: value };
-    })
+    }),
   );
   sheet["!cols"] = [{ wch: 20 }, { wch: 110 }];
   setRange(sheet, lines.length, 2);
@@ -234,7 +258,10 @@ export function submissionsToCsv(book: XLSX.WorkBook): string {
       continue;
     }
     const typed = cell as XLSX.CellObject;
-    sheet[address] = typed.t === "n" && typeof typed.z === "string" && /y/.test(typed.z) ? { t: "s", v: XLSX.SSF.format(typed.z, typed.v as number) } : typed;
+    sheet[address] =
+      typed.t === "n" && typeof typed.z === "string" && /y/.test(typed.z)
+        ? { t: "s", v: XLSX.SSF.format(typed.z, typed.v as number) }
+        : typed;
   }
   return XLSX.utils.sheet_to_csv(sheet, { forceQuotes: false, rawNumbers: true });
 }

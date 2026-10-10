@@ -14,7 +14,14 @@ export function FormStartChoice({ initiativeId }: { initiativeId: string }) {
         <Button type="submit" name="mode" value="import" disabled={pending} className="h-11 px-5 text-base">
           Import a Word template
         </Button>
-        <Button type="submit" name="mode" value="standard" variant="secondary" disabled={pending} className="h-11 px-5 text-base">
+        <Button
+          type="submit"
+          name="mode"
+          value="standard"
+          variant="secondary"
+          disabled={pending}
+          className="h-11 px-5 text-base"
+        >
           {pending ? "Creating draft" : "Start from the standard form"}
         </Button>
       </div>

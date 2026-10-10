@@ -23,7 +23,10 @@ async function tryInsert(submission: string): Promise<string | null> {
   try {
     await owner.query("SET LOCAL ROLE app_server");
     await owner.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
-    await owner.query("INSERT INTO flag (submission_id, kind, source, note, created_by) VALUES ($1, 'manual', 'user', 'check this', $2)", [submission, daniel]);
+    await owner.query(
+      "INSERT INTO flag (submission_id, kind, source, note, created_by) VALUES ($1, 'manual', 'user', 'check this', $2)",
+      [submission, daniel],
+    );
     return null;
   } catch (error) {
     return (error as { code?: string }).code ?? "unknown";

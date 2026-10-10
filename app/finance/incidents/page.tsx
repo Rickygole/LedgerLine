@@ -3,7 +3,18 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime, nowDate } from "@/lib/dates";
-import { incidentStatus, listContacts, listIncidents, notificationDeadline, NOTIFY_WITHIN_HOURS, remediationDeadline, REMEDIATE_WITHIN_DAYS, SEVERITIES, severityLabel, STATUS_LABEL } from "@/lib/ops/incidents";
+import {
+  incidentStatus,
+  listContacts,
+  listIncidents,
+  notificationDeadline,
+  NOTIFY_WITHIN_HOURS,
+  remediationDeadline,
+  REMEDIATE_WITHIN_DAYS,
+  SEVERITIES,
+  severityLabel,
+  STATUS_LABEL,
+} from "@/lib/ops/incidents";
 import { ActionForm } from "@/components/ops/action-form";
 import { DeadlineBadge } from "@/components/ops/deadline-badge";
 import { addIncidentContact, recordIncident, setIncidentContactActive } from "./actions";
@@ -21,7 +32,10 @@ export const metadata: Metadata = { title: "Security incidents" };
 export default async function IncidentsPage() {
   const admin = await requireUser(["finance_admin"]);
   const now = nowDate();
-  const { incidents, contacts } = await withClaims(admin.id, async (tx) => ({ incidents: await listIncidents(tx), contacts: await listContacts(tx) }));
+  const { incidents, contacts } = await withClaims(admin.id, async (tx) => ({
+    incidents: await listIncidents(tx),
+    contacts: await listContacts(tx),
+  }));
   const activeContacts = contacts.filter((c) => c.active);
 
   return (
@@ -33,19 +47,22 @@ export default async function IncidentsPage() {
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Record an incident" description={activeContacts.length === 0 ? "Add a designated contact before recording an incident." : `${activeContacts.length} designated ${plural(activeContacts.length, "contact", "contacts")} will be notified.`} />
+          <CardHeader
+            title="Record an incident"
+            description={
+              activeContacts.length === 0
+                ? "Add a designated contact before recording an incident."
+                : `${activeContacts.length} designated ${plural(activeContacts.length, "contact", "contacts")} will be notified.`
+            }
+          />
           <CardBody>
             <ActionForm action={recordIncident} submitLabel="Record and notify" pendingLabel="Recording">
               <div>
-                <Label htmlFor="detectedAt">
-                  Detected at (Eastern time)
-                </Label>
+                <Label htmlFor="detectedAt">Detected at (Eastern time)</Label>
                 <Input id="detectedAt" aria-required="true" name="detectedAt" type="datetime-local" />
               </div>
               <div>
-                <Label htmlFor="severity">
-                  Severity
-                </Label>
+                <Label htmlFor="severity">Severity</Label>
                 <Select id="severity" aria-required="true" name="severity" defaultValue="">
                   <option value="" disabled>
                     Choose one
@@ -58,22 +75,21 @@ export default async function IncidentsPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="description">
-                  What happened
-                </Label>
+                <Label htmlFor="description">What happened</Label>
                 <Textarea id="description" aria-required="true" name="description" rows={4} maxLength={4000} />
               </div>
               <div>
-                <Label htmlFor="affectedData">
-                  Data affected
-                </Label>
+                <Label htmlFor="affectedData">Data affected</Label>
                 <Textarea id="affectedData" aria-required="true" name="affectedData" rows={3} maxLength={2000} />
               </div>
             </ActionForm>
           </CardBody>
         </Card>
         <Card>
-          <CardHeader title="Designated Council contacts" description="These people receive every incident notice and remediation report." />
+          <CardHeader
+            title="Designated Council contacts"
+            description="These people receive every incident notice and remediation report."
+          />
           <Table density="compact">
             <THead>
               <tr>
@@ -98,7 +114,15 @@ export default async function IncidentsPage() {
                     <TD className="text-muted">{c.email}</TD>
                     <TD>{c.active ? <Badge tone="ok">Active</Badge> : <Badge>Off</Badge>}</TD>
                     <TD>
-                      <ActionForm action={setIncidentContactActive} hidden={{ contactId: c.id, active: c.active ? "false" : "true" }} submitLabel={c.active ? "Switch off" : "Switch on"} variant="secondary" size="sm" resetOnSuccess={false} className="space-y-1" />
+                      <ActionForm
+                        action={setIncidentContactActive}
+                        hidden={{ contactId: c.id, active: c.active ? "false" : "true" }}
+                        submitLabel={c.active ? "Switch off" : "Switch on"}
+                        variant="secondary"
+                        size="sm"
+                        resetOnSuccess={false}
+                        className="space-y-1"
+                      />
                     </TD>
                   </TR>
                 ))
@@ -150,7 +174,10 @@ export default async function IncidentsPage() {
                 return (
                   <TR key={i.id} className="align-top">
                     <TD className="whitespace-nowrap font-semibold">
-                      <Link href={`/finance/incidents/${i.id}`} className="text-link underline underline-offset-2 hover:text-link-hover">
+                      <Link
+                        href={`/finance/incidents/${i.id}`}
+                        className="text-link underline underline-offset-2 hover:text-link-hover"
+                      >
                         {i.reference}
                       </Link>
                     </TD>

@@ -25,7 +25,10 @@ export function formatErrorLog(input: ErrorLogInput, at: Date = nowDate()): stri
   });
 }
 
-export function headerValue(headers: Record<string, string | string[] | undefined> | undefined, name: string): string | null {
+export function headerValue(
+  headers: Record<string, string | string[] | undefined> | undefined,
+  name: string,
+): string | null {
   const value = headers?.[name];
   const text = Array.isArray(value) ? value[0] : value;
   return text ?? null;
@@ -33,8 +36,14 @@ export function headerValue(headers: Record<string, string | string[] | undefine
 
 export const REQUEST_ID_HEADER = "x-request-id";
 
-export function formatActionErrorLog(event: string, error: unknown, requestId: string | null, at: Date = nowDate()): string {
-  const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code: unknown }).code) : null;
+export function formatActionErrorLog(
+  event: string,
+  error: unknown,
+  requestId: string | null,
+  at: Date = nowDate(),
+): string {
+  const code =
+    typeof error === "object" && error !== null && "code" in error ? String((error as { code: unknown }).code) : null;
   return JSON.stringify({
     level: "error",
     event,

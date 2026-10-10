@@ -17,7 +17,13 @@ export type Concern = {
 export type NoteSentence = { text: string; ruleIds: string[] };
 
 export const PRESET_CONCERNS: Concern[] = [
-  { id: "PR-001:docs", ruleId: "PR-001", kind: "preset", label: "Attach supporting documentation for personnel lines", detail: null },
+  {
+    id: "PR-001:docs",
+    ruleId: "PR-001",
+    kind: "preset",
+    label: "Attach supporting documentation for personnel lines",
+    detail: null,
+  },
   { id: "PR-002:counts", ruleId: "PR-002", kind: "preset", label: "Confirm participant counts", detail: null },
 ];
 
@@ -72,7 +78,13 @@ export function buildConcerns(input: {
       const balance = balanceMessage(total, input.award);
       if (!balance.balanced) detail = `Total ${formatCurrency(total)} vs award ${formatCurrency(input.award)}`;
     }
-    concerns.push({ id, ruleId: issue.ruleId, kind: "rule", label: field === "budget.lines" ? "Budget line descriptions" : labelFor(input.definition, issue.field), detail });
+    concerns.push({
+      id,
+      ruleId: issue.ruleId,
+      kind: "rule",
+      label: field === "budget.lines" ? "Budget line descriptions" : labelFor(input.definition, issue.field),
+      detail,
+    });
   }
   const outcome = outcomeFlag(input.status === "draft" ? "submitted" : input.status, input.answers, input.definition);
   if (outcome) {
@@ -117,7 +129,9 @@ function fallbackSentence(concern: Concern): string {
       return "Please check the EIN and enter all nine digits.";
     case "OC-001":
     case "OC-002":
-      return concern.detail ? `Please check the number of participants served: you reported ${concern.detail}.` : "Please check the number of participants served.";
+      return concern.detail
+        ? `Please check the number of participants served: you reported ${concern.detail}.`
+        : "Please check the number of participants served.";
     case "PR-001":
       return "Please attach supporting documentation for personnel lines.";
     case "PR-002":
@@ -134,19 +148,31 @@ function fallbackSentence(concern: Concern): string {
 type AiInput = { concerns: { rule_id: string; field: string; value: string | null }[] };
 
 export function buildAiInput(concerns: Concern[]): AiInput {
-  return { concerns: concerns.map((c) => ({ rule_id: c.ruleId, field: c.label, value: c.kind === "flag" ? null : c.detail })) };
+  return {
+    concerns: concerns.map((c) => ({ rule_id: c.ruleId, field: c.label, value: c.kind === "flag" ? null : c.detail })),
+  };
 }
 
-export function validateSentences(raw: unknown, concerns: Concern[]): { kept: NoteSentence[]; dropped: { text: string; reason: string }[] } {
+export function validateSentences(
+  raw: unknown,
+  concerns: Concern[],
+): { kept: NoteSentence[]; dropped: { text: string; reason: string }[] } {
   const allowedIds = new Set(concerns.map((c) => c.ruleId));
-  const allowedDollars = new Set(concerns.flatMap((c) => dollarFigures(`${c.label} ${c.kind === "flag" ? "" : (c.detail ?? "")}`)));
+  const allowedDollars = new Set(
+    concerns.flatMap((c) => dollarFigures(`${c.label} ${c.kind === "flag" ? "" : (c.detail ?? "")}`)),
+  );
   const kept: NoteSentence[] = [];
   const dropped: { text: string; reason: string }[] = [];
-  const list = raw && typeof raw === "object" && Array.isArray((raw as { sentences?: unknown }).sentences) ? ((raw as { sentences: unknown[] }).sentences as unknown[]) : [];
+  const list =
+    raw && typeof raw === "object" && Array.isArray((raw as { sentences?: unknown }).sentences)
+      ? ((raw as { sentences: unknown[] }).sentences as unknown[])
+      : [];
   for (const item of list) {
     const entry = item as { text?: unknown; rule_ids?: unknown };
     const text = typeof entry?.text === "string" ? entry.text.trim() : "";
-    const ids = Array.isArray(entry?.rule_ids) ? entry.rule_ids.filter((id): id is string => typeof id === "string") : [];
+    const ids = Array.isArray(entry?.rule_ids)
+      ? entry.rule_ids.filter((id): id is string => typeof id === "string")
+      : [];
     if (!text) {
       dropped.push({ text: "", reason: "empty sentence" });
       continue;
@@ -172,7 +198,10 @@ export function validateSentences(raw: unknown, concerns: Concern[]): { kept: No
   return { kept, dropped };
 }
 
-export function completeSentences(kept: NoteSentence[], concerns: Concern[]): { sentences: NoteSentence[]; filled: number } {
+export function completeSentences(
+  kept: NoteSentence[],
+  concerns: Concern[],
+): { sentences: NoteSentence[]; filled: number } {
   const covered = new Set(kept.flatMap((s) => s.ruleIds));
   const sentences = [...kept];
   let filled = 0;
@@ -197,7 +226,13 @@ export function noteText(sentences: NoteSentence[]): string {
 }
 
 export function lineDiff(before: string, after: string) {
-  const a = before.split("\n").map((l) => l.trim()).filter(Boolean);
-  const b = after.split("\n").map((l) => l.trim()).filter(Boolean);
+  const a = before
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const b = after
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   return { removed: a.filter((l) => !b.includes(l)), added: b.filter((l) => !a.includes(l)) };
 }

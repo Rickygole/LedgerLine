@@ -5,7 +5,8 @@ import { validateDefinition } from "@/lib/forms/editor/definition";
 import { readTemplate } from "@/lib/forms/editor/docx";
 import { buildDefinition } from "@/lib/forms/standard";
 
-const cell = (text: string) => new TableCell({ width: { size: 3000, type: WidthType.DXA }, children: [new Paragraph(text)] });
+const cell = (text: string) =>
+  new TableCell({ width: { size: 3000, type: WidthType.DXA }, children: [new Paragraph(text)] });
 
 async function freshTemplate(): Promise<Buffer> {
   const doc = new Document({
@@ -50,10 +51,20 @@ describe("[US-003][US-005][US-007] Word import without a model", () => {
       "Describe how neighbors used the garden",
     ]);
 
-    expect(byLabel["How many volunteer workdays were held?"]).toMatchObject({ type: "integer", section_title: "Garden activity" });
-    expect(byLabel["Which tools were shared?"]).toMatchObject({ type: "select", options: ["Hoes", "Rakes", "Wheelbarrows"] });
+    expect(byLabel["How many volunteer workdays were held?"]).toMatchObject({
+      type: "integer",
+      section_title: "Garden activity",
+    });
+    expect(byLabel["Which tools were shared?"]).toMatchObject({
+      type: "select",
+      options: ["Hoes", "Rakes", "Wheelbarrows"],
+    });
     expect(byLabel["Did the garden donate produce to a pantry?"]).toMatchObject({ type: "yesno" });
-    expect(byLabel["Describe how neighbors used the garden"]).toMatchObject({ type: "textarea", max_words: 150, section_title: "Story" });
+    expect(byLabel["Describe how neighbors used the garden"]).toMatchObject({
+      type: "textarea",
+      max_words: 150,
+      section_title: "Story",
+    });
     expect(byLabel["List each garden plot"]).toMatchObject({
       type: "table",
       section_title: "Plots",
@@ -72,11 +83,17 @@ describe("[US-003][US-005][US-007] Word import without a model", () => {
     const merged = mergeFields(buildDefinition("Garden", []), parseWithRules(paragraphs));
     const titles = merged.definition.sections.map((s) => s.title);
     expect(titles).toEqual(expect.arrayContaining(["Garden activity", "Plots", "Story"]));
-    expect(titles.indexOf("Plots")).toBeLessThan(titles.indexOf(merged.definition.sections.find((s) => s.kind === "budget")!.title));
+    expect(titles.indexOf("Plots")).toBeLessThan(
+      titles.indexOf(merged.definition.sections.find((s) => s.kind === "budget")!.title),
+    );
     const plots = merged.definition.sections.find((s) => s.title === "Plots")!;
     expect(plots.questions).toHaveLength(1);
     expect(plots.questions[0]).toMatchObject({ type: "table", required: true });
-    expect(plots.questions[0].columns?.map((c) => c.label)).toEqual(["Plot name", "Households served", "Pounds harvested"]);
+    expect(plots.questions[0].columns?.map((c) => c.label)).toEqual([
+      "Plot name",
+      "Households served",
+      "Pounds harvested",
+    ]);
     const activity = merged.definition.sections.find((s) => s.title === "Garden activity")!;
     expect(activity.questions.map((q) => q.type)).toEqual(["integer", "select", "yesno"]);
     expect(validateDefinition(merged.definition)).toEqual([]);
@@ -90,7 +107,12 @@ describe("[US-003][US-005][US-007] Word import without a model", () => {
   });
 
   it("still handles plain text with section lines when no structure is available", () => {
-    const fields = parseWithRules(["Section 1: Delivery", "1. Which sites were used? (North / South)", "Section 2: Notes", "2. Describe the weather."]);
+    const fields = parseWithRules([
+      "Section 1: Delivery",
+      "1. Which sites were used? (North / South)",
+      "Section 2: Notes",
+      "2. Describe the weather.",
+    ]);
     expect(fields[0]).toMatchObject({ type: "select", options: ["North", "South"], section_title: "Delivery" });
     expect(fields[1]).toMatchObject({ type: "textarea", section_title: "Notes" });
   });

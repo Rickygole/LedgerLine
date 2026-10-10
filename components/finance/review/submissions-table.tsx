@@ -25,7 +25,11 @@ function dueNote(row: Pick<ReportRow, "status" | "daysPastDue" | "submittedAt" |
   return null;
 }
 
-const NOTE_TONE: Record<DueNote["tone"], string> = { bad: "font-semibold text-bad", warn: "font-semibold text-warn", muted: "text-muted" };
+const NOTE_TONE: Record<DueNote["tone"], string> = {
+  bad: "font-semibold text-bad",
+  warn: "font-semibold text-warn",
+  muted: "text-muted",
+};
 
 function FlagsCell({ row }: { row: ReportRow }) {
   const flags = row.bucket === "missing" ? row.flags.filter((flag) => flag.reason !== "missing") : row.flags;
@@ -46,12 +50,16 @@ function FlagsCell({ row }: { row: ReportRow }) {
 }
 
 export function orgMeta(row: Pick<ReportRow, "ein" | "borough" | "councilDistrict">) {
-  return [row.ein, row.borough, row.councilDistrict ? `District ${row.councilDistrict}` : null].filter(Boolean).join(" · ");
+  return [row.ein, row.borough, row.councilDistrict ? `District ${row.councilDistrict}` : null]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; emptyHref: string }) {
   const notes = new Map(rows.map((row) => [row.assignmentId, dueNote(row)]));
-  const pastDue = new Set(rows.filter((row) => notes.get(row.assignmentId)?.tone === "bad").map((row) => notes.get(row.assignmentId)!.text));
+  const pastDue = new Set(
+    rows.filter((row) => notes.get(row.assignmentId)?.tone === "bad").map((row) => notes.get(row.assignmentId)!.text),
+  );
   const shown = (row: ReportRow) => {
     const note = notes.get(row.assignmentId);
     if (!note) return null;
@@ -75,7 +83,10 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
         {rows.length === 0 ? (
           <EmptyRow colSpan={7}>
             No reports match these filters.{" "}
-            <Link href={emptyHref} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+            <Link
+              href={emptyHref}
+              className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+            >
               Clear all filters
             </Link>
           </EmptyRow>
@@ -84,7 +95,14 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
             <TR key={row.assignmentId} className="lg:h-14">
               <TD className="min-w-[260px]" primary>
                 <div>
-                  <Link href={row.submissionId ? `/finance/submissions/${row.submissionId}` : `/finance/organizations/${row.orgId}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                  <Link
+                    href={
+                      row.submissionId
+                        ? `/finance/submissions/${row.submissionId}`
+                        : `/finance/organizations/${row.orgId}`
+                    }
+                    className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                  >
                     {row.orgName}
                     {row.submissionId ? null : <span className="sr-only">, not started, open organization</span>}
                   </Link>
@@ -94,25 +112,35 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
               <TD className="min-w-[220px]" label="Initiative">
                 <div>
                   <span className="text-ink">{row.initiativeName}</span>
-                  <span className="block text-[13px] text-muted">{row.initiativeCode} · {row.category}</span>
+                  <span className="block text-[13px] text-muted">
+                    {row.initiativeCode} · {row.category}
+                  </span>
                   <span className="hidden text-[13px] text-muted @max-[64rem]:block">{sponsorLabel(row)}</span>
                 </div>
               </TD>
               <TD className="whitespace-nowrap @max-[64rem]:hidden" stackHidden>
-                <span title={row.sponsors.length > 0 ? sponsorNames(row.sponsors) : undefined}>{sponsorLabel(row)}</span>
+                <span title={row.sponsors.length > 0 ? sponsorNames(row.sponsors) : undefined}>
+                  {sponsorLabel(row)}
+                </span>
               </TD>
-              <TD align="right" label="Award">{formatCurrency(row.award, { cents: false })}</TD>
+              <TD align="right" label="Award">
+                {formatCurrency(row.award, { cents: false })}
+              </TD>
               <TD className="min-w-36" label="Status">
                 <div>
                   <StateBadge state={reportState(row.status, row.dueOn)} />
-                  {shown(row) ? <span className={`mt-1 block text-[13px] ${NOTE_TONE[shown(row)!.tone]}`}>{shown(row)!.text}</span> : null}
+                  {shown(row) ? (
+                    <span className={`mt-1 block text-[13px] ${NOTE_TONE[shown(row)!.tone]}`}>{shown(row)!.text}</span>
+                  ) : null}
                 </div>
               </TD>
               <TD label="Flags">
                 <FlagsCell row={row} />
               </TD>
               <TD className="@max-[80rem]:hidden" label="Reference">
-                <span className="whitespace-nowrap font-mono text-sm text-muted">{row.referenceNo ?? "Not started"}</span>
+                <span className="whitespace-nowrap font-mono text-sm text-muted">
+                  {row.referenceNo ?? "Not started"}
+                </span>
               </TD>
             </TR>
           ))

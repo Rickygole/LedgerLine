@@ -23,7 +23,22 @@ export const FLAG_OPTIONS = [
 export const FUNDING_OPTIONS = FUNDING_SOURCES.map((f) => ({ value: f.value, label: f.label }));
 export const CONTRACT_OPTIONS = CONTRACT_STATUSES.map((c) => ({ value: c.value, label: c.label }));
 
-export const QUERY_KEYS = ["period", "category", "initiative", "borough", "district", "member", "funding", "contract", "org_type", "bucket", "status", "award_min", "award_max", "flag"] as const;
+export const QUERY_KEYS = [
+  "period",
+  "category",
+  "initiative",
+  "borough",
+  "district",
+  "member",
+  "funding",
+  "contract",
+  "org_type",
+  "bucket",
+  "status",
+  "award_min",
+  "award_max",
+  "flag",
+] as const;
 type QueryKey = (typeof QUERY_KEYS)[number];
 export type QueryParams = Partial<Record<QueryKey, string>>;
 export type QueryErrors = Partial<Record<QueryKey, string>>;
@@ -58,7 +73,13 @@ export function cleanParams(raw: Raw, periods: PeriodRef[]): QueryParams {
   };
   set("category", get("category").slice(0, 80));
   set("initiative", get("initiative").slice(0, 120));
-  set("borough", oneOf(get("borough"), REPORT_BOROUGHS.map((value) => ({ value }))));
+  set(
+    "borough",
+    oneOf(
+      get("borough"),
+      REPORT_BOROUGHS.map((value) => ({ value })),
+    ),
+  );
   set("district", wholeNumber(get("district"), 1, 51));
   set("member", wholeNumber(get("member"), 1, 51));
   set("funding", oneOf(get("funding"), FUNDING_OPTIONS));
@@ -85,7 +106,11 @@ export function enteredParams(raw: Raw, periods: PeriodRef[]): QueryParams {
 export function validateParams(raw: Raw, periods: PeriodRef[]): QueryErrors {
   const errors: QueryErrors = {};
   const get = (key: string) => getValue(raw, key);
-  const choice = (key: QueryKey, allowed: readonly { value: string }[], message = "Choose one of the listed options.") => {
+  const choice = (
+    key: QueryKey,
+    allowed: readonly { value: string }[],
+    message = "Choose one of the listed options.",
+  ) => {
     const value = get(key);
     if (value && !allowed.some((a) => a.value === value)) errors[key] = message;
   };
@@ -95,10 +120,18 @@ export function validateParams(raw: Raw, periods: PeriodRef[]): QueryErrors {
   };
   const dollars = (key: "award_min" | "award_max") => {
     const value = get(key);
-    if (value && !wholeNumber(value, 0, MAX_AWARD)) errors[key] = "Enter a whole dollar amount from 0 to 1,000,000,000, with digits only.";
+    if (value && !wholeNumber(value, 0, MAX_AWARD))
+      errors[key] = "Enter a whole dollar amount from 0 to 1,000,000,000, with digits only.";
   };
-  choice("period", periods.map((p) => ({ value: p.id })), "Choose one of the reporting periods.");
-  choice("borough", REPORT_BOROUGHS.map((value) => ({ value })));
+  choice(
+    "period",
+    periods.map((p) => ({ value: p.id })),
+    "Choose one of the reporting periods.",
+  );
+  choice(
+    "borough",
+    REPORT_BOROUGHS.map((value) => ({ value })),
+  );
   choice("funding", FUNDING_OPTIONS);
   choice("contract", CONTRACT_OPTIONS);
   choice("org_type", ORG_TYPES);
@@ -111,7 +144,13 @@ export function validateParams(raw: Raw, periods: PeriodRef[]): QueryErrors {
   dollars("award_max");
   if (get("category").length > 80) errors.category = "Use 80 characters or fewer.";
   if (get("initiative").length > 120) errors.initiative = "Use 120 characters or fewer.";
-  if (!errors.award_min && !errors.award_max && get("award_min") && get("award_max") && Number(get("award_min")) > Number(get("award_max"))) {
+  if (
+    !errors.award_min &&
+    !errors.award_max &&
+    get("award_min") &&
+    get("award_max") &&
+    Number(get("award_min")) > Number(get("award_max"))
+  ) {
     errors.award_max = "Award at most cannot be lower than award at least.";
   }
   return errors;
@@ -145,7 +184,10 @@ export function describe(params: QueryParams, members: MemberOption[] = []): str
   if (params.initiative) lines.push(`Initiative matching "${params.initiative}"`);
   if (params.borough) lines.push(params.borough);
   if (params.district) lines.push(`Organization in district ${params.district}`);
-  if (params.member) lines.push(`Sponsor ${members.find((m) => String(m.district) === params.member)?.name ?? `of district ${params.member}`}`);
+  if (params.member)
+    lines.push(
+      `Sponsor ${members.find((m) => String(m.district) === params.member)?.name ?? `of district ${params.member}`}`,
+    );
   if (params.funding) lines.push(FUNDING_OPTIONS.find((o) => o.value === params.funding)?.label ?? params.funding);
   if (params.contract) lines.push(CONTRACT_OPTIONS.find((o) => o.value === params.contract)?.label ?? params.contract);
   if (params.org_type) lines.push(ORG_TYPES.find((o) => o.value === params.org_type)?.label ?? params.org_type);
@@ -171,7 +213,9 @@ export async function queryOptions(tx: Tx) {
     loadPeriods(tx),
     tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative ORDER BY category"),
     tx.query<{ name: string }>("SELECT DISTINCT name FROM initiative ORDER BY name"),
-    tx.query<{ district: number; full_name: string }>("SELECT district, full_name FROM council_member ORDER BY district"),
+    tx.query<{ district: number; full_name: string }>(
+      "SELECT district, full_name FROM council_member ORDER BY district",
+    ),
   ]);
   return {
     periods,
@@ -184,5 +228,7 @@ export async function queryOptions(tx: Tx) {
 type SavedQuery = { id: string; name: string; params: QueryParams; created_at: string };
 
 export async function listSaved(tx: Tx): Promise<SavedQuery[]> {
-  return tx.query<SavedQuery>("SELECT id, name, params, created_at::text FROM saved_query WHERE owner = app.uid() ORDER BY created_at DESC");
+  return tx.query<SavedQuery>(
+    "SELECT id, name, params, created_at::text FROM saved_query WHERE owner = app.uid() ORDER BY created_at DESC",
+  );
 }

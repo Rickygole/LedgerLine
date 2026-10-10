@@ -23,7 +23,8 @@ export async function changeRole(_prev: ActionState, formData: FormData): Promis
   const admin = await requireUser(["finance_admin"]);
   const userId = String(formData.get("userId") ?? "");
   const role = String(formData.get("role") ?? "");
-  if (!isUuid(userId) || !(STAFF_ROLES as readonly string[]).includes(role)) return { error: "Choose one of the Finance roles." };
+  if (!isUuid(userId) || !(STAFF_ROLES as readonly string[]).includes(role))
+    return { error: "Choose one of the Finance roles." };
   if (userId === admin.id) return { error: "You cannot change your own role. Ask another administrator." };
   try {
     return await withClaims(admin.id, async (tx) => {
@@ -31,7 +32,13 @@ export async function changeRole(_prev: ActionState, formData: FormData): Promis
       if (target.role === "cbo_submitter") return { error: "Organization accounts keep the organization role." };
       if (target.role === role) return { ok: `${target.full_name} already has that role.` };
       await tx.query(`UPDATE app_user SET role = $2 WHERE id = $1`, [userId, role]);
-      await writeAudit(tx, { entity: "app_user", entityId: userId, action: "role_change", before: { role: target.role }, after: { role } });
+      await writeAudit(tx, {
+        entity: "app_user",
+        entityId: userId,
+        action: "role_change",
+        before: { role: target.role },
+        after: { role },
+      });
       return { ok: `Role updated for ${target.full_name}.` };
     });
   } catch (error) {
@@ -52,7 +59,13 @@ export async function setActive(_prev: ActionState, formData: FormData): Promise
       const target = await loadTarget(tx, userId);
       if (target.active === active) return { ok: `${target.full_name} is already ${active ? "active" : "inactive"}.` };
       await tx.query(`UPDATE app_user SET active = $2 WHERE id = $1`, [userId, active]);
-      await writeAudit(tx, { entity: "app_user", entityId: userId, action: active ? "activate" : "deactivate", before: { active: !active }, after: { active } });
+      await writeAudit(tx, {
+        entity: "app_user",
+        entityId: userId,
+        action: active ? "activate" : "deactivate",
+        before: { active: !active },
+        after: { active },
+      });
       return { ok: `${target.full_name} is now ${active ? "active" : "inactive"}.` };
     });
   } catch (error) {
@@ -70,11 +83,18 @@ export async function sendPasswordReset(_prev: ActionState, formData: FormData):
   try {
     return await withClaims(admin.id, async (tx) => {
       const target = await loadTarget(tx, userId);
-      const issued = await tx.one<{ link: string }>(`SELECT link FROM app.queue_password_reset($1, $2)`, [userId, origin]);
-      return { ok: `Reset link issued for ${target.full_name}. The link below is shown only now and works once for 30 minutes. Give it to the person directly.`, link: issued?.link };
+      const issued = await tx.one<{ link: string }>(`SELECT link FROM app.queue_password_reset($1, $2)`, [
+        userId,
+        origin,
+      ]);
+      return {
+        ok: `Reset link issued for ${target.full_name}. The link below is shown only now and works once for 30 minutes. Give it to the person directly.`,
+        link: issued?.link,
+      };
     });
   } catch (error) {
-    if (pgCode(error) === "23514") return { error: "That user could not be found or is inactive. Activate the account first." };
+    if (pgCode(error) === "23514")
+      return { error: "That user could not be found or is inactive. Activate the account first." };
     return actionFailure("send_password_reset_failed", error);
   } finally {
     revalidatePath("/finance/outbox");
@@ -92,13 +112,21 @@ const createSchema = z
         const problem = personNameProblem(value, "full name");
         if (problem) ctx.addIssue({ code: "custom", message: problem });
       }),
-    email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254, "Use 254 characters or fewer."),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Enter a valid email address.")
+      .max(254, "Use 254 characters or fewer."),
     title: z.string().trim().max(120, "Use 120 characters or fewer."),
-    role: z.enum(["finance_viewer", "finance_analyst", "finance_admin", "cbo_submitter"], { message: "Choose a role." }),
+    role: z.enum(["finance_viewer", "finance_analyst", "finance_admin", "cbo_submitter"], {
+      message: "Choose a role.",
+    }),
     orgId: z.string(),
   })
   .superRefine((value, ctx) => {
-    if (value.role === "cbo_submitter" && !isUuid(value.orgId)) ctx.addIssue({ code: "custom", path: ["orgId"], message: "Choose the organization this person reports for." });
+    if (value.role === "cbo_submitter" && !isUuid(value.orgId))
+      ctx.addIssue({ code: "custom", path: ["orgId"], message: "Choose the organization this person reports for." });
   });
 
 export async function createUser(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -121,16 +149,27 @@ export async function createUser(_prev: ActionState, formData: FormData): Promis
   let link: string | undefined;
   try {
     const issued = await withClaims(admin.id, (tx) =>
-      tx.one<{ link: string }>(`SELECT link FROM app.create_user($1, $2, $3, $4, $5, $6)`, [data.email, data.fullName, data.title || null, data.role, data.role === "cbo_submitter" ? data.orgId : null, origin])
+      tx.one<{ link: string }>(`SELECT link FROM app.create_user($1, $2, $3, $4, $5, $6)`, [
+        data.email,
+        data.fullName,
+        data.title || null,
+        data.role,
+        data.role === "cbo_submitter" ? data.orgId : null,
+        origin,
+      ]),
     );
     link = issued?.link;
   } catch (error) {
-    if (pgCode(error) === "23505") return { fieldErrors: { email: "An account with that email address already exists." }, values };
+    if (pgCode(error) === "23505")
+      return { fieldErrors: { email: "An account with that email address already exists." }, values };
     if (pgCode(error) === "23503") return { fieldErrors: { orgId: "That organization could not be found." }, values };
     return actionFailure("create_user_failed", error, {}, { values });
   } finally {
     revalidatePath("/finance/users");
     revalidatePath("/finance/outbox");
   }
-  return { ok: `Account created for ${data.fullName}. The link below is shown only now and works once for 30 minutes. Give it to the person directly.`, link };
+  return {
+    ok: `Account created for ${data.fullName}. The link below is shown only now and works once for 30 minutes. Give it to the person directly.`,
+    link,
+  };
 }

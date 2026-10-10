@@ -32,7 +32,8 @@ export function numericProblem(kind: NumericKind, raw: string, label: string): s
   }
   if (/\.\d{3,}/.test(text)) return `${label} can have at most 2 decimal places.`;
   const whole = text.split(".")[0] ?? "";
-  if (kind === "number") return significantDigits(whole) > 8 || Number(text) > MAX_COUNT ? `${label} must be ${countText} or less.` : null;
+  if (kind === "number")
+    return significantDigits(whole) > 8 || Number(text) > MAX_COUNT ? `${label} must be ${countText} or less.` : null;
   if (kind === "currency") return significantDigits(whole) > 9 ? `${label} must be ${MAX_AMOUNT_TEXT} or less.` : null;
   return Number(text) > MAX_PERCENT ? `${label} must be a percentage between 0 and 100.` : null;
 }

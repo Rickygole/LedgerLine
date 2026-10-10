@@ -5,7 +5,17 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime, nowDate } from "@/lib/dates";
 import { isUuid } from "@/lib/ids";
-import { ageMinutes, categoryLabel, dueAt, formatDuration, loadMessages, loadSupport, metTarget, responseMinutes, supportState } from "@/lib/ops/support";
+import {
+  ageMinutes,
+  categoryLabel,
+  dueAt,
+  formatDuration,
+  loadMessages,
+  loadSupport,
+  metTarget,
+  responseMinutes,
+  supportState,
+} from "@/lib/ops/support";
 import { ActionForm } from "@/components/ops/action-form";
 import { SupportStateBadge, Thread } from "@/components/ops/support-parts";
 import { closeSupportRequest } from "../actions";
@@ -28,7 +38,12 @@ export default async function SupportDetail({ params }: { params: Promise<{ id: 
   if (!data) notFound();
   const { row, messages } = data;
   const now = nowDate();
-  const state = supportState({ createdAt: row.created_at, firstResponseAt: row.first_response_at, closedAt: row.closed_at, now });
+  const state = supportState({
+    createdAt: row.created_at,
+    firstResponseAt: row.first_response_at,
+    closedAt: row.closed_at,
+    now,
+  });
   const replied = responseMinutes(row.created_at, row.first_response_at);
   const met = metTarget(row.created_at, row.first_response_at);
 
@@ -36,7 +51,11 @@ export default async function SupportDetail({ params }: { params: Promise<{ id: 
     <>
       <PageHeader
         title={`${row.reference}: ${row.subject}`}
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Support queue", href: "/finance/support" }, { label: row.reference }]}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          { label: "Support queue", href: "/finance/support" },
+          { label: row.reference },
+        ]}
         meta={<SupportStateBadge state={state} />}
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
@@ -71,14 +90,26 @@ export default async function SupportDetail({ params }: { params: Promise<{ id: 
               <p className="text-sm text-muted">This request is closed.</p>
             ) : (
               <>
-                <ActionForm action={replyToSupportRequest} hidden={{ requestId: row.id }} submitLabel="Send reply" pendingLabel="Sending">
+                <ActionForm
+                  action={replyToSupportRequest}
+                  hidden={{ requestId: row.id }}
+                  submitLabel="Send reply"
+                  pendingLabel="Sending"
+                >
                   <div>
                     <Label htmlFor="reply">Reply to {row.requester_name}</Label>
                     <Textarea id="reply" name="body" maxLength={4000} rows={5} />
                   </div>
                 </ActionForm>
                 {row.first_response_at ? (
-                  <ActionForm action={closeSupportRequest} hidden={{ requestId: row.id }} submitLabel="Close request" pendingLabel="Closing" variant="secondary" resetOnSuccess={false} />
+                  <ActionForm
+                    action={closeSupportRequest}
+                    hidden={{ requestId: row.id }}
+                    submitLabel="Close request"
+                    pendingLabel="Closing"
+                    variant="secondary"
+                    resetOnSuccess={false}
+                  />
                 ) : null}
               </>
             )}

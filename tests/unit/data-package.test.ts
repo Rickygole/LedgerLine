@@ -30,7 +30,13 @@ function readZip(buffer: Buffer): Map<string, string> {
   return files;
 }
 
-const column = (table_name: string, column_name: string, ordinal: number, data_type = "text"): CatalogColumn => ({ table_name, column_name, data_type, is_nullable: false, ordinal });
+const column = (table_name: string, column_name: string, ordinal: number, data_type = "text"): CatalogColumn => ({
+  table_name,
+  column_name,
+  data_type,
+  is_nullable: false,
+  ordinal,
+});
 
 describe("[US-055][BR-020] the data package", () => {
   it("writes a zip whose files read back exactly, with valid checksums", () => {
@@ -40,7 +46,7 @@ describe("[US-055][BR-020] the data package", () => {
         { name: "data/b.csv", data: "x,y\r\n1,2\r\n".repeat(500) },
         { name: "empty.txt", data: "" },
       ],
-      new Date("2026-10-09T12:00:00Z")
+      new Date("2026-10-09T12:00:00Z"),
     );
     const files = readZip(zip);
     expect([...files.keys()]).toEqual(["a.txt", "data/b.csv", "empty.txt"]);
@@ -51,7 +57,7 @@ describe("[US-055][BR-020] the data package", () => {
   });
 
   it("guards cells that start with a formula character and quotes commas, quotes and line breaks", () => {
-    expect(csvCell("=HYPERLINK(\"http://x\")")).toBe("\"'=HYPERLINK(\"\"http://x\"\")\"");
+    expect(csvCell('=HYPERLINK("http://x")')).toBe('"\'=HYPERLINK(""http://x"")"');
     expect(csvCell("+1 212")).toBe("'+1 212");
     expect(csvCell("@sum")).toBe("'@sum");
     expect(csvCell("plain")).toBe("plain");
@@ -64,14 +70,33 @@ describe("[US-055][BR-020] the data package", () => {
   });
 
   it("writes a header row and one line per record, in catalog order", () => {
-    expect(tableCsv(["id", "note"], [{ id: 1, note: "a" }, { id: 2, note: "=2+2" }])).toBe("﻿id,note\r\n1,a\r\n2,'=2+2\r\n");
+    expect(
+      tableCsv(
+        ["id", "note"],
+        [
+          { id: 1, note: "a" },
+          { id: 2, note: "=2+2" },
+        ],
+      ),
+    ).toBe("﻿id,note\r\n1,a\r\n2,'=2+2\r\n");
   });
 
   it("builds a package with a README, a manifest and one file per table, with the row counts", () => {
-    const catalog = [column("fiscal_year", "id", 1), column("fiscal_year", "starts_on", 2, "date"), column("council_member", "district", 1, "integer"), column("council_member", "full_name", 2)];
+    const catalog = [
+      column("fiscal_year", "id", 1),
+      column("fiscal_year", "starts_on", 2, "date"),
+      column("council_member", "district", 1, "integer"),
+      column("council_member", "full_name", 2),
+    ];
     const { files, manifest } = buildPackage({
       catalog,
-      rows: { fiscal_year: [{ id: "FY27", starts_on: "2026-07-01" }], council_member: [{ district: 1, full_name: "A B" }, { district: 2, full_name: "C D" }] },
+      rows: {
+        fiscal_year: [{ id: "FY27", starts_on: "2026-07-01" }],
+        council_member: [
+          { district: 1, full_name: "A B" },
+          { district: 2, full_name: "C D" },
+        ],
+      },
       generatedAt: new Date("2026-10-09T12:00:00Z"),
       generatedBy: "Priya Raman (priya.raman@finance.example.gov)",
     });
@@ -91,6 +116,9 @@ describe("[US-055][BR-020] the data package", () => {
 
   it("reports any table or column that has no documentation", () => {
     expect(undocumented([column("fiscal_year", "id", 1), column("fiscal_year", "starts_on", 2)])).toEqual([]);
-    expect(undocumented([column("brand_new_table", "id", 1), column("fiscal_year", "invented", 2)])).toEqual(["brand_new_table", "fiscal_year.invented"]);
+    expect(undocumented([column("brand_new_table", "id", 1), column("fiscal_year", "invented", 2)])).toEqual([
+      "brand_new_table",
+      "fiscal_year.invented",
+    ]);
   });
 });

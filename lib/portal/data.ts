@@ -62,7 +62,7 @@ export async function loadObligations(tx: Tx, orgId: string): Promise<Obligation
      LEFT JOIN app_user su ON su.id = COALESCE(s.started_by, s.submitted_by)
      WHERE a.org_id = $1
      ORDER BY p.due_on, i.name`,
-    [orgId]
+    [orgId],
   );
   const list = rows.map<Obligation>((row) => {
     const state = reportState(row.status, row.due_on);
@@ -88,11 +88,15 @@ export async function loadObligations(tx: Tx, orgId: string): Promise<Obligation
       needsAction: state === "missing" || state === "returned",
     };
   });
-  return list.sort((a, b) => rank(a) - rank(b) || a.dueOn.localeCompare(b.dueOn) || a.initiativeName.localeCompare(b.initiativeName));
+  return list.sort(
+    (a, b) => rank(a) - rank(b) || a.dueOn.localeCompare(b.dueOn) || a.initiativeName.localeCompare(b.initiativeName),
+  );
 }
 
 export async function currentFiscalYear(tx: Tx, today: string): Promise<string> {
-  const row = await tx.one<{ id: string }>("SELECT id FROM fiscal_year WHERE $1::date BETWEEN starts_on AND ends_on", [today]);
+  const row = await tx.one<{ id: string }>("SELECT id FROM fiscal_year WHERE $1::date BETWEEN starts_on AND ends_on", [
+    today,
+  ]);
   if (row) return row.id;
   const latest = await tx.one<{ id: string }>("SELECT id FROM fiscal_year ORDER BY starts_on DESC LIMIT 1");
   return latest?.id ?? "";
@@ -107,7 +111,12 @@ function rank(o: Obligation): number {
 }
 
 export function actionFor(o: Obligation): { label: string; href: string; primary: boolean } {
-  if (!o.submissionId) return { label: "Start report", href: `/portal/reports/new?assignment=${o.assignmentId}&period=${o.periodId}`, primary: true };
+  if (!o.submissionId)
+    return {
+      label: "Start report",
+      href: `/portal/reports/new?assignment=${o.assignmentId}&period=${o.periodId}`,
+      primary: true,
+    };
   const href = `/portal/reports/${o.submissionId}`;
   if (o.status === "draft") return { label: "Continue", href, primary: true };
   if (o.status === "returned") return { label: "Update report", href, primary: true };
@@ -166,4 +175,3 @@ export async function loadOrganization(tx: Tx, orgId: string): Promise<OrgProfil
     annualBudget: row.annual_budget === null ? null : Number(row.annual_budget),
   };
 }
-

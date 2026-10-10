@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { checkCitation, checkField, mergeFields, parseWithRules, splitParagraphs, type ProposedField } from "@/lib/forms/editor/draft-core";
+import {
+  checkCitation,
+  checkField,
+  mergeFields,
+  parseWithRules,
+  splitParagraphs,
+  type ProposedField,
+} from "@/lib/forms/editor/draft-core";
 import { templateSha } from "@/lib/forms/editor/template-hash";
 import { buildDefinition } from "@/lib/forms/standard";
 
@@ -35,14 +42,26 @@ describe("citation checker", () => {
   });
 
   it("flags a field whose citation is wrong, with the plain message", () => {
-    const field: ProposedField = { label: "x", type: "text", required: true, section: "performance", citation: { paragraph: 1, quote: "not in there" } };
+    const field: ProposedField = {
+      label: "x",
+      type: "text",
+      required: true,
+      section: "performance",
+      citation: { paragraph: 1, quote: "not in there" },
+    };
     const check = checkField(paragraphs, field);
     expect(check.ok).toBe(false);
     expect(check.problems).toContain("Citation not found in the template");
   });
 
   it("flags unknown types, unknown library keys and thin choice lists", () => {
-    const base: ProposedField = { label: "x", type: "text", required: true, section: "performance", citation: { paragraph: 1, quote: "Annual" } };
+    const base: ProposedField = {
+      label: "x",
+      type: "text",
+      required: true,
+      section: "performance",
+      citation: { paragraph: 1, quote: "Annual" },
+    };
     expect(checkField(paragraphs, { ...base, type: "table" }).ok).toBe(false);
     expect(checkField(paragraphs, { ...base, library_key: "nope" }).ok).toBe(false);
     expect(checkField(paragraphs, { ...base, type: "select", options: ["Only one"] }).ok).toBe(false);
@@ -89,9 +108,28 @@ describe("template hashing and merging", () => {
   it("merges library questions by reference and avoids duplicate keys", () => {
     const definition = buildDefinition("Test", []);
     const fields: ProposedField[] = [
-      { label: "Number of volunteers", type: "integer", required: true, section: "performance", citation: { paragraph: 1, quote: "a" } },
-      { label: "Number of volunteers", type: "integer", required: true, section: "performance", citation: { paragraph: 1, quote: "a" } },
-      { label: "Challenges", type: "textarea", required: false, section: "narrative", library_key: "challenges", citation: { paragraph: 1, quote: "a" } },
+      {
+        label: "Number of volunteers",
+        type: "integer",
+        required: true,
+        section: "performance",
+        citation: { paragraph: 1, quote: "a" },
+      },
+      {
+        label: "Number of volunteers",
+        type: "integer",
+        required: true,
+        section: "performance",
+        citation: { paragraph: 1, quote: "a" },
+      },
+      {
+        label: "Challenges",
+        type: "textarea",
+        required: false,
+        section: "narrative",
+        library_key: "challenges",
+        citation: { paragraph: 1, quote: "a" },
+      },
     ];
     const merged = mergeFields(definition, fields);
     const keys = merged.definition.sections.flatMap((s) => s.questions.map((q) => q.key));

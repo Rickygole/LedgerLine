@@ -12,3 +12,4 @@ lib/geo/*.json
 lib/ai/replays
 db/migrations
 *.md
+traceability.json

@@ -58,7 +58,7 @@ async function scratchDraft(owner: Client, mariaId: string): Promise<Scratch> {
        AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY')
        AND EXISTS (SELECT 1 FROM form_version f WHERE f.initiative_id = a.initiative_id AND f.status = 'published')
      ORDER BY a.id LIMIT 1`,
-    [mariaId]
+    [mariaId],
   );
   if (!rows[0]) throw new Error("No assignment is free for a scratch report. Reseed with pnpm db:seed.");
   const result = await startReport(mariaId, rows[0].id, "FY27-MY");
@@ -74,7 +74,10 @@ async function discard(owner: Client, scratch: Scratch) {
 }
 
 async function alertText(page: Page): Promise<string> {
-  const alert = page.getByRole("alert").filter({ hasText: /problem|must equal|enter/i }).first();
+  const alert = page
+    .getByRole("alert")
+    .filter({ hasText: /problem|must equal|enter/i })
+    .first();
   await alert.waitFor({ timeout: 15_000 });
   return (await alert.innerText()).replace(/\s+/g, " ").trim();
 }
@@ -92,7 +95,8 @@ async function main() {
 
   const owner = await connect(url("DB_OWNER_URL"));
   const app = await connect(url("APP_DATABASE_URL"));
-  const idOf = async (email: string) => (await owner.query("SELECT id FROM app_user WHERE email = $1", [email])).rows[0].id as string;
+  const idOf = async (email: string) =>
+    (await owner.query("SELECT id FROM app_user WHERE email = $1", [email])).rows[0].id as string;
   const maria = await idOf(PEOPLE.maria);
   const daniel = await idOf(PEOPLE.daniel);
 
@@ -132,7 +136,10 @@ async function main() {
             await page.getByRole("button", { name: "Submit report" }).click();
             const text = await alertText(page);
             const after = (await owner.query("SELECT status FROM submission WHERE id = $1", [draft.id])).rows[0].status;
-            const balanceLine = /Total \$[\d,]+\.\d{2} must equal award \$[\d,]+\.\d{2} \((?:over|under) by \$[\d,]+\.\d{2}\)\./.exec(text)?.[0];
+            const balanceLine =
+              /Total \$[\d,]+\.\d{2} must equal award \$[\d,]+\.\d{2} \((?:over|under) by \$[\d,]+\.\d{2}\)\./.exec(
+                text,
+              )?.[0];
             return {
               refused: after === "draft" && Boolean(balanceLine),
               plain: `A budget of ${money(ps + otps)} against an award of ${money(draft.award)} was refused at submit and the report stayed a draft.`,
@@ -143,8 +150,14 @@ async function main() {
       attacks.push({
         label: "Mark the report accepted with a direct database update",
         run: async () => {
-          const raw = await asUser(app, maria, () => refusedBy(() => app.query("UPDATE submission SET status = 'accepted' WHERE id = $1", [draft.id])));
-          return { refused: raw !== null, plain: "A direct status change by the organization's own account was refused by the database.", raw: raw ?? "update succeeded" };
+          const raw = await asUser(app, maria, () =>
+            refusedBy(() => app.query("UPDATE submission SET status = 'accepted' WHERE id = $1", [draft.id])),
+          );
+          return {
+            refused: raw !== null,
+            plain: "A direct status change by the organization's own account was refused by the database.",
+            raw: raw ?? "update succeeded",
+          };
         },
       });
     }
@@ -154,7 +167,7 @@ async function main() {
         await owner.query(
           `SELECT s.id, o.ein FROM submission s JOIN assignment a ON a.id = s.assignment_id JOIN organization o ON o.id = a.org_id
            WHERE a.org_id <> (SELECT org_id FROM app_user WHERE id = $1) LIMIT 1`,
-          [maria]
+          [maria],
         )
       ).rows[0];
       attacks.push({
@@ -163,7 +176,11 @@ async function main() {
           withMariaPage(async (page) => {
             const response = await page.goto(`/portal/reports/${foreign.id}`);
             const status = response?.status() ?? 0;
-            return { refused: status === 404, plain: "Another organization's report address returned not found to Maria.", raw: `HTTP ${status} for /portal/reports/${foreign.id}` };
+            return {
+              refused: status === 404,
+              plain: "Another organization's report address returned not found to Maria.",
+              raw: `HTTP ${status} for /portal/reports/${foreign.id}`,
+            };
           }),
       });
       attacks.push({
@@ -172,18 +189,32 @@ async function main() {
           const total = (await owner.query("SELECT count(*)::int AS n FROM submission")).rows[0].n as number;
           const visible = await asUser(app, maria, async () => {
             const rows = await app.query(
-              "SELECT count(*)::int AS n FROM submission s JOIN assignment a ON a.id = s.assignment_id WHERE a.org_id <> app.org_id()"
+              "SELECT count(*)::int AS n FROM submission s JOIN assignment a ON a.id = s.assignment_id WHERE a.org_id <> app.org_id()",
             );
             return rows.rows[0].n as number;
           });
-          return { refused: visible === 0, plain: "Row-level security showed Maria none of the other organizations' reports.", raw: `${visible} foreign rows visible, ${total} rows exist in total` };
+          return {
+            refused: visible === 0,
+            plain: "Row-level security showed Maria none of the other organizations' reports.",
+            raw: `${visible} foreign rows visible, ${total} rows exist in total`,
+          };
         },
       });
       attacks.push({
         label: "Ask for a stored file under another organization's EIN",
         run: async () => {
-          const ok = await asUser(app, maria, async () => (await app.query("SELECT app.can_access_path($1) AS ok", [`${foreign.ein}/x/file.pdf`])).rows[0].ok as boolean);
-          return { refused: ok === false, plain: "A storage path under another organization's EIN was refused.", raw: `app.can_access_path('${foreign.ein}/x/file.pdf') = ${ok}` };
+          const ok = await asUser(
+            app,
+            maria,
+            async () =>
+              (await app.query("SELECT app.can_access_path($1) AS ok", [`${foreign.ein}/x/file.pdf`])).rows[0]
+                .ok as boolean,
+          );
+          return {
+            refused: ok === false,
+            plain: "A storage path under another organization's EIN was refused.",
+            raw: `app.can_access_path('${foreign.ein}/x/file.pdf') = ${ok}`,
+          };
         },
       });
     }
@@ -201,7 +232,11 @@ async function main() {
             const text = await alertText(page);
             const after = (await owner.query("SELECT status FROM submission WHERE id = $1", [draft.id])).rows[0].status;
             const count = /(\d+) problems?/.exec(text)?.[1] ?? "some";
-            return { refused: after === "draft", plain: `The empty report was refused with ${count} problems listed, and it stayed a draft.`, raw: text };
+            return {
+              refused: after === "draft",
+              plain: `The empty report was refused with ${count} problems listed, and it stayed a draft.`,
+              raw: text,
+            };
           }),
       });
     }
@@ -215,18 +250,32 @@ async function main() {
           withMariaPage(async (page) => {
             await page.goto(`/portal/reports/${draft.id}`);
             await gotoStep(page, "Attachments");
-            await page.locator("#attachment-input").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]) });
+            await page.locator("#attachment-input").setInputFiles({
+              name: "scan.pdf",
+              mimeType: "application/pdf",
+              buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]),
+            });
             const message = page.getByText(/over the 25\.0 MB limit for one file/).first();
             await message.waitFor({ timeout: 15_000 });
-            const stored = (await owner.query("SELECT count(*)::int AS n FROM attachment WHERE submission_id = $1", [draft.id])).rows[0].n as number;
-            return { refused: stored === 0, plain: "A 26 MB file was refused before it was sent, with its size and the limit stated.", raw: (await message.innerText()).trim() };
+            const stored = (
+              await owner.query("SELECT count(*)::int AS n FROM attachment WHERE submission_id = $1", [draft.id])
+            ).rows[0].n as number;
+            return {
+              refused: stored === 0,
+              plain: "A 26 MB file was refused before it was sent, with its size and the limit stated.",
+              raw: (await message.innerText()).trim(),
+            };
           }),
       });
       attacks.push({
         label: "Send a 31 MB file to the server upload check",
         run: async () => {
           const problem = checkUpload("scan.pdf", 31 * 1024 * 1024);
-          return { refused: problem !== null, plain: "The server upload check refused a 31 MB file and stated the size.", raw: problem ?? "accepted" };
+          return {
+            refused: problem !== null,
+            plain: "The server upload check refused a 31 MB file and stated the size.",
+            raw: problem ?? "accepted",
+          };
         },
       });
     }
@@ -235,15 +284,31 @@ async function main() {
       attacks.push({
         label: "Rewrite an audit event as an analyst",
         run: async () => {
-          const raw = await asUser(app, daniel, () => refusedBy(() => app.query("UPDATE audit_event SET note = 'edited' WHERE id = (SELECT min(id) FROM audit_event)")));
-          return { refused: raw !== null, plain: "An analyst's attempt to edit an audit event was refused by the database.", raw: raw ?? "update succeeded" };
+          const raw = await asUser(app, daniel, () =>
+            refusedBy(() =>
+              app.query("UPDATE audit_event SET note = 'edited' WHERE id = (SELECT min(id) FROM audit_event)"),
+            ),
+          );
+          return {
+            refused: raw !== null,
+            plain: "An analyst's attempt to edit an audit event was refused by the database.",
+            raw: raw ?? "update succeeded",
+          };
         },
       });
       attacks.push({
         label: "Delete a submitted revision as an analyst",
         run: async () => {
-          const raw = await asUser(app, daniel, () => refusedBy(() => app.query("DELETE FROM submission_revision WHERE id = (SELECT min(id) FROM submission_revision)")));
-          return { refused: raw !== null, plain: "An analyst's attempt to delete a submitted revision was refused by the database.", raw: raw ?? "delete succeeded" };
+          const raw = await asUser(app, daniel, () =>
+            refusedBy(() =>
+              app.query("DELETE FROM submission_revision WHERE id = (SELECT min(id) FROM submission_revision)"),
+            ),
+          );
+          return {
+            refused: raw !== null,
+            plain: "An analyst's attempt to delete a submitted revision was refused by the database.",
+            raw: raw ?? "delete succeeded",
+          };
         },
       });
       attacks.push({
@@ -251,8 +316,14 @@ async function main() {
         run: async () => {
           await owner.query("BEGIN");
           try {
-            const raw = await refusedBy(() => owner.query("UPDATE audit_event SET note = 'edited' WHERE id = (SELECT min(id) FROM audit_event)"));
-            return { refused: raw !== null, plain: "Even the table owner's edit of an audit event was rejected by the append-only trigger.", raw: raw ?? "update succeeded" };
+            const raw = await refusedBy(() =>
+              owner.query("UPDATE audit_event SET note = 'edited' WHERE id = (SELECT min(id) FROM audit_event)"),
+            );
+            return {
+              refused: raw !== null,
+              plain: "Even the table owner's edit of an audit event was rejected by the append-only trigger.",
+              raw: raw ?? "update succeeded",
+            };
           } finally {
             await owner.query("ROLLBACK");
           }
@@ -269,7 +340,11 @@ async function main() {
       console.log(`  ${outcome.refused ? "REFUSED" : "NOT REFUSED"}: ${outcome.plain}`);
       console.log(`  raw: ${outcome.raw}`);
     }
-    console.log(failed === 0 ? `\nAll ${attacks.length} attempts on ${rule} were refused.` : `\n${failed} attempt${failed > 1 ? "s" : ""} on ${rule} got through.`);
+    console.log(
+      failed === 0
+        ? `\nAll ${attacks.length} attempts on ${rule} were refused.`
+        : `\n${failed} attempt${failed > 1 ? "s" : ""} on ${rule} got through.`,
+    );
     process.exitCode = failed === 0 ? 0 : 1;
   } finally {
     if (scratch) await discard(owner, scratch).catch((error) => console.error(`cleanup failed: ${rawOf(error)}`));

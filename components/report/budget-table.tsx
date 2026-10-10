@@ -8,7 +8,17 @@ import { balanceCopy } from "./balance";
 
 type Line = Omit<BudgetLine, "rowId">;
 
-export function BudgetTable({ lines, award, answers, totalLabel = "Approved budget total" }: { lines: Line[]; award: number; answers: Answers; totalLabel?: string }) {
+export function BudgetTable({
+  lines,
+  award,
+  answers,
+  totalLabel = "Approved budget total",
+}: {
+  lines: Line[];
+  award: number;
+  answers: Answers;
+  totalLabel?: string;
+}) {
   const withIds: BudgetLine[] = lines.map((line) => ({ ...line, rowId: String(line.position) }));
   const totals = budgetTotals(withIds);
   const balance = balanceCopy(totals.total, award);
@@ -36,11 +46,19 @@ export function BudgetTable({ lines, award, answers, totalLabel = "Approved budg
               const variance = lineVariance(line);
               return (
                 <TR key={line.position}>
-                  <TD align="right" className="num">{line.position}</TD>
+                  <TD align="right" className="num">
+                    {line.position}
+                  </TD>
                   <TD className="whitespace-nowrap">{line.category}</TD>
                   <TD>{line.description || <span className="text-muted">No description</span>}</TD>
                   <TD align="right">{formatCurrency(line.amount)}</TD>
-                  <TD align="right">{line.actual === null || line.actual === undefined ? <span className="text-muted">Not entered</span> : formatCurrency(line.actual)}</TD>
+                  <TD align="right">
+                    {line.actual === null || line.actual === undefined ? (
+                      <span className="text-muted">Not entered</span>
+                    ) : (
+                      formatCurrency(line.actual)
+                    )}
+                  </TD>
                   <TD align="right" className={cn(variance !== null && variance < 0 && "font-semibold text-warn")}>
                     {variance === null ? <span className="text-muted">Not entered</span> : formatCurrency(variance)}
                   </TD>
@@ -50,29 +68,43 @@ export function BudgetTable({ lines, award, answers, totalLabel = "Approved budg
           </tbody>
           <tfoot className="border-t border-line bg-surface/60 text-sm">
             <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">Personal services (PS) subtotal</td>
+              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
+                Personal services (PS) subtotal
+              </td>
               <td className="num px-4 py-2 text-right">{formatCurrency(totals.ps)}</td>
               <td colSpan={2} />
             </tr>
             <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">Other than personal services (OTPS) subtotal</td>
+              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
+                Other than personal services (OTPS) subtotal
+              </td>
               <td className="num px-4 py-2 text-right">{formatCurrency(totals.otps)}</td>
               <td colSpan={2} />
             </tr>
             <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">{totalLabel}</td>
+              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
+                {totalLabel}
+              </td>
               <td className="num px-4 py-2 text-right font-bold">{formatCurrency(totals.total)}</td>
-              <td className="num px-4 py-2 text-right font-bold">{spend.entered ? formatCurrency(spend.actual) : ""}</td>
-              <td className="num px-4 py-2 text-right font-bold">{spend.entered ? formatCurrency(spend.variance) : ""}</td>
+              <td className="num px-4 py-2 text-right font-bold">
+                {spend.entered ? formatCurrency(spend.actual) : ""}
+              </td>
+              <td className="num px-4 py-2 text-right font-bold">
+                {spend.entered ? formatCurrency(spend.variance) : ""}
+              </td>
             </tr>
             <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">Award</td>
+              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
+                Award
+              </td>
               <td className="num px-4 py-2 text-right">{formatCurrency(award)}</td>
               <td colSpan={2} />
             </tr>
             {spend.entered ? (
               <tr>
-                <td colSpan={span} className="px-4 py-2 text-right font-semibold">Unspent balance (award minus actual spent)</td>
+                <td colSpan={span} className="px-4 py-2 text-right font-semibold">
+                  Unspent balance (award minus actual spent)
+                </td>
                 <td colSpan={3} className="num px-4 py-2 text-right">
                   {formatCurrency(spend.unspent)} ({spend.unspentPercent.toFixed(1)}% of the award)
                 </td>

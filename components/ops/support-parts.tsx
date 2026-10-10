@@ -4,10 +4,24 @@ import { formatDateTime } from "@/lib/dates";
 import { type SupportMessage, type SupportState } from "@/lib/ops/support";
 
 export function SupportStateBadge({ state }: { state: SupportState }) {
-  if (state === "overdue") return <Badge tone="bad" icon={AlertTriangle}>Overdue</Badge>;
-  if (state === "responded") return <Badge tone="ok" icon={CheckCircle2}>Responded</Badge>;
+  if (state === "overdue")
+    return (
+      <Badge tone="bad" icon={AlertTriangle}>
+        Overdue
+      </Badge>
+    );
+  if (state === "responded")
+    return (
+      <Badge tone="ok" icon={CheckCircle2}>
+        Responded
+      </Badge>
+    );
   if (state === "closed") return <Badge icon={Lock}>Closed</Badge>;
-  return <Badge tone="info" icon={Circle}>Open</Badge>;
+  return (
+    <Badge tone="info" icon={Circle}>
+      Open
+    </Badge>
+  );
 }
 
 export function Thread({ messages }: { messages: SupportMessage[] }) {

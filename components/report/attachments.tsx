@@ -11,7 +11,14 @@ import type { AttachmentItem, UploadActionResult } from "@/lib/report/types";
 import { sessionIsAlive } from "@/lib/report/session-probe";
 import { ACCEPT_ATTRIBUTE, MAX_UPLOAD_BYTES, clientCheckUpload, formatBytes } from "@/lib/report/upload-rules";
 
-type Pending = { key: string; name: string; bytes: number; state: "uploading" | "rejected"; reason?: string; progress?: number };
+type Pending = {
+  key: string;
+  name: string;
+  bytes: number;
+  state: "uploading" | "rejected";
+  reason?: string;
+  progress?: number;
+};
 
 export function Attachments({
   submissionId,
@@ -34,7 +41,11 @@ export function Attachments({
   const input = useRef<HTMLInputElement>(null);
 
   function patch(key: string, next: Partial<Pending> | null) {
-    setPending((list) => (next === null ? list.filter((item) => item.key !== key) : list.map((item) => (item.key === key ? { ...item, ...next } : item))));
+    setPending((list) =>
+      next === null
+        ? list.filter((item) => item.key !== key)
+        : list.map((item) => (item.key === key ? { ...item, ...next } : item)),
+    );
   }
 
   async function sendOne(file: File, key: string): Promise<UploadActionResult> {
@@ -54,7 +65,12 @@ export function Attachments({
       multipart: file.size > 8 * 1024 * 1024,
       onUploadProgress: ({ percentage }) => patch(key, { progress: percentage }),
     });
-    return recordBlobUpload({ submissionId, pathname: prepared.pathname, signature: prepared.signature, filename: file.name });
+    return recordBlobUpload({
+      submissionId,
+      pathname: prepared.pathname,
+      signature: prepared.signature,
+      filename: file.name,
+    });
   }
 
   async function handleFiles(list: FileList | File[]) {
@@ -63,7 +79,10 @@ export function Attachments({
       const key = `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`;
       const problem = clientCheckUpload(file.name, file.size);
       if (problem) {
-        setPending((current) => [...current, { key, name: file.name, bytes: file.size, state: "rejected", reason: problem }]);
+        setPending((current) => [
+          ...current,
+          { key, name: file.name, bytes: file.size, state: "rejected", reason: problem },
+        ]);
         continue;
       }
       setPending((current) => [...current, { key, name: file.name, bytes: file.size, state: "uploading" }]);
@@ -83,7 +102,10 @@ export function Attachments({
           patch(key, { state: "rejected", reason: "Signed out. Sign in to upload." });
           onSignedOut();
         } else {
-          patch(key, { state: "rejected", reason: `The file could not be uploaded. Files can be up to ${formatBytes(MAX_UPLOAD_BYTES)} each. Check the size of this file and your connection, then try again.` });
+          patch(key, {
+            state: "rejected",
+            reason: `The file could not be uploaded. Files can be up to ${formatBytes(MAX_UPLOAD_BYTES)} each. Check the size of this file and your connection, then try again.`,
+          });
         }
       }
     }
@@ -92,7 +114,10 @@ export function Attachments({
 
   async function remove(item: AttachmentItem) {
     setRemoveError("");
-    const result = await removeAttachment({ submissionId, attachmentId: item.id }).catch(() => ({ status: "error" as const, message: "The file could not be removed. Try again." }));
+    const result = await removeAttachment({ submissionId, attachmentId: item.id }).catch(() => ({
+      status: "error" as const,
+      message: "The file could not be removed. Try again.",
+    }));
     if (result.status === "ok") onRemoved(item.id);
     else if (result.status === "signed_out") onSignedOut();
     else setRemoveError(result.message);
@@ -115,23 +140,35 @@ export function Attachments({
         }}
         className={cn(
           "flex min-h-[160px] flex-col items-center justify-center rounded border-2 border-dashed px-5 py-6 text-center",
-          dragging ? "border-action bg-harbor-100" : "border-line-strong bg-harbor-50/50"
+          dragging ? "border-action bg-harbor-100" : "border-line-strong bg-harbor-50/50",
         )}
       >
         <Upload className="h-6 w-6 text-muted" aria-hidden="true" />
         <p className="mt-2 text-[17px] font-bold leading-6 text-ink">
           Drag files here or{" "}
-          <label
-            className="cursor-pointer text-link underline underline-offset-2 hover:text-link-hover has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus"
-          >
+          <label className="cursor-pointer text-link underline underline-offset-2 hover:text-link-hover has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus">
             choose files
-            <input ref={input} id="attachment-input" type="file" multiple accept={ACCEPT_ATTRIBUTE} className="sr-only" onChange={(event) => event.target.files && void handleFiles(event.target.files)} />
+            <input
+              ref={input}
+              id="attachment-input"
+              type="file"
+              multiple
+              accept={ACCEPT_ATTRIBUTE}
+              className="sr-only"
+              onChange={(event) => event.target.files && void handleFiles(event.target.files)}
+            />
           </label>
         </p>
-        <p className="mt-1 text-[15px] text-ink-2">PDF, Word, Excel or CSV. Up to 25 MB each. Files with macros are not accepted.</p>
+        <p className="mt-1 text-[15px] text-ink-2">
+          PDF, Word, Excel or CSV. Up to 25 MB each. Files with macros are not accepted.
+        </p>
       </div>
 
-      {removeError ? <p role="alert" className="mt-3 text-sm font-semibold text-bad">{removeError}</p> : null}
+      {removeError ? (
+        <p role="alert" className="mt-3 text-sm font-semibold text-bad">
+          {removeError}
+        </p>
+      ) : null}
 
       <div className="mt-5" aria-live="polite">
         <div className="flex items-baseline justify-between border-b border-line pb-2">
@@ -139,7 +176,9 @@ export function Attachments({
           <span className="num text-sm font-medium text-muted">{attachments.length} attached</span>
         </div>
         {empty ? (
-          <p className="py-6 text-[15px] text-muted">No files attached yet. Attachments are optional unless Council Finance asked for supporting documents.</p>
+          <p className="py-6 text-[15px] text-muted">
+            No files attached yet. Attachments are optional unless Council Finance asked for supporting documents.
+          </p>
         ) : (
           <ul className="divide-y divide-line-soft">
             {attachments.map((item) => (
@@ -161,7 +200,12 @@ export function Attachments({
                     Uploaded{item.uploadedByName ? ` by ${item.uploadedByName}` : ""}, {formatDateTime(item.uploadedAt)}
                   </p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => void remove(item)} aria-label={`Remove ${item.filename}`}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void remove(item)}
+                  aria-label={`Remove ${item.filename}`}
+                >
                   Remove
                 </Button>
               </li>
@@ -175,11 +219,21 @@ export function Attachments({
                   </p>
                   {item.state === "uploading" ? (
                     <div className="mt-1.5">
-                      <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-sm bg-harbor-100" role="progressbar" aria-label={`Uploading ${item.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.progress === undefined ? undefined : Math.round(item.progress)}>
+                      <div
+                        className="h-1.5 w-full max-w-xs overflow-hidden rounded-sm bg-harbor-100"
+                        role="progressbar"
+                        aria-label={`Uploading ${item.name}`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={item.progress === undefined ? undefined : Math.round(item.progress)}
+                      >
                         {item.progress === undefined ? (
                           <div className="h-full w-1/3 animate-pulse bg-action motion-reduce:animate-none" />
                         ) : (
-                          <div className="h-full w-full origin-left bg-action" style={{ transform: `scaleX(${item.progress / 100})` }} />
+                          <div
+                            className="h-full w-full origin-left bg-action"
+                            style={{ transform: `scaleX(${item.progress / 100})` }}
+                          />
                         )}
                       </div>
                       <p className="mt-1 text-sm text-muted">
@@ -194,7 +248,12 @@ export function Attachments({
                   )}
                 </div>
                 {item.state === "rejected" ? (
-                  <Button variant="ghost" size="sm" onClick={() => patch(item.key, null)} aria-label={`Dismiss message for ${item.name}`}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => patch(item.key, null)}
+                    aria-label={`Dismiss message for ${item.name}`}
+                  >
                     <X className="h-4 w-4" aria-hidden="true" />
                     Dismiss
                   </Button>

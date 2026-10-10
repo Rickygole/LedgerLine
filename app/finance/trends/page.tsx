@@ -19,14 +19,29 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const categories = (await tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative ORDER BY category")).map((r) => r.category);
-    const boroughs = (await tx.query<{ borough: string }>("SELECT DISTINCT borough FROM organization ORDER BY borough")).map((r) => r.borough);
+    const categories = (
+      await tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative ORDER BY category")
+    ).map((r) => r.category);
+    const boroughs = (
+      await tx.query<{ borough: string }>("SELECT DISTINCT borough FROM organization ORDER BY borough")
+    ).map((r) => r.borough);
     const category = categories.includes(one(params, "category")) ? one(params, "category") : "";
     const borough = boroughs.includes(one(params, "borough")) ? one(params, "borough") : "";
-    const period = periods.find((p) => p.id === one(params, "period")) ?? periods.find((p) => p.id === defaultPeriodId(periods)) ?? periods[0];
+    const period =
+      periods.find((p) => p.id === one(params, "period")) ??
+      periods.find((p) => p.id === defaultPeriodId(periods)) ??
+      periods[0];
     const compare = pickOne(one(params, "compare"), ["category", "borough"] as const, "category");
     const filters = { category, borough, period: period.id, compare };
-    return { periods, categories, boroughs, period, filters, months: await monthlySubmissions(tx, filters), groups: await submissionShareByGroup(tx, filters) };
+    return {
+      periods,
+      categories,
+      boroughs,
+      period,
+      filters,
+      months: await monthlySubmissions(tx, filters),
+      groups: await submissionShareByGroup(tx, filters),
+    };
   });
   const { filters, period } = data;
   const scope = [filters.category || "all categories", filters.borough || "all boroughs"].join(", ");
@@ -78,8 +93,17 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
         </FilterBar>
       </div>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <MonthlyTrendChart data={data.months} description="Reports submitted in each month, split by whether they met the due date for their period." source={source} />
-        <ComparisonChart data={data.groups} dimension={filters.compare === "borough" ? "Borough" : "Category"} periodLabel={period.label} source={source} />
+        <MonthlyTrendChart
+          data={data.months}
+          description="Reports submitted in each month, split by whether they met the due date for their period."
+          source={source}
+        />
+        <ComparisonChart
+          data={data.groups}
+          dimension={filters.compare === "borough" ? "Borough" : "Category"}
+          periodLabel={period.label}
+          source={source}
+        />
       </div>
     </>
   );

@@ -9,7 +9,9 @@ const STATUS_SERIES = [
 
 type StatusSeriesKey = (typeof STATUS_SERIES)[number]["key"];
 
-export const STATUS_COLOR: Record<StatusSeriesKey, string> = Object.fromEntries(STATUS_SERIES.map((s) => [s.key, s.color])) as Record<StatusSeriesKey, string>;
+export const STATUS_COLOR: Record<StatusSeriesKey, string> = Object.fromEntries(
+  STATUS_SERIES.map((s) => [s.key, s.color]),
+) as Record<StatusSeriesKey, string>;
 
 export const GEO_BINS = [
   { min: 0, max: 0, label: "None", color: "#eef2f6" },

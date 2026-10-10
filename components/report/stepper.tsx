@@ -21,10 +21,18 @@ function Marker({ step, index, current }: { step: Step; index: number; current: 
     );
   }
   if (current) {
-    return <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-action text-[13px] font-bold text-white">{index + 1}</span>;
+    return (
+      <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-action text-[13px] font-bold text-white">
+        {index + 1}
+      </span>
+    );
   }
   if (step.state === "error") {
-    return <span className="num flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-bad px-1.5 text-[13px] font-bold text-white">{step.errors}</span>;
+    return (
+      <span className="num flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-bad px-1.5 text-[13px] font-bold text-white">
+        {step.errors}
+      </span>
+    );
   }
   if (step.state === "complete") {
     return (
@@ -33,7 +41,11 @@ function Marker({ step, index, current }: { step: Step; index: number; current: 
       </span>
     );
   }
-  return <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-line-strong bg-white text-[13px] font-bold text-muted">{index + 1}</span>;
+  return (
+    <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-line-strong bg-white text-[13px] font-bold text-muted">
+      {index + 1}
+    </span>
+  );
 }
 
 function stateText(step: Step) {
@@ -60,7 +72,11 @@ function StepList({ steps, current, onSelect }: { steps: Step[]; current: string
               }}
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded px-3 py-2 text-[15px] leading-5 no-underline",
-                active ? "bg-harbor-50 font-bold text-ink" : step.state === "error" ? "font-semibold text-bad hover:bg-harbor-50" : "text-ink hover:bg-harbor-50"
+                active
+                  ? "bg-harbor-50 font-bold text-ink"
+                  : step.state === "error"
+                    ? "font-semibold text-bad hover:bg-harbor-50"
+                    : "text-ink hover:bg-harbor-50",
               )}
             >
               <span aria-hidden="true" className="contents">
@@ -75,10 +91,21 @@ function StepList({ steps, current, onSelect }: { steps: Step[]; current: string
   );
 }
 
-export function Stepper({ steps, current, onSelect }: { steps: Step[]; current: string; onSelect: (key: string) => void }) {
+export function Stepper({
+  steps,
+  current,
+  onSelect,
+}: {
+  steps: Step[];
+  current: string;
+  onSelect: (key: string) => void;
+}) {
   const drawer = useRef<HTMLDetailsElement>(null);
   const done = steps.filter((step) => step.state === "complete").length;
-  const index = Math.max(0, steps.findIndex((step) => step.key === current));
+  const index = Math.max(
+    0,
+    steps.findIndex((step) => step.key === current),
+  );
   const percent = Math.round((done / steps.length) * 100);
   const progress = (
     <>
@@ -99,13 +126,22 @@ export function Stepper({ steps, current, onSelect }: { steps: Step[]; current: 
               Step {index + 1} of {steps.length}
             </span>
             <span className="block truncate text-base font-bold text-ink">{steps[index]?.title}</span>
-            <span className="mt-2 block h-1.5 w-40 overflow-hidden rounded-sm bg-harbor-100 group-open:hidden" aria-hidden="true">
-              <span className="block h-full w-full origin-left bg-ok" style={{ transform: `scaleX(${percent / 100})` }} />
+            <span
+              className="mt-2 block h-1.5 w-40 overflow-hidden rounded-sm bg-harbor-100 group-open:hidden"
+              aria-hidden="true"
+            >
+              <span
+                className="block h-full w-full origin-left bg-ok"
+                style={{ transform: `scaleX(${percent / 100})` }}
+              />
             </span>
           </span>
           <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-link">
             All sections
-            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+            <ChevronDown
+              className="h-4 w-4 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+              aria-hidden="true"
+            />
           </span>
         </summary>
         <div className="border-t border-line-soft px-2 pb-2 pt-3">

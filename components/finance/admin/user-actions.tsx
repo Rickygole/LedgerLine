@@ -16,14 +16,37 @@ const ROLE_OPTIONS = [
 function Message({ state }: { state: ActionState }) {
   if (!state) return null;
   return (
-    <div role={state.error ? "alert" : "status"} className={`text-sm font-semibold ${state.error ? "text-bad" : "text-ok"}`}>
+    <div
+      role={state.error ? "alert" : "status"}
+      className={`text-sm font-semibold ${state.error ? "text-bad" : "text-ok"}`}
+    >
       <p>{state.error ?? state.ok}</p>
-      {state.link ? <code data-testid="issued-link" className="mt-1 block break-all font-mono font-normal text-ink">{state.link}</code> : null}
+      {state.link ? (
+        <code data-testid="issued-link" className="mt-1 block break-all font-mono font-normal text-ink">
+          {state.link}
+        </code>
+      ) : null}
     </div>
   );
 }
 
-export function UserActions({ userId, name, email, role, active, isSelf, isCbo }: { userId: string; name: string; email: string; role: string; active: boolean; isSelf: boolean; isCbo: boolean }) {
+export function UserActions({
+  userId,
+  name,
+  email,
+  role,
+  active,
+  isSelf,
+  isCbo,
+}: {
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  isSelf: boolean;
+  isCbo: boolean;
+}) {
   const [roleState, roleAction, rolePending] = useActionState(changeRole, undefined);
   const [activeState, activeAction, activePending] = useActionState(setActive, undefined);
   const [resetState, resetAction, resetPending] = useActionState(sendPasswordReset, undefined);
@@ -50,7 +73,12 @@ export function UserActions({ userId, name, email, role, active, isSelf, isCbo }
             </h2>
             <p className="mt-0.5 break-words text-sm text-muted">{email}</p>
           </div>
-          <button type="button" onClick={close} className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded text-muted hover:bg-surface hover:text-ink" aria-label="Close">
+          <button
+            type="button"
+            onClick={close}
+            className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded text-muted hover:bg-surface hover:text-ink"
+            aria-label="Close"
+          >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
@@ -60,7 +88,13 @@ export function UserActions({ userId, name, email, role, active, isSelf, isCbo }
               <input type="hidden" name="userId" value={userId} />
               <Label htmlFor={`role-${userId}`}>Role</Label>
               <div className="flex flex-wrap items-center gap-2">
-                <Select id={`role-${userId}`} name="role" defaultValue={role} disabled={isSelf} className="w-auto min-w-56 flex-1">
+                <Select
+                  id={`role-${userId}`}
+                  name="role"
+                  defaultValue={role}
+                  disabled={isSelf}
+                  className="w-auto min-w-56 flex-1"
+                >
                   {ROLE_OPTIONS.map((r) => (
                     <option key={r.value} value={r.value}>
                       {r.label}
@@ -78,9 +112,17 @@ export function UserActions({ userId, name, email, role, active, isSelf, isCbo }
           <form action={activeAction} className="space-y-2 border-t border-line pt-5">
             <input type="hidden" name="userId" value={userId} />
             <input type="hidden" name="active" value={active ? "false" : "true"} />
-            <p className="text-sm text-muted">{active ? "Deactivating stops this person from signing in. Their history stays in the audit log." : "Activating lets this person sign in again."}</p>
+            <p className="text-sm text-muted">
+              {active
+                ? "Deactivating stops this person from signing in. Their history stays in the audit log."
+                : "Activating lets this person sign in again."}
+            </p>
             <Button type="submit" variant="secondary" disabled={(isSelf && active) || activePending}>
-              {active ? <UserX className="h-4 w-4" aria-hidden="true" /> : <UserCheck className="h-4 w-4" aria-hidden="true" />}
+              {active ? (
+                <UserX className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <UserCheck className="h-4 w-4" aria-hidden="true" />
+              )}
               {active ? "Deactivate" : "Activate"}
               <span className="sr-only"> {name}</span>
             </Button>
@@ -88,7 +130,9 @@ export function UserActions({ userId, name, email, role, active, isSelf, isCbo }
           </form>
           <form action={resetAction} className="space-y-2 border-t border-line pt-5">
             <input type="hidden" name="userId" value={userId} />
-            <p className="text-sm text-muted">A one-time password reset link is shown after you issue it. Give it to the person directly.</p>
+            <p className="text-sm text-muted">
+              A one-time password reset link is shown after you issue it. Give it to the person directly.
+            </p>
             <Button type="submit" variant="secondary" disabled={resetPending}>
               <KeyRound className="h-4 w-4" aria-hidden="true" />
               Send password reset

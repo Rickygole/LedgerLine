@@ -22,7 +22,7 @@ export async function reportProgress(tx: Tx, submissionId: string): Promise<Repo
       orgEin: header.ein,
       orgName: header.orgName,
       period: { startsOn: header.startsOn, endsOn: header.endsOn },
-    })
+    }),
   );
   const bySection = issuesBySection(definition, issues);
   const sectionsDone = definition.sections.filter((section) => (bySection[section.key]?.length ?? 0) === 0).length;

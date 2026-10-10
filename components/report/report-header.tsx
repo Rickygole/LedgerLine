@@ -5,7 +5,17 @@ import { formatDate } from "@/lib/dates";
 import { formatCurrency } from "@/lib/format";
 import type { ReportHeader as Header } from "@/lib/report/types";
 
-export function ReportHeader({ header, daysLate, state, actions }: { header: Header; daysLate: number; state: ReportState; actions?: React.ReactNode }) {
+export function ReportHeader({
+  header,
+  daysLate,
+  state,
+  actions,
+}: {
+  header: Header;
+  daysLate: number;
+  state: ReportState;
+  actions?: React.ReactNode;
+}) {
   const open = header.status === "draft" || header.status === "returned";
   return (
     <>

@@ -140,7 +140,7 @@ export async function logAiAction(
     latencyMs?: number;
     submissionId?: string | null;
     initiativeId?: string | null;
-  }
+  },
 ): Promise<string> {
   const inserted = await tx.one<{ id: string }>(
     `INSERT INTO ai_action (feature, mode, model, prompt_version, input_sha256, output, validation, tokens_in, tokens_out, cost_usd, latency_ms, submission_id, initiative_id, created_by)
@@ -160,7 +160,7 @@ export async function logAiAction(
       row.latencyMs ?? null,
       row.submissionId ?? null,
       row.initiativeId ?? null,
-    ]
+    ],
   );
   if (!inserted) throw new Error("could not log ai action");
   return inserted.id;

@@ -1,6 +1,14 @@
 import "server-only";
 import type { Tx } from "@/lib/db";
-import { buildAiInput, completeSentences, noteText, templateSentences, validateSentences, type Concern, type NoteSentence } from "@/lib/finance/review/return-note-core";
+import {
+  buildAiInput,
+  completeSentences,
+  noteText,
+  templateSentences,
+  validateSentences,
+  type Concern,
+  type NoteSentence,
+} from "@/lib/finance/review/return-note-core";
 import { aiEnabled, callStructured, logAiAction, sha256 } from "@/lib/ai/model";
 
 const RETURN_NOTE_PROMPT_VERSION = "return-note-v2";
@@ -44,7 +52,10 @@ const SCHEMA = {
 const RULE_REFERENCE = /\brules?\b|\b[A-Za-z]{2,3}\s*-\s*\d|\b[A-Za-z]{2,3}-?\d*\s*:\s*\d/i;
 
 export function withoutRuleReferences(output: unknown): { output: unknown; removed: number } {
-  const list = output && typeof output === "object" && Array.isArray((output as { sentences?: unknown }).sentences) ? ((output as { sentences: unknown[] }).sentences) : null;
+  const list =
+    output && typeof output === "object" && Array.isArray((output as { sentences?: unknown }).sentences)
+      ? (output as { sentences: unknown[] }).sentences
+      : null;
   if (!list) return { output, removed: 0 };
   const kept = list.filter((item) => {
     const text = (item as { text?: unknown })?.text;
@@ -55,17 +66,29 @@ export function withoutRuleReferences(output: unknown): { output: unknown; remov
 
 export function modelPayload(concerns: Concern[]): string {
   const { concerns: items } = buildAiInput(concerns);
-  return JSON.stringify({ concerns: items.map((c) => (c.value === null ? { rule_id: c.rule_id, field: c.field } : c)) });
+  return JSON.stringify({
+    concerns: items.map((c) => (c.value === null ? { rule_id: c.rule_id, field: c.field } : c)),
+  });
 }
 
-export async function draftReturnNote(tx: Tx, input: { submissionId: string; concerns: Concern[] }): Promise<ReturnNoteDraft> {
+export async function draftReturnNote(
+  tx: Tx,
+  input: { submissionId: string; concerns: Concern[] },
+): Promise<ReturnNoteDraft> {
   const { concerns } = input;
   const aiInput = buildAiInput(concerns);
   const inputHash = sha256(JSON.stringify(aiInput));
 
   if (!(await aiEnabled(tx))) {
     const sentences = templateSentences(concerns);
-    return { sentences, text: noteText(sentences), mode: "fallback", aiActionId: null, dropped: 0, filled: sentences.length };
+    return {
+      sentences,
+      text: noteText(sentences),
+      mode: "fallback",
+      aiActionId: null,
+      dropped: 0,
+      filled: sentences.length,
+    };
   }
 
   let live: Awaited<ReturnType<typeof callStructured>> = null;

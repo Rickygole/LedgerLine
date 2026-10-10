@@ -42,18 +42,25 @@ describe("the district map reconciles with the dashboard Missing tile", () => {
         const missing = countBuckets(rows).missing;
         const { rows: raw } = await owner.query<{ n: number }>(
           "SELECT count(*)::int AS n FROM obligation WHERE period_id = $1 AND due_on < $2::date AND (submission_id IS NULL OR submission_status = 'draft')",
-          [period.id, todayInNewYork()]
+          [period.id, todayInNewYork()],
         );
         expect(missing, period.id).toBe(raw[0].n);
 
         const sponsor = districtStats(rows, "sponsor", members);
-        expect(sponsor.inDistricts.missing + sponsor.speaker.missing + sponsor.citywide.missing + sponsor.noDistrict.missing, period.id).toBe(missing);
+        expect(
+          sponsor.inDistricts.missing + sponsor.speaker.missing + sponsor.citywide.missing + sponsor.noDistrict.missing,
+          period.id,
+        ).toBe(missing);
 
         const location = districtStats(rows, "location", members);
-        expect(location.districts.reduce((n, d) => n + d.missing, 0) + location.noDistrict.missing, period.id).toBe(missing);
+        expect(location.districts.reduce((n, d) => n + d.missing, 0) + location.noDistrict.missing, period.id).toBe(
+          missing,
+        );
 
         for (const d of sponsor.districts) {
-          const listed = rows.filter((r) => r.bucket === "missing" && matchesDistrict(r, String(d.district), "sponsor")).length;
+          const listed = rows.filter(
+            (r) => r.bucket === "missing" && matchesDistrict(r, String(d.district), "sponsor"),
+          ).length;
           expect(listed, `${period.id} district ${d.district}`).toBe(d.missing);
         }
       }
@@ -69,13 +76,14 @@ describe("the district map reconciles with the dashboard Missing tile", () => {
         `SELECT sp.district, count(DISTINCT o.assignment_id) FILTER (WHERE o.due_on < $2::date AND (o.submission_id IS NULL OR o.submission_status = 'draft'))::int AS missing
          FROM obligation o JOIN assignment a ON a.id = o.assignment_id JOIN assignment_sponsor sp ON sp.assignment_id = a.id
          WHERE o.period_id = $1 AND a.funding_source IN ('local', 'delegation') GROUP BY sp.district`,
-        [period.id, todayInNewYork()]
+        [period.id, todayInNewYork()],
       );
-      for (const row of perDistrict) expect(stats.districts[row.district - 1].missing, `district ${row.district}`).toBe(row.missing);
+      for (const row of perDistrict)
+        expect(stats.districts[row.district - 1].missing, `district ${row.district}`).toBe(row.missing);
       const { rows: tiles } = await owner.query<{ funding_source: string; missing: number }>(
         `SELECT a.funding_source, count(*) FILTER (WHERE o.due_on < $2::date AND (o.submission_id IS NULL OR o.submission_status = 'draft'))::int AS missing
          FROM obligation o JOIN assignment a ON a.id = o.assignment_id WHERE o.period_id = $1 AND a.funding_source IN ('speaker', 'citywide') GROUP BY 1`,
-        [period.id, todayInNewYork()]
+        [period.id, todayInNewYork()],
       );
       expect(stats.speaker.missing).toBe(tiles.find((t) => t.funding_source === "speaker")?.missing ?? 0);
       expect(stats.citywide.missing).toBe(tiles.find((t) => t.funding_source === "citywide")?.missing ?? 0);

@@ -37,9 +37,18 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
 
   const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const period = periods.find((p) => p.id === one(params, "period")) ?? periods.find((p) => p.id === defaultPeriodId(periods));
+    const period =
+      periods.find((p) => p.id === one(params, "period")) ?? periods.find((p) => p.id === defaultPeriodId(periods));
     if (!period) return null;
-    const list = await listOrganizations(tx, todayInNewYork(), period.id, { q, borough, type, missing, sort, dir, page });
+    const list = await listOrganizations(tx, todayInNewYork(), period.id, {
+      q,
+      borough,
+      type,
+      missing,
+      sort,
+      dir,
+      page,
+    });
     return { ...list, periods, period };
   });
   if (!data) return <NoPeriods title="Organizations" />;
@@ -50,9 +59,17 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
 
   return (
     <>
-      <PageHeader title="Organizations" description={`Every organization funded through Council initiatives. Awards and compliance count the ${period.label} reports that fall due for ${period.fiscalYearId} awards.`} crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations" }]} />
+      <PageHeader
+        title="Organizations"
+        description={`Every organization funded through Council initiatives. Awards and compliance count the ${period.label} reports that fall due for ${period.fiscalYearId} awards.`}
+        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations" }]}
+      />
       <Card>
-        <FilterBar action={base} clearHref={`${base}?period=${period.id}`} applied={[borough, type, missing ? "1" : ""].filter(Boolean).length}>
+        <FilterBar
+          action={base}
+          clearHref={`${base}?period=${period.id}`}
+          applied={[borough, type, missing ? "1" : ""].filter(Boolean).length}
+        >
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Name or 12-3456789" />
           </FilterField>
@@ -99,40 +116,77 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
               <SortHeader base={base} params={kept} field="ein" label="EIN" sort={sort} dir={dir} />
               <SortHeader base={base} params={kept} field="type" label="Type" sort={sort} dir={dir} />
               <SortHeader base={base} params={kept} field="borough" label="Borough" sort={sort} dir={dir} />
-              <SortHeader base={base} params={kept} field="district" label="District" sort={sort} dir={dir} align="right" />
+              <SortHeader
+                base={base}
+                params={kept}
+                field="district"
+                label="District"
+                sort={sort}
+                dir={dir}
+                align="right"
+              />
               <SortHeader base={base} params={kept} field="awards" label="Awards" sort={sort} dir={dir} align="right" />
               <SortHeader base={base} params={kept} field="total" label="Awarded" sort={sort} dir={dir} align="right" />
               <SortHeader base={base} params={kept} field="compliance" label={period.label} sort={sort} dir={dir} />
-              <SortHeader base={base} params={kept} field="missing" label="Missing" sort={sort} dir={dir} align="right" />
+              <SortHeader
+                base={base}
+                params={kept}
+                field="missing"
+                label="Missing"
+                sort={sort}
+                dir={dir}
+                align="right"
+              />
             </tr>
           </THead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={9}>No organizations match these filters. Clear the filters to see every organization.</EmptyRow>
+              <EmptyRow colSpan={9}>
+                No organizations match these filters. Clear the filters to see every organization.
+              </EmptyRow>
             ) : (
               rows.map((row) => (
                 <TR key={row.id}>
                   <TD className="min-w-[16rem]" primary>
-                    <Link href={`${base}/${row.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`${base}/${row.id}`}
+                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {row.legal_name}
                     </Link>
                   </TD>
                   <TD className="whitespace-nowrap font-mono text-[13px] text-muted" label="EIN">
                     <span>{row.ein}</span>
                   </TD>
-                  <TD className="whitespace-nowrap" stackHidden>{orgTypeLabel(row.org_type)}</TD>
+                  <TD className="whitespace-nowrap" stackHidden>
+                    {orgTypeLabel(row.org_type)}
+                  </TD>
                   <TD className="whitespace-nowrap" label="Borough">
                     <span>{row.borough}</span>
                   </TD>
-                  <TD align="right" stackHidden>{row.council_district ?? ""}</TD>
+                  <TD align="right" stackHidden>
+                    {row.council_district ?? ""}
+                  </TD>
                   <TD align="right" label="Awards">
                     <span>{row.awards}</span>
                   </TD>
                   <TD align="right" label="Awarded">
                     <span>{formatCurrency(Number(row.total), { cents: false })}</span>
                   </TD>
-                  <TD label={period.label}>{row.awards > 0 ? <ProgressBar value={row.accepted} max={row.awards} label={`${row.legal_name} accepted reports`} /> : <span className="text-muted">No awards</span>}</TD>
-                  <TD align="right" label="Missing">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">None</span>}</TD>
+                  <TD label={period.label}>
+                    {row.awards > 0 ? (
+                      <ProgressBar value={row.accepted} max={row.awards} label={`${row.legal_name} accepted reports`} />
+                    ) : (
+                      <span className="text-muted">No awards</span>
+                    )}
+                  </TD>
+                  <TD align="right" label="Missing">
+                    {row.missing > 0 ? (
+                      <Badge tone="bad">{row.missing} missing</Badge>
+                    ) : (
+                      <span className="text-muted">None</span>
+                    )}
+                  </TD>
                 </TR>
               ))
             )}

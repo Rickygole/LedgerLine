@@ -38,7 +38,10 @@ type Icon = ComponentType<{ className?: string }>;
 type NavItem = { href: string; label: string; icon: Icon; match: (path: string) => boolean; roles?: Role[] };
 type NavGroup = { label?: string; items: NavItem[]; more?: boolean };
 
-const under = (...prefixes: string[]) => (path: string) => prefixes.some((p) => path === p || path.startsWith(`${p}/`));
+const under =
+  (...prefixes: string[]) =>
+  (path: string) =>
+    prefixes.some((p) => path === p || path.startsWith(`${p}/`));
 const exactly = (href: string) => (path: string) => path === href;
 
 const FINANCE: NavGroup[] = [
@@ -53,8 +56,18 @@ const FINANCE: NavGroup[] = [
   {
     label: "Programs",
     items: [
-      { href: "/finance/initiatives", label: "Initiatives", icon: FolderKanban, match: under("/finance/initiatives", "/finance/forms") },
-      { href: "/finance/organizations", label: "Organizations", icon: Building2, match: under("/finance/organizations") },
+      {
+        href: "/finance/initiatives",
+        label: "Initiatives",
+        icon: FolderKanban,
+        match: under("/finance/initiatives", "/finance/forms"),
+      },
+      {
+        href: "/finance/organizations",
+        label: "Organizations",
+        icon: Building2,
+        match: under("/finance/organizations"),
+      },
     ],
   },
   {
@@ -69,11 +82,35 @@ const FINANCE: NavGroup[] = [
       { href: "/finance/trends", label: "Trends", icon: LineChart, match: under("/finance/trends") },
       { href: "/finance/outbox", label: "Outbox", icon: Send, match: under("/finance/outbox") },
       { href: "/finance/audit", label: "Audit log", icon: ScrollText, match: under("/finance/audit") },
-      { href: "/finance/rollover", label: "Annual rollover", icon: RefreshCw, match: (p) => under("/finance/rollover")(p) && !under("/finance/rollover/lineage")(p), roles: ["finance_admin"] },
-      { href: "/finance/rollover/lineage", label: "Lineage", icon: GitBranch, match: under("/finance/rollover/lineage") },
+      {
+        href: "/finance/rollover",
+        label: "Annual rollover",
+        icon: RefreshCw,
+        match: (p) => under("/finance/rollover")(p) && !under("/finance/rollover/lineage")(p),
+        roles: ["finance_admin"],
+      },
+      {
+        href: "/finance/rollover/lineage",
+        label: "Lineage",
+        icon: GitBranch,
+        match: under("/finance/rollover/lineage"),
+      },
       { href: "/finance/users", label: "Users", icon: Users, match: under("/finance/users"), roles: ["finance_admin"] },
       { href: "/finance/platform", label: "Platform", icon: ShieldCheck, match: under("/finance/platform") },
-      { href: "/finance/admin", label: "Administration", icon: Settings, match: under("/finance/admin", "/finance/support", "/finance/incidents", "/finance/reviews", "/finance/readiness", "/finance/data"), roles: ["finance_admin"] },
+      {
+        href: "/finance/admin",
+        label: "Administration",
+        icon: Settings,
+        match: under(
+          "/finance/admin",
+          "/finance/support",
+          "/finance/incidents",
+          "/finance/reviews",
+          "/finance/readiness",
+          "/finance/data",
+        ),
+        roles: ["finance_admin"],
+      },
     ],
   },
 ];
@@ -81,7 +118,12 @@ const FINANCE: NavGroup[] = [
 const PORTAL: NavGroup[] = [
   {
     items: [
-      { href: "/portal", label: "My reports", icon: FileText, match: (p) => p === "/portal" || under("/portal/reports")(p) },
+      {
+        href: "/portal",
+        label: "My reports",
+        icon: FileText,
+        match: (p) => p === "/portal" || under("/portal/reports")(p),
+      },
       { href: "/portal/history", label: "Submission history", icon: History, match: under("/portal/history") },
       { href: "/portal/organization", label: "Organization", icon: Building2, match: under("/portal/organization") },
       { href: "/portal/messages", label: "Messages", icon: Mail, match: under("/portal/messages") },
@@ -96,7 +138,17 @@ function groupsFor(role: Role): NavGroup[] {
     .filter((group) => group.items.length > 0);
 }
 
-function NavLinkItem({ item, active, compact, onNavigate }: { item: NavItem; active: boolean; compact: boolean; onNavigate?: () => void }) {
+function NavLinkItem({
+  item,
+  active,
+  compact,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  compact: boolean;
+  onNavigate?: () => void;
+}) {
   const Icon = item.icon;
   return (
     <li>
@@ -109,7 +161,9 @@ function NavLinkItem({ item, active, compact, onNavigate }: { item: NavItem; act
         className={cn(
           "group/nav relative flex h-10 items-center gap-3 rounded-sm text-[15px]",
           compact ? "justify-center px-0" : "px-3",
-          active ? "bg-harbor-50 font-bold text-harbor-900" : "text-ink-2 hover:bg-surface hover:text-link hover:underline"
+          active
+            ? "bg-harbor-50 font-bold text-harbor-900"
+            : "text-ink-2 hover:bg-surface hover:text-link hover:underline",
         )}
       >
         {active ? <span aria-hidden="true" className="absolute inset-y-1 left-0 w-1 rounded-sm bg-action" /> : null}
@@ -120,7 +174,17 @@ function NavLinkItem({ item, active, compact, onNavigate }: { item: NavItem; act
   );
 }
 
-function NavList({ role, onNavigate, compact = false, moreOpen = false }: { role: Role; onNavigate?: () => void; compact?: boolean; moreOpen?: boolean }) {
+function NavList({
+  role,
+  onNavigate,
+  compact = false,
+  moreOpen = false,
+}: {
+  role: Role;
+  onNavigate?: () => void;
+  compact?: boolean;
+  moreOpen?: boolean;
+}) {
   const pathname = usePathname();
   const groups = groupsFor(role);
   return (
@@ -129,17 +193,34 @@ function NavList({ role, onNavigate, compact = false, moreOpen = false }: { role
         const list = (
           <ul className="space-y-0.5">
             {group.items.map((item) => (
-              <NavLinkItem key={item.href} item={item} active={item.match(pathname)} compact={compact} onNavigate={onNavigate} />
+              <NavLinkItem
+                key={item.href}
+                item={item}
+                active={item.match(pathname)}
+                compact={compact}
+                onNavigate={onNavigate}
+              />
             ))}
           </ul>
         );
         if (group.more && !compact) {
           const holdsCurrent = group.items.some((item) => item.match(pathname));
-          return <MoreGroup key="more" label={group.label ?? "More"} initialOpen={moreOpen || holdsCurrent} count={group.items.length}>{list}</MoreGroup>;
+          return (
+            <MoreGroup
+              key="more"
+              label={group.label ?? "More"}
+              initialOpen={moreOpen || holdsCurrent}
+              count={group.items.length}
+            >
+              {list}
+            </MoreGroup>
+          );
         }
         return (
           <div key={group.label ?? index}>
-            {group.label && !compact ? <p className="mb-1 px-3 text-sm font-semibold text-muted">{group.label}</p> : null}
+            {group.label && !compact ? (
+              <p className="mb-1 px-3 text-sm font-semibold text-muted">{group.label}</p>
+            ) : null}
             {group.label && compact && index > 0 ? <hr className="mx-2 mb-3 border-line" /> : null}
             {list}
           </div>
@@ -149,7 +230,17 @@ function NavList({ role, onNavigate, compact = false, moreOpen = false }: { role
   );
 }
 
-function MoreGroup({ label, initialOpen, count, children }: { label: string; initialOpen: boolean; count: number; children: React.ReactNode }) {
+function MoreGroup({
+  label,
+  initialOpen,
+  count,
+  children,
+}: {
+  label: string;
+  initialOpen: boolean;
+  count: number;
+  children: React.ReactNode;
+}) {
   return (
     <details
       open={initialOpen}
@@ -169,7 +260,15 @@ function MoreGroup({ label, initialOpen, count, children }: { label: string; ini
   );
 }
 
-export function SideNav({ role, initialCollapsed = false, moreOpen = false }: { role: Role; initialCollapsed?: boolean; moreOpen?: boolean }) {
+export function SideNav({
+  role,
+  initialCollapsed = false,
+  moreOpen = false,
+}: {
+  role: Role;
+  initialCollapsed?: boolean;
+  moreOpen?: boolean;
+}) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const toggle = () => {
     const next = !collapsed;
@@ -178,7 +277,9 @@ export function SideNav({ role, initialCollapsed = false, moreOpen = false }: { 
   };
   const Toggle = collapsed ? PanelLeftOpen : PanelLeftClose;
   return (
-    <aside className={cn("no-print hidden shrink-0 border-r border-line bg-white lg:block", collapsed ? "w-16" : "w-56")}>
+    <aside
+      className={cn("no-print hidden shrink-0 border-r border-line bg-white lg:block", collapsed ? "w-16" : "w-56")}
+    >
       <div className="sticky top-0 flex max-h-dvh flex-col">
         <div className={cn("flex items-center pt-5", collapsed ? "justify-center px-2" : "justify-between pl-6 pr-3")}>
           {collapsed ? null : <p className="text-sm font-semibold text-ink-2">Finance workspace</p>}
@@ -216,7 +317,9 @@ export function TopTabs({ role }: { role: Role }) {
             aria-current={active ? "page" : undefined}
             className={cn(
               "relative whitespace-nowrap border-b-[3px] py-3.5 text-[15px] font-semibold focus-visible:-outline-offset-4",
-              active ? "border-action text-harbor-900" : "border-transparent text-ink-2 hover:border-line-strong hover:text-link"
+              active
+                ? "border-action text-harbor-900"
+                : "border-transparent text-ink-2 hover:border-line-strong hover:text-link",
             )}
           >
             {item.label}
@@ -242,7 +345,10 @@ export function NavDrawer({ role, subtitle, className }: { role: Role; subtitle:
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
-        className={cn("-ml-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded text-white hover:bg-harbor-800", className)}
+        className={cn(
+          "-ml-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded text-white hover:bg-harbor-800",
+          className,
+        )}
         aria-label="Open menu"
         aria-haspopup="dialog"
       >
@@ -259,7 +365,12 @@ export function NavDrawer({ role, subtitle, className }: { role: Role; subtitle:
         <div className="flex h-full flex-col">
           <div className="flex h-[72px] shrink-0 items-center justify-between gap-3 border-b-4 border-harbor-600 bg-harbor-900 px-4">
             <Logo compact />
-            <button type="button" onClick={close} className="flex h-10 w-10 items-center justify-center rounded text-white hover:bg-harbor-800" aria-label="Close menu">
+            <button
+              type="button"
+              onClick={close}
+              className="flex h-10 w-10 items-center justify-center rounded text-white hover:bg-harbor-800"
+              aria-label="Close menu"
+            >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>

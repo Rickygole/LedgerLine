@@ -54,24 +54,45 @@ export function needsVarianceNote(lines: BudgetLine[], award: number): boolean {
   return overThreshold(lines, award);
 }
 
-export function spendIssues(input: { lines: BudgetLine[]; award: number; answers: Answers; phase: "edit" | "submit" }): Issue[] {
+export function spendIssues(input: {
+  lines: BudgetLine[];
+  award: number;
+  answers: Answers;
+  phase: "edit" | "submit";
+}): Issue[] {
   const { lines, award, answers, phase } = input;
   if (lines.length === 0) return [];
   const issues: Issue[] = [];
   const summary = spendSummary(lines, award);
 
   if (!summary.entered) {
-    issues.push({ field: "budget", ruleId: SPEND_RULES.actual, severity: "warn", message: "Actual spent has not been entered. Add what was actually spent on each line, or leave a line blank if nothing was spent." });
+    issues.push({
+      field: "budget",
+      ruleId: SPEND_RULES.actual,
+      severity: "warn",
+      message:
+        "Actual spent has not been entered. Add what was actually spent on each line, or leave a line blank if nothing was spent.",
+    });
     return issues;
   }
 
   lines.forEach((line) => {
     if (hasActual(line) && toCents(line.actual as number) > toCents(line.amount)) {
-      issues.push({ field: `budget.${line.rowId}`, ruleId: SPEND_RULES.actual, severity: "warn", message: `Line ${line.position}: actual spent is more than the approved amount.` });
+      issues.push({
+        field: `budget.${line.rowId}`,
+        ruleId: SPEND_RULES.actual,
+        severity: "warn",
+        message: `Line ${line.position}: actual spent is more than the approved amount.`,
+      });
     }
   });
   if (toCents(summary.actual) > toCents(award)) {
-    issues.push({ field: "budget", ruleId: SPEND_RULES.actual, severity: "warn", message: `Actual spent ${formatCurrency(summary.actual)} is more than the award ${formatCurrency(award)}.` });
+    issues.push({
+      field: "budget",
+      ruleId: SPEND_RULES.actual,
+      severity: "warn",
+      message: `Actual spent ${formatCurrency(summary.actual)} is more than the award ${formatCurrency(award)}.`,
+    });
   }
 
   if (overThreshold(lines, award)) {
@@ -85,7 +106,12 @@ export function spendIssues(input: { lines: BudgetLine[]; award: number; answers
         message: `${summary.unspentPercent.toFixed(1)}% of the award is unspent. Explain why in the variance explanation.`,
       });
     } else if (text.length > VARIANCE_NOTE_MAX) {
-      issues.push({ field: VARIANCE_NOTE_KEY, ruleId: SPEND_RULES.variance, severity: "block", message: `The variance explanation must be ${VARIANCE_NOTE_MAX} characters or fewer.` });
+      issues.push({
+        field: VARIANCE_NOTE_KEY,
+        ruleId: SPEND_RULES.variance,
+        severity: "block",
+        message: `The variance explanation must be ${VARIANCE_NOTE_MAX} characters or fewer.`,
+      });
     }
   }
   return issues;

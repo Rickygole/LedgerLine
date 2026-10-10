@@ -5,7 +5,7 @@ import type { OpenFlag, PeriodInfo, ReportRow, Sponsor } from "./types";
 
 export async function loadPeriods(tx: Tx): Promise<PeriodInfo[]> {
   const rows = await tx.query<{ id: string; label: string; due_on: string; fiscal_year_id: string }>(
-    "SELECT id, label, due_on::text, fiscal_year_id FROM reporting_period ORDER BY due_on"
+    "SELECT id, label, due_on::text, fiscal_year_id FROM reporting_period ORDER BY due_on",
   );
   return rows.map((r) => ({ id: r.id, label: r.label, dueOn: r.due_on, fiscalYearId: r.fiscal_year_id }));
 }
@@ -55,7 +55,7 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
      JOIN initiative i ON i.id = a.initiative_id
      LEFT JOIN submission s ON s.id = ob.submission_id
      WHERE ob.period_id = $1`,
-    [period.id]
+    [period.id],
   );
   const submissionIds = base.map((r) => r.submission_id).filter((id): id is string => id !== null);
   const formIds = [...new Set(base.map((r) => r.form_version_id).filter((id): id is string => id !== null))];
@@ -63,29 +63,48 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
   const answerRows = submissionIds.length
     ? await tx.query<{ submission_id: string; answers: Answers }>(
         "SELECT submission_id, jsonb_object_agg(question_key, value) AS answers FROM answer WHERE submission_id = ANY($1::uuid[]) GROUP BY submission_id",
-        [submissionIds]
+        [submissionIds],
       )
     : [];
   const budgetRows = submissionIds.length
-    ? await tx.query<{ submission_id: string; row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: number; actual: number | null }>(
+    ? await tx.query<{
+        submission_id: string;
+        row_id: string;
+        position: number;
+        category: "PS" | "OTPS";
+        description: string;
+        amount: number;
+        actual: number | null;
+      }>(
         "SELECT submission_id, row_id, position, category, description, amount::float8 AS amount, actual_spent::float8 AS actual FROM budget_line WHERE submission_id = ANY($1::uuid[]) ORDER BY position",
-        [submissionIds]
+        [submissionIds],
       )
     : [];
-  const formRows = formIds.length ? await tx.query<{ id: string; definition: FormDefinition }>("SELECT id, definition FROM form_version WHERE id = ANY($1::uuid[])", [formIds]) : [];
+  const formRows = formIds.length
+    ? await tx.query<{ id: string; definition: FormDefinition }>(
+        "SELECT id, definition FROM form_version WHERE id = ANY($1::uuid[])",
+        [formIds],
+      )
+    : [];
   const flagRows = submissionIds.length
     ? await tx.query<{ id: string; submission_id: string; kind: string; note: string | null }>(
         "SELECT id, submission_id, kind, note FROM flag WHERE status = 'open' AND submission_id = ANY($1::uuid[]) ORDER BY created_at",
-        [submissionIds]
+        [submissionIds],
       )
     : [];
-
 
   const answersBySubmission = new Map(answerRows.map((r) => [r.submission_id, r.answers]));
   const budgetBySubmission = new Map<string, BudgetLine[]>();
   for (const line of budgetRows) {
     const list = budgetBySubmission.get(line.submission_id) ?? [];
-    list.push({ rowId: line.row_id, position: line.position, category: line.category, description: line.description, amount: line.amount, actual: line.actual });
+    list.push({
+      rowId: line.row_id,
+      position: line.position,
+      category: line.category,
+      description: line.description,
+      amount: line.amount,
+      actual: line.actual,
+    });
     budgetBySubmission.set(line.submission_id, list);
   }
   const definitions = new Map(formRows.map((r) => [r.id, r.definition]));
@@ -130,16 +149,18 @@ export async function loadReportRows(tx: Tx, period: PeriodInfo): Promise<Report
       budget: r.submission_id ? (budgetBySubmission.get(r.submission_id) ?? []) : [],
       definition: r.form_version_id ? (definitions.get(r.form_version_id) ?? null) : null,
       openFlags: r.submission_id ? (flagsBySubmission.get(r.submission_id) ?? []) : [],
-    })
+    }),
   );
 }
 
 export async function loadFilterOptions(tx: Tx) {
   const categories = await tx.query<{ category: string }>("SELECT DISTINCT category FROM initiative ORDER BY category");
   const members = await tx.query<{ district: number; full_name: string }>(
-    "SELECT district, full_name FROM council_member WHERE district IN (SELECT district FROM assignment_sponsor) ORDER BY district"
+    "SELECT district, full_name FROM council_member WHERE district IN (SELECT district FROM assignment_sponsor) ORDER BY district",
   );
-  const agencies = await tx.query<{ agency: string }>("SELECT DISTINCT sponsoring_agency AS agency FROM assignment WHERE sponsoring_agency IS NOT NULL ORDER BY 1");
+  const agencies = await tx.query<{ agency: string }>(
+    "SELECT DISTINCT sponsoring_agency AS agency FROM assignment WHERE sponsoring_agency IS NOT NULL ORDER BY 1",
+  );
   return {
     categories: categories.map((c) => c.category),
     members: members.map((m) => ({ district: m.district, name: m.full_name })),

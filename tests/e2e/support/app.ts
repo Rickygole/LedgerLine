@@ -40,7 +40,9 @@ export const REPORT_URL = /\/portal\/reports\/[0-9a-f-]{36}(\?.*)?$/;
 
 export function stepLink(page: Page, title: string) {
   const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return page.getByRole("navigation", { name: "Report sections" }).getByRole("link", { name: new RegExp(`^Step \\d+: ${escaped},`) });
+  return page
+    .getByRole("navigation", { name: "Report sections" })
+    .getByRole("link", { name: new RegExp(`^Step \\d+: ${escaped},`) });
 }
 
 export async function gotoStep(page: Page, title: string) {
@@ -101,7 +103,10 @@ export async function certify(page: Page) {
   if ((await title.inputValue()) === "") await title.fill("Program Director");
 }
 
-export async function setBudget(page: Page, lines: { category: "PS" | "OTPS"; description: string; amount: string; actual?: string }[]) {
+export async function setBudget(
+  page: Page,
+  lines: { category: "PS" | "OTPS"; description: string; amount: string; actual?: string }[],
+) {
   await gotoStep(page, "Budget");
   const existing = await page.getByRole("button", { name: /^Remove line/ }).count();
   for (let i = 0; i < existing; i++) await page.getByRole("button", { name: "Remove line 1" }).first().click();

@@ -11,7 +11,10 @@ let referenceNo = "";
 const NOTE = "Please explain the variance between participants targeted and served, and confirm the supplies total.";
 
 async function asMaria<T>(browser: Browser, run: (page: import("@playwright/test").Page) => Promise<T>): Promise<T> {
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+  });
   try {
     return await run(await context.newPage());
   } finally {
@@ -23,7 +26,7 @@ test.beforeAll(async ({ browser }) => {
   const [open] = await ownerQuery<{ id: string; status: string; reference_no: string }>(
     `SELECT s.id, s.status, s.reference_no FROM submission s JOIN assignment a ON a.id = s.assignment_id
      WHERE a.org_id = (SELECT org_id FROM app_user WHERE email = $1) AND s.status = 'draft' AND s.period_id = 'FY26-YE'`,
-    [PEOPLE.maria]
+    [PEOPLE.maria],
   );
   if (open) {
     submissionId = await asMaria(browser, submitOverdueDraft);
@@ -33,13 +36,15 @@ test.beforeAll(async ({ browser }) => {
   const [done] = await ownerQuery<{ id: string; reference_no: string }>(
     `SELECT s.id, s.reference_no FROM submission s JOIN assignment a ON a.id = s.assignment_id
      WHERE a.org_id = (SELECT org_id FROM app_user WHERE email = $1) AND s.status = 'submitted' ORDER BY s.submitted_at DESC LIMIT 1`,
-    [PEOPLE.maria]
+    [PEOPLE.maria],
   );
   submissionId = done.id;
   referenceNo = done.reference_no;
 });
 
-test("[US-039][US-041] the dashboard loads and the submissions list filters down to one organization", async ({ page }) => {
+test("[US-039][US-041] the dashboard loads and the submissions list filters down to one organization", async ({
+  page,
+}) => {
   await page.goto("/finance");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.goto("/finance/submissions?q=13-4027118&period=FY26-YE");
@@ -63,7 +68,10 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
   await expect(page.getByText(note).first()).toBeVisible();
 });
 
-test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({ page, browser }) => {
+test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({
+  page,
+  browser,
+}) => {
   await page.goto(`/finance/submissions/${submissionId}`);
   await page.getByRole("button", { name: "Request an update" }).click();
   await expect(page.getByRole("dialog", { name: /Request an update/ })).toBeVisible();
@@ -72,7 +80,9 @@ test("[US-044] an analyst requests an update with a note, the organization resub
   await expect(page.getByText(/Write a note before sending/)).toBeVisible();
   await page.getByLabel("Note to the organization").fill(NOTE);
   await page.getByRole("button", { name: "Send request" }).click();
-  await expect(page.getByText(/Update requested at \d{1,2}:\d{2} [AP]M\. .+ will see the note in Messages/)).toBeVisible();
+  await expect(
+    page.getByText(/Update requested at \d{1,2}:\d{2} [AP]M\. .+ will see the note in Messages/),
+  ).toBeVisible();
 
   const [row] = await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]);
   expect(row.status).toBe("returned");
@@ -92,7 +102,10 @@ test("[US-044] an analyst requests an update with a note, the organization resub
   await page.getByRole("button", { name: "Accept report" }).click();
   await expect(page.getByText("This report is accepted.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept report" })).toHaveCount(0);
-  const [after] = await ownerQuery<{ status: string; revision: number }>("SELECT status, revision FROM submission WHERE id = $1", [submissionId]);
+  const [after] = await ownerQuery<{ status: string; revision: number }>(
+    "SELECT status, revision FROM submission WHERE id = $1",
+    [submissionId],
+  );
   expect(after).toEqual({ status: "accepted", revision: 2 });
 });
 
@@ -108,14 +121,22 @@ test("[US-045][US-057] a correction after acceptance needs a reason and leaves a
   await expect(page.getByText("Correction saved as a new revision.")).toBeVisible();
   const rows = await ownerQuery<{ action: string; note: string }>(
     "SELECT action, note FROM audit_event WHERE entity = 'submission' AND entity_id = $1 AND action = 'correction'",
-    [submissionId]
+    [submissionId],
   );
   expect(rows).toEqual([{ action: "correction", note: "Title confirmed by phone with the organization" }]);
   await page.goto("/finance/audit");
-  await expect(page.locator("main table").getByText(/corrected/i).first()).toBeVisible();
+  await expect(
+    page
+      .locator("main table")
+      .getByText(/corrected/i)
+      .first(),
+  ).toBeVisible();
 });
 
-test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filtered list, for finance staff only", async ({ page, browser }) => {
+test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filtered list, for finance staff only", async ({
+  page,
+  browser,
+}) => {
   const csv = await page.request.get("/api/export?q=13-4027118&period=FY26-YE&format=csv");
   expect(csv.status()).toBe(200);
   expect(csv.headers()["content-type"]).toContain("text/csv");
@@ -132,7 +153,10 @@ test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filt
   expect(book.SheetNames).toEqual(["Submissions", "Budget lines", "README"]);
   expect(XLSX.utils.sheet_to_json(book.Sheets["Submissions"]).length).toBe(lines.length - 1);
 
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+  });
   const denied = await context.request.get("/api/export?period=FY26-YE");
   expect(denied.status()).toBe(403);
   await context.close();

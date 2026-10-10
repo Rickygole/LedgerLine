@@ -5,7 +5,17 @@ import { SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "./button";
 
-export function FilterDisclosure({ applied = 0, layout, className, children }: { applied?: number; layout: "grid" | "flex"; className?: string; children: React.ReactNode }) {
+export function FilterDisclosure({
+  applied = 0,
+  layout,
+  className,
+  children,
+}: {
+  applied?: number;
+  layout: "grid" | "flex";
+  className?: string;
+  children: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const id = useId();
   return (
@@ -17,7 +27,10 @@ export function FilterDisclosure({ applied = 0, layout, className, children }: {
           {applied > 0 ? <span className="font-normal">({applied} applied)</span> : null}
         </Button>
       </div>
-      <div id={id} className={cn(open ? (layout === "grid" ? "grid" : "flex flex-col") : "hidden", "gap-3 lg:contents", className)}>
+      <div
+        id={id}
+        className={cn(open ? (layout === "grid" ? "grid" : "flex flex-col") : "hidden", "gap-3 lg:contents", className)}
+      >
         {children}
       </div>
     </>
