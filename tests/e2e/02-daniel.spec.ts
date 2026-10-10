@@ -141,6 +141,8 @@ test("[US-049][US-051] the dashboard draws its charts from the current reports",
   await page.goto("/finance");
   const charts = page.locator("svg.recharts-surface");
   await expect(charts.first()).toBeVisible();
-  expect(await charts.count()).toBeGreaterThanOrEqual(2);
   expect(await page.locator(".recharts-bar-rectangle, .recharts-sector").count()).toBeGreaterThan(0);
+  const map = page.getByRole("group", { name: /Map of the 51 New York City Council districts/ });
+  await expect(map.locator("path").first()).toBeVisible();
+  await expect(map.getByRole("link")).toHaveCount(51);
 });

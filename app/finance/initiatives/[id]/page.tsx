@@ -92,7 +92,6 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <THead>
             <tr>
               <TH>Organization</TH>
-              <TH>EIN</TH>
               <TH>Borough</TH>
               <TH align="right">Award</TH>
               <TH>Funding and sponsor</TH>
@@ -103,7 +102,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           </THead>
           <tbody>
             {funded.length === 0 ? (
-              <EmptyRow colSpan={8}>No organizations are assigned yet.</EmptyRow>
+              <EmptyRow colSpan={7}>No organizations are assigned yet.</EmptyRow>
             ) : (
               funded.map((f) => (
                 <TR key={f.assignment_id}>
@@ -111,9 +110,12 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                     <Link href={`/finance/organizations/${f.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                       {f.legal_name}
                     </Link>
+                    <span className="block font-mono text-[13px] text-muted">{f.ein}</span>
                   </TD>
-                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted">{f.ein}</TD>
-                  <TD>{f.borough}</TD>
+                  <TD>
+                    {f.borough}
+                    {f.council_district ? <span className="block text-[13px] text-muted">District {f.council_district}</span> : null}
+                  </TD>
                   <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
                   <TD>
                     <SponsorsCell sponsors={f.sponsors} source={f.funding_source} />

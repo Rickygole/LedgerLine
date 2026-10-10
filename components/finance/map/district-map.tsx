@@ -137,35 +137,35 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
               <caption className="sr-only">Reports by Council district{borough ? ` in ${borough}` : ""}</caption>
               <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
                 <tr>
-                  <th scope="col" aria-sort={sort === "district" ? "ascending" : undefined} className="h-11 px-3">
+                  <th scope="col" aria-sort={sort === "district" ? "ascending" : undefined} className="h-11 px-2">
                     <Link href={dashHref({ ...keep, table: "1", sort: "" }, "#district-table")} scroll={false} className="underline underline-offset-2">
                       District
                     </Link>
                   </th>
-                  <th scope="col" className="px-3">Council Member</th>
-                  <th scope="col" className="px-3">Borough</th>
+                  <th scope="col" className="px-2">Council Member</th>
+                  <th scope="col" className="px-2">Borough</th>
                   <th scope="col" className="px-3 text-right">Due</th>
-                  <th scope="col" aria-sort={sort === "missing" ? "descending" : undefined} className="px-3 text-right">
+                  <th scope="col" aria-sort={sort === "missing" ? "descending" : undefined} className="px-2 text-right">
                     <Link href={dashHref({ ...keep, table: "1", sort: "missing" }, "#district-table")} scroll={false} className="underline underline-offset-2">
                       Missing
                     </Link>
                   </th>
-                  <th scope="col" className="px-3 text-right">Waiting for review</th>
+                  <th scope="col" className="px-2 text-right leading-5">Waiting for review</th>
                 </tr>
               </thead>
               <tbody>
                 {tableRows.map((d) => (
                   <tr key={d.district} className="border-b border-line-soft hover:bg-harbor-50">
-                    <th scope="row" className="h-11 whitespace-nowrap px-3 text-left font-semibold">
+                    <th scope="row" className="h-11 whitespace-nowrap px-2 text-left font-semibold">
                       <Link href={districtHref(periodId, d.district, mode, d.missing)} className="text-link underline underline-offset-2 hover:text-link-hover">
                         District {d.district}
                       </Link>
                     </th>
-                    <td className="px-3">{d.member ?? "Not on file"}</td>
-                    <td className="px-3">{d.boroughs}</td>
-                    <td className="num px-3 text-right">{d.due}</td>
-                    <td className={cn("num px-3 text-right", d.missing > 0 && "font-bold text-bad")}>{d.missing}</td>
-                    <td className="num px-3 text-right">{d.waiting}</td>
+                    <td className="px-2">{d.member ?? "Not on file"}</td>
+                    <td className="px-2">{d.boroughs}</td>
+                    <td className="num px-2 text-right">{d.due}</td>
+                    <td className={cn("num px-2 text-right", d.missing > 0 && "font-bold text-bad")}>{d.missing}</td>
+                    <td className="num px-2 text-right">{d.waiting}</td>
                   </tr>
                 ))}
               </tbody>
