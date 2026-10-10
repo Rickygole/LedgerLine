@@ -8,7 +8,7 @@ export type RowFlag = { reason: FlagReason; evidence: string };
 
 export type OpenFlag = { id: string; kind: string; note: string | null };
 
-export type PeriodInfo = { id: string; label: string; dueOn: string; fiscalYearId: string };
+export type PeriodInfo = { id: string; label: string; dueOn: string; fiscalYearId: string; custom?: boolean };
 
 export type Sponsor = { district: number; name: string; amount: number };
 

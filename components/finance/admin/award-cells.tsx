@@ -14,7 +14,9 @@ export function AwardPeriods({ periods }: { periods: PeriodCell[] | null }) {
     <ul className="space-y-1">
       {periods.map((p) => (
         <li key={p.id} className="flex items-center gap-2 whitespace-nowrap">
-          <span className="w-16 text-xs text-muted">{p.id.endsWith("-MY") ? "Mid-Year" : "Year-End"}</span>
+          <span className="min-w-16 text-xs text-muted">
+            {p.id.endsWith("-MY") ? "Mid-Year" : p.id.endsWith("-YE") ? "Year-End" : p.label}
+          </span>
           <StateBadge state={reportState(p.status, p.due_on)} />
         </li>
       ))}

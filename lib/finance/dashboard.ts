@@ -14,7 +14,9 @@ export function cycleTimeline(
   const end = 2000 + Number(fiscalYearId.replace(/\D/g, "").slice(-2));
   const startsOn = `${end - 1}-07-01`;
   const yearEnd = `${end}-06-30`;
-  const own = periods.filter((p) => p.fiscalYearId === fiscalYearId).sort((a, b) => a.dueOn.localeCompare(b.dueOn));
+  const own = periods
+    .filter((p) => p.fiscalYearId === fiscalYearId && !p.custom)
+    .sort((a, b) => a.dueOn.localeCompare(b.dueOn));
   const marks: TimelineMark[] = [{ date: startsOn, label: `${fiscalYearId} begins`, kind: "boundary" }];
   for (const p of own) {
     if (/Mid-Year/.test(p.label))

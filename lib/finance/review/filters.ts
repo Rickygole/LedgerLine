@@ -5,8 +5,12 @@ import type { Filters, PeriodInfo } from "./types";
 
 export const PAGE_SIZE = 50;
 
-export function defaultPeriodId(periods: Pick<PeriodInfo, "id" | "dueOn">[], today = todayInNewYork()): string {
-  const sorted = [...periods].sort((a, b) => a.dueOn.localeCompare(b.dueOn));
+export function defaultPeriodId(
+  periods: Pick<PeriodInfo, "id" | "dueOn" | "custom">[],
+  today = todayInNewYork(),
+): string {
+  const shared = periods.filter((p) => !p.custom);
+  const sorted = [...(shared.length > 0 ? shared : periods)].sort((a, b) => a.dueOn.localeCompare(b.dueOn));
   const past = sorted.filter((p) => p.dueOn <= today);
   return (past.length > 0 ? past[past.length - 1] : sorted[0])?.id ?? "";
 }

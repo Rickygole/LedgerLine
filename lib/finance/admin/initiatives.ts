@@ -35,7 +35,7 @@ export async function listInitiatives(tx: Tx, today: string, periodId: string, f
        SELECT f.version, f.status FROM form_version f WHERE f.initiative_id = i.id AND f.status IN ('published', 'draft')
        ORDER BY (f.status = 'published') DESC, f.version DESC LIMIT 1
      ) fv ON true
-     JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id
+     JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id AND (rp.initiative_id IS NULL OR rp.initiative_id = i.id)
      LEFT JOIN ay ON ay.initiative_id = i.id
      WHERE ($3 = '' OR i.name ILIKE $4 OR i.code ILIKE $4)
        AND ($5 = '' OR i.category = $5)
@@ -74,7 +74,7 @@ export async function categorySummary(tx: Tx, today: string, periodId: string) {
     `WITH ${ASSIGNMENT_STATE},
      per_cat AS (
        SELECT i.category, count(*)::int AS initiatives, sum(i.total_funding) AS funding
-       FROM initiative i JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id
+       FROM initiative i JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id AND (rp.initiative_id IS NULL OR rp.initiative_id = i.id)
        GROUP BY i.category
      ),
      per_assign AS (
@@ -110,6 +110,30 @@ export async function listCategories(tx: Tx) {
   return rows.map((r) => r.category);
 }
 
+export type RequiredReport = {
+  id: string;
+  label: string;
+  starts_on: string;
+  ends_on: string;
+  due_on: string;
+  custom: boolean;
+  required: boolean;
+  started: number;
+};
+
+export async function requiredReports(tx: Tx, initiativeId: string, fiscalYearId: string) {
+  return tx.query<RequiredReport>(
+    `SELECT p.id, p.label, p.starts_on::text, p.ends_on::text, p.due_on::text, p.initiative_id IS NOT NULL AS custom,
+            NOT EXISTS (SELECT 1 FROM initiative_period_exclusion x WHERE x.initiative_id = $1 AND x.period_id = p.id) AS required,
+            (SELECT count(*)::int FROM submission s JOIN assignment a ON a.id = s.assignment_id
+              WHERE a.initiative_id = $1 AND s.period_id = p.id) AS started
+     FROM reporting_period p
+     WHERE p.fiscal_year_id = $2 AND (p.initiative_id IS NULL OR p.initiative_id = $1)
+     ORDER BY p.due_on, p.label`,
+    [initiativeId, fiscalYearId],
+  );
+}
+
 export type InitiativeDetail = {
   id: string;
   code: string;
@@ -120,6 +144,8 @@ export type InitiativeDetail = {
   total_funding: string;
   status: string;
   administering_agency: string | null;
+  retired_on: string | null;
+  retired_reason: string | null;
 };
 
 export type AwardPeriod = { id: string; label: string; due_on: string; status: string | null };
@@ -154,7 +180,7 @@ type FormVersionRow = {
 
 export async function loadInitiative(tx: Tx, id: string) {
   const initiative = await tx.one<InitiativeDetail>(
-    `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status, administering_agency FROM initiative WHERE id = $1`,
+    `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status, administering_agency, retired_on::text, retired_reason FROM initiative WHERE id = $1`,
     [id],
   );
   if (!initiative) return null;
@@ -239,7 +265,7 @@ export async function setupStatus(tx: Tx, today: string): Promise<SetupStatus> {
   }>(
     `WITH fyi AS (
        SELECT i.id, i.code, i.status,
-              EXISTS (SELECT 1 FROM initiative_lineage l WHERE l.successor_id = i.id) AS carried,
+              EXISTS (SELECT 1 FROM initiative_lineage l WHERE l.successor_id = i.id AND l.predecessor_id <> l.successor_id) AS carried,
               EXISTS (SELECT 1 FROM form_version f WHERE f.initiative_id = i.id AND f.status = 'published') AS has_form,
               (SELECT count(*) FROM assignment a WHERE a.initiative_id = i.id)::int AS awards,
               (SELECT coalesce(sum(a.award_amount), 0) FROM assignment a WHERE a.initiative_id = i.id) AS funding
@@ -260,7 +286,7 @@ export async function setupStatus(tx: Tx, today: string): Promise<SetupStatus> {
     [fy.id],
   );
   const mid = await tx.one<{ id: string; ends_on: string; due_on: string }>(
-    "SELECT id, ends_on::text, due_on::text FROM reporting_period WHERE fiscal_year_id = $1 ORDER BY due_on LIMIT 1",
+    "SELECT id, ends_on::text, due_on::text FROM reporting_period WHERE fiscal_year_id = $1 AND initiative_id IS NULL ORDER BY due_on LIMIT 1",
     [fy.id],
   );
   return {
