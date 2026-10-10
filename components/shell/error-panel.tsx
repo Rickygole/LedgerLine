@@ -43,7 +43,7 @@ export function ErrorPanel({ digest, reset }: { digest?: string; reset: () => vo
 function HelpLink() {
   return (
     <Link href="/help" className="text-link underline underline-offset-2 hover:text-link-hover">
-      Help
+      Help and contact
     </Link>
   );
 }
