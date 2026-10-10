@@ -29,7 +29,7 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
         description={`Ask Finance support about your account, a report or your data. Support aims to reply to every request within ${RESPONSE_TARGET_HOURS} hours.`}
         crumbs={[{ label: home.label, href: home.href }, { label: "Get help" }]}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <Card>
           <CardHeader title="Send a request" description="Say what you were trying to do and what happened." />
           <CardBody>
@@ -64,7 +64,7 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
             </ActionForm>
           </CardBody>
         </Card>
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader title="Your requests" description="Only you can see these." />
             <Table density="compact">
