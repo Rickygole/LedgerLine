@@ -181,7 +181,7 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                 {notice}
               </p>
             ))}
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <div className="min-w-0">
                 <h3 className="text-[17px] font-bold leading-6 text-ink">From your document</h3>
                 <ol className="mt-3 max-h-[36rem] space-y-2 overflow-y-auto rounded border border-line bg-white p-4 text-[15px] leading-6 text-ink lg:sticky lg:top-6">

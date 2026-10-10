@@ -106,7 +106,7 @@ export default async function TraceabilityPage() {
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Platform and delivery", href: "/finance/platform" }, { label: "Requirements traceability" }]}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <Card>
           <CardHeader title="Test run" description="Where these results came from." />
           <CardBody>

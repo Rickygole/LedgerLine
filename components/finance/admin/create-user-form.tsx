@@ -29,7 +29,7 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
           {state.link ? <code data-testid="issued-link" className="mt-1 block break-all font-mono text-xs font-normal text-ink">{state.link}</code> : null}
         </div>
       ) : null}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <Label htmlFor="fullName">
             Full name

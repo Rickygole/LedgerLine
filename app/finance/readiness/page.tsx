@@ -109,7 +109,7 @@ export default async function ReadinessPage() {
         <CardBody className="border-t border-line">
           <h3 className="mb-3 text-base font-bold">Record a test session</h3>
           <ActionForm action={recordUatSession} submitLabel="Record session" pendingLabel="Recording">
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
                 <Label htmlFor="scenario">
                   Scenario
@@ -200,7 +200,7 @@ export default async function ReadinessPage() {
         <CardBody className="border-t border-line">
           <h3 className="mb-3 text-base font-bold">Record training</h3>
           <ActionForm action={recordTraining} submitLabel="Record training" pendingLabel="Recording">
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
                 <Label htmlFor="userId">
                   Person

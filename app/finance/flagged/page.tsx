@@ -164,7 +164,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
         <nav aria-label="Flag reasons" className="rounded border border-line bg-white lg:sticky lg:top-6">
           <ul className="divide-y divide-line-soft">
             {FLAG_ORDER.map((r) => {

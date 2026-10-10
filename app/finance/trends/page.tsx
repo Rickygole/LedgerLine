@@ -77,7 +77,7 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
           </FilterField>
         </FilterBar>
       </div>
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <MonthlyTrendChart data={data.months} description="Reports submitted in each month, split by whether they met the due date for their period." source={source} />
         <ComparisonChart data={data.groups} dimension={filters.compare === "borough" ? "Borough" : "Category"} periodLabel={period.label} source={source} />
       </div>

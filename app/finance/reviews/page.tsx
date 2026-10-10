@@ -33,7 +33,7 @@ export default async function ReviewsPage() {
         description="Once a year, Council Finance reviews initiatives, report forms, reporting periods, users and rules before the next fiscal year starts. Each year has one review, signed off by a Finance administrator. Decisions feed the annual rollover."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Annual structure review" }]}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <Card>
           <CardHeader title="Reviews" />
           <Table density="compact">

@@ -31,7 +31,7 @@ export default async function IncidentsPage() {
         description={`Record a breach or suspected breach. The Council's designated contacts are notified through the outbox straight away, the deadline is ${NOTIFY_WITHIN_HOURS} hours from detection, and a remediation report is due within ${REMEDIATE_WITHIN_DAYS} days. Records cannot be edited or deleted.`}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Security incidents" }]}
       />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Record an incident" description={activeContacts.length === 0 ? "Add a designated contact before recording an incident." : `${activeContacts.length} designated ${plural(activeContacts.length, "contact", "contacts")} will be notified.`} />
           <CardBody>
@@ -107,7 +107,7 @@ export default async function IncidentsPage() {
           </Table>
           <CardBody className="border-t border-line">
             <ActionForm action={addIncidentContact} submitLabel="Add contact" pendingLabel="Adding" variant="secondary">
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <Label htmlFor="contactName">Name</Label>
                   <Input id="contactName" aria-required="true" name="name" maxLength={120} />

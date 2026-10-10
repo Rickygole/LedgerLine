@@ -25,7 +25,7 @@ export function DistrictMapView({ viewBox, districts, outlines, initial, caption
   const current = districts.find((d) => d.district === active) ?? null;
   const ring = districts.find((d) => d.district === focused) ?? null;
   return (
-    <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_13rem] md:items-start">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_13rem] md:items-start">
       <svg viewBox={viewBox} className="block h-auto w-full max-w-[520px]" role="group" aria-label={caption}>
         {districts.map((d) => {
           const shape = (

@@ -14,7 +14,7 @@ export function TemplateChoiceForm({ initiativeId }: { initiativeId: string }) {
       <div role="alert">
         <FieldError>{state?.error}</FieldError>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="flex flex-col rounded-lg border border-line bg-white p-5">
           <FileText className="h-6 w-6 text-navy-700" aria-hidden="true" />
           <h3 className="mt-3 text-base font-semibold">Start from the standard template</h3>

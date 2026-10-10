@@ -48,7 +48,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
           </>
         }
       />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Incident" />
           <CardBody className="space-y-4">

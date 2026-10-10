@@ -32,7 +32,7 @@ export function RuleForm({ period, rule, cancelHref }: { period: string; rule?: 
       <ErrorSummary ref={summaryRef} title={summary.length > 0 ? problemsTitle(summary.length, "you save") : "The rule was not saved"} items={summary.length > 0 ? summary : state?.error ? [{ message: state.error }] : []} className="mb-0" />
       <input type="hidden" name="period" value={period} />
       {rule ? <input type="hidden" name="id" value={rule.id} /> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="rule-days">Days</Label>
           <Input id="rule-days" aria-required="true" name="days" type="number" min={0} max={365} defaultValue={days} aria-invalid={Boolean(errors.days)} aria-describedby={errors.days ? "rule-days-error" : undefined} />

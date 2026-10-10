@@ -139,7 +139,7 @@ export default async function PlatformPage() {
           <Card>
             <CardHeader title="Platform status" description="Read from the same health check that monitoring tools call at /api/health." actions={<Ids ids={["US-062"]} />} />
             <CardBody>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Stat label="Service" value={health.status === "ok" ? "Healthy" : "Degraded"} tone={health.status === "ok" ? "ok" : "bad"} hint={`Checked ${formatDateTime(health.checkedAt)}`} />
                 <Stat label="Database" value={health.database.ok ? "Connected" : "Unreachable"} tone={health.database.ok ? "ok" : "bad"} hint={health.database.latencyMs === null ? "No response" : `${health.database.latencyMs} ms`} />
                 <Stat label="Database version" value={health.migrations.applied} tone={health.migrations.ok ? "ok" : "bad"} hint={health.migrations.latest ?? "None applied"} />
@@ -152,7 +152,7 @@ export default async function PlatformPage() {
         <Card>
           <CardHeader title="Hosting and security" description="Proposed: hosted outside Council owned servers in Azure Government, with controls mapped to NIST 800-53." actions={<Ids ids={["US-053", "US-054", "BR-026"]} />} />
           <CardBody className="space-y-5">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-md border border-line p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-navy-700" aria-hidden="true" /> Current environment</p>
                 <p className="mt-1 text-sm text-muted">
@@ -201,7 +201,7 @@ export default async function PlatformPage() {
           </CardBody>
         </Card>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader title="Data ownership and export" description="The Council owns all system data." actions={<Ids ids={["US-055", "BR-020"]} />} />
             <CardBody className="space-y-3 text-sm">
@@ -236,7 +236,7 @@ export default async function PlatformPage() {
         <Card>
           <CardHeader title="Breach notification" description="The Council is told about any breach, with a remediation plan." actions={<Ids ids={["US-058", "BR-025"]} />} />
           <CardBody>
-            <ol className="grid gap-4 md:grid-cols-4">
+            <ol className="grid grid-cols-1 gap-4 md:grid-cols-4">
               {[
                 ["1. Detect and contain", "Monitoring or a report raises the alert. Affected accounts and access are shut off immediately.", "Within 1 hour"],
                 ["2. Notify the Council", "The Council Finance security contact is told by phone and email with what is known so far.", "Within 24 hours of confirmation"],
@@ -265,7 +265,7 @@ export default async function PlatformPage() {
         <Card>
           <CardHeader title="Scale" description="No limit on submitting users, and 50 to 100 Finance users with different permissions." actions={<Ids ids={["US-059", "US-060", "BR-017", "BR-018"]} />} />
           <CardBody className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {facts.usersByRole.map((r) => (
                 <Stat key={r.role} label={roleLabel(r.role as Role)} value={formatCount(r.n)} hint="Active accounts" icon={Users2} />
               ))}

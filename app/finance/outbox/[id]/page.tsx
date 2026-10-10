@@ -29,7 +29,7 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox", href: "/finance/outbox" }, { label: "Message" }]}
         meta={<Badge tone={deliveryState(message.status).tone}>{deliveryState(message.status).label}</Badge>}
       />
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardBody>
             <h2 className="text-[13px] font-semibold text-muted">Message body</h2>

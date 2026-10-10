@@ -61,7 +61,7 @@ export function QueryBuilder({ params, errors, periods, categories, initiatives,
 
   return (
     <div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy={pending}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy={pending}>
         {select("q-period", "period", "Reporting period", periods.map((p) => ({ value: p.id, label: p.label })), "Default period")}
         {select("q-category", "category", "Initiative category", categories.map((c) => ({ value: c, label: c })), "All categories")}
         <div>

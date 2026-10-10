@@ -39,7 +39,7 @@ export default async function SupportDetail({ params }: { params: Promise<{ id: 
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Support queue", href: "/finance/support" }, { label: row.reference }]}
         meta={<SupportStateBadge state={state} />}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <Card>
           <CardHeader title="Request" />
           <CardBody>

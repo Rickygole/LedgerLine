@@ -52,7 +52,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
           </ButtonLink>
         }
       />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Checklist" />
           <CardBody>
@@ -94,7 +94,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
             </ul>
             {!signed ? (
               <ActionForm action={addReviewParticipant} hidden={{ reviewId: review.id, year }} submitLabel="Add participant" pendingLabel="Adding" variant="secondary">
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="name">Name</Label>
                     <Input id="name" aria-required="true" name="name" maxLength={120} />
@@ -123,7 +123,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
           </ul>
           {!signed ? (
             <ActionForm action={addReviewDecision} hidden={{ reviewId: review.id, year }} submitLabel="Record decision" pendingLabel="Recording" variant="secondary">
-              <div className="grid gap-3 sm:grid-cols-[14rem_minmax(0,1fr)]">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[14rem_minmax(0,1fr)]">
                 <div>
                   <Label htmlFor="area">Area</Label>
                   <Select id="area" aria-required="true" name="area" defaultValue="">

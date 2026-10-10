@@ -140,7 +140,7 @@ export function QuestionEditor({ question, index, count, definition, readOnly, p
           ) : null}
           <div className="sm:col-span-2">
             <Label htmlFor={`${id}-when`} optional>Show only when</Label>
-            <div className="grid gap-2 sm:grid-cols-[1fr_8rem]">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_8rem]">
               <Select
                 id={`${id}-when`}
                 value={question.visibleWhen?.key ?? ""}

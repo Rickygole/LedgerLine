@@ -40,7 +40,7 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
       />
       {one(raw, "saved") === "1" ? <p role="status" className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">Query saved.</p> : null}
       <div className="space-y-6">
-        <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
           <Card className="lg:col-span-8">
             <CardHeader title="Query builder" />
             <CardBody>

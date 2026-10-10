@@ -309,7 +309,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
       ) : view === "preview" ? (
         <FormPreview definition={definition} />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_22rem]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_22rem]">
           <div className="self-start lg:sticky lg:top-4">
             <QuestionOutline
               definition={definition}

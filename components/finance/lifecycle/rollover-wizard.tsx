@@ -176,7 +176,7 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
                 <span className="num font-semibold">{newInitiatives}</span> {plural(newInitiatives, "initiative", "initiatives")}, {grouped.size > 0 ? "up to " : ""}
                 <span className="num font-semibold">{assignments}</span> {plural(assignments, "award", "awards")} and <span className="num font-semibold">{formsCopied}</span> {plural(formsCopied, "form", "forms")} will be copied to {to}.
               </p>
-              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <Summary label="Carried forward" value={counts.carry} />
                 <Summary label="Renamed" value={counts.rename} />
                 <Summary label="Combined into" value={`${grouped.size} (from ${eligible.filter((i) => choiceFor(i.id).action === "combine").length})`} />
@@ -336,7 +336,7 @@ export function RolloverWizard({ from, to, initiatives, forms }: { from: string;
       {grouped.size > 0 ? (
         <Card>
           <CardHeader title="Combined initiatives" description="Each group becomes one new initiative. Awards are summed per organization, and the form comes from the first initiative in the group." />
-          <CardBody className="grid gap-4 md:grid-cols-2">
+          <CardBody className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {[...grouped.entries()]
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([group, members]) => (
