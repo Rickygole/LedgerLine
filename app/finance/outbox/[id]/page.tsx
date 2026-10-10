@@ -9,7 +9,7 @@ import { Card, CardBody, DescriptionList } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { deliveryState } from "@/lib/portal/messages";
 import { loadOutboxMessage, templateLabel } from "@/lib/finance/admin/outbox";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

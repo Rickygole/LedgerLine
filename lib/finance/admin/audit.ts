@@ -1,6 +1,7 @@
 import type { Tx } from "@/lib/db";
 import { roleLabel, type Role } from "@/lib/auth";
-import { PAGE_SIZE, isUuid } from "./params";
+import { PAGE_SIZE } from "./params";
+import { isUuid } from "@/lib/ids";
 import { actionVerb, entityLabel } from "@/lib/finance/audit-actions";
 import { describeOffset } from "@/lib/lifecycle/reminders";
 import { formatCount, plural } from "@/lib/format";

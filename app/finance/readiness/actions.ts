@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { dbFailure, failure, firstIssue, isoDay, success, trimmed, type OpState } from "@/lib/ops/action-state";
 import { plural } from "@/lib/format";
 

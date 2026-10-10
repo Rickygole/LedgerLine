@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, formatDateTime, nowDate } from "@/lib/dates";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { EVENT_LABEL, incidentStatus, loadEvents, loadIncident, loadRemediations, notificationDeadline, remediationDeadline, severityLabel, STATUS_LABEL } from "@/lib/ops/incidents";
 import { ActionForm } from "@/components/ops/action-form";
 import { DeadlineBadge } from "@/components/ops/deadline-badge";

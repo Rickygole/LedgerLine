@@ -11,7 +11,8 @@ import { NewInitiativeForm } from "@/components/finance/admin/new-initiative-for
 import { AssignOrgsForm } from "@/components/finance/admin/assign-orgs-form";
 import { TemplateChoiceForm } from "@/components/finance/admin/template-choice-form";
 import { listCategories } from "@/lib/finance/admin/initiatives";
-import { isUuid, one, type SearchParams } from "@/lib/finance/admin/params";
+import { one, type SearchParams } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { cn } from "@/lib/cn";
 
 export const runtime = "nodejs";

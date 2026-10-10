@@ -3,15 +3,15 @@ import { getCurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { contentDisposition } from "@/lib/report/upload-rules";
 import { getFile } from "@/lib/storage";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string; attachmentId: string }> }) {
   const { id, attachmentId } = await params;
-  if (!ID.test(id) || !ID.test(attachmentId)) return new NextResponse("Not found", { status: 404 });
+  if (!isUuid(id) || !isUuid(attachmentId)) return new NextResponse("Not found", { status: 404 });
 
   const user = await getCurrentUser().catch(() => null);
   if (!user) return new NextResponse("Sign in to download files.", { status: 401 });

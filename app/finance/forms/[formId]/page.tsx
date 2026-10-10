@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/dates";
 import type { FormDefinition } from "@/lib/rules/types";
 import { CheckCircle2, CircleDashed, History } from "lucide-react";
 import { CreateDraftForm } from "@/components/finance/admin/create-draft-form";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,13 +29,12 @@ type FormRow = {
   published_definition: FormDefinition | null;
 };
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function FormPage({ params, searchParams }: { params: Promise<{ formId: string }>; searchParams: Promise<{ import?: string }> }) {
   const user = await requireUser(FINANCE_ROLES);
   const { formId } = await params;
   const query = await searchParams;
-  if (!uuid.test(formId)) notFound();
+  if (!isUuid(formId)) notFound();
   const form = await withClaims(user.id, (tx) =>
     tx.one<FormRow>(
       `SELECT f.id, f.version, f.status, f.definition, f.initiative_id, i.name AS initiative_name, i.code AS initiative_code,

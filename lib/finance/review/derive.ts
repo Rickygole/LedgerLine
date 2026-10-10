@@ -7,6 +7,7 @@ import type { Answers, BudgetLine, FormDefinition, Issue } from "@/lib/rules/typ
 import { matchesDistrict } from "@/lib/finance/district-stats";
 import { PAGE_SIZE } from "./filters";
 import type { Filters, FlagReason, OpenFlag, ReportRow, RowFlag } from "./types";
+import { isUuid } from "@/lib/ids";
 
 export const BUCKET_ORDER: Bucket[] = ["outstanding", "missing", "submitted", "in_review", "returned", "accepted"];
 
@@ -138,7 +139,6 @@ function statusKey(row: Pick<ReportRow, "status">): string {
   return row.status ?? "not_started";
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip: (keyof Filters)[] = []): ReportRow[] {
   const use = (key: keyof Filters) => !skip.includes(key) && Boolean(filters[key]);
@@ -153,7 +153,7 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
       if (!text && !einMatch) return false;
     }
     if (use("initiative")) {
-      if (UUID.test(initiative)) {
+      if (isUuid(initiative)) {
         if (row.initiativeId.toLowerCase() !== initiative) return false;
       } else if (!row.initiativeName.toLowerCase().includes(initiative) && !row.initiativeCode.toLowerCase().includes(initiative)) return false;
     }

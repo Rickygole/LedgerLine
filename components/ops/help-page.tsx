@@ -3,7 +3,7 @@ import { createSupportRequest, replyToSupportRequest } from "@/app/actions/suppo
 import type { CurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime, nowDate } from "@/lib/dates";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { CATEGORIES, categoryLabel, listSupport, loadMessages, loadSupport, RESPONSE_TARGET_HOURS, supportState } from "@/lib/ops/support";
 import { ActionForm } from "@/components/ops/action-form";
 import { SupportStateBadge, Thread } from "@/components/ops/support-parts";

@@ -20,7 +20,7 @@ import { MiniDistrictMap } from "@/components/finance/map/mini-district-map";
 import { buttonClass } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { loadInitiative } from "@/lib/finance/admin/initiatives";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

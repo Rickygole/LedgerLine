@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { loadPeriods } from "@/lib/finance/review/data";
 import { cleanParams, QUERY_KEYS, toSearch, validateParams } from "@/lib/lifecycle/queries";
 

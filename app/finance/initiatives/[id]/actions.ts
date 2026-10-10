@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 
 type DraftState = { error?: string } | undefined;
 

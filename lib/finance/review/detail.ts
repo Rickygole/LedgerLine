@@ -3,6 +3,7 @@ import type { Certification } from "@/lib/rules/certify";
 import type { Answers, BudgetLine, FormDefinition } from "@/lib/rules/types";
 import { finishRow } from "./derive";
 import type { OpenFlag, ReportRow, Sponsor } from "./types";
+import { isUuid } from "@/lib/ids";
 
 export type AttachmentRow = { id: string; filename: string; bytes: number; mime: string; createdAt: string; uploadedBy: string | null };
 
@@ -41,7 +42,7 @@ export type SubmissionDetail = {
 const ISO = (column: string) => `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
 
 export async function loadSubmissionDetail(tx: Tx, id: string): Promise<SubmissionDetail | null> {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
+  if (!isUuid(id)) return null;
   const base = await tx.one<{
     assignment_id: string;
     org_id: string;

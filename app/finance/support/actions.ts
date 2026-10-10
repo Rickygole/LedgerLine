@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { dbFailure, failure, success, type OpState } from "@/lib/ops/action-state";
 
 export async function closeSupportRequest(_previous: OpState, formData: FormData): Promise<OpState> {

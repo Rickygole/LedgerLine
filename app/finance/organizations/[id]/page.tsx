@@ -23,7 +23,8 @@ import { loadOrganization, type OrgAward } from "@/lib/finance/admin/organizatio
 import { orgActivity } from "@/lib/finance/admin/audit";
 import { templateLabel } from "@/lib/finance/admin/outbox";
 import { orgTypeLabel } from "@/lib/domain";
-import { isUuid, one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
+import { one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

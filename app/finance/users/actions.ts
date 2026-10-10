@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { appOrigin } from "@/lib/origin";
 import { pgCode, withClaims } from "@/lib/db";
 import { plainError } from "@/lib/finance/admin/errors";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { STAFF_ROLES } from "@/lib/finance/admin/users";
 
 export type UserActionState = { ok?: string; error?: string; link?: string } | undefined;

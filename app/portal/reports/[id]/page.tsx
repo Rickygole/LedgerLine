@@ -11,17 +11,17 @@ import { withClaims } from "@/lib/db";
 import { loadEditorPayload, loadReport } from "@/lib/report/data";
 import { loadFileIds, loadLatestRevision, loadReturnNote } from "@/lib/report/revision";
 import { formatBytes } from "@/lib/report/upload-rules";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Report" };
 
-const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!ID.test(id)) notFound();
+  if (!isUuid(id)) notFound();
   const user = await requireUser(["cbo_submitter"]);
 
   const data = await withClaims(user.id, async (tx) => {

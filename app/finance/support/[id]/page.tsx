@@ -4,7 +4,7 @@ import { replyToSupportRequest } from "@/app/actions/support";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime, nowDate } from "@/lib/dates";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { ageMinutes, categoryLabel, dueAt, formatDuration, loadMessages, loadSupport, metTarget, responseMinutes, supportState } from "@/lib/ops/support";
 import { ActionForm } from "@/components/ops/action-form";
 import { SupportStateBadge, Thread } from "@/components/ops/support-parts";

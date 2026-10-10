@@ -1,5 +1,6 @@
 import type { Tx } from "@/lib/db";
-import { PAGE_SIZE, isUuid } from "./params";
+import { PAGE_SIZE } from "./params";
+import { isUuid } from "@/lib/ids";
 
 type OutboxRow = {
   id: string;

@@ -9,7 +9,7 @@ import { parseAmount } from "@/lib/rules/money";
 import { plainError } from "@/lib/finance/admin/errors";
 import { AGENCIES } from "@/lib/domain";
 import type { FormState } from "@/lib/finance/admin/form-state";
-import { isUuid } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 
 const createSchema = z.object({
   name: z.string().trim().min(3, "Enter a name of at least 3 characters.").max(120, "Use 120 characters or fewer."),

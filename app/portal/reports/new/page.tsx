@@ -8,18 +8,18 @@ import { formatDate } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
 import { findReport } from "@/lib/report/create";
 import { startReportAction } from "./actions";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Start a report" };
 
-const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function NewReportPage({ searchParams }: { searchParams: Promise<{ assignment?: string; period?: string; closed?: string }> }) {
   const user = await requireUser(["cbo_submitter"]);
   const { assignment, period, closed } = await searchParams;
-  if (!assignment || !period || !ID.test(assignment) || !/^[A-Za-z0-9-]{3,20}$/.test(period)) notFound();
+  if (!assignment || !period || !isUuid(assignment) || !/^[A-Za-z0-9-]{3,20}$/.test(period)) notFound();
 
   const existing = await findReport(user.id, assignment, period);
   if (existing.status === "not_found") notFound();

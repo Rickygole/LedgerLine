@@ -9,6 +9,7 @@ import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
 import { Badge } from "@/components/ui/status-badge";
 import { deliveryState, templateLabel } from "@/lib/portal/messages";
+import { isUuid } from "@/lib/ids";
 
 export const metadata: Metadata = { title: "Message" };
 export const runtime = "nodejs";
@@ -16,12 +17,11 @@ export const dynamic = "force-dynamic";
 
 type Row = { id: string; subject: string; template: string; to_email: string; body_text: string; created_at: string; status: string; submission_id: string | null; reference_no: string | null };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function MessageDetail({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser(["cbo_submitter"]);
   const { id } = await params;
-  if (!UUID.test(id)) notFound();
+  if (!isUuid(id)) notFound();
   const row = await withClaims(user.id, (tx) =>
     tx.one<Row>(
       `SELECT o.id, o.subject, o.template, o.to_email, o.body_text, o.created_at, o.status, o.submission_id, s.reference_no

@@ -6,7 +6,8 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { dispatchFor } from "@/lib/outbox-dispatch";
 import { plainError } from "@/lib/finance/admin/errors";
-import { isoDate, isUuid } from "@/lib/finance/admin/params";
+import { isoDate } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 import { todayInNewYork } from "@/lib/dates";
 import { plural } from "@/lib/format";
 
