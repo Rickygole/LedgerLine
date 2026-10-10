@@ -110,7 +110,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
       <Card className="mt-6">
         <CardHeader
           title="Remediation report"
-          description="Root cause, actions taken and the plan to reduce the risk of a repeat. Save an update any time; the latest one counts. Each save is sent to the designated contacts."
+          description="Root cause, actions taken and the plan to reduce the risk of a repeat. Save an update any time; the latest one counts. Each save adds a message for the designated contacts to the outbox."
         />
         <CardBody className="space-y-6">
           {latest ? (

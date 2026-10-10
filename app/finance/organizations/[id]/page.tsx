@@ -25,6 +25,7 @@ import { templateLabel } from "@/lib/finance/admin/outbox";
 import { orgTypeLabel } from "@/lib/domain";
 import { one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
 import { isUuid } from "@/lib/ids";
+import { deliveryState } from "@/lib/portal/messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -439,9 +440,7 @@ export default async function OrganizationProfile({
                     <TD className="whitespace-nowrap">{templateLabel(m.template)}</TD>
                     <TD>{m.to_email}</TD>
                     <TD>
-                      <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>
-                        {m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}
-                      </Badge>
+                      <Badge tone={deliveryState(m.status).tone}>{deliveryState(m.status).label}</Badge>
                     </TD>
                     <TD>{formatDateTime(m.created_at)}</TD>
                   </TR>
