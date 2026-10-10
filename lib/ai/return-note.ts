@@ -41,6 +41,18 @@ const SCHEMA = {
   additionalProperties: false,
 };
 
+const RULE_REFERENCE = /\brules?\b|\b[A-Za-z]{2,3}\s*-\s*\d|\b[A-Za-z]{2,3}-?\d*\s*:\s*\d/i;
+
+export function withoutRuleReferences(output: unknown): { output: unknown; removed: number } {
+  const list = output && typeof output === "object" && Array.isArray((output as { sentences?: unknown }).sentences) ? ((output as { sentences: unknown[] }).sentences) : null;
+  if (!list) return { output, removed: 0 };
+  const kept = list.filter((item) => {
+    const text = (item as { text?: unknown })?.text;
+    return !(typeof text === "string" && RULE_REFERENCE.test(text));
+  });
+  return { output: { ...(output as object), sentences: kept }, removed: list.length - kept.length };
+}
+
 export function modelPayload(concerns: Concern[]): string {
   const { concerns: items } = buildAiInput(concerns);
   return JSON.stringify({ concerns: items.map((c) => (c.value === null ? { rule_id: c.rule_id, field: c.field } : c)) });
@@ -72,7 +84,9 @@ export async function draftReturnNote(tx: Tx, input: { submissionId: string; con
   }
 
   if (live) {
-    const { kept, dropped } = validateSentences(live.output, concerns);
+    const screened = withoutRuleReferences(live.output);
+    const { kept, dropped } = validateSentences(screened.output, concerns);
+    for (let i = 0; i < screened.removed; i++) dropped.push({ text: "", reason: "mentions a rule" });
     const { sentences, filled } = completeSentences(kept, concerns);
     const text = noteText(sentences);
     const aiActionId = await logAiAction(tx, {
