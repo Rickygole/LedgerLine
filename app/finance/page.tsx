@@ -13,7 +13,7 @@ import { districtStats, loadCouncilMembers, parseMapMode } from "@/lib/finance/d
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { countBuckets, groupBy } from "@/lib/finance/review/derive";
 import { hrefWith, parseFilters } from "@/lib/finance/review/filters";
-import type { Filters, PeriodInfo, ReportRow } from "@/lib/finance/review/types";
+import type { Filters, ReportRow } from "@/lib/finance/review/types";
 import { isGeoBorough } from "@/lib/geo/boroughs";
 import { dashboardHeadline, periodEyebrow, plural } from "@/lib/finance/dashboard";
 
