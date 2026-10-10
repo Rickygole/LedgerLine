@@ -1,173 +1,139 @@
 import type { Metadata } from "next";
-import { AlertTriangle, ArrowRight } from "lucide-react";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { ButtonLink } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
+import { FiscalYearTimeline, type TimelineMark } from "@/components/ui/fiscal-year-timeline";
+import { NextAction } from "@/components/portal/next-action";
+import { ObligationGroups } from "@/components/portal/obligation-groups";
 import { PageHeader } from "@/components/ui/page-header";
-import { DueBadge, StateBadge } from "@/components/ui/status-badge";
-import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
-import { Segmented } from "@/components/portal/portal-filters";
-import { OrgSummary } from "@/components/portal/org-summary";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDate, formatDateTime, todayInNewYork } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
-import { actionFor, currentFiscalYear, loadObligations, loadOrganization } from "@/lib/portal/data";
+import { formatDate, todayInNewYork } from "@/lib/dates";
+import { actionFor, loadObligations, loadOrganization, type Obligation } from "@/lib/portal/data";
+import { reportProgress } from "@/lib/portal/progress";
 
 export const metadata: Metadata = { title: "My reports" };
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default async function PortalHome({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
+type Period = { id: string; label: string; ends_on: string; due_on: string };
+type Year = { id: string; starts_on: string; ends_on: string };
+
+function plural(n: number, one: string, many: string) {
+  return n === 1 ? one : many;
+}
+
+function pickNext(obligations: Obligation[]): Obligation | null {
+  const byDue = [...obligations].sort((a, b) => a.dueOn.localeCompare(b.dueOn) || a.initiativeName.localeCompare(b.initiativeName));
+  return (
+    byDue.find((o) => o.state === "missing") ??
+    byDue.find((o) => o.state === "returned") ??
+    byDue.find((o) => o.state === "draft") ??
+    byDue.find((o) => o.state === "not_started") ??
+    null
+  );
+}
+
+export default async function PortalHome() {
   const user = await requireUser(["cbo_submitter"]);
-  const params = await searchParams;
-  const { org, obligations, fiscalYear } = await withClaims(user.id, async (tx) => ({
-    org: await loadOrganization(tx, user.orgId!),
-    obligations: await loadObligations(tx, user.orgId!),
-    fiscalYear: await currentFiscalYear(tx, todayInNewYork()),
-  }));
-  const periods = Array.from(new Map(obligations.map((o) => [o.periodId, o.periodLabel])).entries());
-  const period = periods.some(([id]) => id === params.period) ? params.period! : "all";
-  const rows = period === "all" ? obligations : obligations.filter((o) => o.periodId === period);
-  const urgent = obligations.filter((o) => o.needsAction);
-  const awards = new Map(obligations.filter((o) => o.fiscalYearId === fiscalYear).map((o) => [o.assignmentId, o.award]));
-  const totalAwarded = Array.from(awards.values()).reduce((sum, v) => sum + v, 0);
+  const today = todayInNewYork();
+  const data = await withClaims(user.id, async (tx) => {
+    const obligations = await loadObligations(tx, user.orgId!);
+    const next = pickNext(obligations);
+    const year =
+      (await tx.one<Year>("SELECT id, to_char(starts_on, 'YYYY-MM-DD') AS starts_on, to_char(ends_on, 'YYYY-MM-DD') AS ends_on FROM fiscal_year WHERE $1::date BETWEEN starts_on AND ends_on", [today])) ??
+      (await tx.one<Year>("SELECT id, to_char(starts_on, 'YYYY-MM-DD') AS starts_on, to_char(ends_on, 'YYYY-MM-DD') AS ends_on FROM fiscal_year ORDER BY starts_on DESC LIMIT 1"));
+    const periods = await tx.query<Period>(
+      "SELECT id, label, to_char(ends_on, 'YYYY-MM-DD') AS ends_on, to_char(due_on, 'YYYY-MM-DD') AS due_on FROM reporting_period ORDER BY due_on"
+    );
+    return {
+      org: await loadOrganization(tx, user.orgId!),
+      obligations,
+      next,
+      progress: next?.submissionId ? await reportProgress(tx, next.submissionId) : null,
+      year,
+      periods,
+    };
+  });
+  const { org, obligations, next, progress, year, periods } = data;
+
+  const overdue = obligations.filter((o) => o.state === "missing");
+  const returned = obligations.filter((o) => o.state === "returned");
+  const upcoming = obligations.filter((o) => (o.state === "not_started" || o.state === "draft") && o.dueOn >= today).sort((a, b) => a.dueOn.localeCompare(b.dueOn));
+  const nextDue = upcoming[0]?.dueOn ?? null;
+  const dueTogether = nextDue ? upcoming.filter((o) => o.dueOn === nextDue) : [];
+
+  const title =
+    overdue.length > 0
+      ? `${overdue.length} ${plural(overdue.length, "report is", "reports are")} overdue`
+      : returned.length > 0
+        ? `Council Finance asked for changes to ${returned.length} ${plural(returned.length, "report", "reports")}`
+        : nextDue
+          ? `Your next report is due ${formatDate(nextDue)}`
+          : "You are up to date";
+
+  const lede = nextDue
+    ? `You have ${dueTogether.length} ${plural(dueTogether.length, "report", "reports")} due by ${formatDate(nextDue)} for ${dueTogether[0].periodLabel}.`
+    : obligations.length > 0
+      ? "Nothing else is due right now. Council Finance assigns new reports at the start of each fiscal year."
+      : "Council Finance has not assigned any reports to your organization yet.";
+
+  const eyebrow = org ? [org.legalName, org.borough, org.councilDistrict ? `District ${org.councilDistrict}` : null].filter(Boolean).join(" · ") : user.orgName ?? "Your organization";
+
+  const marks: TimelineMark[] = [];
+  if (year) {
+    marks.push({ date: year.starts_on, label: `${year.id} begins`, kind: "boundary" });
+    marks.push({ date: year.ends_on, label: `${year.id} ends`, kind: "boundary" });
+    for (const period of periods) {
+      if (period.ends_on > year.starts_on && period.ends_on < year.ends_on) marks.push({ date: period.ends_on, label: `${period.label.replace(/^FY\d+ /, "")} period ends`, kind: "period-end" });
+      if (period.due_on < year.starts_on || period.due_on > year.ends_on) continue;
+      const mine = obligations.filter((o) => o.periodId === period.id);
+      if (mine.length === 0) continue;
+      const late = mine.filter((o) => o.state === "missing").length;
+      const open = mine.filter((o) => o.state === "returned" || o.state === "draft" || o.state === "not_started").length;
+      const status = late > 0 ? `${late} overdue` : open > 0 ? `${open} to file` : "all submitted";
+      marks.push({ date: period.due_on, label: `${period.label} due, ${status}`, kind: "due", state: late > 0 ? "current" : undefined });
+    }
+  }
 
   return (
-    <>
-      <PageHeader
-        title="My reports"
-        description={`Welcome, ${user.fullName.split(" ")[0]}. Here are the reports due for ${user.orgName ?? "your organization"}, one row for each initiative and reporting period.`}
-      />
-      {org ? <OrgSummary org={org} fiscalYear={fiscalYear} activeAwards={awards.size} totalAwarded={totalAwarded} /> : null}
+    <div className="space-y-8">
+      <PageHeader eyebrow={eyebrow} title={title} description={lede} />
 
-      {urgent.length > 0 ? (
-        <section aria-labelledby="action-needed" className="mb-6 rounded-xl border border-l-4 border-line border-l-bad bg-white px-5 py-4 shadow-card">
-          <h2 id="action-needed" className="flex items-center gap-2 text-[15px] font-semibold text-ink">
-            <AlertTriangle className="h-4 w-4 text-bad" aria-hidden="true" />
-            Action needed
-          </h2>
-          <ul className="mt-3 divide-y divide-line">
-            {urgent.map((o) => {
-              const action = actionFor(o);
-              return (
-                <li key={`${o.assignmentId}-${o.periodId}`} className="flex flex-wrap items-center justify-between gap-3 py-2.5 text-sm text-ink first:pt-0 last:pb-0">
-                  <span className="min-w-0 flex-1 basis-72">
-                    <span className="font-semibold">{o.initiativeName}</span>, {o.periodLabel}:{" "}
-                    {o.state === "returned" ? "Finance asked for changes." : `due ${formatDate(o.dueOn)}, now ${o.pastDue} ${o.pastDue === 1 ? "day" : "days"} past due.`}
-                  </span>
-                  <ButtonLink href={action.href} size="sm" className="max-sm:w-full">
-                    {action.label === "Continue" ? "Continue report" : action.label}
-                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                  </ButtonLink>
-                </li>
-              );
-            })}
-          </ul>
+      {next ? (
+        <NextAction obligation={next} href={actionFor(next).href} progress={progress} />
+      ) : obligations.length > 0 ? (
+        <p className="flex items-start gap-2 rounded border border-ok/30 bg-ok-bg px-5 py-4 text-[15px] font-semibold text-ok">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          Every report that is due has been submitted. Council Finance will tell you in Messages if anything needs to change.
+        </p>
+      ) : null}
+
+      {year ? (
+        <section aria-labelledby="fy-glance" className="rounded border border-line bg-white">
+          <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
+            <h2 id="fy-glance" className="text-xl font-bold leading-7 text-ink">
+              {year.id} at a glance
+            </h2>
+            <p className="mt-0.5 text-[15px] text-ink-2">
+              {year.id} runs {formatDate(year.starts_on)} to {formatDate(year.ends_on)}. Squares are your report due dates.
+            </p>
+          </div>
+          <div className="px-5 py-4 sm:px-6 sm:py-6">
+            <FiscalYearTimeline fiscalYear={year.id} startsOn={year.starts_on} endsOn={year.ends_on} today={today} marks={marks} label={`${year.id} at a glance for your organization`} />
+          </div>
         </section>
       ) : null}
 
-      <Card>
-        <CardHeader
-          title="Reporting obligations"
-          description="Overdue reports and requested changes are listed first."
-          actions={
-            <Segmented
-              label="Filter by reporting period"
-              param="period"
-              base={{}}
-              current={period}
-              options={[{ value: "all", label: "All periods", count: obligations.length }, ...periods.map(([id, label]) => ({ value: id, label, count: obligations.filter((o) => o.periodId === id).length }))]}
-            />
-          }
-        />
-        <ul className="divide-y divide-line md:hidden">
-          {rows.length === 0 ? <li className="px-5 py-10 text-center text-sm text-muted">No reporting obligations for this period. Council Finance assigns initiatives to your organization.</li> : null}
-          {rows.map((o) => {
-            const action = actionFor(o);
-            return (
-              <li key={`${o.assignmentId}-${o.periodId}`} className={o.needsAction ? "bg-[#fef7f6] px-5 py-4" : "px-5 py-4"}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-ink">{o.initiativeName}</p>
-                    <p className="whitespace-nowrap font-mono text-[13px] text-muted">{o.initiativeCode}{o.referenceNo ? `, ${o.referenceNo}` : ""}</p>
-                  </div>
-                  <StateBadge state={o.state} audience="cbo" />
-                </div>
-                <p className="mt-2 text-sm text-ink">
-                  {o.periodLabel} <span className="text-muted">due</span> <span className="whitespace-nowrap">{formatDate(o.dueOn)}</span>
-                </p>
-                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <span className="num text-muted">Award {formatCurrency(o.award)}</span>
-                  {o.status === null || o.status === "draft" || o.status === "returned" ? <DueBadge daysPastDue={o.pastDue} /> : null}
-                </div>
-                <ButtonLink href={action.href} variant={action.primary ? "primary" : "secondary"} size="md" className="mt-3 w-full">
-                  {action.label}
-                </ButtonLink>
-              </li>
-            );
-          })}
-        </ul>
-        <Table className="hidden md:block">
-          <THead>
-            <tr>
-              <TH>Initiative</TH>
-              <TH>Period</TH>
-              <TH>Due</TH>
-              <TH align="right">Award</TH>
-              <TH>Status</TH>
-              <TH>Last edited</TH>
-              <TH>
-                <span className="sr-only">Action</span>
-              </TH>
-            </tr>
-          </THead>
-          <tbody>
-            {rows.length === 0 ? (
-              <EmptyRow colSpan={7}>No reporting obligations for this period. Council Finance assigns initiatives to your organization.</EmptyRow>
-            ) : (
-              rows.map((o) => {
-                const action = actionFor(o);
-                return (
-                  <TR key={`${o.assignmentId}-${o.periodId}`} className={o.needsAction ? "bg-[#fef7f6] hover:bg-[#fdeeec]" : undefined}>
-                    <TD>
-                      <p className="font-medium text-ink">{o.initiativeName}</p>
-                      <p className="whitespace-nowrap font-mono text-[13px] text-muted">{o.initiativeCode}{o.referenceNo ? `, ${o.referenceNo}` : ""}</p>
-                    </TD>
-                    <TD>
-                      <p>{o.periodLabel}</p>
-                      <p className="text-xs text-muted">{formatDate(o.startsOn)} to {formatDate(o.endsOn)}</p>
-                    </TD>
-                    <TD>
-                      <p className="whitespace-nowrap">{formatDate(o.dueOn)}</p>
-                      {o.status === null || o.status === "draft" || o.status === "returned" ? <DueBadge daysPastDue={o.pastDue} /> : null}
-                    </TD>
-                    <TD align="right">{formatCurrency(o.award)}</TD>
-                    <TD>
-                      <StateBadge state={o.state} audience="cbo" />
-                    </TD>
-                    <TD>
-                      {o.editedAt && o.submissionId ? (
-                        <>
-                          <p>{o.editedBy ?? "Unknown"}</p>
-                          <p className="text-xs text-muted">{formatDateTime(o.editedAt)}</p>
-                        </>
-                      ) : (
-                        <span className="text-muted">None</span>
-                      )}
-                    </TD>
-                    <TD className="text-right">
-                      <ButtonLink href={action.href} variant={action.primary ? "primary" : "secondary"} size="sm">
-                        {action.label}
-                      </ButtonLink>
-                    </TD>
-                  </TR>
-                );
-              })
-            )}
-          </tbody>
-        </Table>
-        <CardBody className="border-t border-line text-xs text-muted">Dates and times are shown in Eastern Time.</CardBody>
-      </Card>
-    </>
+      <section aria-labelledby="all-reports" className="rounded border border-line bg-white">
+        <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
+          <h2 id="all-reports" className="text-xl font-bold leading-7 text-ink">
+            Your reports
+          </h2>
+          <p className="mt-0.5 text-[15px] text-ink-2">One report for each initiative and reporting period. Dates and times are Eastern Time.</p>
+        </div>
+        <div className="px-5 py-6 sm:px-6">
+          <ObligationGroups obligations={obligations} />
+        </div>
+      </section>
+    </div>
   );
 }

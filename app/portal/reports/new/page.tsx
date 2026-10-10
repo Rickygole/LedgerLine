@@ -50,8 +50,8 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <PageHeader title="Start a report" description="Starting a report creates a draft for your organization. You can leave and come back at any time." crumbs={crumbs} />
+    <div className="max-w-[760px]">
+      <PageHeader eyebrow={`${details.period} report`} title="Start a report" description="Starting a report creates a draft for your organization. You can leave and come back at any time." crumbs={crumbs} />
       <Card>
         <CardBody className="space-y-5">
           <DescriptionList
@@ -66,7 +66,7 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
           <form action={startReportAction} className="flex flex-wrap gap-3">
             <input type="hidden" name="assignment" value={assignment} />
             <input type="hidden" name="period" value={period} />
-            <Button type="submit">Start report</Button>
+            <Button type="submit" className="max-sm:w-full">Start report</Button>
           </form>
         </CardBody>
       </Card>

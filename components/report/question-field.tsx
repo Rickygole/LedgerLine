@@ -101,7 +101,7 @@ export function QuestionField({
             key={option}
             className={cn(
               "inline-flex h-10 min-w-24 cursor-pointer items-center justify-center gap-2 rounded-md border px-4 text-sm font-semibold shadow-sm",
-              asText(value) === option ? "border-navy-700 bg-navy-50 text-navy-900" : "border-line bg-white text-ink hover:bg-navy-50",
+              asText(value) === option ? "border-harbor-700 bg-harbor-50 text-harbor-900" : "border-line bg-white text-ink hover:bg-harbor-50",
               disabled && "cursor-not-allowed opacity-60"
             )}
           >
@@ -115,7 +115,7 @@ export function QuestionField({
                 onChange(option);
                 onBlur();
               }}
-              className="h-4 w-4 accent-navy-800"
+              className="h-4 w-4 accent-harbor-800"
             />
             {option}
           </label>

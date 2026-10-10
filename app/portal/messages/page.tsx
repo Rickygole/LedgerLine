@@ -31,11 +31,11 @@ export default async function MessagesPage() {
   return (
     <>
       <PageHeader
+        eyebrow={user.orgName ?? "Your organization"}
         title="Messages"
-        description="Copies of the messages LedgerLine has generated for your organization, such as submission confirmations and update requests."
-        crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages" }]}
+        description="Copies of every message LedgerLine has generated for your organization, such as submission confirmations and update requests from Council Finance."
       />
-      {emailDeliveryOn() ? null : <p className="mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink">{DELIVERY_OFF_NOTICE}</p>}
+      {emailDeliveryOn() ? null : <p className="mb-6 max-w-[70ch] rounded border border-l-4 border-line border-l-action bg-white px-5 py-4 text-[15px] text-ink">{DELIVERY_OFF_NOTICE}</p>}
       <Card>
         <CardHeader title="Your messages" description={`${rows.length} ${rows.length === 1 ? "message" : "messages"}, newest first.`} />
         <Table stack>

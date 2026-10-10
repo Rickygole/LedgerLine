@@ -1,15 +1,16 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, CheckCircle2, LogOut, RefreshCw, Send } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, RefreshCw } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { submitReport } from "@/app/portal/reports/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import type { ReportState } from "@/components/ui/status-badge";
 import { FieldError, Hint, Input, Label } from "@/components/ui/field";
+import { cn } from "@/lib/cn";
 import { formatTime } from "@/lib/dates";
 import { amountIssues, linesFromRows, rowsFromLines, type BudgetRow } from "@/lib/report/budget-rows";
-import { fieldTargetId, issuesBySection, reportIssues } from "@/lib/report/issues";
+import { fieldTargetId, issuesBySection, reportIssues, sectionKeyForField } from "@/lib/report/issues";
 import type { AttachmentItem, EditorPayload } from "@/lib/report/types";
 import { useAutosave } from "@/lib/report/use-autosave";
 import type { AnswerValue, Answers, Issue } from "@/lib/rules/types";
@@ -18,35 +19,40 @@ import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { blockingIssues, isVisible } from "@/lib/rules/validate";
 import { Attachments } from "./attachments";
 import { BudgetGrid } from "./budget-grid";
-import { ErrorSummary, focusField } from "./error-summary";
+import { CheckAnswers } from "./check-answers";
+import { focusField } from "./error-summary";
 import { QuestionField } from "./question-field";
+import { ReportHeader } from "./report-header";
 import { SaveStatus } from "./save-status";
-import { SectionNav, type NavSection } from "./section-nav";
+import { StepProblems } from "./step-problems";
+import { Stepper, type Step } from "./stepper";
 
 const ATTACHMENTS = "attachments";
 const REVIEW = "review";
+const REVIEW_FIELDS = new Set(["certification", "certifier_name", "certifier_title"]);
 
-export function ReportEditor({ payload }: { payload: EditorPayload }) {
+export function ReportEditor({ payload, daysLate, state: reportState, notice }: { payload: EditorPayload; daysLate: number; state: ReportState; notice?: React.ReactNode }) {
   const { header, definition } = payload;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [answers, setAnswers] = useState<Answers>(payload.answers);
   const [rows, setRows] = useState<BudgetRow[]>(() => rowsFromLines(payload.budget));
   const [attachments, setAttachments] = useState<AttachmentItem[]>(payload.attachments);
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [serverIssues, setServerIssues] = useState<Issue[] | null>(null);
-  const [active, setActive] = useState(definition.sections[0]?.key ?? ATTACHMENTS);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [staleInfo, setStaleInfo] = useState<{ by: string | null; at: string } | null>(null);
-  const [resume, setResume] = useState<string | null>(null);
-  const [resumeDismissed, setResumeDismissed] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(payload.hasProgress ? header.updatedAt : null);
   const [certified, setCertified] = useState(false);
   const [certName, setCertName] = useState(payload.currentUserName);
   const [certTitle, setCertTitle] = useState(payload.currentUserTitle || String(payload.answers.contact_title ?? ""));
   const summaryRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const pendingFocus = useRef<string | null>(null);
   const [focusTick, setFocusTick] = useState(0);
+  const [navTick, setNavTick] = useState(0);
 
   const latest = useRef({ answers, rows });
   useEffect(() => {
@@ -59,13 +65,12 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
     header.id
   );
 
-  const storageKey = `ll:last-section:${header.id}`;
-
-  useEffect(() => {
-    if (!payload.hasProgress) return;
-    const stored = window.localStorage.getItem(storageKey);
-    setResume(stored ?? payload.resumeSection);
-  }, [payload.hasProgress, payload.resumeSection, storageKey]);
+  const stepKeys = useMemo(() => [...definition.sections.map((section) => section.key), ATTACHMENTS, REVIEW], [definition.sections]);
+  const landing = payload.resumeSection && stepKeys.includes(payload.resumeSection) ? payload.resumeSection : stepKeys[0];
+  const requested = searchParams.get("step");
+  const step = requested && stepKeys.includes(requested) ? requested : landing;
+  const returning = searchParams.get("return") === "review" && step !== REVIEW;
+  const index = stepKeys.indexOf(step);
 
   useEffect(() => {
     if (state.kind === "saved") setLastSavedAt(state.at);
@@ -76,20 +81,18 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
     if (focusTick > 0) summaryRef.current?.focus();
   }, [focusTick]);
 
-  const sectionKeys = useMemo(() => [...definition.sections.map((section) => section.key), ATTACHMENTS, REVIEW], [definition.sections]);
-
   useEffect(() => {
-    const elements = sectionKeys.map((key) => document.getElementById(`section-${key}`)).filter((el): el is HTMLElement => el !== null);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActive(visible[0].target.id.replace("section-", ""));
-      },
-      { rootMargin: "-15% 0px -70% 0px" }
-    );
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, [sectionKeys]);
+    if (navTick === 0) return;
+    const target = pendingFocus.current;
+    pendingFocus.current = null;
+    if (target && target !== "heading") {
+      focusField(target);
+      return;
+    }
+    const top = document.getElementById("report-step");
+    if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ block: "start" });
+    headingRef.current?.focus({ preventScroll: true });
+  }, [navTick, step]);
 
   const lines = useMemo(() => linesFromRows(rows), [rows]);
   const issues = useMemo(
@@ -111,25 +114,35 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
   const blocking = useMemo(() => blockingIssues(issues), [issues]);
   const warnings = useMemo(() => issues.filter((issue) => issue.severity === "warn"), [issues]);
   const bySection = useMemo(() => issuesBySection(definition, blocking), [definition, blocking]);
+  const reviewIssues = useMemo(() => blocking.filter((issue) => REVIEW_FIELDS.has(issue.field)), [blocking]);
 
-  const remember = useCallback(
-    (sectionKey: string | null) => {
-      if (!sectionKey) return;
-      window.localStorage.setItem(storageKey, sectionKey);
-      setResume(sectionKey);
-      setResumeDismissed(true);
-    },
-    [storageKey]
-  );
+  function stepOfField(field: string): string {
+    if (REVIEW_FIELDS.has(field)) return REVIEW;
+    return sectionKeyForField(definition, field) ?? REVIEW;
+  }
 
-  function sectionOf(questionKey: string): string | null {
-    return definition.sections.find((section) => section.questions.some((question) => question.key === questionKey))?.key ?? null;
+  function go(key: string, options: { focus?: string; keepReturn?: boolean } = {}) {
+    const query = new URLSearchParams();
+    query.set("step", key);
+    if (options.keepReturn && key !== REVIEW) query.set("return", "review");
+    window.history.pushState(null, "", `?${query.toString()}`);
+    pendingFocus.current = options.focus ?? "heading";
+    setNavTick((tick) => tick + 1);
+  }
+
+  function goToField(field: string) {
+    const key = stepOfField(field);
+    const target = fieldTargetId(field);
+    if (key === step) {
+      focusField(target);
+      return;
+    }
+    go(key, { focus: target, keepReturn: true });
   }
 
   function changeAnswer(key: string, value: AnswerValue) {
     setAnswers((current) => ({ ...current, [key]: value }));
     setServerIssues(null);
-    remember(sectionOf(key));
     markDirty();
   }
 
@@ -140,15 +153,7 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
   function changeRows(next: BudgetRow[]) {
     setRows(next);
     setServerIssues(null);
-    remember(definition.sections.find((section) => section.kind === "budget")?.key ?? null);
     markDirty();
-  }
-
-  function jump(key: string) {
-    setActive(key);
-    const target = document.getElementById(`section-${key}`);
-    target?.scrollIntoView({ behavior: "smooth", block: "start" });
-    target?.querySelector<HTMLElement>("[tabindex='-1']")?.focus({ preventScroll: true });
   }
 
   function errorFor(key: string): string | undefined {
@@ -165,17 +170,23 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
     return result;
   }, [blocking, summaryOpen]);
 
-  const navSections: NavSection[] = [
-    ...definition.sections.map((section): NavSection => {
+  const steps: Step[] = [
+    ...definition.sections.map((section): Step => {
       const count = bySection[section.key]?.length ?? 0;
-      return { key: section.key, title: section.title, state: count === 0 ? "complete" : summaryOpen ? "attention" : "todo" };
+      return { key: section.key, title: section.title, errors: count, state: count === 0 ? "complete" : summaryOpen ? "error" : "todo" };
     }),
-    { key: ATTACHMENTS, title: "Attachments", state: attachments.length > 0 ? "complete" : "todo" },
-    { key: REVIEW, title: "Review and submit", state: blocking.length === 0 ? "complete" : summaryOpen ? "attention" : "todo" },
+    { key: ATTACHMENTS, title: "Attachments", errors: 0, state: attachments.length > 0 ? "complete" : "todo", optional: true },
+    { key: REVIEW, title: "Review and submit", errors: reviewIssues.length, state: blocking.length === 0 ? "complete" : summaryOpen && reviewIssues.length > 0 ? "error" : "todo" },
   ];
+  const current = steps[index];
+  const previous = index > 0 ? steps[index - 1] : null;
+  const next = index < steps.length - 1 ? steps[index + 1] : null;
+  const section = definition.sections.find((item) => item.key === step) ?? null;
 
+  const wide = section?.kind === "budget";
   const halted = state.kind === "stale" || state.kind === "locked";
   const shownIssues = serverIssues ?? blocking;
+  const stepIssues = step === REVIEW ? [] : shownIssues.filter((issue) => stepOfField(issue.field) === step);
 
   function showProblems() {
     setSummaryOpen(true);
@@ -188,6 +199,12 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
     if (outcome === "saved" || outcome === "idle") router.push("/portal");
     else if (outcome === "signed_out") setMessage("You are signed out, so your latest changes are not saved. Sign in again in a new tab, then choose Save and exit.");
     else if (outcome === "retrying") setMessage("Your latest changes are not saved yet. Keep this tab open and try again in a moment.");
+  }
+
+  function saveAndContinue() {
+    void flushNow();
+    if (returning) go(REVIEW);
+    else if (next) go(next.key);
   }
 
   async function submit() {
@@ -224,85 +241,83 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
     }
   }
 
-  const resumeTitle = resume ? navSections.find((section) => section.key === resume)?.title : null;
+  const purpose =
+    step === ATTACHMENTS
+      ? "Add supporting documents such as invoices, rosters or a signed certification."
+      : step === REVIEW
+        ? "Check your answers, then send the report to Council Finance."
+        : section?.kind === "budget"
+          ? section.description || "List what the award paid for. The approved budget must add up to the award."
+          : section?.description;
 
   return (
-    <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-      <aside className="no-print mb-4 lg:sticky lg:top-6 lg:mb-0">
-        <SectionNav sections={navSections} active={active} onJump={jump} />
-      </aside>
-
-      <div className="min-w-0">
-        <div className="no-print sticky top-0 z-20 -mx-1 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-2.5 shadow-sm">
-          <SaveStatus state={state} lastSavedAt={lastSavedAt} today={payload.today} />
-          <Button variant="secondary" size="sm" onClick={() => void saveAndExit()}>
-            <LogOut className="h-4 w-4" aria-hidden="true" />
+    <>
+      <ReportHeader
+        header={header}
+        daysLate={daysLate}
+        state={reportState}
+        actions={
+          <Button variant="secondary" size="sm" onClick={() => void saveAndExit()} className="no-print">
             Save and exit
           </Button>
+        }
+      />
+
+      {notice}
+
+      {staleInfo ? (
+        <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
+          <p className="inline-flex items-start gap-2 font-semibold">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              {staleInfo.by ?? "Someone"} saved this report at {formatTime(staleInfo.at)}. Reload to see the latest version.
+            </span>
+          </p>
+          <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            Reload
+          </Button>
         </div>
+      ) : null}
 
-        {staleInfo ? (
-          <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
-            <p className="inline-flex items-start gap-2 font-semibold">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>
-                {staleInfo.by ?? "Someone"} saved this report at {formatTime(staleInfo.at)}. Reload to see the latest version.
-              </span>
-            </p>
-            <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
-              <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              Reload
-            </Button>
+      {state.kind === "locked" ? (
+        <div role="alert" className="mb-6 rounded border border-bad/40 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
+          {state.message}
+        </div>
+      ) : null}
+
+      {message && step !== REVIEW ? (
+        <p role="alert" className="mb-6 rounded border border-bad/40 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
+          {message}
+        </p>
+      ) : null}
+
+      <div className={cn("lg:grid lg:items-start lg:gap-10", wide ? "lg:grid-cols-[260px_minmax(0,1100px)]" : "lg:grid-cols-[260px_minmax(0,760px)]")}>
+        <aside className="no-print mb-5 lg:sticky lg:top-6 lg:mb-0">
+          <Stepper steps={steps} current={step} onSelect={(key) => go(key)} />
+          <div className="mt-3 px-1 lg:mt-4 lg:border-t lg:border-line-soft lg:px-3 lg:pt-4">
+            <SaveStatus state={state} lastSavedAt={lastSavedAt} today={payload.today} />
           </div>
-        ) : null}
+        </aside>
 
-        {state.kind === "locked" ? (
-          <div role="alert" className="mb-5 rounded-lg border border-bad/40 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
-            {state.message}
-          </div>
-        ) : null}
+        <div id="report-step" className="min-w-0 scroll-mt-4">
+          <fieldset disabled={halted} className="min-w-0 border-0 p-0">
+            <legend className="sr-only">Report form</legend>
+            <section aria-labelledby="step-heading" className="rounded border border-line bg-white">
+              <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
+                <p className="num hidden text-sm font-semibold text-muted lg:block">
+                  Step {index + 1} of {steps.length}
+                </p>
+                <h2 id="step-heading" ref={headingRef} tabIndex={-1} className="lg:mt-0.5 text-xl font-bold leading-7 text-ink outline-none">
+                  {current?.title}
+                </h2>
+                {purpose ? <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">{purpose}</p> : null}
+              </div>
 
-        {resume && resumeTitle && !resumeDismissed ? (
-          <div className="no-print mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-navy-100 bg-navy-50 px-4 py-3">
-            <div>
-              <p className="text-sm font-bold text-navy-900">Pick up where you left off</p>
-              <p className="text-sm text-muted">You last worked on {resumeTitle}.</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  jump(resume);
-                  setResumeDismissed(true);
-                }}
-              >
-                Go to {resumeTitle}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setResumeDismissed(true)}>
-                Dismiss
-              </Button>
-            </div>
-          </div>
-        ) : null}
+              <div className="px-5 py-6 sm:px-6">
+                {summaryOpen && stepIssues.length > 0 ? <StepProblems issues={stepIssues} onSelect={goToField} scope="step" /> : null}
 
-        {summaryOpen && shownIssues.length > 0 ? <ErrorSummary ref={summaryRef} issues={shownIssues} /> : null}
-
-        <fieldset disabled={halted} className="min-w-0 space-y-6 border-0 p-0">
-          <legend className="sr-only">Report form</legend>
-
-          {definition.sections.map((section) => (
-            <Card key={section.key} id={`section-${section.key}`} className="scroll-mt-20">
-              <CardHeader
-                title={
-                  <span tabIndex={-1} className="outline-none">
-                    {section.title}
-                  </span>
-                }
-                description={section.description}
-              />
-              <CardBody className={section.kind === "budget" ? "px-3 py-3 sm:px-5" : "space-y-6"}>
-                {section.kind === "budget" ? (
+                {section && section.kind === "budget" ? (
                   <>
                     <h3 className="sr-only">Budget lines</h3>
                     <BudgetGrid
@@ -317,143 +332,140 @@ export function ReportEditor({ payload }: { payload: EditorPayload }) {
                       varianceError={summaryOpen ? blocking.find((issue) => issue.field === VARIANCE_NOTE_KEY)?.message : undefined}
                     />
                   </>
-                ) : (
-                  section.questions
-                    .filter((question) => isVisible(question, answers))
-                    .map((question) => (
-                      <QuestionField
-                        key={question.key}
-                        question={question}
-                        value={answers[question.key]}
-                        onChange={(value) => changeAnswer(question.key, value)}
-                        onBlur={() => touch(question.key)}
-                        error={errorFor(question.key)}
-                      />
-                    ))
-                )}
-              </CardBody>
-            </Card>
-          ))}
+                ) : null}
 
-          <Card id={`section-${ATTACHMENTS}`} className="scroll-mt-20">
-            <CardHeader title={<span tabIndex={-1} className="outline-none">Attachments</span>} description="Add supporting documents such as invoices, rosters or a signed certification." />
-            <CardBody>
-              <Attachments
-                submissionId={header.id}
-                storage={payload.storage}
-                attachments={attachments}
-                onAdded={(item) => {
-                  setAttachments((list) => [...list, item]);
-                  remember(ATTACHMENTS);
-                }}
-                onRemoved={(id) => setAttachments((list) => list.filter((item) => item.id !== id))}
-                onSignedOut={() => setMessage("Signed out. Sign in in a new tab, then try again.")}
-              />
-            </CardBody>
-          </Card>
+                {section && section.kind !== "budget" ? (
+                  <div className="space-y-7">
+                    {section.questions
+                      .filter((question) => isVisible(question, answers))
+                      .map((question) => (
+                        <QuestionField
+                          key={question.key}
+                          question={question}
+                          value={answers[question.key]}
+                          onChange={(value) => changeAnswer(question.key, value)}
+                          onBlur={() => touch(question.key)}
+                          error={errorFor(question.key)}
+                        />
+                      ))}
+                  </div>
+                ) : null}
 
-          <Card id={`section-${REVIEW}`} className="scroll-mt-20">
-            <CardHeader title={<span tabIndex={-1} className="outline-none">Review and submit</span>} description="Check every section, then send the report to Council Finance." />
-            <CardBody className="space-y-5">
-              {blocking.length === 0 ? (
-                <p className="flex items-start gap-2 rounded-md border border-ok/20 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  Everything required is complete. You can submit this report.
-                </p>
-              ) : (
-                <div>
-                  <p className="text-sm font-semibold text-ink">
-                    {blocking.length} {blocking.length === 1 ? "thing needs" : "things need"} your attention before you can submit.
-                  </p>
-                  <ul className="mt-2 space-y-1 pl-5 text-sm marker:text-muted list-disc">
-                    {blocking.map((issue, index) => {
-                      const target = fieldTargetId(issue.field);
-                      return (
-                        <li key={`${issue.field}-${index}`}>
-                          <a
-                            href={`#${target}`}
-                            className="text-navy-700 underline underline-offset-2 hover:text-navy-900"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              focusField(target);
-                            }}
-                          >
-                            {issue.message}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-
-              {warnings.length > 0 ? (
-                <div className="rounded-md border border-warn/30 bg-warn-bg px-4 py-3">
-                  <p className="flex items-start gap-2 text-sm font-semibold text-warn">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                    Worth checking before you submit. These do not stop you from submitting.
-                  </p>
-                  <ul className="mt-2 list-disc space-y-1 pl-9 text-sm text-ink marker:text-warn">
-                    {warnings.map((issue, index) => (
-                      <li key={`${issue.field}-${index}`}>{issue.message}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              <fieldset className="rounded-md border border-line px-4 py-4">
-                <legend className="px-1 text-sm font-semibold text-ink">Certification</legend>
-                <div className="flex items-start gap-3">
-                  <input
-                    id="certification-box"
-                    type="checkbox"
-                    checked={certified}
-                    onChange={(event) => setCertified(event.target.checked)}
-                    aria-invalid={summaryOpen && !certified ? true : undefined}
-                    className="mt-1 h-4 w-4 shrink-0 rounded border-line-strong text-navy-800 focus:ring-2 focus:ring-navy-600"
+                {step === ATTACHMENTS ? (
+                  <Attachments
+                    submissionId={header.id}
+                    storage={payload.storage}
+                    attachments={attachments}
+                    onAdded={(item) => setAttachments((list) => [...list, item])}
+                    onRemoved={(id) => setAttachments((list) => list.filter((item) => item.id !== id))}
+                    onSignedOut={() => setMessage("Signed out. Sign in in a new tab, then try again.")}
                   />
-                  <label htmlFor="certification-box" className="text-sm font-semibold text-ink">
-                    {CERTIFICATION_STATEMENT}
-                  </label>
-                </div>
-                <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certification")?.message : undefined}</FieldError>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="certifier-name">Certifier name</Label>
-                    <Input id="certifier-name" value={certName} maxLength={120} onChange={(event) => setCertName(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_name") ? true : undefined} autoComplete="name" />
-                    <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_name")?.message : undefined}</FieldError>
-                  </div>
-                  <div>
-                    <Label htmlFor="certifier-title">Certifier title</Label>
-                    <Input id="certifier-title" value={certTitle} maxLength={120} onChange={(event) => setCertTitle(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_title") ? true : undefined} autoComplete="organization-title" />
-                    <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_title")?.message : undefined}</FieldError>
-                  </div>
-                </div>
-                <Hint>The name, title and time are stored with this submission and shown to Council Finance.</Hint>
-              </fieldset>
+                ) : null}
 
-              <p className="text-sm text-muted">
-                After you submit, the report is locked. You can change it again only if Council Finance asks for an update. A copy is saved in Messages.
-              </p>
+                {step === REVIEW ? (
+                  <div className="space-y-8">
+                    {blocking.length > 0 || (summaryOpen && shownIssues.length > 0) ? (
+                      <StepProblems ref={summaryRef} issues={shownIssues} onSelect={goToField} scope="report" alert={summaryOpen} />
+                    ) : (
+                      <p className="flex items-start gap-2 rounded border border-ok/30 bg-ok-bg px-4 py-3 text-[15px] font-semibold text-ok">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                        Everything required is complete. You can submit this report.
+                      </p>
+                    )}
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button onClick={() => void submit()} disabled={submitting || halted} aria-describedby="submit-hint">
-                  <Send className="h-4 w-4" aria-hidden="true" />
-                  {submitting ? "Submitting" : "Submit report"}
-                </Button>
-                <p id="submit-hint" className="text-sm text-muted">
-                  {blocking.length > 0 ? "Submit checks every section and lists anything left to fix." : "Ready to send."}
-                </p>
+                    {warnings.length > 0 ? (
+                      <div className="rounded border border-warn/30 bg-warn-bg px-4 py-3">
+                        <p className="flex items-start gap-2 text-[15px] font-semibold text-warn">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                          Worth checking before you submit. These do not stop you from submitting.
+                        </p>
+                        <ul className="mt-2 list-disc space-y-1 pl-9 text-[15px] text-ink marker:text-warn">
+                          {warnings.map((issue, i) => (
+                            <li key={`${issue.field}-${i}`}>{issue.message}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    <CheckAnswers definition={definition} answers={answers} lines={lines} award={header.awardAmount} attachments={attachments} onChange={(key, target) => go(key, { focus: target, keepReturn: true })} />
+
+                    <fieldset className="rounded border border-line px-5 py-5">
+                      <legend className="px-1 text-[17px] font-bold text-ink">Certification</legend>
+                      <div className="flex items-start gap-3">
+                        <input
+                          id="certification-box"
+                          type="checkbox"
+                          checked={certified}
+                          onChange={(event) => setCertified(event.target.checked)}
+                          aria-invalid={summaryOpen && !certified ? true : undefined}
+                          className="mt-0.5 h-5 w-5 shrink-0 rounded border-line-strong accent-[#005ea2]"
+                        />
+                        <label htmlFor="certification-box" className="text-base font-semibold text-ink">
+                          {CERTIFICATION_STATEMENT}
+                        </label>
+                      </div>
+                      <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certification")?.message : undefined}</FieldError>
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <Label htmlFor="certifier-name">Certifier name</Label>
+                          <Input id="certifier-name" value={certName} maxLength={120} onChange={(event) => setCertName(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_name") ? true : undefined} autoComplete="name" />
+                          <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_name")?.message : undefined}</FieldError>
+                        </div>
+                        <div>
+                          <Label htmlFor="certifier-title">Certifier title</Label>
+                          <Input id="certifier-title" value={certTitle} maxLength={120} onChange={(event) => setCertTitle(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_title") ? true : undefined} autoComplete="organization-title" />
+                          <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_title")?.message : undefined}</FieldError>
+                        </div>
+                      </div>
+                      <Hint>The name, title and time are stored with this submission and shown to Council Finance.</Hint>
+                    </fieldset>
+
+                    <p id="submit-hint" className="max-w-[70ch] text-[15px] leading-[22px] text-ink-2">
+                      After you submit, the report is locked. You can change it again only if Council Finance asks for an update. A copy is saved in Messages.
+                    </p>
+                    {message ? (
+                      <p role="alert" className="text-sm font-semibold text-bad">
+                        {message}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
-              {message ? (
-                <p role="alert" className="text-sm font-semibold text-bad">
-                  {message}
-                </p>
-              ) : null}
-            </CardBody>
-          </Card>
-        </fieldset>
+
+              <div className="no-print flex flex-col-reverse gap-4 border-t border-line-soft px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                {previous ? (
+                  <a
+                    href={`?step=${encodeURIComponent(previous.key)}`}
+                    onClick={(event) => {
+                      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+                      event.preventDefault();
+                      go(previous.key);
+                    }}
+                    className="inline-flex items-center gap-1.5 self-start text-[15px] font-semibold text-link underline underline-offset-2 hover:text-link-hover sm:self-auto"
+                  >
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                    <span>
+                      Previous<span className="max-sm:sr-only">: {previous.title}</span>
+                    </span>
+                  </a>
+                ) : (
+                  <span />
+                )}
+                {step === REVIEW ? (
+                  <Button onClick={() => void submit()} disabled={submitting || halted} aria-describedby="submit-hint" className="max-sm:w-full">
+                    {submitting ? "Submitting" : "Submit report to Council Finance"}
+                  </Button>
+                ) : (
+                  <Button onClick={saveAndContinue} disabled={halted} className="max-sm:w-full">
+                    {returning ? "Save and return to review" : "Save and continue"}
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                )}
+              </div>
+            </section>
+          </fieldset>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
