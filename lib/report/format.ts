@@ -118,7 +118,7 @@ export function plainTextReport(input: SummaryInput): string {
     lines.push(`Certified ${formatDateTime(input.certification.certifiedAt)} ET`);
   }
   lines.push("");
-  lines.push("We will email you if Finance needs changes.");
+  lines.push("If Council Finance needs changes, the request appears in Messages.");
   return lines.join("\n");
 }
 
