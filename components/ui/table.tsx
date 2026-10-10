@@ -5,7 +5,7 @@ import { ScrollArea } from "./scroll-area";
 const pin =
   "max-lg:[&_tbody_td:first-child:not([colspan])]:sticky max-lg:[&_tbody_td:first-child:not([colspan])]:left-0 max-lg:[&_tbody_td:first-child:not([colspan])]:z-[1] max-lg:[&_tbody_td:first-child:not([colspan])]:min-w-[11rem] max-lg:[&_tbody_td:first-child:not([colspan])]:bg-inherit max-lg:[&_tbody_td:first-child:not([colspan])]:shadow-[inset_-1px_0_0_var(--color-line)] max-lg:[&_thead_th:first-child]:sticky max-lg:[&_thead_th:first-child]:left-0 max-lg:[&_thead_th:first-child]:z-[2] max-lg:[&_thead_th:first-child]:bg-harbor-50 max-lg:[&_thead_th:first-child]:shadow-[inset_-1px_0_0_var(--color-line)]";
 
-const compact = "[&_td]:px-3 [&_th]:px-3 [&_td:not([colspan])]:py-2";
+const compact = "[&_td]:px-3 [&_th]:px-3 [&_td:not([colspan])]:py-2 [&_table]:text-sm [&_table]:leading-5 md:[&_tr]:h-auto";
 
 export function Table({ children, className, stack = false, density = "default" }: { children: React.ReactNode; className?: string; stack?: boolean; density?: "default" | "compact" }) {
   return (
