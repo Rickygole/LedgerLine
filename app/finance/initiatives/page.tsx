@@ -15,7 +15,8 @@ import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { ProgressBar } from "@/components/finance/admin/progress-bar";
-import { categorySummary, listAgencies, listCategories, listInitiatives } from "@/lib/finance/admin/initiatives";
+import { categorySummary, listAgencies, listCategories, listInitiatives, setupStatus } from "@/lib/finance/admin/initiatives";
+import { SetupTaskList } from "@/components/finance/setup-tasks";
 import { loadPeriods } from "@/lib/finance/review/data";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
 import { buildHref, one, pageNumber, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
@@ -30,6 +31,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
   const q = one(params, "q");
   const status = ["active", "retired"].includes(one(params, "status")) ? one(params, "status") : "";
   const page = pageNumber(params);
+  const form = ["none", "draft", "published"].includes(one(params, "form")) ? one(params, "form") : "";
+  const admin = user.role === "finance_admin";
   const today = todayInNewYork();
 
   const data = await withClaims(user.id, async (tx) => {
@@ -39,9 +42,10 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     const agencies = await listAgencies(tx);
     const category = categories.includes(one(params, "category")) ? one(params, "category") : "";
     const agency = agencies.includes(one(params, "agency")) ? one(params, "agency") : "";
-    const list = await listInitiatives(tx, today, period.id, { q, category, status, agency, page });
+    const list = await listInitiatives(tx, today, period.id, { q, category, status, agency, page, form });
     const summary = await categorySummary(tx, today, period.id);
-    return { periods, period, categories, agencies, category, agency, summary, ...list };
+    const setup = admin ? await setupStatus(tx, today) : null;
+    return { periods, period, categories, agencies, category, agency, summary, setup, ...list };
   });
 
   const base = "/finance/initiatives";
@@ -50,23 +54,17 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     { funding: 0, initiatives: 0, accepted: 0, assignments: 0, missing: 0 }
   );
   const maxFunding = Math.max(0, ...data.summary.map((c) => Number(c.funding)));
-  const kept = { q, category: data.category, status, agency: data.agency, period: data.period.id };
+  const kept = { q, category: data.category, status, agency: data.agency, period: data.period.id, form };
 
   return (
     <>
       <PageHeader
         title="Initiatives"
-        description={`Council initiatives funded in ${data.period.fiscalYearId} and how ${data.period.label} reporting is going.`}
+        description={admin ? "Set up this year's initiatives and report forms, and see how reporting is going." : `Council initiatives funded in ${data.period.fiscalYearId} and how ${data.period.label} reporting is going.`}
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Initiatives" }]}
-        actions={
-          user.role === "finance_admin" ? (
-            <ButtonLink href="/finance/initiatives/new">
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              New initiative
-            </ButtonLink>
-          ) : null
-        }
       />
+
+      {data.setup ? <SetupTaskList status={data.setup} today={today} /> : null}
 
       <Card className="mb-6">
         <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-t-xl border-b border-line bg-line lg:grid-cols-4">
@@ -131,8 +129,24 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
         </div>
       </Card>
 
-      <Card>
-        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })} applied={[data.category, data.agency, status].filter(Boolean).length}>
+      <Card id="initiatives">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 pb-4 pt-5 sm:px-6">
+          <div>
+            <h2 className="text-xl font-bold leading-7 text-ink">
+              {data.period.fiscalYearId} initiatives <span className="num font-semibold text-muted">({data.total})</span>
+            </h2>
+            <p className="mt-0.5 text-[15px] text-[#3d4757]">
+              {formatCompactCurrency(totals.funding)} across {formatCount(totals.assignments)} awards
+            </p>
+          </div>
+          {admin ? (
+            <ButtonLink href="/finance/initiatives/new" variant="secondary">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Create initiative
+            </ButtonLink>
+          ) : null}
+        </div>
+        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })} applied={[data.category, data.agency, status, form].filter(Boolean).length}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Code or name" />
           </FilterField>
@@ -165,6 +179,14 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               ))}
             </Select>
           </FilterField>
+          <FilterField label="Report form" htmlFor="form">
+            <Select id="form" name="form" defaultValue={form}>
+              <option value="">Any form status</option>
+              <option value="none">No published form</option>
+              <option value="draft">Has a draft</option>
+              <option value="published">Published</option>
+            </Select>
+          </FilterField>
           <FilterField label="Status" htmlFor="status">
             <Select id="status" name="status" defaultValue={status}>
               <option value="">Any status</option>
@@ -178,10 +200,10 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             <tr>
               <TH>Code</TH>
               <TH>Initiative</TH>
-              <TH>Category</TH>
-              <TH>Agency</TH>
+              <TH>Category and agency</TH>
               <TH align="right">Organizations</TH>
               <TH align="right">Total funding</TH>
+              <TH>Form</TH>
               <TH>{data.period.label}</TH>
               <TH align="right">Missing</TH>
             </tr>
@@ -201,15 +223,24 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                     </Link>
                     {row.status === "retired" ? <span className="ml-2"><Badge>Retired</Badge></span> : null}
                   </TD>
-                  <TD className="whitespace-nowrap" label="Category">
+                  <TD label="Category">
                     <span>{row.category}</span>
+                    <span className="block text-[13px] text-muted">{row.agency ?? "Agency not set"}</span>
                   </TD>
-                  <TD className="whitespace-nowrap" stackHidden>{row.agency ?? <span className="text-muted">Not set</span>}</TD>
                   <TD align="right" label="Organizations">
                     <span>{row.orgs}</span>
                   </TD>
                   <TD align="right" label="Total funding">
                     <span>{formatCurrency(Number(row.funding), { cents: false })}</span>
+                  </TD>
+                  <TD className="whitespace-nowrap" label="Form">
+                    {row.form_status === "published" ? (
+                      <span>Published v{row.form_version}</span>
+                    ) : row.form_status === "draft" ? (
+                      <span className="text-[#3d4757]">Draft v{row.form_version}</span>
+                    ) : (
+                      <Badge tone="warn">No form</Badge>
+                    )}
                   </TD>
                   <TD label={data.period.label}>{row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>
                   <TD align="right" label="Missing">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">None</span>}</TD>
