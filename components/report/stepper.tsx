@@ -12,6 +12,13 @@ function stepHref(key: string) {
 }
 
 function Marker({ step, index, current }: { step: Step; index: number; current: boolean }) {
+  if (current && step.state === "complete") {
+    return (
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-action text-white">
+        <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+      </span>
+    );
+  }
   if (current) {
     return <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-action text-[13px] font-bold text-white">{index + 1}</span>;
   }
