@@ -24,7 +24,7 @@ export default async function AdminIndex() {
     <>
       <PageHeader title="Administration" description="Areas for Finance administrators." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Administration" }]} />
       <Card>
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Area</TH>

@@ -37,7 +37,7 @@ export default async function DataPage() {
       </Card>
       <Card className="mb-6">
         <CardHeader title="Tables in the package" />
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Table</TH>

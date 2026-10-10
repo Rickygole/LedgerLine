@@ -53,7 +53,7 @@ export default async function ReadinessPage() {
 
       <Card className="mb-6">
         <CardHeader title="Test sessions" description="One row per scenario run by one tester. The pass rate uses the most recent session of each scenario." />
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Date</TH>
@@ -170,7 +170,7 @@ export default async function ReadinessPage() {
 
       <Card>
         <CardHeader title="Training" description="Each Finance user completes the modules for their role. Someone counts as trained when every required module is recorded." />
-        <Table>
+        <Table density="compact">
           <THead>
             <tr>
               <TH>Person</TH>
