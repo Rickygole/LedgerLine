@@ -1,38 +1,38 @@
 {
-  "generatedAt": "2026-10-09T19:19:44.782Z",
-  "commit": "b590d8352e62c0ef0126c1e4ee15dc30748fcd6b",
+  "generatedAt": "2026-10-10T02:34:41.332Z",
+  "commit": "ecfc6325830185be952a925870f96632cad65fb6",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 321,
-    "passed": 321,
+    "tests": 408,
+    "passed": 408,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 174,
-    "sql": 87,
+    "unit": 202,
+    "sql": 136,
     "eval": 29,
-    "e2e": 31
+    "e2e": 41
   },
   "summary": {
     "verified": {
-      "stories": 52,
-      "rules": 20
+      "stories": 64,
+      "rules": 27
     },
     "failing": {
       "stories": 0,
       "rules": 0
     },
     "demonstrated": {
-      "stories": 3,
-      "rules": 2
+      "stories": 0,
+      "rules": 0
     },
     "planned": {
-      "stories": 11,
-      "rules": 7
+      "stories": 2,
+      "rules": 2
     }
   },
   "requirements": [
@@ -99,10 +99,29 @@
       "area": "Configuration",
       "summary": "Questions are maintained centrally, not rebuilt per form",
       "route": "/finance/initiatives",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
-      "note": "Standard questions come from one shared library in the application. Each form version stores its own copy, so a published form never changes underneath a report.",
-      "tests": []
+      "note": "Standard questions come from one shared library in the application. Every form version on file embeds those same questions, and a change to the library reaches every form built afterwards. Each published version keeps its own copy, so a published form never changes underneath a report.",
+      "tests": [
+        {
+          "title": "standard questions come from one shared library embeds the same library questions in every form version on file, across both fiscal years",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "standard questions come from one shared library applies one change to the library to every form built afterwards without editing any form",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "standard questions come from one shared library keeps initiative questions out of the library",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-004",
@@ -1730,11 +1749,36 @@
       "id": "US-050",
       "area": "Data",
       "summary": "Generate graphs of trends and comparisons",
-      "route": "/finance",
-      "state": "demonstrated",
+      "route": "/finance/trends",
+      "state": "verified",
       "reason": null,
       "note": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "trend and comparison data follows the selected criteria fills quiet months so a trend line has no gaps",
+          "file": "tests/sql/trends.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "trend and comparison data follows the selected criteria totals every submitted report across months, and narrows when a category or borough is chosen",
+          "file": "tests/sql/trends.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "trend and comparison data follows the selected criteria compares groups for a reporting period and changes with the period and the filters",
+          "file": "tests/sql/trends.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the trend and comparison charts draw from the reports and change with the filters",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-051",
@@ -1810,31 +1854,104 @@
       "id": "US-053",
       "area": "Hosting",
       "summary": "Hosted outside Council-owned servers",
-      "route": null,
+      "route": "/finance/platform",
       "state": "planned",
       "reason": null,
-      "note": "Delivery commitment confirmed when the production environment is built. The proposed target is Azure Government.",
+      "note": "Delivery commitment, not claimed as met. The health check reports the declared hosting provider and region and that the system is not on Council servers, but that is a deployment setting and is not independently audited. The proposed target is Azure Government.",
       "tests": []
     },
     {
       "id": "US-054",
       "area": "Hosting",
       "summary": "Cloud hosting meets FedRAMP or NIST 800-53",
-      "route": null,
+      "route": "/finance/platform",
       "state": "planned",
       "reason": null,
-      "note": "Confirmed in the security review before go-live. Application controls in place: row-level security, append-only audit tables, server-side validation.",
+      "note": "Delivery commitment, not claimed as met. FedRAMP or NIST 800-53 compliance is confirmed in the security review before go-live. Application controls in place: row-level security, append-only audit tables, server-side validation.",
       "tests": []
     },
     {
       "id": "US-055",
       "area": "Data ownership",
       "summary": "The Council owns all system data",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/data",
+      "state": "verified",
       "reason": null,
-      "note": "Contractual commitment. Full Excel and CSV export is available to Finance staff (see US-046 and US-047).",
-      "tests": []
+      "note": "Full Excel and CSV export is available to Finance staff, and administrators can download a complete data package with a README for every table and column. Contractual ownership terms are agreed in the contract.",
+      "tests": [
+        {
+          "title": "the Council can take a complete, documented copy of its data covers every business table in the database, and names the ones it leaves out",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data documents every table and every column",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data returns every row of every table, including rows that row-level security hides from the administrator's own queries",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data never exports credentials: no password hash, session counter, token or throttle table",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data builds a package whose manifest lists every table with the stored row counts",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data is limited to Finance administrators",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the data package writes a zip whose files read back exactly, with valid checksums",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package guards cells that start with a formula character and quotes commas, quotes and line breaks",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package writes a header row and one line per record, in catalog order",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package builds a package with a README, a manifest and one file per table, with the row counts",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package reports any table or column that has no documentation",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "only an administrator can download the data package, which holds every table and a README",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-056",
@@ -1916,101 +2033,567 @@
       "id": "US-058",
       "area": "Security",
       "summary": "The Council is told about any breach",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/incidents",
+      "state": "verified",
       "reason": null,
-      "note": "Procedural commitment: the incident response plan and notification terms are agreed in the contract.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "security incidents notify the Council and track remediation records an incident, queues a notice to every active designated contact, and writes the history",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation flags a notice as late when the incident was detected more than 24 hours before it was recorded",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation tracks a remediation report with root cause, actions, prevention and a completed date, keeping every version",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation keeps the history append only, even for the database owner",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation refuses to record a future detection time, and keeps at least one contact active",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation refuses to record when no designated contact is active",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation allows only an administrator to record incidents or manage contacts, and hides them from everyone else",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation hides incident notices from Finance staff who are not administrators",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation adds a designated contact, audits it, and includes that contact in the next notice",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "breach notification deadline indicator sets the notice due 24 hours after detection and the remediation report due 7 days after",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator marks a notice sent inside 24 hours as on time and later as late, with the margin",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator counts down to the notice deadline when nobody has been notified yet",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator tracks the remediation report against its 7 day deadline",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator derives status from the latest remediation report",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "an administrator records a breach, the Council's contacts are queued a notice, and remediation is tracked",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-059",
       "area": "Scale",
       "summary": "No limit on submitting users",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/users",
+      "state": "verified",
       "reason": null,
-      "note": "Accounts are database records; the application sets no limit on the number of submitting users.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "no cap on submitting users creates 5,000 submitter accounts in one transaction, each scoped to its own organization",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "no cap on submitting users has no constraint or trigger that limits how many accounts exist",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-060",
       "area": "Scale",
       "summary": "50 to 100 Finance users with different permissions",
       "route": "/finance/users",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
       "note": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "50 to 100 Finance users with different permissions holds 100 Finance users across the three roles and enforces each role's permissions",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "50 to 100 Finance users with different permissions keeps user management working at 100 users: an administrator sees every account and can change a role",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-061",
       "area": "Support",
       "summary": "Vendor help with account issues",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/support",
+      "state": "verified",
       "reason": null,
-      "note": "Support model described on the Platform page. Operational commitment.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "help requests and the 24 hour response target lets every signed-in role send a request and records an audit event",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target shows each person only their own requests, and every request to an administrator",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target records the first response time once and never overwrites it",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target measures overdue, responded late and responded in time from the stored timestamps",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target queues the reply to the requester through the outbox and lets only an administrator reply as support or close",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target rejects empty or oversized requests and keeps messages append only",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a requester can read the support reply returns the staff message to the requester even though the requester cannot read the staff account",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "users send help requests, see only their own, and an administrator answers from the queue",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-062",
       "area": "Support",
       "summary": "Post-launch support, monitoring and maintenance",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/platform",
+      "state": "verified",
       "reason": null,
-      "note": "Support model described on the Platform page. Operational commitment.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "health check reads the database and the migration version reports a connected database and the latest applied migration",
+          "file": "tests/sql/health.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "health check reads the database and the migration version exposes nothing sensitive",
+          "file": "tests/sql/health.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "health check reads the database and the migration version lets the application account read only what the check needs",
+          "file": "tests/sql/health.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "health check when the database is down reports degraded without leaking the connection error",
+          "file": "tests/unit/health-degraded.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "hosting and build facts reported for monitoring reads the hosting provider and region from the deployment settings",
+          "file": "tests/unit/monitoring.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "hosting and build facts reported for monitoring says plainly when nothing is declared, and never claims Council servers unless configured",
+          "file": "tests/unit/monitoring.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "hosting and build facts reported for monitoring reports a short build commit only when it looks like one",
+          "file": "tests/unit/monitoring.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "server logs carry the request ID writes one JSON line with the request ID, the error reference and the route, without the query string",
+          "file": "tests/unit/monitoring.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "server logs carry the request ID limits the message length and reads the request ID header from either header shape",
+          "file": "tests/unit/monitoring.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the health endpoint answers without the passcode and reveals nothing sensitive",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "an error page shows the request ID that the response carried",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "the platform page shows the health status to administrators only",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-063",
       "area": "Support",
       "summary": "Support requests answered quickly, preferably within 24 hours",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/support",
+      "state": "verified",
       "reason": null,
-      "note": "Support model described on the Platform page. Operational commitment.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "help requests and the 24 hour response target lets every signed-in role send a request and records an audit event",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target shows each person only their own requests, and every request to an administrator",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target records the first response time once and never overwrites it",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target measures overdue, responded late and responded in time from the stored timestamps",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target queues the reply to the requester through the outbox and lets only an administrator reply as support or close",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target rejects empty or oversized requests and keeps messages append only",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a requester can read the support reply returns the staff message to the requester even though the requester cannot read the staff account",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "support response is measured against a 24 hour target sets the due time exactly 24 hours after the request",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target is open inside the target, overdue after it, with no reply",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target is responded once a first reply exists, even a late one, and closed once closed",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target computes the first response time in minutes and whether it met the target",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target summarizes replies met within the target and the median first reply",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target states age and durations in plain words",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "users send help requests, see only their own, and an administrator answers from the queue",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-064",
       "area": "Maintenance",
       "summary": "Annual review of reporting structure with Finance",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/reviews",
+      "state": "verified",
       "reason": null,
-      "note": "Annual changes are made as form drafts and rollover, not code changes. The review itself is a scheduled engagement with Finance.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "annual structure review with Finance allows one review per fiscal year",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "annual structure review with Finance walks a review through checklist, participants and decisions, and only then lets it be signed off",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "annual structure review with Finance is limited to finance administrators, while Finance staff can read reviews",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "annual structure review with Finance feeds the rollover: the signed review and its decisions are what the rollover page reads",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the annual review is kept per fiscal year and appears in the rollover",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-065",
       "area": "Delivery",
       "summary": "Formal testing period before go-live",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/readiness",
+      "state": "verified",
       "reason": null,
-      "note": "Testing period is part of the delivery timeline on the Platform page.",
-      "tests": []
+      "note": "Formal testing is scheduled for January 4 to 15, 2027. Test sessions and defects are tracked here.",
+      "tests": [
+        {
+          "title": "user acceptance test sessions records a session with its scenario, tester, result and defects, and audits it",
+          "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "user acceptance test sessions rejects a passed session that lists defects, a future date and a bad result",
+          "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "user acceptance test sessions marks a defect fixed once, with a date inside the session-to-today window",
+          "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "user acceptance test sessions is limited to administrators and hidden from other roles",
+          "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the test pass rate uses the latest session of each scenario lets a passing retest replace an earlier failure",
+          "file": "tests/unit/readiness-summary.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the test pass rate uses the latest session of each scenario breaks a tie on the same day by the time it was recorded",
+          "file": "tests/unit/readiness-summary.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the test pass rate uses the latest session of each scenario has no rate before any session exists",
+          "file": "tests/unit/readiness-summary.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "readiness shows the share of Finance users trained and the test pass rate",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-066",
       "area": "Delivery",
       "summary": "Formal training period before go-live",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/readiness",
+      "state": "verified",
       "reason": null,
-      "note": "Training period is part of the delivery timeline on the Platform page.",
-      "tests": []
+      "note": "Formal training is scheduled for January 11 to 22, 2027. Training records are tracked here.",
+      "tests": [
+        {
+          "title": "training records and the readiness summary reports the share of Finance users trained and the scenario pass rate from the records on file",
+          "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "training records and the readiness summary raises the trained share when a missing module is recorded, and records it once per person",
+          "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "training records and the readiness summary records training for Finance users only, for known modules, with a real date",
+          "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "training progress is the share of Finance users who finished every module for their role requires more modules for roles with more responsibility",
+          "file": "tests/unit/readiness-summary.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "training progress is the share of Finance users who finished every module for their role counts a person as trained only when every required module is recorded",
+          "file": "tests/unit/readiness-summary.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "training progress is the share of Finance users who finished every module for their role rounds a percentage and returns nothing for an empty whole",
+          "file": "tests/unit/readiness-summary.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "readiness shows the share of Finance users trained and the test pass rate",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-001",
       "area": "Rules",
       "summary": "About 175 initiatives, changing each year",
       "route": "/finance/initiatives",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
       "note": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "about 175 initiatives each fiscal year, and the set changes between years holds about 175 initiatives in each year on file",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "about 175 initiatives each fiscal year, and the set changes between years differs between FY26 and FY27 in both directions",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "about 175 initiatives each fiscal year, and the set changes between years lets the portfolio shrink or grow at rollover without changing code",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-002",
@@ -2494,20 +3077,46 @@
       "area": "Rules",
       "summary": "50 to 100 Finance users with varied permissions",
       "route": "/finance/users",
-      "state": "demonstrated",
+      "state": "verified",
       "reason": null,
       "note": null,
-      "tests": []
+      "tests": [
+        {
+          "title": "50 to 100 Finance users with different permissions holds 100 Finance users across the three roles and enforces each role's permissions",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "50 to 100 Finance users with different permissions keeps user management working at 100 users: an administrator sees every account and can change a role",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-018",
       "area": "Rules",
       "summary": "Unlimited submitting users",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/users",
+      "state": "verified",
       "reason": null,
-      "note": "Accounts are database records; the application sets no limit on the number of submitting users.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "no cap on submitting users creates 5,000 submitter accounts in one transaction, each scoped to its own organization",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "no cap on submitting users has no constraint or trigger that limits how many accounts exist",
+          "file": "tests/sql/capacity.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "BR-019",
@@ -2572,11 +3181,84 @@
       "id": "BR-020",
       "area": "Rules",
       "summary": "The Council owns the data",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/data",
+      "state": "verified",
       "reason": null,
-      "note": "Contractual commitment. Full export is available to Finance staff.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "the Council can take a complete, documented copy of its data covers every business table in the database, and names the ones it leaves out",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data documents every table and every column",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data returns every row of every table, including rows that row-level security hides from the administrator's own queries",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data never exports credentials: no password hash, session counter, token or throttle table",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data builds a package whose manifest lists every table with the stored row counts",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Council can take a complete, documented copy of its data is limited to Finance administrators",
+          "file": "tests/sql/data-package.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the data package writes a zip whose files read back exactly, with valid checksums",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package guards cells that start with a formula character and quotes commas, quotes and line breaks",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package writes a header row and one line per record, in catalog order",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package builds a package with a README, a manifest and one file per table, with the row counts",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the data package reports any table or column that has no documentation",
+          "file": "tests/unit/data-package.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "only an administrator can download the data package, which holds every table and a README",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-021",
@@ -2836,51 +3518,252 @@
       "id": "BR-025",
       "area": "Rules",
       "summary": "Breaches are reported with a remediation plan",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/incidents",
+      "state": "verified",
       "reason": null,
-      "note": "Procedural commitment agreed in the contract.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "security incidents notify the Council and track remediation records an incident, queues a notice to every active designated contact, and writes the history",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation flags a notice as late when the incident was detected more than 24 hours before it was recorded",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation tracks a remediation report with root cause, actions, prevention and a completed date, keeping every version",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation keeps the history append only, even for the database owner",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation refuses to record a future detection time, and keeps at least one contact active",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation refuses to record when no designated contact is active",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation allows only an administrator to record incidents or manage contacts, and hides them from everyone else",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation hides incident notices from Finance staff who are not administrators",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "security incidents notify the Council and track remediation adds a designated contact, audits it, and includes that contact in the next notice",
+          "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "breach notification deadline indicator sets the notice due 24 hours after detection and the remediation report due 7 days after",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator marks a notice sent inside 24 hours as on time and later as late, with the margin",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator counts down to the notice deadline when nobody has been notified yet",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator tracks the remediation report against its 7 day deadline",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "breach notification deadline indicator derives status from the latest remediation report",
+          "file": "tests/unit/incident-deadlines.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "an administrator records a breach, the Council's contacts are queued a notice, and remediation is tracked",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-026",
       "area": "Rules",
       "summary": "Hosted in a compliant cloud, not on Council servers",
-      "route": null,
+      "route": "/finance/platform",
       "state": "planned",
       "reason": null,
-      "note": "Delivery commitment confirmed when the production environment is built.",
+      "note": "Delivery commitment, not claimed as met. Confirmed when the production environment is built and reviewed.",
       "tests": []
     },
     {
       "id": "BR-027",
       "area": "Rules",
       "summary": "Target go-live February 1, 2027",
-      "route": null,
+      "route": "/finance/platform",
       "state": "planned",
       "reason": null,
-      "note": "Target date in the delivery timeline on the Platform page.",
+      "note": "Target date of February 1, 2027 in the delivery timeline on the Platform page. A delivery commitment this system cannot confirm.",
       "tests": []
     },
     {
       "id": "BR-028",
       "area": "Rules",
       "summary": "Annual structure review with Finance",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/reviews",
+      "state": "verified",
       "reason": null,
-      "note": "Scheduled engagement with Finance. Structure changes are configuration, not code.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "annual structure review with Finance allows one review per fiscal year",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "annual structure review with Finance walks a review through checklist, participants and decisions, and only then lets it be signed off",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "annual structure review with Finance is limited to finance administrators, while Finance staff can read reviews",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "annual structure review with Finance feeds the rollover: the signed review and its decisions are what the rollover page reads",
+          "file": "tests/sql/annual-review.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the annual review is kept per fiscal year and appears in the rollover",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-029",
       "area": "Rules",
       "summary": "Fast post-launch support response",
-      "route": null,
-      "state": "planned",
+      "route": "/finance/support",
+      "state": "verified",
       "reason": null,
-      "note": "Support model described on the Platform page. Operational commitment.",
-      "tests": []
+      "note": null,
+      "tests": [
+        {
+          "title": "help requests and the 24 hour response target lets every signed-in role send a request and records an audit event",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target shows each person only their own requests, and every request to an administrator",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target records the first response time once and never overwrites it",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target measures overdue, responded late and responded in time from the stored timestamps",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target queues the reply to the requester through the outbox and lets only an administrator reply as support or close",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "help requests and the 24 hour response target rejects empty or oversized requests and keeps messages append only",
+          "file": "tests/sql/support.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "support response is measured against a 24 hour target sets the due time exactly 24 hours after the request",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target is open inside the target, overdue after it, with no reply",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target is responded once a first reply exists, even a late one, and closed once closed",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target computes the first response time in minutes and whether it met the target",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target summarizes replies met within the target and the median first reply",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "support response is measured against a 24 hour target states age and durations in plain words",
+          "file": "tests/unit/support-time.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "users send help requests, see only their own, and an administrator answers from the queue",
+          "file": "tests/e2e/06-operations.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     }
   ]
 }
