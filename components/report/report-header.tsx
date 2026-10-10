@@ -29,7 +29,7 @@ export function ReportHeader({ header, daysLate, state, actions }: { header: Hea
           <span className="whitespace-nowrap">
             Reference <span className="num font-mono text-sm font-medium text-ink">{header.referenceNo}</span>
           </span>
-          <StateBadge state={state} audience="cbo" />
+          {state === "missing" && open ? null : <StateBadge state={state} audience="cbo" />}
         </div>
       }
     />
