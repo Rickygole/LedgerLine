@@ -14,6 +14,7 @@ import type {
   RevisionRecord,
   SubmissionDetail,
 } from "@/lib/finance/review/detail";
+import { correctionValueInWords } from "@/lib/finance/review/audit-words";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
@@ -85,7 +86,7 @@ function CorrectionNote({ fix }: { fix: Correction | undefined }) {
       {fix.original !== undefined && fix.original !== null && fix.original !== "" ? (
         <>
           {". Was "}
-          <del>{String(fix.original)}</del>
+          <del>{correctionValueInWords(fix.original)}</del>
         </>
       ) : (
         ". Was blank"

@@ -20,7 +20,16 @@ import {
 } from "@/lib/finance/review/return-note-core";
 import { buildSnapshot } from "@/lib/snapshot";
 import { isUuid } from "@/lib/ids";
-import { introducedBlockingIssues } from "@/lib/rules/correction";
+import { randomUUID } from "node:crypto";
+import { introducedBlockingIssuesFor } from "@/lib/rules/correction";
+import {
+  BUDGET_KEY,
+  budgetAudit,
+  parseBudgetCorrection,
+  parseTableCorrection,
+  sameJson,
+} from "@/lib/finance/review/correction-input";
+import type { AnswerValue } from "@/lib/rules/types";
 import { identityProblem } from "@/lib/rules/identity";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
@@ -261,7 +270,8 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
   const user = await requireUser(REVIEW_ROLES);
   const id = String(formData.get("submissionId") ?? "");
   const key = String(formData.get("questionKey") ?? "");
-  const value = String(formData.get("value") ?? "").trim();
+  const rawValue = String(formData.get("value") ?? "");
+  const value = rawValue.trim();
   const reason = String(formData.get("reason") ?? "").trim();
   const lock = lockField.safeParse(formData.get("lockVersion"));
   if (!lock.success) return failure("That action is not available.");
@@ -274,29 +284,70 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
       const detail = await loadSubmissionDetail(tx, id);
       if (!detail || !detail.row.definition) return "That report could not be found.";
       const { row } = detail;
+      const definition = row.definition!;
       if (row.lockVersion !== lock.data) return STALE_MESSAGE;
-      const question = row.definition!.sections.flatMap((s) => s.questions).find((q) => q.key === key);
-      if (!question || question.type === "table") return "That question cannot be corrected here.";
-      if (String(row.answers[key] ?? "") === value)
-        return "The new value is the same as the current value. Enter a different value to correct.";
-      const answers = { ...row.answers, [key]: value };
-      const issues = validateSubmission({
-        definition: row.definition!,
-        answers,
-        budget: row.budget,
-        awardAmount: row.award,
-      }).filter((i) => i.field === key && i.severity === "block");
-      if (issues.length > 0) return issues[0].message;
-      const introduced = introducedBlockingIssues(
-        { definition: row.definition!, answers: row.answers, budget: row.budget, awardAmount: row.award },
-        key,
-        value,
+      const isBudget = key === BUDGET_KEY;
+      const question = definition.sections.flatMap((s) => s.questions).find((q) => q.key === key);
+      if (isBudget ? !definition.budget.enabled : !question) return "That question cannot be corrected here.";
+
+      let nextAnswers = row.answers;
+      let nextBudget = row.budget;
+      let answerWrite: Record<string, AnswerValue> | null = null;
+      let budgetWrite: ReturnType<typeof budgetAudit> | null = null;
+      let before: Record<string, unknown>;
+      let after: Record<string, unknown>;
+
+      if (isBudget) {
+        const parsed = parseBudgetCorrection(rawValue, row.budget, randomUUID, definition.budget.maxLines);
+        if (!parsed.ok) return parsed.message;
+        const was = budgetAudit(row.budget);
+        const now = budgetAudit(parsed.value);
+        if (sameJson(was, now)) return "The budget is the same as the current budget. Change a line to correct it.";
+        nextBudget = parsed.value;
+        budgetWrite = now;
+        before = { question_key: BUDGET_KEY, value: was };
+        after = { question_key: BUDGET_KEY, value: now };
+      } else if (question!.type === "table") {
+        const parsed = parseTableCorrection(rawValue, question!);
+        if (!parsed.ok) return parsed.message;
+        const was = row.answers[key] ?? [];
+        if (sameJson(was, parsed.value))
+          return "The table is the same as the current table. Change a row to correct it.";
+        nextAnswers = { ...row.answers, [key]: parsed.value };
+        answerWrite = { [key]: parsed.value };
+        before = { question_key: key, value: was };
+        after = { question_key: key, value: parsed.value };
+      } else {
+        if (String(row.answers[key] ?? "") === value)
+          return "The new value is the same as the current value. Enter a different value to correct.";
+        nextAnswers = { ...row.answers, [key]: value };
+        answerWrite = { [key]: value };
+        before = { question_key: key, value: row.answers[key] ?? null };
+        after = { question_key: key, value };
+      }
+
+      if (!isBudget) {
+        const issues = validateSubmission({
+          definition,
+          answers: nextAnswers,
+          budget: nextBudget,
+          awardAmount: row.award,
+        }).filter((i) => i.field === key && i.severity === "block");
+        if (issues.length > 0) return issues[0].message;
+      }
+      const introduced = introducedBlockingIssuesFor(
+        { definition, answers: row.answers, budget: row.budget, awardAmount: row.award },
+        { answers: answerWrite ?? undefined, budget: budgetWrite ? nextBudget : undefined },
       );
       if (introduced.length > 0) {
-        return `This correction would leave the report incomplete. ${introduced[0].message}`;
+        return isBudget
+          ? `This correction would leave the budget with a problem. ${introduced[0].message}`
+          : `This correction would leave the report incomplete. ${introduced[0].message}`;
       }
-      const identity = identityProblem(key, value, { legalName: row.orgName, ein: row.ein });
-      if (identity) return identity;
+      if (!isBudget && question!.type !== "table") {
+        const identity = identityProblem(key, value, { legalName: row.orgName, ein: row.ein });
+        if (identity) return identity;
+      }
       const attachments = await tx.query<{ path: string; filename: string; bytes: string; mime: string }>(
         "SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1 AND removed_at IS NULL",
         [id],
@@ -304,10 +355,10 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
       const snapshot = buildSnapshot({
         formVersionId: row.formVersionId!,
         answers: {
-          ...visibleAnswers(row.definition!, answers),
-          ...(answers[VARIANCE_NOTE_KEY] ? { [VARIANCE_NOTE_KEY]: answers[VARIANCE_NOTE_KEY] } : {}),
+          ...visibleAnswers(definition, nextAnswers),
+          ...(nextAnswers[VARIANCE_NOTE_KEY] ? { [VARIANCE_NOTE_KEY]: nextAnswers[VARIANCE_NOTE_KEY] } : {}),
         },
-        budget: row.budget,
+        budget: nextBudget,
         attachments: attachments.map((a) => ({
           path: a.path,
           filename: a.filename,
@@ -316,6 +367,18 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
         })),
         certification: detail.certification ?? undefined,
       });
+      if (isBudget || question!.type === "table") {
+        await tx.query("SELECT app.correct_submission($1, $2::jsonb, $3::jsonb, $4, $5::jsonb, $6::jsonb, $7::jsonb)", [
+          id,
+          answerWrite ? JSON.stringify(answerWrite) : null,
+          budgetWrite ? JSON.stringify(budgetWrite) : null,
+          reason,
+          JSON.stringify(snapshot),
+          JSON.stringify(before),
+          JSON.stringify(after),
+        ]);
+        return null;
+      }
       await tx.query("SELECT app.correct_answer($1, $2, $3::jsonb, $4, $5::jsonb)", [
         id,
         key,

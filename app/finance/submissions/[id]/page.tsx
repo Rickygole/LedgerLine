@@ -15,6 +15,7 @@ import {
 import { DueBadge, StateBadge } from "@/components/ui/status-badge";
 import { AuditTimeline } from "@/components/finance/review/audit-timeline";
 import { Breadcrumbs } from "@/components/ui/page-header";
+import { DownloadPdfLink } from "@/components/report/download-pdf";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { FINANCE_ROLES, REVIEW_ROLES, requireUser } from "@/lib/auth";
@@ -25,6 +26,7 @@ import { buildConcerns, PRESET_CONCERNS } from "@/lib/finance/review/return-note
 import { reportState } from "@/lib/reporting";
 import { formatCurrency, plural } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
+import { BUDGET_KEY } from "@/lib/finance/review/correction-input";
 import { sponsorNames } from "@/lib/finance/awards";
 
 export const runtime = "nodejs";
@@ -78,15 +80,43 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   for (const section of detail.row.definition.sections) {
     for (const q of section.questions) {
       labels[q.key] = q.label;
-      if (q.type !== "table" && isVisible(q, row.answers)) {
-        const value = row.answers[q.key];
+      if (!isVisible(q, row.answers)) continue;
+      const value = row.answers[q.key];
+      if (q.type === "table") {
+        const columns = q.columns ?? [];
+        const rows = Array.isArray(value) ? value : [];
         questions.push({
+          kind: "table",
+          key: q.key,
+          label: q.label,
+          columns,
+          rows: rows.map((r) => Object.fromEntries(columns.map((c) => [c.key, String(r[c.key] ?? "")]))),
+          maxRows: q.maxRows ?? 50,
+        });
+      } else {
+        questions.push({
+          kind: "value",
           key: q.key,
           label: q.label,
           current: value === null || value === undefined ? "" : String(value),
         });
       }
     }
+  }
+  if (detail.row.definition.budget.enabled) {
+    labels[BUDGET_KEY] = "Budget";
+    questions.push({
+      kind: "budget",
+      key: BUDGET_KEY,
+      label: "Budget lines",
+      maxLines: detail.row.definition.budget.maxLines,
+      lines: row.budget.map((line) => ({
+        rowId: line.rowId,
+        category: line.category,
+        description: line.description,
+        amount: line.amount.toFixed(2),
+      })),
+    });
   }
 
   const flagCount = row.flags.length;
@@ -172,6 +202,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
             { label: row.referenceNo ?? "Report" },
           ]}
         />
+        <div className="flex flex-wrap items-center gap-4">
+          {row.status !== "draft" ? <DownloadPdfLink href={`/finance/submissions/${id}/pdf`} /> : null}
+        </div>
         {queued ? (
           <nav aria-label="Review queue" className="flex flex-wrap items-center gap-4">
             <p className="text-[15px] text-ink-2">

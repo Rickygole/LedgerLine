@@ -1,6 +1,11 @@
 import { AiDraftBadge, Badge } from "@/components/ui/status-badge";
 import { formatDateTime } from "@/lib/dates";
-import { actionInWords, statusInWords } from "@/lib/finance/review/audit-words";
+import {
+  actionInWords,
+  correctionChanges,
+  correctionValueInWords,
+  statusInWords,
+} from "@/lib/finance/review/audit-words";
 import type { AuditRecord } from "@/lib/finance/review/detail";
 import { cn } from "@/lib/cn";
 
@@ -65,13 +70,20 @@ export function AuditTimeline({
                 {labels[key] ?? key}:{" "}
                 <del className="text-muted">
                   <span className="sr-only">from </span>
-                  {String(event.before?.value ?? "blank")}
+                  {correctionValueInWords(event.before?.value)}
                 </del>{" "}
                 <span className="font-semibold text-ink">
                   <span className="sr-only">to </span>
-                  {String(event.after?.value ?? "blank")}
+                  {correctionValueInWords(event.after?.value)}
                 </span>
               </p>
+            ) : null}
+            {key && !compact ? (
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-ink">
+                {correctionChanges(event.before?.value, event.after?.value).map((change) => (
+                  <li key={change}>{change}</li>
+                ))}
+              </ul>
             ) : null}
             {event.note ? (
               <p

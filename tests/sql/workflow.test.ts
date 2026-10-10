@@ -368,6 +368,99 @@ describe("[US-045] authorized staff correct submitted data with an audit record"
     });
   });
 
+  it("[US-045] rewrites budget lines and table answers as one correction revision with before and after", async () => {
+    await inTransaction(async () => {
+      const id = await startDraft(maria);
+      await transition(maria, id, "submit");
+      await as(daniel);
+      const old = (await app.query("SELECT row_id FROM budget_line WHERE submission_id = $1", [id])).rows[0].row_id;
+      const added = (await app.query("SELECT gen_random_uuid() AS id")).rows[0].id;
+      const lines = [
+        {
+          row_id: old,
+          position: 1,
+          category: "OTPS",
+          description: "Supplies and rent",
+          amount: Number(target.award) - 100,
+          actual_spent: null,
+        },
+        { row_id: added, position: 2, category: "PS", description: "Stipend", amount: 100, actual_spent: null },
+      ];
+      const rows = [{ age_group: "5 to 9", count: "12" }];
+      const revision = (
+        await app.query(
+          "SELECT app.correct_submission($1, $2::jsonb, $3::jsonb, 'Corrected from the signed budget', $4::jsonb, $5::jsonb, $6::jsonb) AS rev",
+          [
+            id,
+            JSON.stringify({ youth_breakdown: rows }),
+            JSON.stringify(lines),
+            SNAPSHOT,
+            JSON.stringify({ question_key: "budget", value: [] }),
+            JSON.stringify({ question_key: "budget", value: lines }),
+          ],
+        )
+      ).rows[0].rev;
+      expect(revision).toBe(2);
+      const stored = (
+        await app.query(
+          "SELECT category, description, amount::float8 AS amount FROM budget_line WHERE submission_id = $1 ORDER BY position",
+          [id],
+        )
+      ).rows;
+      expect(stored.map((line) => line.description)).toEqual(["Supplies and rent", "Stipend"]);
+      expect(stored[0].category).toBe("OTPS");
+      const answer = (
+        await app.query("SELECT value FROM answer WHERE submission_id = $1 AND question_key = 'youth_breakdown'", [id])
+      ).rows[0].value;
+      expect(answer).toEqual(rows);
+      const audit = (
+        await app.query(
+          "SELECT note, after FROM audit_event WHERE entity = 'submission' AND entity_id = $1 AND action = 'correction'",
+          [id],
+        )
+      ).rows[0];
+      expect(audit.note).toBe("Corrected from the signed budget");
+      expect(audit.after.value).toHaveLength(2);
+
+      await app.query("SAVEPOINT removal");
+      await app.query(
+        "SELECT app.correct_submission($1, NULL, $2::jsonb, 'Removed a duplicate line', $3::jsonb, '{}'::jsonb, '{}'::jsonb)",
+        [id, JSON.stringify([lines[0]]), SNAPSHOT],
+      );
+      expect(
+        (await app.query("SELECT count(*)::int AS n FROM budget_line WHERE submission_id = $1", [id])).rows[0].n,
+      ).toBe(1);
+      await app.query("ROLLBACK TO SAVEPOINT removal");
+    });
+  });
+
+  it("[US-045] refuses a budget or table correction without a reason or by a non-reviewer", async () => {
+    await inTransaction(async () => {
+      const id = await startDraft(maria);
+      await transition(maria, id, "submit");
+      await as(daniel);
+      await app.query("SAVEPOINT noreason");
+      expect(
+        await errorCode(() =>
+          app.query("SELECT app.correct_submission($1, NULL, '[]'::jsonb, '', $2::jsonb, '{}'::jsonb, '{}'::jsonb)", [
+            id,
+            SNAPSHOT,
+          ]),
+        ),
+      ).toBe("23514");
+      await app.query("ROLLBACK TO SAVEPOINT noreason");
+      await as(grace);
+      expect(
+        await errorCode(() =>
+          app.query(
+            "SELECT app.correct_submission($1, NULL, '[]'::jsonb, 'why', $2::jsonb, '{}'::jsonb, '{}'::jsonb)",
+            [id, SNAPSHOT],
+          ),
+        ),
+      ).toBe("42501");
+    });
+  });
+
   it("is refused for a view-only user and for the reporting organization", async () => {
     await inTransaction(async () => {
       const id = await startDraft(maria);
