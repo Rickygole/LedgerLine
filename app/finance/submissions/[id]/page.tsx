@@ -186,7 +186,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
         <div className="order-2 min-w-0 lg:order-1 lg:col-span-8">
           {tab === "report" ? <ReportTab detail={detail} /> : null}
           {tab === "budget" ? <BudgetTab detail={detail} /> : null}

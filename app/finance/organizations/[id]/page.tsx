@@ -130,7 +130,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
           <div className="grid items-start gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader title="About" />
-              <CardBody className="grid gap-6 md:grid-cols-[minmax(0,1fr)_200px]">
+              <CardBody className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_200px]">
                 <div className="min-w-0">
                 <h3 className="text-[13px] font-semibold text-muted">Mission</h3>
                 <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
@@ -266,7 +266,7 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       ) : null}
 
       {tab === "contacts" ? (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader title="Contacts" />
             <ul className="divide-y divide-line">
