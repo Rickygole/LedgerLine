@@ -43,4 +43,30 @@ describe("[US-043] manual flags", () => {
   it("are allowed on a submitted report", async () => {
     expect(await tryInsert(submittedId)).toBeNull();
   });
+
+  it("[BR-010] keep their notes out of the organization's view of the audit history", async () => {
+    const cbo = (
+      await owner.query(
+        "SELECT id FROM app_user WHERE role = 'cbo_submitter' AND org_id = app.submission_org($1) LIMIT 1",
+        [submittedId],
+      )
+    ).rows[0].id;
+    await owner.query("BEGIN");
+    try {
+      await owner.query("SET LOCAL ROLE app_server");
+      await owner.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
+      await owner.query(
+        "SELECT app.write_audit('submission', $1, 'flag_add', 'internal finance note', NULL, NULL, NULL)",
+        [submittedId],
+      );
+      await owner.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: cbo })]);
+      const rows = await owner.query("SELECT action FROM audit_event WHERE entity = 'submission' AND entity_id = $1", [
+        submittedId,
+      ]);
+      expect(rows.rowCount).toBeGreaterThan(0);
+      expect(rows.rows.map((r) => r.action)).not.toContain("flag_add");
+    } finally {
+      await owner.query("ROLLBACK");
+    }
+  });
 });
