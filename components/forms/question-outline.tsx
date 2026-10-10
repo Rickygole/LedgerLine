@@ -1,27 +1,10 @@
 "use client";
 
-import { AlignLeft, Building2, Calendar, CircleDollarSign, GripVertical, Hash, List, Mail, Percent, Phone, Table2, ToggleLeft, Type, Wallet } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { useState } from "react";
-import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
 import { TYPE_LABEL } from "@/lib/forms/editor/definition";
-import type { FieldType, FormDefinition } from "@/lib/rules/types";
-
-const TYPE_ICON: Record<FieldType, ComponentType<{ className?: string }>> = {
-  text: Type,
-  textarea: AlignLeft,
-  number: Hash,
-  integer: Hash,
-  currency: CircleDollarSign,
-  percent: Percent,
-  date: Calendar,
-  email: Mail,
-  phone: Phone,
-  ein: Building2,
-  select: List,
-  yesno: ToggleLeft,
-  table: Table2,
-};
+import type { FormDefinition } from "@/lib/rules/types";
 
 export function QuestionOutline({
   definition,
@@ -61,7 +44,6 @@ export function QuestionOutline({
                 className={cn("flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-sm", current ? "bg-navy-50 font-semibold text-navy-900" : "font-medium text-ink hover:bg-surface")}
               >
                 <span className="flex min-w-0 items-center gap-2">
-                  {section.kind === "budget" ? <Wallet className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" /> : null}
                   <span className="truncate">{section.title}</span>
                 </span>
                 <span className="num text-xs font-normal text-muted">{section.kind === "budget" ? (definition.budget.enabled ? "On" : "Off") : section.questions.length}</span>
@@ -69,7 +51,6 @@ export function QuestionOutline({
               {current && section.kind === "questions" && section.questions.length > 0 ? (
                 <ol className="mt-1 space-y-px border-l border-line pl-2 ml-3">
                   {section.questions.map((question, index) => {
-                    const Icon = TYPE_ICON[question.type] ?? Type;
                     return (
                       <li
                         key={question.key}
@@ -103,7 +84,6 @@ export function QuestionOutline({
                           aria-current={selectedKey === question.key ? "true" : undefined}
                           className={cn("flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-[13px]", selectedKey === question.key ? "bg-navy-50 text-navy-900" : "text-ink hover:bg-surface")}
                         >
-                          <Icon className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
                           <span className="truncate">{question.label || "Untitled question"}</span>
                           <span className="sr-only">, {TYPE_LABEL[question.type]}</span>
                         </button>

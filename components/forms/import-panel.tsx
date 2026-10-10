@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, CheckCircle2, FileUp, Pencil, Undo2, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileUp, Undo2, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { analyzeTemplate, applyDraft, rejectDraft } from "@/app/finance/forms/[formId]/actions";
 import { Button } from "@/components/ui/button";
@@ -183,7 +183,6 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="min-w-0">
                 <h3 className="text-[17px] font-bold leading-6 text-ink">From your document</h3>
-                <p className="mt-0.5 font-mono text-[13px] text-muted">Fingerprint {analysis.inputSha256.slice(0, 16)}</p>
                 <ol className="mt-3 max-h-[36rem] space-y-2 overflow-y-auto rounded border border-line bg-white p-4 text-[15px] leading-6 text-ink lg:sticky lg:top-6">
                   {analysis.paragraphs.map((paragraph, index) => {
                     const number = index + 1;
@@ -273,15 +272,12 @@ export function ImportPanel({ formId, initiallyOpen, onApplied, onClose, onProgr
                           ))}
                           <div className="mt-3 flex flex-wrap items-center gap-4">
                             <Button variant="secondary" size="sm" onClick={() => patchRow(row.id, { decision: "accepted", editing: false })} disabled={!check.ok} aria-label={`Accept ${row.field.label}`}>
-                              <Check className="h-4 w-4" aria-hidden="true" />
                               Accept
                             </Button>
                             <Button variant="ghost" size="sm" className="px-0" aria-expanded={row.editing} onClick={() => patchRow(row.id, { editing: !row.editing })} aria-label={`${row.editing ? "Close editor for" : "Edit"} ${row.field.label}`}>
-                              <Pencil className="h-4 w-4" aria-hidden="true" />
                               {row.editing ? "Done editing" : "Edit"}
                             </Button>
                             <Button variant="ghost" size="sm" className="px-0" onClick={() => patchRow(row.id, { decision: "discarded", editing: false })} aria-label={`Discard ${row.field.label}`}>
-                              <X className="h-4 w-4" aria-hidden="true" />
                               Discard
                             </Button>
                           </div>

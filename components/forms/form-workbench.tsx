@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Eye, FileUp, Lock, Pencil, Plus, Save } from "lucide-react";
+import { CheckCircle2, Lock } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { publishForm, saveDefinition } from "@/app/finance/forms/[formId]/actions";
 import { FormPreview } from "@/components/forms/form-preview";
@@ -70,6 +70,7 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
   const [confirming, setConfirming] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [review, setReview] = useState<{ reviewed: number; total: number } | null>(null);
+  const [showBuilder, setShowBuilder] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
   const confirmRef = useRef<HTMLDialogElement>(null);
 
@@ -181,32 +182,35 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div role="tablist" aria-label="Form view" className="inline-flex rounded-md border border-line bg-white p-0.5 shadow-sm">
-          <button type="button" role="tab" aria-selected={view === "edit"} onClick={() => setView("edit")} className={cn("inline-flex h-8 items-center gap-2 rounded px-3 text-sm font-semibold", view === "edit" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
-            <Pencil className="h-4 w-4" aria-hidden="true" />
+          <button type="button" role="tab" aria-selected={view === "edit"} onClick={() => setView("edit")} className={cn("inline-flex h-8 items-center rounded px-3 text-sm font-semibold", view === "edit" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
             {editable ? "Edit form" : "Structure"}
           </button>
-          <button type="button" role="tab" aria-selected={view === "preview"} onClick={() => setView("preview")} className={cn("inline-flex h-8 items-center gap-2 rounded px-3 text-sm font-semibold", view === "preview" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
-            <Eye className="h-4 w-4" aria-hidden="true" />
+          <button type="button" role="tab" aria-selected={view === "preview"} onClick={() => setView("preview")} className={cn("inline-flex h-8 items-center rounded px-3 text-sm font-semibold", view === "preview" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
             Preview as organization
           </button>
         </div>
         {editable ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="secondary" onClick={() => setImportOpen(true)} disabled={dirty || importOpen} title={dirty ? "Save your changes before importing" : undefined}>
-              <FileUp className="h-4 w-4" aria-hidden="true" />
-              Import from Word
-            </Button>
-            <Button variant="secondary" onClick={() => save()} disabled={pending || !dirty}>
-              <Save className="h-4 w-4" aria-hidden="true" />
-              {pending ? "Saving" : dirty ? "Save draft" : "Saved"}
-            </Button>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {dirty || pending ? (
+              <Button variant="secondary" onClick={() => save()} disabled={pending}>
+                {pending ? "Saving" : "Save draft"}
+              </Button>
+            ) : (
+              <span role="status" className="text-sm text-muted">
+                Saved
+              </span>
+            )}
+            {importOpen ? null : (
+              <Button variant="secondary" onClick={() => setImportOpen(true)} disabled={dirty} title={dirty ? "Save your changes before importing" : undefined}>
+                Import from Word
+              </Button>
+            )}
             {review && importOpen ? (
               <span className={cn("num rounded-sm px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset", reviewing ? "bg-harbor-100 text-harbor-700 ring-harbor-700/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
                 {review.reviewed} of {review.total} reviewed
               </span>
             ) : null}
             <Button onClick={openPublish} disabled={pending || dirty || importOpen || confirming} aria-describedby="publish-why" title={dirty ? "Save your changes before publishing" : importOpen ? "Finish the import review first" : undefined}>
-              {importOpen ? <Lock className="h-4 w-4" aria-hidden="true" /> : null}
               Publish version {version}
             </Button>
             <span id="publish-why" className="sr-only">
@@ -279,10 +283,12 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           onClose={() => {
             setImportOpen(false);
             setReview(null);
+            setShowBuilder(false);
           }}
           onProgress={(reviewed, total) => setReview((current) => (total === 0 ? null : current && current.reviewed === reviewed && current.total === total ? current : { reviewed, total }))}
           onApplied={(summary) => {
             setImportOpen(false);
+            setShowBuilder(false);
             setReview(null);
             setNotice(`Draft applied. ${summary}`);
             setErrors([]);
@@ -291,7 +297,19 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
         />
       ) : null}
 
-      {view === "preview" ? (
+      {view === "edit" && importOpen && editable && !showBuilder ? (
+        <p className="rounded border border-line bg-white px-5 py-4 text-[15px] text-ink-2">
+          Current form:{" "}
+          {definition.sections
+            .filter((s) => s.kind === "questions")
+            .map((s, i) => `${i === 0 ? count(s.questions.length, "question") : s.questions.length} in ${s.title}`)
+            .join(", ")}
+          .{" "}
+          <button type="button" onClick={() => setShowBuilder(true)} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+            Show
+          </button>
+        </p>
+      ) : view === "preview" ? (
         <FormPreview definition={definition} />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_22rem]">
@@ -359,65 +377,54 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                         ))}
                       </ol>
                     )}
+                    {editable ? (
+                      <div className="mt-5 grid gap-x-8 gap-y-4 border-t border-line-soft pt-5 2xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                        <div className="flex flex-wrap items-end gap-2">
+                          <div className="min-w-48 flex-1">
+                            <Label htmlFor="new-label">Question label</Label>
+                            <Input id="new-label" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNew())} />
+                          </div>
+                          <div className="w-40">
+                            <Label htmlFor="new-type">Answer type</Label>
+                            <Select id="new-type" value={newType} onChange={(e) => setNewType(e.target.value as FieldType)}>
+                              {FIELD_TYPES.filter((type) => type !== "table").map((type) => (
+                                <option key={type} value={type}>
+                                  {TYPE_LABEL[type]}
+                                </option>
+                              ))}
+                            </Select>
+                          </div>
+                          <Button variant="secondary" onClick={addNew} disabled={!newLabel.trim()}>
+                            Add question
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap items-end gap-2">
+                          <div className="min-w-48 flex-1">
+                            <Label htmlFor="library">Standard question</Label>
+                            <Select id="library" value={libraryKey} onChange={(e) => setLibraryKey(e.target.value)}>
+                              <option value="">{available.length ? "Choose a question" : "All standard questions are in this form"}</option>
+                              {available.map((q) => (
+                                <option key={q.key} value={q.key}>
+                                  {q.label}
+                                </option>
+                              ))}
+                            </Select>
+                          </div>
+                          <Button variant="secondary" onClick={addLibrary} disabled={!libraryKey}>
+                            Add from library
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
                   </CardBody>
                 </Card>
 
-                {editable ? (
-                  <div className="grid gap-4 xl:grid-cols-2">
-                    <Card>
-                      <CardHeader title="Add a question" description="Creates a question for this initiative only." />
-                      <CardBody className="space-y-3">
-                        <div>
-                          <Label htmlFor="new-label">Question label</Label>
-                          <Input id="new-label" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNew())} />
-                        </div>
-                        <div>
-                          <Label htmlFor="new-type">Answer type</Label>
-                          <Select id="new-type" value={newType} onChange={(e) => setNewType(e.target.value as FieldType)}>
-                            {FIELD_TYPES.filter((type) => type !== "table").map((type) => (
-                              <option key={type} value={type}>
-                                {TYPE_LABEL[type]}
-                              </option>
-                            ))}
-                          </Select>
-                        </div>
-                        <Button variant="secondary" onClick={addNew} disabled={!newLabel.trim()}>
-                          <Plus className="h-4 w-4" aria-hidden="true" />
-                          Add question
-                        </Button>
-                      </CardBody>
-                    </Card>
-                    <Card>
-                      <CardHeader title="Add from standard library" description="Shared with every initiative. Not copied." />
-                      <CardBody className="space-y-3">
-                        <div>
-                          <Label htmlFor="library">Standard question</Label>
-                          <Select id="library" value={libraryKey} onChange={(e) => setLibraryKey(e.target.value)}>
-                            <option value="">{available.length ? "Choose a question" : "All standard questions are already in this form"}</option>
-                            {available.map((q) => (
-                              <option key={q.key} value={q.key}>
-                                {q.label}
-                              </option>
-                            ))}
-                          </Select>
-                        </div>
-                        <Button variant="secondary" onClick={addLibrary} disabled={!libraryKey}>
-                          <Plus className="h-4 w-4" aria-hidden="true" />
-                          Add from library
-                        </Button>
-                      </CardBody>
-                    </Card>
-                  </div>
-                ) : null}
               </>
             ) : null}
           </div>
 
           <aside aria-label="Live preview" className="hidden self-start xl:sticky xl:top-4 xl:block xl:max-h-[calc(100dvh-2rem)] xl:overflow-y-auto">
-            <p className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-muted">
-              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-              Live preview, as organizations see it
-            </p>
+            <p className="mb-2 text-[13px] font-semibold text-muted">Live preview</p>
             <FormPreview definition={definition} only={definition.sections.find((s) => (s.kind === "budget" ? BUDGET : s.key) === sectionKey)?.key} />
           </aside>
         </div>
