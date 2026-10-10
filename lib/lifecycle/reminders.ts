@@ -51,7 +51,7 @@ export function describeOffset(days: number): string {
 
 export function sendNowSummary(orgs: number, emails: number, date: string): string {
   const org = `${orgs} ${orgs === 1 ? "organization" : "organizations"}`;
-  const mail = `${emails} ${emails === 1 ? "email" : "emails"}`;
+  const mail = `${emails} ${emails === 1 ? "message" : "messages"}`;
   return `This will add ${mail} to the outbox for ${org} for ${date}.`;
 }
 

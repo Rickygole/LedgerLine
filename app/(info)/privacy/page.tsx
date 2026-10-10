@@ -20,7 +20,7 @@ export default function PrivacyPage() {
       <p>
         The answers, budget lines and supporting documents your organization enters for each report, and organization details such as address, contacts and mission. Supporting documents can be PDF, Word (.docx), Excel (.xlsx) or CSV files of up to 25 MB each, with no more than 20 files on one report. Files that contain macros are refused.
       </p>
-      <h3>Emails LedgerLine prepares</h3>
+      <h3>Messages LedgerLine prepares</h3>
       <p>LedgerLine writes submission confirmations, requests for changes, reminders and password reset messages. A copy of each message, with the address it is for, is kept in an outbox that Finance staff can see.</p>
       <h3>Activity records</h3>
       <p>

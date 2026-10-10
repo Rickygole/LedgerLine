@@ -64,7 +64,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     <>
       <PageHeader
         title="Reminders"
-        description="Reminder rules email organizations about reports that are not submitted yet. Organizations with a submitted or accepted report are never reminded."
+        description="Reminder rules queue a message to organizations about reports that are not submitted yet. Organizations with a submitted or accepted report are never reminded."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Reminders" }]}
         actions={
           <ButtonLink href="/finance/outbox" variant="secondary">
@@ -229,7 +229,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
               <BellRing className="h-6 w-6 text-muted" aria-hidden="true" />
               <p className="text-[15px] font-semibold text-ink">Nothing goes out on this date</p>
-              <p className="max-w-md text-sm text-muted">Pick a date from the Fires on column above to see who that rule would email.</p>
+              <p className="max-w-md text-sm text-muted">Pick a date from the Fires on column above to see who that rule would send a message to.</p>
             </div>
           )}
         </Card>

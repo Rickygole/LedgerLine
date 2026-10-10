@@ -87,7 +87,7 @@ export function UserActions({ userId, name, email, role, active, isSelf, isCbo }
           </form>
           <form action={resetAction} className="space-y-2 border-t border-line pt-5">
             <input type="hidden" name="userId" value={userId} />
-            <p className="text-sm text-muted">A password reset link is added to the outbox for {email}.</p>
+            <p className="text-sm text-muted">A one-time password reset link is shown after you issue it. Give it to the person directly.</p>
             <Button type="submit" variant="secondary" disabled={resetPending}>
               <KeyRound className="h-4 w-4" aria-hidden="true" />
               Send password reset

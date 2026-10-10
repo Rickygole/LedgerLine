@@ -74,7 +74,7 @@ export async function sendPasswordReset(_prev: UserActionState, formData: FormDa
     return await withClaims(admin.id, async (tx) => {
       const target = await loadTarget(tx, userId);
       const issued = await tx.one<{ link: string }>(`SELECT link FROM app.queue_password_reset($1, $2)`, [userId, origin]);
-      return { ok: `Reset message for ${target.full_name} added to the outbox. The link below is shown only now and works once for 30 minutes.`, link: issued?.link };
+      return { ok: `Reset link issued for ${target.full_name}. The link below is shown only now and works once for 30 minutes. Give it to the person directly.`, link: issued?.link };
     });
   } catch (error) {
     if (pgCode(error) === "23514") return { error: "That user could not be found or is inactive. Activate the account first." };
@@ -135,5 +135,5 @@ export async function createUser(_prev: CreateUserState, formData: FormData): Pr
     revalidatePath("/finance/users");
     revalidatePath("/finance/outbox");
   }
-  return { ok: `Account created for ${data.fullName}. A message was added to the outbox. The link below is shown only now and works once for 30 minutes.`, link };
+  return { ok: `Account created for ${data.fullName}. The link below is shown only now and works once for 30 minutes. Give it to the person directly.`, link };
 }

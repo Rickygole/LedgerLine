@@ -90,7 +90,7 @@ export function CreateUserForm({ orgs }: { orgs: { id: string; name: string; ein
           <UserPlus className="h-4 w-4" aria-hidden="true" />
           {pending ? "Creating" : "Create account"}
         </Button>
-        <p className="text-sm text-muted">The person gets a message with a link to set a password. The link works once and expires after 30 minutes.</p>
+        <p className="text-sm text-muted">A link to set a password is shown once after the account is created. Give it to the person directly. It works once and expires after 30 minutes.</p>
       </div>
     </form>
   );

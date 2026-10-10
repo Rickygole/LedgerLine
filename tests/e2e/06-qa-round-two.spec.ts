@@ -91,7 +91,7 @@ test("[US-052] Add to outbox asks for confirmation with the number of organizati
   const before = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1", [today]);
   await page.getByRole("button", { name: "Add to outbox" }).click();
   const dialog = page.getByRole("alertdialog", { name: "Confirm adding reminders to the outbox" });
-  await expect(dialog).toContainText(/This will add \d+ emails? to the outbox for \d+ organizations?/);
+  await expect(dialog).toContainText(/This will add \d+ messages? to the outbox for \d+ organizations?/);
   const afterOpen = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1", [today]);
   expect(afterOpen[0].n).toBe(before[0].n);
   await dialog.getByRole("button", { name: "Cancel" }).click();
