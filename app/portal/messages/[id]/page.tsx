@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageTitle } from "@/components/portal/page-title";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
@@ -33,12 +33,13 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
   if (!row) notFound();
   return (
     <>
-      <PageHeader
+      <PageTitle
         title={row.subject}
-        crumbs={[{ label: "Portal", href: "/portal" }, { label: "Messages", href: "/portal/messages" }, { label: "Message" }]}
+        eyebrow={`${templateLabel(row.template)} · ${formatDateTime(row.created_at)}`}
+        crumbs={[{ label: "Messages", href: "/portal/messages" }, { label: "Message" }]}
         actions={
           row.submission_id ? (
-            <ButtonLink href={`/portal/reports/${row.submission_id}`} variant="secondary">
+            <ButtonLink href={`/portal/reports/${row.submission_id}`} variant="secondary" className="h-11 px-5 text-base">
               View report {row.reference_no}
             </ButtonLink>
           ) : null

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Clock, ExternalLink, Info, MapPin, Phone, Send, Star } from "lucide-react";
+import { ExternalLink, Info, MapPin, Phone, Star } from "lucide-react";
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { TabNav } from "@/components/finance/admin/tab-nav";
-import { Stat } from "@/components/ui/stat";
+import { DistrictMiniMap } from "@/components/portal/district-mini-map";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
@@ -15,7 +15,7 @@ import { todayInNewYork } from "@/lib/dates";
 import { currentFiscalYear, loadObligations, loadOrganization } from "@/lib/portal/data";
 import { orgTypeLabel } from "@/lib/finance/admin/sql";
 
-export const metadata: Metadata = { title: "Organization profile" };
+export const metadata: Metadata = { title: "Organization" };
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -59,7 +59,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       <ProfileHeader
         title={org.legalName}
         subtitle={org.dbaName ? `Doing business as ${org.dbaName}` : undefined}
-        crumbs={[{ label: "Portal", href: "/portal" }, { label: "Organization profile" }]}
+        crumbs={[{ label: "My reports", href: "/portal" }, { label: "Organization" }]}
         meta={[
           <Badge key="type">
             {orgTypeLabel(org.orgType)}
@@ -98,15 +98,45 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
 
       {tab === "overview" ? (
         <>
-          <section aria-labelledby="compliance" className="mb-6">
-            <h2 id="compliance" className="sr-only">
-              Compliance at a glance
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              <Stat label="Reports accepted" value={accepted} tone="ok" hint="Accepted by Council Finance" icon={CheckCircle2} />
-              <Stat label="Submitted or in review" value={submitted} tone="info" hint="Waiting on Council Finance" icon={Send} />
-              <Stat label="Outstanding" value={outstanding} hint="Not yet submitted" tone={outstanding > 0 ? "warn" : "neutral"} icon={Clock} />
-              <Stat label="Overdue" value={overdue} hint="Past the due date" tone={overdue > 0 ? "bad" : "neutral"} icon={AlertTriangle} />
+          <section aria-labelledby="org-facts" className="mb-6 rounded border border-line bg-white">
+            <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6 p-5 sm:p-6">
+              <div className="min-w-0 flex-1 basis-[28rem]">
+                <h2 id="org-facts" className="text-xl font-bold leading-7 text-ink">
+                  Organization facts
+                </h2>
+                <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 text-[15px] sm:grid-cols-2">
+                  {[
+                    { label: "Legal name", value: <span className="font-semibold">{org.legalName}</span> },
+                    { label: "EIN", value: <span className="whitespace-nowrap font-mono text-sm">{org.ein}</span> },
+                    { label: "Borough and Council district", value: `${org.borough}${org.councilDistrict ? ` · District ${org.councilDistrict}` : ""}` },
+                    { label: `${fiscalYear} awards`, value: <span className="num">{funded.filter((f) => f.fiscal_year_id === fiscalYear).length}</span> },
+                    { label: `${fiscalYear} total awarded`, value: <span className="num font-semibold">{formatCurrency(totalAward)}</span> },
+                  ].map((item) => (
+                    <div key={item.label} className="min-w-0">
+                      <dt className="text-sm font-semibold text-muted">{item.label}</dt>
+                      <dd className="mt-0.5 break-words text-ink">{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {[
+                    { label: "Accepted", value: accepted, note: "by Council Finance" },
+                    { label: "Submitted or in review", value: submitted, note: "waiting on Council Finance" },
+                    { label: "Not yet submitted", value: outstanding, note: "open reports" },
+                    { label: "Overdue", value: overdue, note: "past the due date", bad: overdue > 0 },
+                  ].map((tile) => (
+                    <li key={tile.label} className="rounded border border-line p-4">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-[#3d4757]">
+                        {tile.bad ? <span className="h-2 w-2 shrink-0 rounded-full bg-bad" aria-hidden="true" /> : null}
+                        {tile.label}
+                      </p>
+                      <p className="num mt-1 text-[28px] font-extrabold leading-9 tracking-[-0.02em] text-ink">{tile.value}</p>
+                      <p className="text-sm text-muted">{tile.note}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <DistrictMiniMap district={org.councilDistrict} borough={org.borough} />
             </div>
           </section>
           <div className="grid items-start gap-6 lg:grid-cols-3">
@@ -117,16 +147,11 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                 <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
                 <div className="mt-5 border-t border-line pt-5">
                   <DescriptionList
-                    columns={3}
+                    columns={2}
                     items={[
-                      { label: "Legal name", value: org.legalName },
-                      { label: "EIN", value: <span className="whitespace-nowrap font-mono text-[13px]">{org.ein}</span> },
                       { label: "Organization type", value: orgTypeLabel(org.orgType) },
-                      { label: "Borough", value: org.borough },
-                      { label: "Council district", value: org.councilDistrict ? `District ${org.councilDistrict}` : null },
                       { label: "Founded", value: org.foundedYear ? <span className="num">{org.foundedYear}</span> : null },
                       { label: "Annual budget", value: org.annualBudget !== null ? <span className="num">{formatCurrency(org.annualBudget)}</span> : null },
-                      { label: `Total awarded, ${fiscalYear}`, value: <span className="num">{formatCurrency(totalAward)}</span> },
                       { label: "Reports on file", value: <span className="num">{totalReports}</span> },
                     ]}
                   />

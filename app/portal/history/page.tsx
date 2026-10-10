@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { ButtonLink } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageTitle } from "@/components/portal/page-title";
 import { Badge, type Tone } from "@/components/ui/status-badge";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { Segmented } from "@/components/portal/portal-filters";
@@ -61,10 +60,10 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader
+      <PageTitle
+        eyebrow={user.orgName ?? "Your organization"}
         title="Submission history"
-        description={`Every report submitted for ${user.orgName ?? "your organization"}, including reports submitted by your colleagues.`}
-        crumbs={[{ label: "Portal", href: "/portal" }, { label: "History" }]}
+        lede="Every report your organization has submitted, including reports submitted by your colleagues."
       />
       <Card>
         <CardHeader
@@ -116,9 +115,9 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                   <TD label="Submitted by">{r.submitted_by_name ?? "Unknown"}</TD>
                   <TD className="whitespace-nowrap" label="Submitted">{formatDateTime(r.submitted_at)}</TD>
                   <TD className="text-right" action>
-                    <ButtonLink href={`/portal/reports/${r.id}`} variant="secondary" size="sm">
-                      View
-                    </ButtonLink>
+                    <Link href={`/portal/reports/${r.id}`} className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover">
+                      View<span className="sr-only"> {r.reference_no}</span>
+                    </Link>
                   </TD>
                 </TR>
               ))
