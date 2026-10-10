@@ -48,3 +48,5 @@ next-env.d.ts
 .mint.*
 .shots.*
 !.env.example
+
+/data/raw
