@@ -8,7 +8,6 @@ export function SiteFooter({ className, signedIn = false, width = "max-w-[1376px
   const service = [
     ...(signedIn ? [] : [{ href: "/login", label: "Sign in" }]),
     { href: "/help", label: "Help and contact" },
-    { href: "/trust", label: "Security and trust" },
   ];
   const about = [
     { href: "/accessibility", label: "Accessibility" },
