@@ -182,20 +182,21 @@ describe("award fields", () => {
   });
 
   it("[US-009][US-010] carries funding source and sponsors through a rollover", async () => {
-    const result = await asUser(app, priya, async () => {
+    const stats = (year: string) =>
+      app.query(
+        `SELECT count(*)::int AS awards,
+                count(*) FILTER (WHERE EXISTS (SELECT 1 FROM assignment_sponsor s WHERE s.assignment_id = a.id))::int AS with_sponsor,
+                count(*) FILTER (WHERE a.sponsoring_agency IS NOT NULL)::int AS with_agency
+         FROM assignment a JOIN initiative i ON i.id = a.initiative_id WHERE i.fiscal_year_id = $1`,
+        [year],
+      );
+    const { before, after } = await asUser(app, priya, async () => {
+      const source = (await stats("FY27")).rows[0];
       await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)");
-      return (
-        await app.query(
-          `SELECT count(*)::int AS awards,
-                  count(*) FILTER (WHERE EXISTS (SELECT 1 FROM assignment_sponsor s WHERE s.assignment_id = a.id))::int AS with_sponsor,
-                  count(*) FILTER (WHERE a.sponsoring_agency IS NOT NULL)::int AS with_agency
-           FROM assignment a JOIN initiative i ON i.id = a.initiative_id WHERE i.fiscal_year_id = 'FY28'`,
-        )
-      ).rows[0];
+      return { before: source, after: (await stats("FY28")).rows[0] };
     });
-    expect(result.awards).toBeGreaterThan(0);
-    expect(result.with_sponsor).toBe(result.awards);
-    expect(result.with_agency).toBe(result.awards);
+    expect(after.awards).toBeGreaterThan(0);
+    expect(after).toEqual(before);
   });
 });
 

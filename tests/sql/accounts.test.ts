@@ -181,17 +181,23 @@ describe("[US-013] sessions can be revoked", () => {
       await claims(app, maria);
       const version = (await app.query("SELECT app.current_session_version() AS v")).rows[0].v;
       const jti = "11111111-1111-4111-8111-111111111111";
+      const signOuts = async () =>
+        (
+          await app.query(
+            "SELECT count(*)::int AS n FROM audit_event WHERE entity = 'user' AND action = 'sign_out' AND actor_id = $1",
+            [maria],
+          )
+        ).rows[0].n;
+      await claims(app, priya);
+      const before = await signOuts();
+      await claims(app, maria);
       const other = "22222222-2222-4222-8222-222222222222";
       expect((await app.query("SELECT app.session_valid($1, $2) AS ok", [jti, version])).rows[0].ok).toBe(true);
       await app.query("SELECT app.revoke_session($1, now() + interval '8 hours')", [jti]);
       expect((await app.query("SELECT app.session_valid($1, $2) AS ok", [jti, version])).rows[0].ok).toBe(false);
       expect((await app.query("SELECT app.session_valid($1, $2) AS ok", [other, version])).rows[0].ok).toBe(true);
       await claims(app, priya);
-      const audit = await app.query(
-        "SELECT 1 FROM audit_event WHERE entity = 'user' AND action = 'sign_out' AND actor_id = $1",
-        [maria],
-      );
-      expect(audit.rowCount).toBe(1);
+      expect(await signOuts()).toBe(before + 1);
     });
   });
 
