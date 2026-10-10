@@ -122,11 +122,10 @@ function fallbackSentence(concern: Concern): string {
       return "Please attach supporting documentation for personnel lines.";
     case "PR-002":
       return "Please confirm the participant counts.";
-    case "FL-001": {
-      if (!concern.detail) return `Finance flagged this report for follow up (${lower}). Please review it and respond.`;
-      const note = concern.detail.replace(/\s+/g, " ").trim();
-      return `Finance flagged this report for follow up: ${/[.!?]$/.test(note) ? note : `${note}.`} Please review it and respond.`;
-    }
+    case "FL-001":
+      return concern.label === FLAG_LABEL.manual
+        ? "Council Finance has a question about this report. Please review it and respond."
+        : `Council Finance has a question about this report (${lower}). Please review it and respond.`;
     default:
       return `Please review ${lower} and update it.`;
   }
@@ -135,12 +134,12 @@ function fallbackSentence(concern: Concern): string {
 type AiInput = { concerns: { rule_id: string; field: string; value: string | null }[] };
 
 export function buildAiInput(concerns: Concern[]): AiInput {
-  return { concerns: concerns.map((c) => ({ rule_id: c.ruleId, field: c.label, value: c.detail })) };
+  return { concerns: concerns.map((c) => ({ rule_id: c.ruleId, field: c.label, value: c.kind === "flag" ? null : c.detail })) };
 }
 
 export function validateSentences(raw: unknown, concerns: Concern[]): { kept: NoteSentence[]; dropped: { text: string; reason: string }[] } {
   const allowedIds = new Set(concerns.map((c) => c.ruleId));
-  const allowedDollars = new Set(concerns.flatMap((c) => dollarFigures(`${c.label} ${c.detail ?? ""}`)));
+  const allowedDollars = new Set(concerns.flatMap((c) => dollarFigures(`${c.label} ${c.kind === "flag" ? "" : (c.detail ?? "")}`)));
   const kept: NoteSentence[] = [];
   const dropped: { text: string; reason: string }[] = [];
   const list = raw && typeof raw === "object" && Array.isArray((raw as { sentences?: unknown }).sentences) ? ((raw as { sentences: unknown[] }).sentences as unknown[]) : [];
