@@ -22,14 +22,14 @@ export function correctionValueInWords(value: unknown): string {
   if (value === null || value === undefined || value === "") return "blank";
   if (isLines(value)) {
     const total = value.reduce((sum, line) => sum + Math.round((line.amount ?? 0) * 100), 0) / 100;
-    return `${counted(value.length, "line")}, ${formatCurrency(total)}`;
+    return `${counted(value.length, "line")}, ${formatCurrency(total, { cents: true })}`;
   }
   if (Array.isArray(value)) return counted(value.length, "row");
   return String(value);
 }
 
 function lineText(line: AuditLine): string {
-  return `${line.category} ${line.description}, ${formatCurrency(line.amount ?? 0)}`;
+  return `${line.category} ${line.description}, ${formatCurrency(line.amount ?? 0, { cents: true })}`;
 }
 
 export function correctionChanges(before: unknown, after: unknown): string[] {
@@ -45,7 +45,9 @@ export function correctionChanges(before: unknown, after: unknown): string[] {
       }
       const parts: string[] = [];
       if (was.amount !== line.amount)
-        parts.push(`amount ${formatCurrency(was.amount ?? 0)} to ${formatCurrency(line.amount ?? 0)}`);
+        parts.push(
+          `amount ${formatCurrency(was.amount ?? 0, { cents: true })} to ${formatCurrency(line.amount ?? 0, { cents: true })}`,
+        );
       if (was.category !== line.category) parts.push(`category ${was.category} to ${line.category}`);
       if (was.description !== line.description) parts.push(`description "${was.description}" to "${line.description}"`);
       if (parts.length > 0) out.push(`Line ${line.position}: ${parts.join("; ")}`);

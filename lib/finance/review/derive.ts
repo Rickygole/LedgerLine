@@ -90,7 +90,7 @@ function flagsForRow(input: {
       const diff = Math.round((total - input.award) * 100) / 100;
       flags.push({
         reason: "unbalanced",
-        evidence: `Budget total ${formatCurrency(total)} is ${formatCurrency(Math.abs(diff))} ${diff > 0 ? "over" : "under"} the ${formatCurrency(input.award)} award.`,
+        evidence: `Budget total ${formatCurrency(total, { cents: true })} is ${formatCurrency(Math.abs(diff), { cents: true })} ${diff > 0 ? "over" : "under"} the ${formatCurrency(input.award, { cents: true })} award.`,
       });
     }
   }

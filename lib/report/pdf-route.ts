@@ -11,7 +11,8 @@ import { contentDisposition } from "./upload-rules";
 export async function serveReportPdf(id: string, roles: Role[]): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in to download this report." }, { status: 401 });
-  if (!roles.includes(user.role)) return NextResponse.json({ error: "You do not have access to this report." }, { status: 403 });
+  if (!roles.includes(user.role))
+    return NextResponse.json({ error: "You do not have access to this report." }, { status: 403 });
   if (!isUuid(id)) return NextResponse.json({ error: "That report could not be found." }, { status: 404 });
   const loaded = await withClaims(user.id, async (tx) => {
     const report = await loadReport(tx, id);

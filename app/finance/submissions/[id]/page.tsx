@@ -135,13 +135,13 @@ export default async function ReviewPage({ params, searchParams }: Props) {
       ? "Budget balanced"
       : row.budget.length === 0
         ? "No budget lines entered"
-        : `Budget ${diff < 0 ? "under" : "over"} by ${formatCurrency(Math.abs(diff))}`;
+        : `Budget ${diff < 0 ? "under" : "over"} by ${formatCurrency(Math.abs(diff), { cents: true })}`;
   const issueText = row.issues.slice(0, 4).map((issue) => issue.message.replace(/\.$/, ""));
   const prefill = [
     budgetOn && !balance.balanced
       ? row.budget.length > 0
-        ? `Please review the budget. The total is ${formatCurrency(Math.abs(diff))} ${diff < 0 ? "under" : "over"} the award of ${formatCurrency(row.award)}.`
-        : `Please add your budget lines. The total must equal the award of ${formatCurrency(row.award)}.`
+        ? `Please review the budget. The total is ${formatCurrency(Math.abs(diff), { cents: true })} ${diff < 0 ? "under" : "over"} the award of ${formatCurrency(row.award, { cents: true })}.`
+        : `Please add your budget lines. The total must equal the award of ${formatCurrency(row.award, { cents: true })}.`
       : null,
     issueText.length > 0
       ? `Please fix ${row.issues.length === 1 ? "this answer" : `these ${row.issues.length > issueText.length ? `${row.issues.length} answers, starting with` : "answers"}`}: ${issueText.join("; ")}.`

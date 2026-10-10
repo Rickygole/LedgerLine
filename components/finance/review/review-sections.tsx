@@ -56,7 +56,7 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
     );
   }
   if (question.type === "currency")
-    return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")))}</span>;
+    return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")), { cents: "auto" })}</span>;
   if (question.type === "percent") return <span className="num">{String(value)}%</span>;
   if (question.type === "integer" || question.type === "number")
     return <span className="num">{formatCount(String(value))}</span>;

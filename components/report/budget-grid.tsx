@@ -484,16 +484,16 @@ export function BudgetGrid({
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
                     <dt className="text-muted">{label}</dt>
-                    <dd className="num text-ink">{formatCurrency(value as number)}</dd>
+                    <dd className="num text-ink">{formatCurrency(value as number, { cents: true })}</dd>
                   </div>
                 ))}
                 <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4 lg:px-6">
                   <dt className="font-semibold text-ink">Approved budget total</dt>
-                  <dd className="num font-bold text-ink">{formatCurrency(totals.total)}</dd>
+                  <dd className="num font-bold text-ink">{formatCurrency(totals.total, { cents: true })}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
                   <dt className="text-muted">Award</dt>
-                  <dd className="num text-muted">{formatCurrency(award)}</dd>
+                  <dd className="num text-muted">{formatCurrency(award, { cents: true })}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
                   <dt className="font-semibold text-ink">Difference (budget total minus award)</dt>
@@ -509,19 +509,19 @@ export function BudgetGrid({
                 <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2.5 sm:px-4 lg:px-6">
                   <dt className="font-semibold text-ink">Actual spent total</dt>
                   <dd className="num font-bold text-ink">
-                    {spend.entered ? formatCurrency(spend.actual) : "Not entered"}
+                    {spend.entered ? formatCurrency(spend.actual, { cents: true }) : "Not entered"}
                   </dd>
                 </div>
                 {spend.entered ? (
                   <>
                     <div className="flex items-center justify-between gap-4 px-3 py-2 sm:px-4 lg:px-6">
                       <dt className="text-muted">Variance (approved budget minus actual spent)</dt>
-                      <dd className="num text-ink">{formatCurrency(spend.variance)}</dd>
+                      <dd className="num text-ink">{formatCurrency(spend.variance, { cents: true })}</dd>
                     </div>
                     <div className="flex items-center justify-between gap-4 px-3 pb-2.5 sm:px-4 lg:px-6">
                       <dt className="text-muted">Unspent balance (award minus actual spent)</dt>
                       <dd className={cn("num font-semibold", explainVariance ? "text-warn" : "text-ink")}>
-                        {formatCurrency(spend.unspent)}{" "}
+                        {formatCurrency(spend.unspent, { cents: true })}{" "}
                         <span className="font-normal text-muted">
                           ({spend.unspentPercent.toFixed(1)}% of the award)
                         </span>

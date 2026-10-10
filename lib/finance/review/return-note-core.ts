@@ -76,7 +76,8 @@ export function buildConcerns(input: {
     if (issue.field === "budget" && issue.message.startsWith("Total")) {
       const { total } = budgetTotals(input.budget);
       const balance = balanceMessage(total, input.award);
-      if (!balance.balanced) detail = `Total ${formatCurrency(total)} vs award ${formatCurrency(input.award)}`;
+      if (!balance.balanced)
+        detail = `Total ${formatCurrency(total, { cents: true })} vs award ${formatCurrency(input.award, { cents: true })}`;
     }
     concerns.push({
       id,

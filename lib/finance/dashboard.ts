@@ -1,11 +1,7 @@
 import type { TimelineMark } from "@/components/ui/fiscal-year-timeline";
 import { formatDate } from "@/lib/dates";
-import { counted, formatCurrency } from "@/lib/format";
+import { counted } from "@/lib/format";
 import type { PeriodInfo } from "@/lib/finance/review/types";
-
-export function formatWholeDollars(value: number): string {
-  return formatCurrency(value, { cents: false });
-}
 
 export function cycleTimeline(
   fiscalYearId: string,

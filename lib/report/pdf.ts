@@ -158,8 +158,7 @@ class Writer {
       const wrapped = cells.map((cell, i) => this.wrap(cell, font, size, cols[i] - pad * 2));
       const height = Math.max(...wrapped.map((w) => w.length)) * lead + pad * 2;
       this.ensure(height);
-      if (fill)
-        this.page.drawRectangle({ x: MARGIN, y: this.y - height, width: total, height, color: HEAD_FILL });
+      if (fill) this.page.drawRectangle({ x: MARGIN, y: this.y - height, width: total, height, color: HEAD_FILL });
       let x = MARGIN;
       wrapped.forEach((lines, i) => {
         lines.forEach((line, n) => {
@@ -208,13 +207,18 @@ function budgetSection(w: Writer, input: ReportPdfInput) {
     right.push(true, true);
   }
   const rows = lines.map((line) => {
-    const base = [String(line.position), line.category, line.description || "No description", formatCurrency(line.amount)];
+    const base = [
+      String(line.position),
+      line.category,
+      line.description || "No description",
+      formatCurrency(line.amount, { cents: true }),
+    ];
     if (!spend.entered) return base;
     const variance = lineVariance(line);
     return [
       ...base,
-      line.actual === null || line.actual === undefined ? dash : formatCurrency(line.actual),
-      variance === null ? dash : formatCurrency(variance),
+      line.actual === null || line.actual === undefined ? dash : formatCurrency(line.actual, { cents: true }),
+      variance === null ? dash : formatCurrency(variance, { cents: true }),
     ];
   });
   const pad = (label: string, amount: string, extra: string[] = []) => {
@@ -223,15 +227,18 @@ function budgetSection(w: Writer, input: ReportPdfInput) {
     return cells;
   };
   w.table(headers, rows, widths, right, [
-    pad("Personal services (PS) subtotal", formatCurrency(totals.ps)),
-    pad("Other than personal services (OTPS) subtotal", formatCurrency(totals.otps)),
-    pad("Total", formatCurrency(totals.total), [formatCurrency(spend.actual), formatCurrency(spend.variance)]),
-    pad("Award", formatCurrency(input.awardAmount)),
+    pad("Personal services (PS) subtotal", formatCurrency(totals.ps, { cents: true })),
+    pad("Other than personal services (OTPS) subtotal", formatCurrency(totals.otps, { cents: true })),
+    pad("Total", formatCurrency(totals.total, { cents: true }), [
+      formatCurrency(spend.actual, { cents: true }),
+      formatCurrency(spend.variance, { cents: true }),
+    ]),
+    pad("Award", formatCurrency(input.awardAmount, { cents: true })),
   ]);
   w.paragraph(balanceMessage(totals.total, input.awardAmount).message, { bold: true });
   if (spend.entered) {
     w.paragraph(
-      `Unspent balance: ${formatCurrency(spend.unspent)} (${spend.unspentPercent.toFixed(1)}% of the award)`,
+      `Unspent balance: ${formatCurrency(spend.unspent, { cents: true })} (${spend.unspentPercent.toFixed(1)}% of the award)`,
     );
     const note = input.snapshot.answers[VARIANCE_NOTE_KEY];
     if (typeof note === "string" && note.trim() !== "") w.paragraph(`Variance explanation: ${note.trim()}`);
@@ -304,11 +311,14 @@ export async function buildReportPdf(input: ReportPdfInput): Promise<Uint8Array>
 
   w.heading("Attachments");
   if (input.snapshot.attachments.length === 0) w.paragraph("No files were attached.");
-  for (const file of input.snapshot.attachments) w.paragraph(`${file.filename} (${formatBytes(file.bytes)})`, { gap: 2 });
+  for (const file of input.snapshot.attachments)
+    w.paragraph(`${file.filename} (${formatBytes(file.bytes)})`, { gap: 2 });
 
   const pages = doc.getPages();
   pages.forEach((page, index) => {
-    const label = w.clean(`${input.referenceNo}  |  Revision ${input.revision}  |  Page ${index + 1} of ${pages.length}`);
+    const label = w.clean(
+      `${input.referenceNo}  |  Revision ${input.revision}  |  Page ${index + 1} of ${pages.length}`,
+    );
     page.drawText(label, { x: MARGIN, y: MARGIN - 20, size: 8, font: w.regular, color: MUTED });
   });
   return doc.save();
