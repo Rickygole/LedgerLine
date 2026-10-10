@@ -48,8 +48,11 @@ function AnswerValue({ question, answers }: { question: Question; answers: Answe
   return <span className="whitespace-pre-wrap break-words">{text}</span>;
 }
 
-function lowerFirst(label: string): string {
-  return /^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1);
+function spokenLabel(label: string): string {
+  return label
+    .split(" ")
+    .map((word) => (/^\(?[A-Z]{2,}\)?[.?]?$/.test(word) ? word : word.toLowerCase()))
+    .join(" ");
 }
 
 export function CheckAnswers({
@@ -164,7 +167,7 @@ export function CheckAnswers({
                       <AnswerValue question={question} answers={answers} />
                     </dd>
                     <dd>
-                      <ChangeLink step={section.key} target={`q-${question.key}`} label={lowerFirst(questionLabel(question.label))} onChange={onChange} />
+                      <ChangeLink step={section.key} target={`q-${question.key}`} label={spokenLabel(questionLabel(question.label))} onChange={onChange} />
                     </dd>
                   </div>
                 ))}
