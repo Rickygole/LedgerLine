@@ -28,7 +28,7 @@ const paragraphs = [
   "2. Describe your outreach work.",
 ];
 
-describe("[US-003] the AI switch covers form drafting", () => {
+describe("the AI switch covers form drafting", () => {
   beforeEach(() => callStructured.mockReset());
 
   it("never calls the model and drafts by rules when the switch is off", async () => {

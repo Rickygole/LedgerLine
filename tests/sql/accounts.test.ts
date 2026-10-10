@@ -69,7 +69,7 @@ afterAll(async () => {
 });
 
 describe("[US-038] password reset tokens", () => {
-  it("emails a link, stores only a hash, and sets the password once", async () => {
+  it("queues a reset link in the outbox, stores only a hash, and sets the password once", async () => {
     await inTx(app, async () => {
       await claims(app, priya);
       const token = await issueReset(app, maria);

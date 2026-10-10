@@ -47,7 +47,7 @@ afterAll(async () => {
   if (dir) await rm(dir, { recursive: true, force: true });
 });
 
-describe("[BR-012] orphan uploads are swept after 24 hours", () => {
+describe("orphan uploads are swept after 24 hours", () => {
   it("deletes old files with no attachment row and keeps referenced and recent ones", async () => {
     await put(kept, 48);
     await put(orphan, 48);

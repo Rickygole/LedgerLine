@@ -37,7 +37,7 @@ async function freshTemplate(): Promise<Buffer> {
   return Packer.toBuffer(doc);
 }
 
-describe("[US-003][US-005][US-007] Word import without a model", () => {
+describe("[US-005][US-007] Word import without a model", () => {
   it("reads headings, tables, choice lists and yes or no lines from a fresh file", async () => {
     const paragraphs = await readTemplate(await freshTemplate());
     const fields = parseWithRules(paragraphs);

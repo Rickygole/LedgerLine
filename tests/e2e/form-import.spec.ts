@@ -3,7 +3,7 @@ import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow, 
 import { authFile, PEOPLE } from "./support/app";
 import { ownerQuery } from "./support/db";
 
-test("[US-003][US-007] a Word file imported without a model keeps its headings, table and choices and is not labelled AI", async ({
+test("[US-007] a Word file imported without a model keeps its headings, table and choices and is not labelled AI", async ({
   browser,
 }) => {
   const cell = (text: string) =>
