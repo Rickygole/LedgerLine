@@ -7,6 +7,7 @@ import { defaultPeriodId } from "@/lib/finance/review/filters";
 import { monthlySubmissions, submissionShareByGroup } from "@/lib/finance/trends";
 import { ComparisonChart, MonthlyTrendChart } from "@/components/charts/trend-charts";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
+import { formatDate } from "@/lib/dates";
 import { PageHeader } from "@/components/ui/page-header";
 import { Select } from "@/components/ui/field";
 
@@ -95,7 +96,8 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <MonthlyTrendChart
           data={data.months}
-          description="Reports submitted in each month, split by whether they met the due date for their period."
+          periodLabel={period.label}
+          description={`Reports submitted in each month, split by whether they met the ${formatDate(period.dueOn)} due date.`}
           source={source}
         />
         <ComparisonChart

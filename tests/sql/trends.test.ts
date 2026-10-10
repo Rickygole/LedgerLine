@@ -1,7 +1,14 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Tx } from "@/lib/db";
-import { fillMonths, monthLabel, monthlySubmissions, sharePercent, submissionShareByGroup } from "@/lib/finance/trends";
+import {
+  fillMonths,
+  monthLabel,
+  monthlySubmissions,
+  partialMonthNote,
+  sharePercent,
+  submissionShareByGroup,
+} from "@/lib/finance/trends";
 import { appUrl, asUser, connect, ownerUrl, userId } from "./helpers";
 
 let owner: Client;
@@ -67,6 +74,23 @@ describe("[US-050] trend and comparison data follows the selected criteria", () 
       expect(JSON.stringify(youth)).not.toBe(JSON.stringify(all));
       expect(await monthlySubmissions(tx, { category: "Not a category", borough: "" })).toEqual([]);
     });
+  });
+
+  it("limits the monthly series to the selected reporting period and marks a month still in progress", async () => {
+    await asUser(app, daniel, async () => {
+      const year = await monthlySubmissions(tx, { category: "", borough: "", period: "FY26-YE" });
+      const expected = (
+        await owner.query(
+          "SELECT count(*)::int AS n FROM submission WHERE period_id = 'FY26-YE' AND submitted_at IS NOT NULL",
+        )
+      ).rows[0].n;
+      expect(year.reduce((sum, p) => sum + p.total, 0)).toBe(expected);
+      const mid = await monthlySubmissions(tx, { category: "", borough: "", period: "FY26-MY" });
+      expect(mid.map((p) => p.month)).not.toEqual(year.map((p) => p.month));
+    });
+    expect(partialMonthNote("2026-10", "2026-10-10")).toBe("Oct 1 to 10");
+    expect(partialMonthNote("2026-09", "2026-10-10")).toBeUndefined();
+    expect(partialMonthNote("2026-10", "2026-10-31")).toBeUndefined();
   });
 
   it("compares groups for a reporting period and changes with the period and the filters", async () => {

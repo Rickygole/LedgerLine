@@ -122,7 +122,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
 
       <section
         aria-label="Key figures"
-        className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line-soft xl:grid-cols-4"
+        className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line-soft xl:grid-cols-5"
       >
         <Stat
           className="rounded-none border-0"
@@ -136,12 +136,15 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           className="rounded-none border-0"
           label="Waiting for review"
           value={counts.submitted}
-          sub={
-            next?.submittedAt
-              ? `Oldest ${formatShortDate(next.submittedAt)} · ${counts.in_review} already in review`
-              : `${counts.in_review} already in review`
-          }
+          sub={next?.submittedAt ? `Oldest submitted ${formatShortDate(next.submittedAt)}` : "Submitted, review not started"}
           action={{ href: list({ bucket: "submitted" }), label: "Open review queue" }}
+        />
+        <Stat
+          className="rounded-none border-0"
+          label="In review"
+          value={counts.in_review}
+          sub="Review started, no decision yet"
+          action={{ href: list({ bucket: "in_review" }), label: "Continue reviews" }}
         />
         <Stat
           className="rounded-none border-0"
@@ -151,7 +154,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           action={{ href: list({ bucket: "returned" }), label: "See requests" }}
         />
         <Stat
-          className="rounded-none border-0"
+          className="col-span-2 rounded-none border-0 xl:col-span-1"
           label="Accepted"
           value={
             <>
