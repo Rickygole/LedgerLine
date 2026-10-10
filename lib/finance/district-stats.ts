@@ -92,11 +92,16 @@ export function districtStats(rows: Row[], mode: MapMode, members: Map<number, s
   };
 }
 
-export function binFor(missing: number): 0 | 1 | 2 | 3 | 4 {
-  if (missing <= 0) return 0;
-  if (missing <= 2) return 1;
-  if (missing <= 4) return 2;
-  if (missing <= 7) return 3;
+export function missingShare(missing: number, due: number): number {
+  return due <= 0 ? 0 : Math.round((missing / due) * 100);
+}
+
+export function binFor(missing: number, due: number): 0 | 1 | 2 | 3 | 4 {
+  if (missing <= 0 || due <= 0) return 0;
+  const share = (missing / due) * 100;
+  if (share < 10) return 1;
+  if (share < 25) return 2;
+  if (share < 50) return 3;
   return 4;
 }
 

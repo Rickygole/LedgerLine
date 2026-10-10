@@ -37,7 +37,7 @@ test("the map has a table view, borough chips and an organization location mode"
 
   await page.getByLabel("Show by").selectOption("location");
   await expect(page).toHaveURL(/map=location/);
-  await expect(page.getByText("Each district shows reports from organizations located there")).toBeVisible();
+  await expect(page.getByText("Reports from organizations located in each district")).toBeVisible();
   await page.getByRole("group", { name: /Map of the 51/ }).getByRole("link", { name: /^District 8,/ }).focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/district=8&by=location/);

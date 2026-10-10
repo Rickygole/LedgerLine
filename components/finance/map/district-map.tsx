@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import { binFor, rankDistricts, type DistrictStats, type MapMode, type Tally } from "@/lib/finance/district-stats";
+import { binFor, missingShare, rankDistricts, type DistrictStats, type MapMode, type Tally } from "@/lib/finance/district-stats";
 import { BOROUGH_SHAPES, COUNCIL_DISTRICT_SHAPES, GEO_VIEWBOX } from "@/lib/geo";
 import { districtInBorough, GEO_BOROUGHS } from "@/lib/geo/boroughs";
 import { AutoSelect } from "./auto-select";
@@ -36,13 +36,14 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
     return {
       district: shape.district,
       path: shape.path,
-      bin: binFor(s.missing),
+      bin: binFor(s.missing, s.due),
       href: dim ? null : districtHref(periodId, shape.district, mode, s.missing),
       dim,
       member: s.member,
       boroughs: s.boroughs,
       due: s.due,
       missing: s.missing,
+      share: missingShare(s.missing, s.due),
       waiting: s.waiting,
       label: `District ${shape.district}, ${member}, ${s.due} ${reportsWord(s.due)} due, ${s.missing} missing`,
     };
@@ -61,8 +62,8 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
         </h2>
         <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">
           {mode === "sponsor"
-            ? "Each district shows reports funded by its Council Member that are past due with nothing submitted."
-            : "Each district shows reports from organizations located there that are past due with nothing submitted."}
+            ? "Reports funded by each Council Member, past due with nothing submitted."
+            : "Reports from organizations located in each district, past due with nothing submitted."}
         </p>
       </div>
       <div className="space-y-4 px-5 py-5 sm:px-6">
@@ -108,15 +109,12 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
           districts={districts}
           outlines={BOROUGH_SHAPES.map((b) => b.path)}
           initial={top}
-          caption={`Map of the 51 New York City Council districts, shaded by missing reports${borough ? `, ${borough} highlighted` : ""}. Each district is a link to its reports.`}
+          caption={`Map of the 51 New York City Council districts, shaded by the share of reports missing${borough ? `, ${borough} highlighted` : ""}. Each district is a link to its reports.`}
         />
 
         <div className="space-y-1 text-[13px] leading-5 text-muted">
           {mode === "sponsor" ? (
-            <p>
-              {multiSponsor ? "Awards with more than one sponsor count in each sponsoring district. " : ""}
-              Speaker&apos;s allocations and citywide initiatives are not tied to one district and are counted separately.
-            </p>
+            multiSponsor ? <p>Awards with more than one sponsor count in each sponsoring district.</p> : null
           ) : stats.noDistrict.due > 0 ? (
             <p>
               No district on file: <span className="num">{stats.noDistrict.missing}</span> missing of <span className="num">{stats.noDistrict.due}</span> {reportsWord(stats.noDistrict.due)}.
@@ -185,37 +183,38 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
   );
 }
 
-function SideTile({ title, tally, href }: { title: string; tally: Tally; href: string }) {
+function OffMapLink({ label, tally, href }: { label: string; tally: Tally; href: string }) {
+  const text = (
+    <>
+      <span className="num">{tally.missing}</span> missing of <span className="num">{tally.due}</span>
+    </>
+  );
   return (
-    <div className="rounded border border-line px-4 py-3">
-      <p className="text-sm font-medium text-ink-2">{title}</p>
-      <p className="text-xl font-extrabold leading-7 text-ink">
-        <span className="num">{tally.missing}</span> missing
-      </p>
-      <p className="text-sm text-muted">
-        of <span className="num">{tally.due}</span> {reportsWord(tally.due)}
-      </p>
+    <span className="whitespace-nowrap">
+      {label},{" "}
       {tally.missing > 0 ? (
-        <Link href={href} className="mt-1 inline-block text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
-          View<span className="sr-only"> missing {title.toLowerCase()} reports</span>
+        <Link href={href} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+          {text}
         </Link>
-      ) : null}
-    </div>
+      ) : (
+        text
+      )}
+    </span>
   );
 }
 
 export function DistrictRanking({ stats, borough, periodId }: Common) {
-  const ranked = rankDistricts(stats.districts, borough);
+  const ranked = rankDistricts(stats.districts, borough, 8);
   const mode = stats.mode;
   const missingHref = (funding: string) => `/finance/submissions?${new URLSearchParams({ period: periodId, funding, bucket: "missing" }).toString()}`;
   const allHref = dashHref({ period: periodId, map: mode === "sponsor" ? "" : mode, borough, table: "1", sort: "missing" }, "#district-table");
   return (
-    <section aria-labelledby="rank-title" className="flex min-w-0 flex-col rounded border border-line bg-white lg:col-span-5">
+    <section aria-labelledby="rank-title" className="min-w-0 self-start rounded border border-line bg-white lg:col-span-5">
       <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
         <h2 id="rank-title" className="text-xl font-bold leading-7 text-ink">
           Districts with the most missing reports
         </h2>
-        <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{borough ? `${borough} only. ` : ""}Select a district to see its organizations and send reminders.</p>
+        {borough ? <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{borough} only</p> : null}
       </div>
       {ranked.length === 0 ? (
         <p className="px-6 py-8 text-[15px] text-muted">No reports were due in {borough ? `${borough} districts` : "any district"} for this period.</p>
@@ -227,7 +226,7 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
                 <Link href={districtHref(periodId, d.district, mode, d.missing)} className="text-[17px] font-bold leading-6 text-link underline underline-offset-2 hover:text-link-hover">
                   District {d.district}
                 </Link>
-                <p className="truncate text-[13px] leading-5 text-muted">
+                <p className="text-[13px] leading-5 text-muted">
                   {d.member ?? "No Council Member on file"} · {d.boroughs}
                 </p>
               </div>
@@ -241,14 +240,13 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
           ))}
         </ol>
       )}
-      <div className="mt-auto space-y-4 px-5 py-5 sm:px-6">
+      <div className="space-y-3 border-t border-line-soft px-5 py-4 text-[15px] leading-[22px] sm:px-6">
         {mode === "sponsor" ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <SideTile title="Speaker's allocations" tally={stats.speaker} href={missingHref("speaker")} />
-            <SideTile title="Citywide initiatives" tally={stats.citywide} href={missingHref("citywide")} />
-          </div>
+          <p className="text-ink-2">
+            Not shown on the map: <OffMapLink label="Citywide initiatives" tally={stats.citywide} href={missingHref("citywide")} /> · <OffMapLink label="Speaker's allocations" tally={stats.speaker} href={missingHref("speaker")} />
+          </p>
         ) : null}
-        <Link href={allHref} scroll={false} className="inline-block text-[15px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+        <Link href={allHref} scroll={false} className="inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover">
           See all 51 districts
         </Link>
       </div>
