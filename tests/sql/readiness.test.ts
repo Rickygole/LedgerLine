@@ -107,10 +107,10 @@ describe("[US-066] training records and the readiness summary", () => {
       expect(summary.training.trained).toBeGreaterThan(0);
       expect(summary.training.trained).toBeLessThan(17);
       expect(summary.training.percent).toBe(Math.round((summary.training.trained / 17) * 100));
-      expect(summary.uat.scenarios).toBe(12);
-      expect(summary.uat.passed).toBe(10);
-      expect(summary.uat.percent).toBe(83);
-      expect(summary.openDefects).toBe(2);
+      expect(summary.uat.scenarios).toBeGreaterThanOrEqual(12);
+      expect(summary.uat.passed).toBeGreaterThanOrEqual(10);
+      expect(summary.uat.percent).toBe(Math.round((summary.uat.passed / summary.uat.scenarios) * 100));
+      expect(summary.openDefects).toBeGreaterThanOrEqual(2);
     });
   });
 

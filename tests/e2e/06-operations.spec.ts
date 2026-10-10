@@ -64,16 +64,16 @@ test("[US-050] the trend and comparison charts draw from the reports and change 
   const all = await totalOf(page);
   expect(all).toBeGreaterThan(500);
 
-  await page.getByLabel("Category").selectOption("Youth Services");
+  await page.getByLabel("Category", { exact: true }).selectOption("Youth Services");
   await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/category=Youth\+Services/);
   await expect(page.locator("svg.recharts-surface")).toHaveCount(2);
   const youth = await totalOf(page);
   expect(youth).toBeGreaterThan(0);
   expect(youth).toBeLessThan(all);
-  await expect(page.getByText("Youth Services").first()).toBeVisible();
+  await expect(page.getByLabel("Category", { exact: true })).toHaveValue("Youth Services");
 
-  await page.getByLabel("Borough").selectOption("Bronx");
+  await page.getByLabel("Borough", { exact: true }).selectOption("Bronx");
   await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/borough=Bronx/);
   expect(await totalOf(page)).toBeLessThan(youth);
@@ -115,6 +115,7 @@ test("[US-061][US-063][BR-029] users send help requests, see only their own, and
 
   await maria.page.goto("/portal/help");
   await maria.page.getByRole("link", { name: subject }).click();
+  await expect(maria.page).toHaveURL(/request=/);
   await expect(maria.page.getByText("The grid appears under Budget")).toBeVisible();
   await maria.context.close();
 });
@@ -134,15 +135,16 @@ test("an administrator reaches every operations area from one Administration ent
 test("[US-058][BR-025] an administrator records a breach, the Council's contacts are queued a notice, and remediation is tracked", async ({ browser }) => {
   const { context, page } = await as(browser, "priya");
   await page.goto("/finance/incidents");
+  const marker = `shared folder ${Date.now()}`;
   const detected = new Date(Date.now() - 3 * 3_600_000);
   const local = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/New_York", dateStyle: "short", timeStyle: "short" }).format(detected).replace(" ", "T");
   await page.getByLabel("Detected at (Eastern time)").fill(local);
   await page.getByLabel("Severity").selectOption("high");
-  await page.getByLabel("What happened").fill("A support export was left in a shared folder for about an hour.");
+  await page.getByLabel("What happened").fill(`A support export was left in a ${marker} for about an hour.`);
   await page.getByLabel("Data affected").fill("Organization names and contact emails for 40 organizations.");
   await page.getByRole("button", { name: "Record and notify" }).click();
   await expect(page.getByRole("status")).toContainText(/INC-\d{4} recorded\. 3 designated contacts were notified/);
-  const mail = await ownerQuery<{ to_email: string }>("SELECT to_email FROM outbox WHERE template = 'security_incident' AND body_text LIKE '%shared folder%' ORDER BY to_email");
+  const mail = await ownerQuery<{ to_email: string }>("SELECT to_email FROM outbox WHERE template = 'security_incident' AND body_text LIKE $1 ORDER BY to_email", [`%${marker}%`]);
   expect(mail).toHaveLength(3);
 
   await page.reload();
@@ -157,7 +159,7 @@ test("[US-058][BR-025] an administrator records a breach, the Council's contacts
   await expect(page.getByRole("status")).toContainText("Remediation report saved");
   await page.reload();
   await expect(page.getByText("Remediation in progress").first()).toBeVisible();
-  await page.getByLabel("Completed on").fill(new Date().toISOString().slice(0, 10));
+  await page.getByLabel("Completed on").fill(new Intl.DateTimeFormat("sv-SE", { timeZone: "America/New_York" }).format(new Date()));
   await page.getByRole("button", { name: "Save updated report" }).click();
   await expect(page.getByRole("status")).toContainText("marked complete");
   await page.reload();
@@ -183,7 +185,7 @@ test("[US-064][BR-028] the annual review is kept per fiscal year and appears in 
   await page.getByRole("button", { name: "Tick Users and permissions" }).click();
   await expect(page.getByRole("button", { name: "Untick Users and permissions" })).toBeVisible();
   await page.getByRole("button", { name: "Sign off review" }).click();
-  await expect(page.getByRole("alert")).toContainText("Tick every checklist item");
+  await expect(page.locator('p[role="alert"]')).toContainText("Tick every checklist item");
   await page.goto("/finance/rollover?from=FY26");
   await expect(page.getByRole("heading", { name: "FY26 structure review" })).toBeVisible();
   await expect(page.getByText(/Signed off/).first()).toBeVisible();
@@ -198,7 +200,7 @@ test("[US-065][US-066] readiness shows the share of Finance users trained and th
   await expect(page.getByText(/Test scenarios passing: 83%/)).toBeVisible();
   const before = Number((await page.getByText(/Finance users trained: \d+%/).textContent())!.match(/(\d+)%/)![1]);
   await page.getByLabel("Scenario").fill("Analyst prints the dashboard");
-  await page.getByLabel("Tester", { exact: true }).fill("Grace Chen");
+  await page.locator("#tester").fill("Grace Chen");
   await page.getByLabel("Tester role or team").fill("Policy Analyst, Council Finance");
   await page.getByLabel("Result").selectOption("passed");
   await page.getByRole("button", { name: "Record session" }).click();
