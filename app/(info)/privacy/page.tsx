@@ -74,6 +74,9 @@ export default function PrivacyPage() {
         <li>
           <strong>ll_nav</strong> is set only for Finance staff who collapse the side menu, and remembers that choice for one year.
         </li>
+        <li>
+          <strong>ll_nav_more</strong> is set only for Finance staff who open or close the More section of the side menu, and remembers that choice for one year.
+        </li>
       </ul>
       <p>While you fill in a report, your browser also stores which section you were last on so the report can open there next time. This stays on your device.</p>
       <p>There are no analytics or advertising cookies.</p>

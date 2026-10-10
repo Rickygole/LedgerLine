@@ -3,7 +3,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ComponentProps } from "reac
 import { cn } from "@/lib/cn";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
-type Size = "sm" | "md";
+type Size = "sm" | "md" | "lg";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded font-bold disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 whitespace-nowrap";
@@ -11,13 +11,14 @@ const base =
 const variants: Record<Variant, string> = {
   primary: "bg-action text-white hover:bg-action-hover active:bg-action-active",
   secondary: "bg-white text-action shadow-[inset_0_0_0_2px_var(--color-action)] hover:text-action-hover hover:shadow-[inset_0_0_0_2px_var(--color-action-hover)] active:text-action-active",
-  ghost: "text-link underline underline-offset-2 hover:text-link-hover",
+  ghost: "font-semibold text-link underline underline-offset-2 hover:text-link-hover hover:decoration-2",
   danger: "bg-bad text-white hover:bg-[#912018] active:bg-[#6f1811]",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-8 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
+  sm: "h-9 px-3 text-sm",
+  md: "h-11 px-5 text-base",
+  lg: "h-[52px] px-6 text-lg",
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", className?: string) {

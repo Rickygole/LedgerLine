@@ -14,23 +14,24 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (user) redirect(safeNext(next, homeFor(user.role)));
   return (
     <AuthFrame>
-      <h1 className="text-2xl font-bold leading-8 text-ink">Sign in</h1>
-      <p className="mt-2 text-base leading-6 text-ink">Use the work email and password for your LedgerLine account.</p>
+      <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">Sign in to LedgerLine</h1>
+      <p className="mt-2 text-lg leading-7 text-ink-2">Use your work email and password.</p>
       {params.reset === "1" ? (
-        <p role="status" className="mt-5 border-l-4 border-ok bg-ok-bg px-4 py-3 text-sm font-semibold text-ink">
+        <p role="status" className="mt-6 border-l-4 border-ok bg-ok-bg px-4 py-3 text-base font-semibold text-ink">
           Your password was saved. Sign in with it below.
         </p>
       ) : null}
       <LoginForm next={next} />
-      <div className="mt-8 border-t border-line pt-5 text-sm leading-6 text-ink">
-        <p>
-          Need help signing in? Contact your LedgerLine administrator or Council Finance. Support hours are on the{" "}
-          <Link href="/help" className="text-link underline underline-offset-2 hover:text-link-hover">
-            Help
-          </Link>{" "}
-          page.
+      <div className="mt-8 border-t border-line-soft pt-6 text-base leading-6 text-ink">
+        <p>Need an account? Your organization&apos;s primary contact or Council Finance can add you.</p>
+        <p className="mt-3">
+          Trouble signing in? See{" "}
+          <Link href="/help#sign-in" className="text-link underline underline-offset-2 hover:text-link-hover">
+            Help and contact
+          </Link>
+          . Support is open Monday to Friday, 9 AM to 5 PM ET.
         </p>
-        <p className="mt-3 text-muted">This system is for authorized users. Sign-in and account activity are recorded.</p>
+        <p className="mt-4 text-sm leading-5 text-muted">This system is for authorized users. Sign-in and account activity are recorded.</p>
       </div>
     </AuthFrame>
   );

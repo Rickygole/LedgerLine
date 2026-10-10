@@ -5,6 +5,6 @@ export const dynamic = "force-dynamic";
 
 export default async function GetHelp() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/get-help");
   redirect(user.role === "cbo_submitter" ? "/portal/help" : "/finance/help");
 }

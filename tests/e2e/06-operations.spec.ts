@@ -87,7 +87,9 @@ test("[US-061][US-063][BR-029] users send help requests, see only their own, and
   const subject = `Cannot find the budget grid ${Date.now()}`;
   const maria = await as(browser, "maria");
   await maria.page.goto("/portal");
-  await maria.page.getByRole("contentinfo").getByRole("link", { name: "Get help", exact: true }).click();
+  await maria.page.getByRole("contentinfo").getByRole("link", { name: "Help and contact", exact: true }).click();
+  await expect(maria.page).toHaveURL(/\/help$/);
+  await maria.page.getByRole("link", { name: "Send a help request" }).click();
   await expect(maria.page).toHaveURL(/\/portal\/help$/);
   await maria.page.getByLabel("What do you need help with").selectOption("report");
   await maria.page.getByLabel("Subject").fill(subject);
@@ -126,7 +128,9 @@ test("[US-061][US-063][BR-029] users send help requests, see only their own, and
 test("an administrator reaches every operations area from one Administration entry", async ({ browser }) => {
   const { context, page } = await as(browser, "priya");
   await page.goto("/finance");
-  await page.getByRole("navigation", { name: "Main" }).first().getByRole("link", { name: "Administration" }).click();
+  const main = page.getByRole("navigation", { name: "Main" }).first();
+  if (!(await main.getByRole("link", { name: "Administration" }).isVisible())) await main.getByText(/^More/).click();
+  await main.getByRole("link", { name: "Administration" }).click();
   await expect(page).toHaveURL(/\/finance\/admin$/);
   for (const name of ["Support queue", "Security incidents", "Annual structure review", "Go-live readiness", "Export all data", "Platform and status"]) {
     await expect(page.getByRole("link", { name })).toBeVisible();
