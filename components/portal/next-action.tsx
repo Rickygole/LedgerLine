@@ -18,7 +18,7 @@ export function NextAction({ obligation: o, href, progress, today }: { obligatio
   const percent = progress ? Math.round((progress.complete / progress.total) * 100) : 0;
   const open = o.status === null || o.status === "draft" || o.status === "returned";
   return (
-    <section aria-labelledby="next-action-title" className={cn("rounded border border-l-4 border-line bg-white p-5 sm:flex sm:items-end sm:justify-between sm:gap-8 sm:p-6", tone)}>
+    <section aria-labelledby="next-action-title" className={cn("rounded border border-l-4 border-line bg-white p-5 sm:flex sm:items-end sm:justify-between sm:gap-8 sm:px-6", tone)}>
       <div className="min-w-0">
         <p className="eyebrow">Do this next</p>
         <h2 id="next-action-title" className="mt-1 text-xl font-bold leading-7 text-ink">
@@ -35,11 +35,11 @@ export function NextAction({ obligation: o, href, progress, today }: { obligatio
           ) : null}
         </p>
         {progress ? (
-          <div className="mt-4 max-w-[360px]">
-            <p className="num text-sm font-semibold text-ink-2">
+          <div className="mt-3 flex max-w-[360px] flex-wrap items-center gap-x-3 gap-y-1.5">
+            <p className="num whitespace-nowrap text-sm font-semibold text-ink-2">
               {progress.complete} of {progress.total} sections complete
             </p>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-sm bg-harbor-100" aria-hidden="true">
+            <div className="h-2 min-w-[120px] flex-1 overflow-hidden rounded-sm bg-harbor-100" aria-hidden="true">
               <div className="h-full w-full origin-left bg-ok" style={{ transform: `scaleX(${percent / 100})` }} />
             </div>
           </div>

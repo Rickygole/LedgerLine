@@ -31,11 +31,11 @@ function numberWord(n: number, capital = false): string {
 
 function dueSentence(rows: Obligation[], one: string, many: string, today: string): string {
   const dates = new Set(rows.map((o) => o.dueOn));
-  const when = dates.size === 1 ? `due ${formatShortDate(rows[0].dueOn, today)}` : "past due";
+  const when = dates.size === 1 ? `due ${formatShortDate(rows[0].dueOn, today).replace(/ /g, "\u00a0")}` : "past due";
   if (rows.length === 1) return `${rows[0].initiativeName} ${rows[0].periodLabel} ${one} ${when}.`;
   const periods = new Set(rows.map((o) => o.periodLabel));
   const what = periods.size === 1 ? `${rows[0].periodLabel} reports` : "reports";
-  return `${numberWord(rows.length, true)} ${what} ${many} ${when}.`;
+  return `${numberWord(rows.length, true)} ${what} ${dates.size === 1 ? many : "are"} ${when}.`;
 }
 
 function pickNext(obligations: Obligation[]): Obligation | null {
