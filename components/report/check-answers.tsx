@@ -48,6 +48,10 @@ function AnswerValue({ question, answers }: { question: Question; answers: Answe
   return <span className="whitespace-pre-wrap break-words">{text}</span>;
 }
 
+function lowerFirst(label: string): string {
+  return /^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1);
+}
+
 export function CheckAnswers({
   definition,
   answers,
@@ -75,6 +79,7 @@ export function CheckAnswers({
             {section.title}
           </h3>
           {section.kind === "budget" ? (
+            <>
             <dl className="text-[15px] leading-[22px]">
               <div className={ROW}>
                 <dt className="font-semibold text-ink">Budget total</dt>
@@ -114,6 +119,7 @@ export function CheckAnswers({
                   </dd>
                 </div>
               ) : null}
+            </dl>
               {lines.length > 0 ? (
                 <details className="group border-b border-line-soft py-3">
                   <summary className="cursor-pointer text-[15px] font-semibold text-link underline underline-offset-2">
@@ -146,7 +152,7 @@ export function CheckAnswers({
                   </div>
                 </details>
               ) : null}
-            </dl>
+            </>
           ) : (
             <dl className="text-[15px] leading-[22px]">
               {section.questions
@@ -158,7 +164,7 @@ export function CheckAnswers({
                       <AnswerValue question={question} answers={answers} />
                     </dd>
                     <dd>
-                      <ChangeLink step={section.key} target={`q-${question.key}`} label={questionLabel(question.label).toLowerCase()} onChange={onChange} />
+                      <ChangeLink step={section.key} target={`q-${question.key}`} label={lowerFirst(questionLabel(question.label))} onChange={onChange} />
                     </dd>
                   </div>
                 ))}
