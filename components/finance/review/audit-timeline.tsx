@@ -44,7 +44,14 @@ export function AuditTimeline({ events, labels, compact = false }: { events: Aud
             ) : null}
             {key ? (
               <p className="mt-1 text-sm text-muted">
-                {labels[key] ?? key}: <del className="text-muted">{String(event.before?.value ?? "blank")}</del> <span className="font-semibold text-ink">{String(event.after?.value ?? "blank")}</span>
+                {labels[key] ?? key}: <del className="text-muted">
+                  <span className="sr-only">from </span>
+                  {String(event.before?.value ?? "blank")}
+                </del>{" "}
+                <span className="font-semibold text-ink">
+                  <span className="sr-only">to </span>
+                  {String(event.after?.value ?? "blank")}
+                </span>
               </p>
             ) : null}
             {event.note ? <p className={cn("mt-2 whitespace-pre-wrap rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink", compact && "line-clamp-4")}>{event.note}</p> : null}

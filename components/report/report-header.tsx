@@ -16,7 +16,7 @@ export function ReportHeader({ header, daysLate, state, actions }: { header: Hea
       <PageHeader
         eyebrow={
           <>
-            {header.periodLabel} report <span aria-hidden="true">·</span>
+            {header.periodLabel} report<span aria-hidden="true"> ·</span>
             <span className="sr-only">,</span> {formatDate(header.startsOn)} to {formatDate(header.endsOn)}
           </>
         }

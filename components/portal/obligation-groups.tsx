@@ -43,7 +43,8 @@ function Rows({ rows }: { rows: Obligation[] }) {
               <div className="min-w-0">
                 <p className="text-base font-semibold text-ink">{o.initiativeName}</p>
                 <p className="text-sm text-muted">
-                  {o.periodLabel} <span aria-hidden="true">·</span>
+                  {o.periodLabel}
+                  <span aria-hidden="true"> ·</span>
                   <span className="sr-only">,</span> <span className="font-mono">
                     {o.initiativeCode}
                   </span>
