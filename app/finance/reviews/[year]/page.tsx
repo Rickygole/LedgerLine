@@ -4,7 +4,14 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
 import { systemToday } from "@/lib/ops/today";
-import { CHECKLIST, DECISION_AREAS, loadDecisions, loadParticipants, reviewForYear, signOffBlockers } from "@/lib/ops/reviews";
+import {
+  CHECKLIST,
+  DECISION_AREAS,
+  loadDecisions,
+  loadParticipants,
+  reviewForYear,
+  signOffBlockers,
+} from "@/lib/ops/reviews";
 import { ActionForm } from "@/components/ops/action-form";
 import { addReviewDecision, addReviewParticipant, setReviewCheck, signOffReview } from "../actions";
 import { PageHeader } from "@/components/ui/page-header";
@@ -24,7 +31,11 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
   const data = await withClaims(admin.id, async (tx) => {
     const review = await reviewForYear(tx, year);
     if (!review) return null;
-    return { review, participants: await loadParticipants(tx, review.id), decisions: await loadDecisions(tx, review.id) };
+    return {
+      review,
+      participants: await loadParticipants(tx, review.id),
+      decisions: await loadDecisions(tx, review.id),
+    };
   });
   if (!data) notFound();
   const { review, participants, decisions } = data;
@@ -44,15 +55,27 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
       <PageHeader
         title={`${year} structure review`}
         description={`Review held ${formatDate(review.review_date)}.`}
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Annual structure review", href: "/finance/reviews" }, { label: year }]}
-        meta={signed ? <Badge tone="ok">Signed off {formatDate(review.signed_off_on)} by {review.signed_off_by_name}</Badge> : <Badge tone="warn">In progress</Badge>}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          { label: "Annual structure review", href: "/finance/reviews" },
+          { label: year },
+        ]}
+        meta={
+          signed ? (
+            <Badge tone="ok">
+              Signed off {formatDate(review.signed_off_on)} by {review.signed_off_by_name}
+            </Badge>
+          ) : (
+            <Badge tone="warn">In progress</Badge>
+          )
+        }
         actions={
           <ButtonLink href={`/finance/rollover?from=${year}`} variant="secondary">
             Open annual rollover
           </ButtonLink>
         }
       />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Checklist" />
           <CardBody>
@@ -64,7 +87,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
                     <p className="text-sm text-muted">{item.detail}</p>
                   </div>
                   {signed ? (
-                    <Badge tone={checks[item.key] ? "ok" : "neutral"}>{checks[item.key] ? "Reviewed" : "Not reviewed"}</Badge>
+                    <Badge tone={checks[item.key] ? "ok" : "neutral"}>
+                      {checks[item.key] ? "Reviewed" : "Not reviewed"}
+                    </Badge>
                   ) : (
                     <ActionForm
                       action={setReviewCheck}
@@ -88,13 +113,20 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
             <ul className="divide-y divide-line border-y border-line">
               {participants.map((p) => (
                 <li key={p.id} className="py-2 text-sm">
-                  <span className="font-semibold">{p.full_name}</span> <span className="text-muted">{p.affiliation}</span>
+                  <span className="font-semibold">{p.full_name}</span>{" "}
+                  <span className="text-muted">{p.affiliation}</span>
                 </li>
               ))}
             </ul>
             {!signed ? (
-              <ActionForm action={addReviewParticipant} hidden={{ reviewId: review.id, year }} submitLabel="Add participant" pendingLabel="Adding" variant="secondary">
-                <div className="grid gap-3 sm:grid-cols-2">
+              <ActionForm
+                action={addReviewParticipant}
+                hidden={{ reviewId: review.id, year }}
+                submitLabel="Add participant"
+                pendingLabel="Adding"
+                variant="secondary"
+              >
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="name">Name</Label>
                     <Input id="name" aria-required="true" name="name" maxLength={120} />
@@ -110,7 +142,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
         </Card>
       </div>
       <Card className="mt-6">
-        <CardHeader title="Decisions" description="Changes agreed for the next fiscal year. Record No change when an area stays as it is." />
+        <CardHeader
+          title="Decisions"
+          description="Changes agreed for the next fiscal year. Record No change when an area stays as it is."
+        />
         <CardBody className="space-y-4">
           {decisions.length === 0 ? <p className="text-sm text-muted">No decisions recorded.</p> : null}
           <ul className="divide-y divide-line border-y border-line">
@@ -122,8 +157,14 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
             ))}
           </ul>
           {!signed ? (
-            <ActionForm action={addReviewDecision} hidden={{ reviewId: review.id, year }} submitLabel="Record decision" pendingLabel="Recording" variant="secondary">
-              <div className="grid gap-3 sm:grid-cols-[14rem_minmax(0,1fr)]">
+            <ActionForm
+              action={addReviewDecision}
+              hidden={{ reviewId: review.id, year }}
+              submitLabel="Record decision"
+              pendingLabel="Recording"
+              variant="secondary"
+            >
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[14rem_minmax(0,1fr)]">
                 <div>
                   <Label htmlFor="area">Area</Label>
                   <Select id="area" aria-required="true" name="area" defaultValue="">
@@ -148,7 +189,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
       </Card>
       {!signed ? (
         <Card className="mt-6">
-          <CardHeader title="Sign off" description="A Finance administrator signs off once the checklist is complete, participants are recorded and decisions are made. A signed review cannot be changed." />
+          <CardHeader
+            title="Sign off"
+            description="A Finance administrator signs off once the checklist is complete, participants are recorded and decisions are made. A signed review cannot be changed."
+          />
           <CardBody>
             {blockers.length > 0 ? (
               <ul className="mb-4 list-disc pl-5 text-sm text-muted">
@@ -157,11 +201,15 @@ export default async function ReviewPage({ params }: { params: Promise<{ year: s
                 ))}
               </ul>
             ) : null}
-            <ActionForm action={signOffReview} hidden={{ reviewId: review.id, year }} submitLabel="Sign off review" pendingLabel="Signing off" resetOnSuccess={false}>
+            <ActionForm
+              action={signOffReview}
+              hidden={{ reviewId: review.id, year }}
+              submitLabel="Sign off review"
+              pendingLabel="Signing off"
+              resetOnSuccess={false}
+            >
               <div className="max-w-xs">
-                <Label htmlFor="signedOn">
-                  Sign-off date
-                </Label>
+                <Label htmlFor="signedOn">Sign-off date</Label>
                 <Input id="signedOn" aria-required="true" name="signedOn" type="date" defaultValue={systemToday()} />
               </div>
             </ActionForm>

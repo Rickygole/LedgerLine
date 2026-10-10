@@ -1,6 +1,6 @@
 import type { Tx } from "@/lib/db";
 
-export type PlatformFacts = {
+type PlatformFacts = {
   revisions: number;
   auditEvents: number;
   firstAudit: string | null;
@@ -34,20 +34,22 @@ export async function platformFacts(tx: Tx): Promise<PlatformFacts> {
             (SELECT count(*)::int FROM organization) AS orgs,
             (SELECT count(*)::int FROM app_user WHERE can_sign_in AND active) AS sign_in,
             (SELECT count(*)::int FROM initiative) AS initiatives,
-            (SELECT count(*)::int FROM assignment) AS assignments`
+            (SELECT count(*)::int FROM assignment) AS assignments`,
   );
   const roles = await tx.query<{ role: string; n: number }>(
-    "SELECT role, count(*)::int AS n FROM app_user WHERE active AND email <> 'system.scheduler@ledgerline.example' GROUP BY role ORDER BY CASE role WHEN 'cbo_submitter' THEN 4 WHEN 'finance_viewer' THEN 1 WHEN 'finance_analyst' THEN 2 ELSE 3 END"
+    "SELECT role, count(*)::int AS n FROM app_user WHERE active AND email <> 'system.scheduler@ledgerline.example' GROUP BY role ORDER BY CASE role WHEN 'cbo_submitter' THEN 4 WHEN 'finance_viewer' THEN 1 WHEN 'finance_analyst' THEN 2 ELSE 3 END",
   );
   const tables = await tx.one<{ protected: number; total: number }>(
     `SELECT count(*) FILTER (WHERE c.relrowsecurity)::int AS protected, count(*)::int AS total
      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-     WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname <> 'schema_migration'`
+     WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname <> 'schema_migration'`,
   );
-  const policies = await tx.one<{ n: number }>("SELECT count(*)::int AS n FROM pg_policies WHERE schemaname = 'public'");
+  const policies = await tx.one<{ n: number }>(
+    "SELECT count(*)::int AS n FROM pg_policies WHERE schemaname = 'public'",
+  );
   const triggers = await tx.one<{ n: number }>(
     `SELECT count(*)::int AS n FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
-     WHERE NOT t.tgisinternal AND c.relname IN ('audit_event', 'submission_revision') AND t.tgname LIKE '%append_only'`
+     WHERE NOT t.tgisinternal AND c.relname IN ('audit_event', 'submission_revision') AND t.tgname LIKE '%append_only'`,
   );
   return {
     revisions: counts?.revisions ?? 0,

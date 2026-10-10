@@ -8,7 +8,7 @@ import { Segmented } from "@/components/portal/portal-filters";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { STATUS_LABEL } from "@/lib/portal/data";
+import { statusLabel } from "@/lib/domain";
 
 export const metadata: Metadata = { title: "Submission history" };
 export const runtime = "nodejs";
@@ -27,9 +27,19 @@ type Row = {
   submitted_at: string | null;
 };
 
-const TONE: Record<string, Tone> = { draft: "neutral", submitted: "info", under_review: "info", returned: "warn", accepted: "ok" };
+const TONE: Record<string, Tone> = {
+  draft: "neutral",
+  submitted: "info",
+  under_review: "info",
+  returned: "warn",
+  accepted: "ok",
+};
 
-export default async function HistoryPage({ searchParams }: { searchParams: Promise<{ initiative?: string; period?: string }> }) {
+export default async function HistoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ initiative?: string; period?: string }>;
+}) {
   const user = await requireUser(["cbo_submitter"]);
   const params = await searchParams;
   const rows = await withClaims(user.id, (tx) =>
@@ -43,14 +53,16 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
        LEFT JOIN app_user u ON u.id = s.submitted_by
        WHERE a.org_id = $1 AND s.submitted_at IS NOT NULL
        ORDER BY s.submitted_at DESC`,
-      [user.orgId]
-    )
+      [user.orgId],
+    ),
   );
   const initiatives = Array.from(new Map(rows.map((r) => [r.initiative_id, r.initiative_name])).entries());
   const periods = Array.from(new Map(rows.map((r) => [r.period_id, r.period_label])).entries());
   const initiative = initiatives.some(([id]) => id === params.initiative) ? params.initiative! : "all";
   const period = periods.some(([id]) => id === params.period) ? params.period! : "all";
-  const shown = rows.filter((r) => (initiative === "all" || r.initiative_id === initiative) && (period === "all" || r.period_id === period));
+  const shown = rows.filter(
+    (r) => (initiative === "all" || r.initiative_id === initiative) && (period === "all" || r.period_id === period),
+  );
   const base = (omit: "initiative" | "period") => {
     const out: Record<string, string> = {};
     if (omit !== "initiative" && initiative !== "all") out.initiative = initiative;
@@ -60,23 +72,38 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader
-        eyebrow={user.orgName ?? "Your organization"}
-        title="Submission history"
-      />
+      <PageHeader eyebrow={user.orgName ?? "Your organization"} title="Submission history" />
       <Card>
         <CardHeader
           title="Submitted reports"
           description={shown.length === rows.length ? undefined : `${shown.length} of ${rows.length} shown`}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Segmented label="Filter by period" param="period" base={base("period")} current={period} options={[{ value: "all", label: "All periods" }, ...periods.map(([id, label]) => ({ value: id, label }))]} />
+              <Segmented
+                label="Filter by period"
+                param="period"
+                base={base("period")}
+                current={period}
+                options={[
+                  { value: "all", label: "All periods" },
+                  ...periods.map(([id, label]) => ({ value: id, label })),
+                ]}
+              />
             </div>
           }
         />
         {initiatives.length > 0 ? (
           <CardBody className="border-b border-line py-3">
-            <Segmented label="Filter by initiative" param="initiative" base={base("initiative")} current={initiative} options={[{ value: "all", label: "All initiatives" }, ...initiatives.map(([id, name]) => ({ value: id, label: name }))]} />
+            <Segmented
+              label="Filter by initiative"
+              param="initiative"
+              base={base("initiative")}
+              current={initiative}
+              options={[
+                { value: "all", label: "All initiatives" },
+                ...initiatives.map(([id, name]) => ({ value: id, label: name })),
+              ]}
+            />
           </CardBody>
         ) : null}
         <Table stack>
@@ -96,25 +123,39 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
           </THead>
           <tbody>
             {shown.length === 0 ? (
-              <EmptyRow colSpan={8}>{rows.length === 0 ? "No reports have been submitted yet. Submitted reports appear here." : "No submitted reports match these filters."}</EmptyRow>
+              <EmptyRow colSpan={8}>
+                {rows.length === 0
+                  ? "No reports have been submitted yet. Submitted reports appear here."
+                  : "No submitted reports match these filters."}
+              </EmptyRow>
             ) : (
               shown.map((r) => (
                 <TR key={r.id}>
                   <TD>
-                    <Link href={`/portal/reports/${r.id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`/portal/reports/${r.id}`}
+                      className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {r.reference_no}
                     </Link>
                   </TD>
                   <TD primary>{r.initiative_name}</TD>
                   <TD label="Period">{r.period_label}</TD>
                   <TD label="Status">
-                    <Badge tone={TONE[r.status] ?? "neutral"}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                    <Badge tone={TONE[r.status] ?? "neutral"}>{statusLabel(r.status, "cbo")}</Badge>
                   </TD>
-                  <TD align="right" label="Revision">{r.revision}</TD>
+                  <TD align="right" label="Revision">
+                    {r.revision}
+                  </TD>
                   <TD label="Submitted by">{r.submitted_by_name ?? "Unknown"}</TD>
-                  <TD className="whitespace-nowrap" label="Submitted">{formatDateTime(r.submitted_at)}</TD>
+                  <TD className="whitespace-nowrap" label="Submitted">
+                    {formatDateTime(r.submitted_at)}
+                  </TD>
                   <TD className="text-right" action>
-                    <Link href={`/portal/reports/${r.id}`} className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`/portal/reports/${r.id}`}
+                      className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       View<span className="sr-only"> {r.reference_no}</span>
                     </Link>
                   </TD>

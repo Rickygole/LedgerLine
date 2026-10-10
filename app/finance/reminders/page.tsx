@@ -6,7 +6,15 @@ import { withClaims } from "@/lib/db";
 import { formatDate, todayInNewYork } from "@/lib/dates";
 import { isoDate, one, type SearchParams } from "@/lib/finance/admin/params";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
-import { describeOffset, listPeriods, listRules, offsetFor, previewTargets, renderSubject, shiftDate } from "@/lib/lifecycle/reminders";
+import {
+  describeOffset,
+  listPeriods,
+  listRules,
+  offsetFor,
+  previewTargets,
+  renderSubject,
+  shiftDate,
+} from "@/lib/lifecycle/reminders";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
@@ -14,6 +22,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { RestoreDefaultsForm, RuleActions, RuleForm, SendNowForm } from "@/components/finance/lifecycle/reminder-forms";
+import { plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +42,10 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
   const data = await withClaims(user.id, async (tx) => {
     const periods = await listPeriods(tx);
     const requested = one(params, "period");
-    const period = periods.find((p) => p.id === requested) ?? periods.find((p) => p.id === defaultPeriodId(periods.map((x) => ({ id: x.id, dueOn: x.due_on })))) ?? periods[0];
+    const period =
+      periods.find((p) => p.id === requested) ??
+      periods.find((p) => p.id === defaultPeriodId(periods.map((x) => ({ id: x.id, dueOn: x.due_on })))) ??
+      periods[0];
     if (!period) return null;
     const rules = await listRules(tx, period.id);
     const targets = await previewTargets(tx, period.id, date);
@@ -64,7 +76,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     <>
       <PageHeader
         title="Reminders"
-        description="Reminder rules email organizations about reports that are not submitted yet. Organizations with a submitted or accepted report are never reminded."
+        description="Reminder rules queue a message to organizations about reports that are not submitted yet. Organizations with a submitted or accepted report are never reminded."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Reminders" }]}
         actions={
           <ButtonLink href="/finance/outbox" variant="secondary">
@@ -72,9 +84,27 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
           </ButtonLink>
         }
       />
-      {one(params, "saved") === "1" ? <p role="status" className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok">Rule saved.</p> : null}
-      {badDate ? <p role="alert" className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm font-semibold text-bad">{requestedDate} is not a real calendar date. Showing {formatDate(today)} instead.</p> : null}
-      {!canEdit ? <p className="mb-4 rounded-md border border-line bg-surface px-3 py-2 text-sm text-muted">You can view rules and preview messages. Only a Finance administrator can change rules or send reminders.</p> : null}
+      {one(params, "saved") === "1" ? (
+        <p
+          role="status"
+          className="mb-4 rounded-md border border-ok/30 bg-ok-bg px-3 py-2 text-sm font-semibold text-ok"
+        >
+          Rule saved.
+        </p>
+      ) : null}
+      {badDate ? (
+        <p
+          role="alert"
+          className="mb-4 rounded-md border border-bad/30 bg-bad-bg px-3 py-2 text-sm font-semibold text-bad"
+        >
+          {requestedDate} is not a real calendar date. Showing {formatDate(today)} instead.
+        </p>
+      ) : null}
+      {!canEdit ? (
+        <p className="mb-4 rounded-md border border-line bg-surface px-3 py-2 text-sm text-muted">
+          You can view rules and preview messages. Only a Finance administrator can change rules or send reminders.
+        </p>
+      ) : null}
 
       <form action="/finance/reminders" className="mb-6 flex flex-wrap items-end gap-3">
         <div>
@@ -91,7 +121,10 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
           <Label htmlFor="date">Preview date</Label>
           <Input id="date" name="date" type="date" defaultValue={date} />
         </div>
-        <button type="submit" className="h-10 rounded-md border border-line bg-white px-4 text-sm font-semibold shadow-sm hover:bg-navy-50">
+        <button
+          type="submit"
+          className="h-10 rounded-md border border-line bg-white px-4 text-sm font-semibold shadow-sm hover:bg-navy-50"
+        >
           Show
         </button>
       </form>
@@ -101,7 +134,13 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
           <CardHeader
             title={`Rules for ${period.label}`}
             description={`Due ${formatDate(period.due_on)}. A rule fires on the day that matches its timing.`}
-            actions={canEdit ? <ButtonLink href={`${base}&date=${date}&add=1`} variant="secondary" size="sm">Add a rule</ButtonLink> : null}
+            actions={
+              canEdit ? (
+                <ButtonLink href={`${base}&date=${date}&add=1`} variant="secondary" size="sm">
+                  Add a rule
+                </ButtonLink>
+              ) : null
+            }
           />
           <Table>
             <THead>
@@ -119,7 +158,11 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                 <EmptyRow colSpan={canEdit ? 6 : 5}>
                   <div className="space-y-3">
                     <p>No rules for this period.</p>
-                    {canEdit ? <div className="flex justify-center"><RestoreDefaultsForm period={period.id} /></div> : null}
+                    {canEdit ? (
+                      <div className="flex justify-center">
+                        <RestoreDefaultsForm period={period.id} />
+                      </div>
+                    ) : null}
                   </div>
                 </EmptyRow>
               ) : (
@@ -129,7 +172,10 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                     <TR key={rule.id}>
                       <TD className="whitespace-nowrap">{describeOffset(rule.offset_days)}</TD>
                       <TD className="whitespace-nowrap">
-                        <Link href={`${base}&date=${fires}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                        <Link
+                          href={`${base}&date=${fires}`}
+                          className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                        >
                           {formatDate(fires)}
                         </Link>
                       </TD>
@@ -137,13 +183,21 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                         {renderSubject(rule.template_subject, { label: period.label, dueOn: period.due_on })}
                         <span className="mt-0.5 block text-xs text-muted">Template: {rule.template_subject}</span>
                       </TD>
-                      <TD>{rule.active ? <Badge tone="ok" icon={Check}>On</Badge> : <Badge>Off</Badge>}</TD>
+                      <TD>
+                        {rule.active ? (
+                          <Badge tone="ok" icon={Check}>
+                            On
+                          </Badge>
+                        ) : (
+                          <Badge>Off</Badge>
+                        )}
+                      </TD>
                       <TD className="whitespace-nowrap">
                         {rule.last_sent ? (
                           <>
                             {formatDate(rule.last_sent)}
                             <span className="num block text-xs text-muted">
-                              {rule.sent} {rule.sent === 1 ? "message" : "messages"} queued
+                              {rule.sent} {plural(rule.sent, "message", "messages")} queued
                             </span>
                           </>
                         ) : (
@@ -167,7 +221,12 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
           <Card>
             <CardHeader title={editing ? "Edit rule" : "Add a rule"} />
             <CardBody>
-              <RuleForm key={editing?.id ?? "new"} period={period.id} rule={editing} cancelHref={`${base}&date=${date}`} />
+              <RuleForm
+                key={editing?.id ?? "new"}
+                period={period.id}
+                rule={editing}
+                cancelHref={`${base}&date=${date}`}
+              />
             </CardBody>
           </Card>
         ) : null}
@@ -178,14 +237,22 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             description={
               matching.length === 0
                 ? `No active rule fires on this date. For ${period.label} this date is ${describeOffset(offset).toLowerCase()}.`
-                : `${targets.length} ${targets.length === 1 ? "organization qualifies" : "organizations qualify"} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Add to outbox would queue.`
+                : `${targets.length} ${plural(targets.length, "organization qualifies", "organizations qualify")} for ${matching.length === 1 ? "one rule" : `${matching.length} rules`}. This is exactly what Add to outbox would queue.`
             }
           />
           {targets.length > 0 ? (
             <>
               {canEdit ? (
                 <CardBody className="border-b border-line">
-                  <SendNowForm period={period.id} date={date} dateLabel={formatDate(date)} today={today} count={targets.length} fresh={fresh} orgs={freshOrgs} />
+                  <SendNowForm
+                    period={period.id}
+                    date={date}
+                    dateLabel={formatDate(date)}
+                    today={today}
+                    count={targets.length}
+                    fresh={fresh}
+                    orgs={freshOrgs}
+                  />
                 </CardBody>
               ) : null}
               <Table>
@@ -202,11 +269,16 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                   {targets.map((t) => (
                     <TR key={`${t.rule_id}-${t.org_id}`} className="align-top">
                       <TD>
-                        <Link href={`/finance/organizations/${t.org_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                        <Link
+                          href={`/finance/organizations/${t.org_id}`}
+                          className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                        >
                           {t.org_name}
                         </Link>
                         <details className="mt-1">
-                          <summary className="cursor-pointer text-xs font-medium text-link underline underline-offset-2 hover:text-link-hover">Show message</summary>
+                          <summary className="cursor-pointer text-xs font-medium text-link underline underline-offset-2 hover:text-link-hover">
+                            Show message
+                          </summary>
                           <div className="mt-2 max-w-xl rounded-md border border-line bg-surface p-3 text-sm">
                             <p className="font-semibold">{t.subject}</p>
                             <p className="mt-2 whitespace-pre-wrap">{t.body}</p>
@@ -219,7 +291,9 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                       </TD>
                       <TD className="max-w-xs">{t.initiatives}</TD>
                       <TD className="whitespace-nowrap">{describeOffset(t.offset_days)}</TD>
-                      <TD className="whitespace-nowrap">{t.already_sent ? <Badge>Already in outbox</Badge> : <Badge tone="info">Will be queued</Badge>}</TD>
+                      <TD className="whitespace-nowrap">
+                        {t.already_sent ? <Badge>Already in outbox</Badge> : <Badge tone="info">Will be queued</Badge>}
+                      </TD>
                     </TR>
                   ))}
                 </tbody>
@@ -229,7 +303,9 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
               <BellRing className="h-6 w-6 text-muted" aria-hidden="true" />
               <p className="text-[15px] font-semibold text-ink">Nothing goes out on this date</p>
-              <p className="max-w-md text-sm text-muted">Pick a date from the Fires on column above to see who that rule would email.</p>
+              <p className="max-w-md text-sm text-muted">
+                Pick a date from the Fires on column above to see who that rule would send a message to.
+              </p>
             </div>
           )}
         </Card>

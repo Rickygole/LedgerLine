@@ -9,7 +9,18 @@ export async function GET(request: NextRequest) {
   const health = await getHealth();
   const requestId = request.headers.get(REQUEST_ID_HEADER);
   if (health.status !== "ok") {
-    console.error(JSON.stringify({ level: "error", event: "health_degraded", requestId, database: health.database.ok, migrations: health.migrations.ok }));
+    console.error(
+      JSON.stringify({
+        level: "error",
+        event: "health_degraded",
+        requestId,
+        database: health.database.ok,
+        migrations: health.migrations.ok,
+      }),
+    );
   }
-  return NextResponse.json({ ...health, requestId }, { status: health.status === "ok" ? 200 : 503, headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(
+    { ...health, requestId },
+    { status: health.status === "ok" ? 200 : 503, headers: { "Cache-Control": "no-store" } },
+  );
 }

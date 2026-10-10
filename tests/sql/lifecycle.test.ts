@@ -29,7 +29,7 @@ async function pickInitiatives(count: number, minOrgs = 1): Promise<{ id: string
      JOIN form_version fv ON fv.initiative_id = i.id AND fv.status = 'published'
      WHERE i.fiscal_year_id = 'FY27' AND i.status = 'active'
      GROUP BY i.id HAVING count(a.id) >= $2 ORDER BY i.code LIMIT $1`,
-    [count, minOrgs]
+    [count, minOrgs],
   );
   return rows;
 }
@@ -42,23 +42,40 @@ describe("[US-009][BR-015] rollover copies forms and assignments", () => {
   it("[US-010][BR-002] creates the new year with a mid-year and a year-end period and carries forms and awards", async () => {
     const [first] = await pickInitiatives(1);
     const result = await asUser(app, priya, async () => {
-      const summary = (await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb) AS s", [plan([{ initiative_id: first.id, action: "carry" }])])).rows[0].s;
-      const year = (await app.query("SELECT starts_on::text, ends_on::text FROM fiscal_year WHERE id = 'FY28'")).rows[0];
-      const periods = (await app.query("SELECT id, due_on::text FROM reporting_period WHERE fiscal_year_id = 'FY28' ORDER BY id")).rows;
-      const successor = (await app.query(
-        `SELECT i.id, i.code, i.name, i.fiscal_year_id FROM initiative i JOIN initiative_lineage l ON l.successor_id = i.id WHERE l.predecessor_id = $1`,
-        [first.id]
-      )).rows[0];
-      const copiedAssignments = (await app.query("SELECT count(*)::int AS n FROM assignment WHERE initiative_id = $1", [successor.id])).rows[0].n;
-      const sameAwards = (await app.query(
-        `SELECT count(*)::int AS n FROM assignment n JOIN assignment o ON o.org_id = n.org_id AND o.initiative_id = $1 AND o.award_amount = n.award_amount WHERE n.initiative_id = $2`,
-        [first.id, successor.id]
-      )).rows[0].n;
-      const forms = (await app.query("SELECT version, status FROM form_version WHERE initiative_id = $1", [successor.id])).rows;
-      const sameForm = (await app.query(
-        `SELECT count(*)::int AS n FROM form_version o JOIN form_version n ON n.definition = o.definition WHERE o.initiative_id = $1 AND o.status = 'published' AND n.initiative_id = $2`,
-        [first.id, successor.id]
-      )).rows[0].n;
+      const summary = (
+        await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb) AS s", [
+          plan([{ initiative_id: first.id, action: "carry" }]),
+        ])
+      ).rows[0].s;
+      const year = (await app.query("SELECT starts_on::text, ends_on::text FROM fiscal_year WHERE id = 'FY28'"))
+        .rows[0];
+      const periods = (
+        await app.query("SELECT id, due_on::text FROM reporting_period WHERE fiscal_year_id = 'FY28' ORDER BY id")
+      ).rows;
+      const successor = (
+        await app.query(
+          `SELECT i.id, i.code, i.name, i.fiscal_year_id FROM initiative i JOIN initiative_lineage l ON l.successor_id = i.id WHERE l.predecessor_id = $1`,
+          [first.id],
+        )
+      ).rows[0];
+      const copiedAssignments = (
+        await app.query("SELECT count(*)::int AS n FROM assignment WHERE initiative_id = $1", [successor.id])
+      ).rows[0].n;
+      const sameAwards = (
+        await app.query(
+          `SELECT count(*)::int AS n FROM assignment n JOIN assignment o ON o.org_id = n.org_id AND o.initiative_id = $1 AND o.award_amount = n.award_amount WHERE n.initiative_id = $2`,
+          [first.id, successor.id],
+        )
+      ).rows[0].n;
+      const forms = (
+        await app.query("SELECT version, status FROM form_version WHERE initiative_id = $1", [successor.id])
+      ).rows;
+      const sameForm = (
+        await app.query(
+          `SELECT count(*)::int AS n FROM form_version o JOIN form_version n ON n.definition = o.definition WHERE o.initiative_id = $1 AND o.status = 'published' AND n.initiative_id = $2`,
+          [first.id, successor.id],
+        )
+      ).rows[0].n;
       return { summary, year, periods, successor, copiedAssignments, sameAwards, forms, sameForm };
     });
     expect(result.year).toEqual({ starts_on: "2027-07-01", ends_on: "2028-06-30" });
@@ -77,8 +94,14 @@ describe("[US-009][BR-015] rollover copies forms and assignments", () => {
   });
 
   it("carries every active initiative that the plan does not mention", async () => {
-    const total = (await owner.query("SELECT count(*)::int AS n FROM initiative WHERE fiscal_year_id = 'FY27' AND status = 'active'")).rows[0].n;
-    const summary = await asUser(app, priya, async () => (await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb) AS s")).rows[0].s);
+    const total = (
+      await owner.query("SELECT count(*)::int AS n FROM initiative WHERE fiscal_year_id = 'FY27' AND status = 'active'")
+    ).rows[0].n;
+    const summary = await asUser(
+      app,
+      priya,
+      async () => (await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb) AS s")).rows[0].s,
+    );
     expect(summary.initiatives_created).toBe(total);
     expect(summary.carried).toBe(total);
   });
@@ -92,8 +115,18 @@ describe("[US-009][BR-015] rollover copies forms and assignments", () => {
           { initiative_id: b.id, action: "retire" },
         ]),
       ]);
-      const renamed = (await app.query("SELECT i.name FROM initiative i JOIN initiative_lineage l ON l.successor_id = i.id WHERE l.predecessor_id = $1 AND l.kind = 'renamed'", [a.id])).rows;
-      const retired = (await app.query("SELECT i.status, (SELECT count(*)::int FROM initiative_lineage l WHERE l.predecessor_id = i.id AND l.kind = 'retired' AND l.successor_id IS NULL) AS lineage FROM initiative i WHERE i.id = $1", [b.id])).rows[0];
+      const renamed = (
+        await app.query(
+          "SELECT i.name FROM initiative i JOIN initiative_lineage l ON l.successor_id = i.id WHERE l.predecessor_id = $1 AND l.kind = 'renamed'",
+          [a.id],
+        )
+      ).rows;
+      const retired = (
+        await app.query(
+          "SELECT i.status, (SELECT count(*)::int FROM initiative_lineage l WHERE l.predecessor_id = i.id AND l.kind = 'retired' AND l.successor_id IS NULL) AS lineage FROM initiative i WHERE i.id = $1",
+          [b.id],
+        )
+      ).rows[0];
       const again = (await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb) AS s")).rows[0].s;
       return { renamed, retired, again };
     });
@@ -104,11 +137,17 @@ describe("[US-009][BR-015] rollover copies forms and assignments", () => {
   });
 
   it("is limited to finance administrators and leaves nothing behind when it fails", async () => {
-    const denied = await asUser(app, daniel, () => errorCode(() => app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)")));
+    const denied = await asUser(app, daniel, () =>
+      errorCode(() => app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)")),
+    );
     expect(denied).toBe("42501");
-    const cbo = await asUser(app, maria, () => errorCode(() => app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)")));
+    const cbo = await asUser(app, maria, () =>
+      errorCode(() => app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)")),
+    );
     expect(cbo).toBe("42501");
-    const backwards = await asUser(app, priya, () => errorCode(() => app.query("SELECT app.rollover_fiscal_year('FY27', 'FY26', '[]'::jsonb)")));
+    const backwards = await asUser(app, priya, () =>
+      errorCode(() => app.query("SELECT app.rollover_fiscal_year('FY27', 'FY26', '[]'::jsonb)")),
+    );
     expect(backwards).toBe("23514");
     const left = (await owner.query("SELECT count(*)::int AS n FROM fiscal_year WHERE id = 'FY28'")).rows[0].n;
     expect(left).toBe(0);
@@ -122,26 +161,42 @@ describe("[US-011] combine merges assignments and records lineage", () => {
     const expected = (
       await owner.query(
         `SELECT count(DISTINCT org_id)::int AS orgs, sum(award_amount)::float8 AS total FROM assignment WHERE initiative_id = ANY($1::uuid[])`,
-        [[a.id, b.id]]
+        [[a.id, b.id]],
       )
     ).rows[0];
     const result = await asUser(app, priya, async () => {
-      const summary = (await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb) AS s", [
-        plan([
-          { initiative_id: a.id, action: "combine", group: "g1", new_name: "Combined Youth Program" },
-          { initiative_id: b.id, action: "combine", group: "g1" },
-        ]),
-      ])).rows[0].s;
-      const merged = (await app.query(
-        `SELECT i.id, i.name, i.total_funding::float8 AS funding FROM initiative i JOIN initiative_lineage l ON l.successor_id = i.id WHERE l.predecessor_id = $1`,
-        [a.id]
-      )).rows[0];
-      const orgs = (await app.query("SELECT count(*)::int AS n, sum(award_amount)::float8 AS total FROM assignment WHERE initiative_id = $1", [merged.id])).rows[0];
-      const lineage = (await app.query("SELECT predecessor_id, kind FROM initiative_lineage WHERE successor_id = $1 ORDER BY created_at, predecessor_id", [merged.id])).rows;
-      const formMatches = (await app.query(
-        `SELECT count(*)::int AS n FROM form_version n JOIN form_version o ON o.definition = n.definition AND o.initiative_id = $1 AND o.status = 'published' WHERE n.initiative_id = $2`,
-        [a.id, merged.id]
-      )).rows[0].n;
+      const summary = (
+        await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb) AS s", [
+          plan([
+            { initiative_id: a.id, action: "combine", group: "g1", new_name: "Combined Youth Program" },
+            { initiative_id: b.id, action: "combine", group: "g1" },
+          ]),
+        ])
+      ).rows[0].s;
+      const merged = (
+        await app.query(
+          `SELECT i.id, i.name, i.total_funding::float8 AS funding FROM initiative i JOIN initiative_lineage l ON l.successor_id = i.id WHERE l.predecessor_id = $1`,
+          [a.id],
+        )
+      ).rows[0];
+      const orgs = (
+        await app.query(
+          "SELECT count(*)::int AS n, sum(award_amount)::float8 AS total FROM assignment WHERE initiative_id = $1",
+          [merged.id],
+        )
+      ).rows[0];
+      const lineage = (
+        await app.query(
+          "SELECT predecessor_id, kind FROM initiative_lineage WHERE successor_id = $1 ORDER BY created_at, predecessor_id",
+          [merged.id],
+        )
+      ).rows;
+      const formMatches = (
+        await app.query(
+          `SELECT count(*)::int AS n FROM form_version n JOIN form_version o ON o.definition = n.definition AND o.initiative_id = $1 AND o.status = 'published' WHERE n.initiative_id = $2`,
+          [a.id, merged.id],
+        )
+      ).rows[0].n;
       return { summary, merged, orgs, lineage, formMatches };
     });
     expect(result.merged.name).toBe("Combined Youth Program");
@@ -157,7 +212,11 @@ describe("[US-011] combine merges assignments and records lineage", () => {
   it("rejects a group with a single initiative", async () => {
     const [a] = await pickInitiatives(1);
     const code = await asUser(app, priya, () =>
-      errorCode(() => app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb)", [plan([{ initiative_id: a.id, action: "combine", group: "solo" }])]))
+      errorCode(() =>
+        app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb)", [
+          plan([{ initiative_id: a.id, action: "combine", group: "solo" }]),
+        ]),
+      ),
     );
     expect(code).toBe("23514");
   });
@@ -166,14 +225,21 @@ describe("[US-011] combine merges assignments and records lineage", () => {
 describe("[US-012][BR-016] lineage links predecessors", () => {
   it("lets finance read lineage and keeps writes with the rollover function", async () => {
     const [a] = await pickInitiatives(1);
-    const auditBefore = (await owner.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'rollover'")).rows[0].n;
+    const auditBefore = (await owner.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'rollover'"))
+      .rows[0].n;
     const result = await asUser(app, priya, async () => {
-      await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb)", [plan([{ initiative_id: a.id, action: "carry" }])]);
-      const chain = (await app.query(
-        `SELECT p.name AS from_name, s.name AS to_name, l.kind FROM initiative_lineage l JOIN initiative p ON p.id = l.predecessor_id JOIN initiative s ON s.id = l.successor_id WHERE l.predecessor_id = $1`,
-        [a.id]
-      )).rows;
-      const audit = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'rollover'")).rows[0].n - auditBefore;
+      await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb)", [
+        plan([{ initiative_id: a.id, action: "carry" }]),
+      ]);
+      const chain = (
+        await app.query(
+          `SELECT p.name AS from_name, s.name AS to_name, l.kind FROM initiative_lineage l JOIN initiative p ON p.id = l.predecessor_id JOIN initiative s ON s.id = l.successor_id WHERE l.predecessor_id = $1`,
+          [a.id],
+        )
+      ).rows;
+      const audit =
+        (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'rollover'")).rows[0].n -
+        auditBefore;
       await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
       const seenByAnalyst = (await app.query("SELECT count(*)::int AS n FROM initiative_lineage")).rows[0].n;
       await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: maria })]);
@@ -187,7 +253,12 @@ describe("[US-012][BR-016] lineage links predecessors", () => {
     expect(result.seenByAnalyst).toBeGreaterThan(0);
     expect(result.seenByOrg).toBe(0);
     const direct = await asUser(app, daniel, () =>
-      errorCode(() => app.query("INSERT INTO initiative_lineage (predecessor_id, successor_id, kind, fiscal_year_id) VALUES ($1, $1, 'carried', 'FY27')", [a.id]))
+      errorCode(() =>
+        app.query(
+          "INSERT INTO initiative_lineage (predecessor_id, successor_id, kind, fiscal_year_id) VALUES ($1, $1, 'carried', 'FY27')",
+          [a.id],
+        ),
+      ),
     );
     expect(direct).not.toBeNull();
   });
@@ -210,7 +281,7 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
       `SELECT DISTINCT o.org_id FROM obligation o
        WHERE o.period_id = 'FY26-YE'
          AND (o.submission_status IS NULL OR o.submission_status IN ('draft', 'returned'))
-         AND EXISTS (SELECT 1 FROM contact c WHERE c.org_id = o.org_id)`
+         AND EXISTS (SELECT 1 FROM contact c WHERE c.org_id = o.org_id)`,
     );
     return rows.map((r) => r.org_id).sort();
   }
@@ -219,11 +290,19 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
     const expected = await owingOrgs();
     const result = await asUser(app, priya, async () => {
       await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
-      const auditBefore = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")).rows[0].n;
+      const auditBefore = (
+        await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")
+      ).rows[0].n;
       const first = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
       const second = (await app.query("SELECT app.queue_reminders('FY26-YE', $1::date) AS n", [today])).rows[0].n;
-      const rows = (await app.query("SELECT org_id, to_email, subject, body_text FROM outbox WHERE template = 'reminder' ORDER BY org_id")).rows;
-      const audit = (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")).rows[0].n - auditBefore;
+      const rows = (
+        await app.query(
+          "SELECT org_id, to_email, subject, body_text FROM outbox WHERE template = 'reminder' ORDER BY org_id",
+        )
+      ).rows;
+      const audit =
+        (await app.query("SELECT count(*)::int AS n FROM audit_event WHERE action = 'reminders_queued'")).rows[0].n -
+        auditBefore;
       return { first, second, rows, audit };
     });
     expect(expected.length).toBeGreaterThan(0);
@@ -242,7 +321,9 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
     const queued = await asUser(app, priya, async () => {
       await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
       await app.query("SELECT app.queue_reminders('FY26-YE', $1::date)", [today]);
-      return (await app.query("SELECT DISTINCT org_id FROM outbox WHERE template = 'reminder'")).rows.map((r) => r.org_id);
+      return (await app.query("SELECT DISTINCT org_id FROM outbox WHERE template = 'reminder'")).rows.map(
+        (r) => r.org_id,
+      );
     });
     expect(done.length).toBeGreaterThan(0);
     for (const id of done) expect(queued).not.toContain(id);
@@ -251,39 +332,60 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
   it("ignores initiatives that only exist after a later rollover", async () => {
     const counts = await asUser(app, priya, async () => {
       await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
-      const before = (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n;
+      const before = (
+        await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])
+      ).rows[0].n;
       await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', '[]'::jsonb)");
-      const after = (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n;
+      const after = (
+        await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])
+      ).rows[0].n;
       return { before, after };
     });
     expect(counts.after).toBe(counts.before);
   });
 
   it("sends nothing on a day that matches no rule", async () => {
-    const n = await asUser(app, priya, async () => (await app.query("SELECT app.queue_reminders('FY26-YE', '2026-10-05'::date) AS n")).rows[0].n);
+    const n = await asUser(
+      app,
+      priya,
+      async () => (await app.query("SELECT app.queue_reminders('FY26-YE', '2026-10-05'::date) AS n")).rows[0].n,
+    );
     expect(n).toBe(0);
   });
 
   it("is limited to finance administrators and previews for all finance staff", async () => {
-    const denied = await asUser(app, daniel, () => errorCode(() => app.query("SELECT app.queue_reminders('FY26-YE', $1::date)", [today])));
+    const denied = await asUser(app, daniel, () =>
+      errorCode(() => app.query("SELECT app.queue_reminders('FY26-YE', $1::date)", [today])),
+    );
     expect(denied).toBe("42501");
     const preview = await asUser(app, priya, async () => {
       await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
       await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
-      return (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today])).rows[0].n;
+      return (await app.query("SELECT count(*)::int AS n FROM app.reminder_targets('FY26-YE', $1::date)", [today]))
+        .rows[0].n;
     });
     expect(preview).toBeGreaterThan(0);
-    const org = await asUser(app, maria, () => errorCode(() => app.query("SELECT * FROM app.reminder_targets('FY26-YE', $1::date)", [today])));
+    const org = await asUser(app, maria, () =>
+      errorCode(() => app.query("SELECT * FROM app.reminder_targets('FY26-YE', $1::date)", [today])),
+    );
     expect(org).toBe("42501");
-    const write = await asUser(app, daniel, () => errorCode(() => app.query("UPDATE reminder_rule SET active = false")));
+    const write = await asUser(app, daniel, () =>
+      errorCode(() => app.query("UPDATE reminder_rule SET active = false")),
+    );
     expect(write).toBeNull();
-    const changed = await asUser(app, daniel, async () => (await app.query("UPDATE reminder_rule SET active = false")).rowCount);
+    const changed = await asUser(
+      app,
+      daniel,
+      async () => (await app.query("UPDATE reminder_rule SET active = false")).rowCount,
+    );
     expect(changed).toBe(0);
   });
 
   it("uses a scheduler identity that cannot sign in", async () => {
     await owner.query("SELECT app.ensure_scheduler()");
-    const { rows } = await owner.query("SELECT role, can_sign_in, password_hash FROM app_user WHERE email = 'system.scheduler@ledgerline.example'");
+    const { rows } = await owner.query(
+      "SELECT role, can_sign_in, password_hash FROM app_user WHERE email = 'system.scheduler@ledgerline.example'",
+    );
     expect(rows[0]).toEqual({ role: "finance_admin", can_sign_in: false, password_hash: null });
   });
 });
@@ -291,7 +393,10 @@ describe("[US-052] reminders queue once per org per rule per day and skip submit
 describe("[US-048] saved queries are private to their owner", () => {
   it("shows a saved query only to the person who saved it", async () => {
     const result = await asUser(app, daniel, async () => {
-      await app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Bronx missing', $2::jsonb)", [daniel, JSON.stringify({ borough: "Bronx", bucket: "missing" })]);
+      await app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Bronx missing', $2::jsonb)", [
+        daniel,
+        JSON.stringify({ borough: "Bronx", bucket: "missing" }),
+      ]);
       const own = (await app.query("SELECT name, params FROM saved_query")).rows;
       await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: priya })]);
       const other = (await app.query("SELECT count(*)::int AS n FROM saved_query")).rows[0].n;
@@ -308,11 +413,15 @@ describe("[US-048] saved queries are private to their owner", () => {
 
   it("refuses to save a query on behalf of someone else or for an organization account", async () => {
     const forged = await asUser(app, daniel, () =>
-      errorCode(() => app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Forged', '{}'::jsonb)", [priya]))
+      errorCode(() =>
+        app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Forged', '{}'::jsonb)", [priya]),
+      ),
     );
     expect(forged).toBe("42501");
     const org = await asUser(app, maria, () =>
-      errorCode(() => app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Mine', '{}'::jsonb)", [maria]))
+      errorCode(() =>
+        app.query("INSERT INTO saved_query (owner, name, params) VALUES ($1, 'Mine', '{}'::jsonb)", [maria]),
+      ),
     );
     expect(org).toBe("42501");
   });
@@ -324,7 +433,7 @@ describe("[US-052] reminder history and wording", () => {
       await owner.query(
         `SELECT r.offset_days, count(o.id)::int AS sent, min(o.created_at)::date::text AS first_sent
          FROM reminder_rule r LEFT JOIN outbox o ON o.reminder_key LIKE r.id::text || ':%'
-         WHERE r.period_id = 'FY26-YE' GROUP BY r.offset_days ORDER BY r.offset_days`
+         WHERE r.period_id = 'FY26-YE' GROUP BY r.offset_days ORDER BY r.offset_days`,
       )
     ).rows;
     const byOffset = Object.fromEntries(rows.map((r) => [r.offset_days, r]));
@@ -333,7 +442,8 @@ describe("[US-052] reminder history and wording", () => {
     expect(byOffset[1].first_sent).toBe("2026-10-01");
     for (const offset of [-14, -3, 1]) expect(byOffset[offset].sent).toBeGreaterThan(0);
     const today = todayInNewYork();
-    const due = (await owner.query("SELECT (due_on + 14)::text AS d FROM reporting_period WHERE id = 'FY26-YE'")).rows[0].d;
+    const due = (await owner.query("SELECT (due_on + 14)::text AS d FROM reporting_period WHERE id = 'FY26-YE'"))
+      .rows[0].d;
     if (today <= due) expect(byOffset[14].sent).toBe(0);
   });
 
@@ -341,7 +451,7 @@ describe("[US-052] reminder history and wording", () => {
     const { rows } = await owner.query(
       `SELECT o.body_text, c.full_name FROM outbox o
        JOIN contact c ON c.org_id = o.org_id AND c.email = o.to_email
-       WHERE o.template = 'reminder' LIMIT 25`
+       WHERE o.template = 'reminder' LIMIT 25`,
     );
     expect(rows.length).toBeGreaterThan(0);
     for (const row of rows) expect(row.body_text.startsWith(`Hello ${row.full_name},`)).toBe(true);
@@ -350,7 +460,9 @@ describe("[US-052] reminder history and wording", () => {
   it("greets by name in a live preview too", async () => {
     const preview = await asUser(app, priya, async () => {
       await app.query("SELECT app.restore_reminder_defaults('FY26-YE')");
-      return (await app.query("SELECT body, contact_name FROM app.reminder_targets('FY26-YE', '2026-10-14'::date) LIMIT 5")).rows;
+      return (
+        await app.query("SELECT body, contact_name FROM app.reminder_targets('FY26-YE', '2026-10-14'::date) LIMIT 5")
+      ).rows;
     });
     expect(preview.length).toBeGreaterThan(0);
     for (const row of preview) expect(row.body.startsWith(`Hello ${row.contact_name},`)).toBe(true);

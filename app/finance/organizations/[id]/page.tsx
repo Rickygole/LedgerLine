@@ -6,7 +6,7 @@ import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { daysPastDue, formatDate, formatDateTime } from "@/lib/dates";
 import { isMissing, reportState } from "@/lib/reporting";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { buttonClass } from "@/components/ui/button";
@@ -22,8 +22,9 @@ import { AuditSentence } from "@/components/finance/admin/audit-line";
 import { loadOrganization, type OrgAward } from "@/lib/finance/admin/organizations";
 import { orgActivity } from "@/lib/finance/admin/audit";
 import { templateLabel } from "@/lib/finance/admin/outbox";
-import { orgTypeLabel } from "@/lib/finance/admin/sql";
-import { isUuid, one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
+import { orgTypeLabel } from "@/lib/domain";
+import { one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +32,13 @@ export const metadata: Metadata = { title: "Organization profile" };
 
 const TABS = ["overview", "awards", "reports", "contacts", "activity", "messages"] as const;
 
-export default async function OrganizationProfile({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParams> }) {
+export default async function OrganizationProfile({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<SearchParams>;
+}) {
   const user = await requireUser(FINANCE_ROLES);
   const { id } = await params;
   if (!isUuid(id)) notFound();
@@ -51,9 +58,11 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
   const allPeriods = awards.flatMap((a) => a.periods ?? []);
   const dueSoFar = allPeriods.filter((p) => daysPastDue(p.due_on) > 0).length;
   const acceptedDue = allPeriods.filter((p) => daysPastDue(p.due_on) > 0 && p.status === "accepted").length;
-  const sponsorDistricts = [...new Set(awards.flatMap((a) => (a.sponsors ?? []).map((s) => s.district)))].sort((a, b) => a - b);
+  const sponsorDistricts = [...new Set(awards.flatMap((a) => (a.sponsors ?? []).map((s) => s.district)))].sort(
+    (a, b) => a - b,
+  );
   const mapFills: Record<number, string> = org.council_district ? { [org.council_district]: "#1f4e85" } : {};
-  const mapCaption = `${org.council_district ? `District ${org.council_district} (location).` : "No Council district on file."} ${sponsorDistricts.length ? `Funded by Council Members in ${sponsorDistricts.length === 1 ? "District" : "Districts"} ${sponsorDistricts.join(", ")}.` : "No sponsoring Council Members on file."}`;
+  const mapCaption = `${org.council_district ? `District ${org.council_district} (location).` : "No Council district on file."} ${sponsorDistricts.length ? `Funded by Council Members in ${plural(sponsorDistricts.length, "District", "Districts")} ${sponsorDistricts.join(", ")}.` : "No sponsoring Council Members on file."}`;
   const overdue = awards.flatMap((a) => a.periods ?? []).filter((p) => isMissing(p.status, p.due_on)).length;
   const primary = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
   const address = `${org.address_line}, ${org.city}, ${org.state} ${org.postal_code}`;
@@ -63,11 +72,13 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       <ProfileHeader
         title={org.legal_name}
         subtitle={org.dba_name ? `Doing business as ${org.dba_name}` : undefined}
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Organizations", href: "/finance/organizations" }, { label: org.legal_name }]}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          { label: "Organizations", href: "/finance/organizations" },
+          { label: org.legal_name },
+        ]}
         meta={[
-          <Badge key="type">
-            {orgTypeLabel(org.org_type)}
-          </Badge>,
+          <Badge key="type">{orgTypeLabel(org.org_type)}</Badge>,
           <span key="ein" className="whitespace-nowrap font-mono text-[13px]">
             EIN {org.ein}
           </span>,
@@ -122,33 +133,75 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       {tab === "overview" ? (
         <>
           <section aria-label="Compliance at a glance" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Stat label="Total awarded" value={formatCurrency(totalAwarded, { cents: false })} sub={`across ${awards.length} ${awards.length === 1 ? "award" : "awards"}${years.length ? ` (${years.join(" and ")})` : ""}`} />
-            <Stat label="Reports accepted" value={<>{acceptedDue} <span className="text-lg font-semibold tracking-normal text-ink-2">of {dueSoFar}</span></>} sub={dueSoFar === 0 ? "No reports due yet" : "of reports due so far"} />
-            <Stat label="Missing" value={overdue} tone={overdue > 0 ? "bad" : "neutral"} sub="Past due, nothing submitted" action={overdue > 0 ? { href: `/finance/submissions?q=${encodeURIComponent(org.ein)}&bucket=missing`, label: overdue === 1 ? "See missing report" : "See missing reports" } : undefined} />
+            <Stat
+              label="Total awarded"
+              value={formatCurrency(totalAwarded, { cents: false })}
+              sub={`across ${awards.length} ${plural(awards.length, "award", "awards")}${years.length ? ` (${years.join(" and ")})` : ""}`}
+            />
+            <Stat
+              label="Reports accepted"
+              value={
+                <>
+                  {acceptedDue} <span className="text-lg font-semibold tracking-normal text-ink-2">of {dueSoFar}</span>
+                </>
+              }
+              sub={dueSoFar === 0 ? "No reports due yet" : "of reports due so far"}
+            />
+            <Stat
+              label="Missing"
+              value={overdue}
+              tone={overdue > 0 ? "bad" : "neutral"}
+              sub="Past due, nothing submitted"
+              action={
+                overdue > 0
+                  ? {
+                      href: `/finance/submissions?q=${encodeURIComponent(org.ein)}&bucket=missing`,
+                      label: plural(overdue, "See missing report", "See missing reports"),
+                    }
+                  : undefined
+              }
+            />
           </section>
           <div className="grid items-start gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader title="About" />
-              <CardBody className="grid gap-6 md:grid-cols-[minmax(0,1fr)_200px]">
+              <CardBody className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_200px]">
                 <div className="min-w-0">
-                <h3 className="text-[13px] font-semibold text-muted">Mission</h3>
-                <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
-                <div className="mt-5 border-t border-line pt-5">
-                  <DescriptionList
-                    columns={3}
-                    items={[
-                      { label: "Legal name", value: org.legal_name },
-                      { label: "Borough", value: org.borough },
-                      { label: "Council district", value: org.council_district ? <span className="num">{org.council_district}</span> : null },
-                      { label: "Founded", value: org.founded_year ? <span className="num">{org.founded_year}</span> : null },
-                      { label: "Annual budget", value: org.annual_budget ? <span className="num">{formatCurrency(Number(org.annual_budget))}</span> : null },
-                      { label: "Also known as", value: org.dba_name },
-                    ]}
-                  />
-                </div>
+                  <h3 className="text-[13px] font-semibold text-muted">Mission</h3>
+                  <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">
+                    {org.mission ?? "No mission statement on file."}
+                  </p>
+                  <div className="mt-5 border-t border-line pt-5">
+                    <DescriptionList
+                      columns={3}
+                      items={[
+                        { label: "Legal name", value: org.legal_name },
+                        { label: "Borough", value: org.borough },
+                        {
+                          label: "Council district",
+                          value: org.council_district ? <span className="num">{org.council_district}</span> : null,
+                        },
+                        {
+                          label: "Founded",
+                          value: org.founded_year ? <span className="num">{org.founded_year}</span> : null,
+                        },
+                        {
+                          label: "Annual budget",
+                          value: org.annual_budget ? (
+                            <span className="num">{formatCurrency(Number(org.annual_budget))}</span>
+                          ) : null,
+                        },
+                        { label: "Also known as", value: org.dba_name },
+                      ]}
+                    />
+                  </div>
                 </div>
                 <figure className="md:border-l md:border-line md:pl-6">
-                  <MiniDistrictMap fills={mapFills} outlined={sponsorDistricts} label={`Map of Council districts. ${mapCaption}`} />
+                  <MiniDistrictMap
+                    fills={mapFills}
+                    outlined={sponsorDistricts}
+                    label={`Map of Council districts. ${mapCaption}`}
+                  />
                   <figcaption className="mt-2 text-[13px] leading-5 text-muted">{mapCaption}</figcaption>
                   <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-ink-2" aria-hidden="true">
                     <span className="inline-flex items-center gap-1.5">
@@ -186,7 +239,10 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                     <div className="min-w-0 text-sm">
                       <p className="font-semibold text-ink">{primary.full_name}</p>
                       <p className="text-muted">{primary.title}</p>
-                      <a href={`mailto:${primary.email}`} className="mt-1 block break-all font-medium text-link underline underline-offset-2 hover:text-link-hover">
+                      <a
+                        href={`mailto:${primary.email}`}
+                        className="mt-1 block break-all font-medium text-link underline underline-offset-2 hover:text-link-hover"
+                      >
                         {primary.email}
                       </a>
                       {primary.phone ? <p className="num text-muted">{primary.phone}</p> : null}
@@ -202,7 +258,10 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
             <CardHeader
               title="Awards"
               actions={
-                <Link href={`/finance/organizations/${id}?tab=awards`} className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                <Link
+                  href={`/finance/organizations/${id}?tab=awards`}
+                  className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                >
                   Open awards tab
                 </Link>
               }
@@ -240,7 +299,10 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 reports.map((r) => (
                   <TR key={r.id}>
                     <TD>
-                      <Link href={`/finance/submissions/${r.id}`} className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                      <Link
+                        href={`/finance/submissions/${r.id}`}
+                        className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      >
                         {r.reference_no}
                       </Link>
                     </TD>
@@ -251,11 +313,19 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                     </TD>
                     <TD>
                       <StateBadge state={reportState(r.status, r.due_on)} />
-                      {r.status === "draft" && daysPastDue(r.due_on) > 0 ? <span className="sr-only"> past due</span> : null}
+                      {r.status === "draft" && daysPastDue(r.due_on) > 0 ? (
+                        <span className="sr-only"> past due</span>
+                      ) : null}
                     </TD>
                     <TD align="right">{r.revision}</TD>
                     <TD>{r.submitted_by_name ?? <span className="text-muted">Not submitted</span>}</TD>
-                    <TD>{r.submitted_at ? formatDateTime(r.submitted_at) : <span className="text-muted">Not submitted</span>}</TD>
+                    <TD>
+                      {r.submitted_at ? (
+                        formatDateTime(r.submitted_at)
+                      ) : (
+                        <span className="text-muted">Not submitted</span>
+                      )}
+                    </TD>
                   </TR>
                 ))
               )}
@@ -265,20 +335,18 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
       ) : null}
 
       {tab === "contacts" ? (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader title="Contacts" />
             <ul className="divide-y divide-line">
-              {contacts.length === 0 ? <li className="px-5 py-10 text-center text-sm text-muted">No contacts on file.</li> : null}
+              {contacts.length === 0 ? (
+                <li className="px-5 py-10 text-center text-sm text-muted">No contacts on file.</li>
+              ) : null}
               {contacts.map((c) => (
                 <li key={c.id} className="px-5 py-4">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{c.full_name}</span>
-                    {c.is_primary ? (
-                      <Badge tone="info">
-                        Primary
-                      </Badge>
-                    ) : null}
+                    {c.is_primary ? <Badge tone="info">Primary</Badge> : null}
                   </div>
                   <p className="text-sm text-muted">{c.title}</p>
                   <p className="mt-1 flex items-center gap-2 text-sm">
@@ -293,7 +361,11 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
           <Card>
             <CardHeader title="Team" />
             <ul className="divide-y divide-line">
-              {team.length === 0 ? <li className="px-5 py-8 text-center text-sm text-muted">No one from this organization has an account.</li> : null}
+              {team.length === 0 ? (
+                <li className="px-5 py-8 text-center text-sm text-muted">
+                  No one from this organization has an account.
+                </li>
+              ) : null}
               {team.map((t) => (
                 <li key={t.id} className="flex items-center justify-between gap-3 px-5 py-4">
                   <div>
@@ -320,7 +392,9 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
         <Card>
           <CardHeader title="Activity" />
           <ol className="divide-y divide-line">
-            {activity.length === 0 ? <li className="px-5 py-8 text-center text-sm text-muted">No activity has been recorded yet.</li> : null}
+            {activity.length === 0 ? (
+              <li className="px-5 py-8 text-center text-sm text-muted">No activity has been recorded yet.</li>
+            ) : null}
             {activity.map((row) => (
               <li key={row.id} className="flex flex-wrap items-baseline justify-between gap-3 px-5 py-3 text-sm">
                 <div>
@@ -355,14 +429,19 @@ export default async function OrganizationProfile({ params, searchParams }: { pa
                 messages.map((m) => (
                   <TR key={m.id}>
                     <TD>
-                      <Link href={`/finance/outbox/${m.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                      <Link
+                        href={`/finance/outbox/${m.id}`}
+                        className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      >
                         {m.subject}
                       </Link>
                     </TD>
                     <TD className="whitespace-nowrap">{templateLabel(m.template)}</TD>
                     <TD>{m.to_email}</TD>
                     <TD>
-                      <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>{m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}</Badge>
+                      <Badge tone={m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "neutral"}>
+                        {m.status === "sent" ? "Sent" : m.status === "failed" ? "Failed" : "Queued"}
+                      </Badge>
                     </TD>
                     <TD>{formatDateTime(m.created_at)}</TD>
                   </TR>
@@ -397,7 +476,10 @@ function AwardsTable({ awards }: { awards: OrgAward[] }) {
           awards.map((a) => (
             <TR key={a.assignment_id}>
               <TD className="min-w-[14rem]">
-                <Link href={`/finance/initiatives/${a.initiative_id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                <Link
+                  href={`/finance/initiatives/${a.initiative_id}`}
+                  className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                >
                   {a.name}
                 </Link>
                 <div className="font-mono text-[13px] text-muted">{a.code}</div>
@@ -409,7 +491,11 @@ function AwardsTable({ awards }: { awards: OrgAward[] }) {
                 <SponsorsCell sponsors={a.sponsors} source={a.funding_source} />
               </TD>
               <TD>
-                <ContractCell status={a.contract_status} number={a.contract_number} registeredOn={a.contract_registered_on} />
+                <ContractCell
+                  status={a.contract_status}
+                  number={a.contract_number}
+                  registeredOn={a.contract_registered_on}
+                />
               </TD>
               <TD>
                 <AwardPeriods periods={a.periods} />

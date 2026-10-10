@@ -1,5 +1,11 @@
 import mammoth from "mammoth";
-import { attachStructure, collapse, splitParagraphs, type TemplateCell, type TemplateStructure } from "@/lib/forms/editor/draft-core";
+import {
+  attachStructure,
+  collapse,
+  splitParagraphs,
+  type TemplateCell,
+  type TemplateStructure,
+} from "@/lib/forms/editor/draft-core";
 
 function decode(text: string): string {
   return text
@@ -14,13 +20,18 @@ function decode(text: string): string {
 }
 
 function linesOf(fragment: string): string[] {
-  return decode(fragment.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n").replace(/<[^>]+>/g, ""))
+  return decode(
+    fragment
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<[^>]+>/g, ""),
+  )
     .split(/\r?\n/)
     .map((line) => collapse(line))
     .filter((line) => line.length > 0);
 }
 
-export function structureFromHtml(html: string): { lines: string[]; structure: TemplateStructure } {
+function structureFromHtml(html: string): { lines: string[]; structure: TemplateStructure } {
   const lines: string[] = [];
   const structure: TemplateStructure = { headings: [], tables: [], listItems: [] };
   const block = /<(h[1-6]|p|li|table)\b[^>]*>([\s\S]*?)<\/\1>/gi;

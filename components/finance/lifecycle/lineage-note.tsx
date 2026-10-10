@@ -8,13 +8,23 @@ function suffix(kind: LineageLink["kind"]): string {
 function Code({ link }: { link: LineageLink }) {
   if (!link.other_id) return null;
   return (
-    <Link href={`/finance/initiatives/${link.other_id}`} title={link.other_name ?? undefined} className="font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+    <Link
+      href={`/finance/initiatives/${link.other_id}`}
+      title={link.other_name ?? undefined}
+      className="font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+    >
       {link.other_code}
     </Link>
   );
 }
 
-export function lineageMeta({ predecessors, successors }: { predecessors: LineageLink[]; successors: LineageLink[] }): React.ReactNode[] {
+export function lineageMeta({
+  predecessors,
+  successors,
+}: {
+  predecessors: LineageLink[];
+  successors: LineageLink[];
+}): React.ReactNode[] {
   const items: React.ReactNode[] = [];
   const earlier = predecessors.filter((p) => p.other_id);
   const continued = successors.filter((s) => s.other_id);
@@ -30,7 +40,7 @@ export function lineageMeta({ predecessors, successors }: { predecessors: Lineag
             {suffix(p.kind)}
           </span>
         ))}
-      </span>
+      </span>,
     );
   }
   if (continued.length > 0) {
@@ -43,7 +53,7 @@ export function lineageMeta({ predecessors, successors }: { predecessors: Lineag
             {suffix(s.kind)}
           </span>
         ))}
-      </span>
+      </span>,
     );
   }
   if (retired) items.push(<span key="retired">Retired at the rollover into {retired.fiscal_year_id}</span>);

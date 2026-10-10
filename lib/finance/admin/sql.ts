@@ -7,16 +7,6 @@ export const ASSIGNMENT_STATE = `
     WHERE ob.period_id = $2
   )`;
 
-export const BOROUGHS = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island", "Citywide"] as const;
-export const ORG_TYPES = [
-  { value: "cbo", label: "Nonprofit" },
-  { value: "agency", label: "City agency" },
-] as const;
-
-export function orgTypeLabel(value: string): string {
-  return ORG_TYPES.find((t) => t.value === value)?.label ?? value;
-}
-
 export const SPONSORS_SQL = `(SELECT jsonb_agg(jsonb_build_object('district', sp.district, 'name', cm.full_name, 'amount', sp.amount::float8) ORDER BY sp.amount DESC, sp.district)
   FROM assignment_sponsor sp JOIN council_member cm ON cm.district = sp.district WHERE sp.assignment_id = a.id)`;
 

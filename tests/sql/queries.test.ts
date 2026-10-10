@@ -14,7 +14,9 @@ beforeAll(async () => {
   owner = await connect(ownerUrl());
   app = await connect(appUrl());
   daniel = await userId(owner, "daniel.cho");
-  periods = (await owner.query("SELECT id, due_on::text AS due FROM reporting_period ORDER BY due_on")).rows.map((r) => ({ id: r.id as string, dueOn: r.due as string }));
+  periods = (await owner.query("SELECT id, due_on::text AS due FROM reporting_period ORDER BY due_on")).rows.map(
+    (r) => ({ id: r.id as string, dueOn: r.due as string }),
+  );
 });
 
 afterAll(async () => {
@@ -51,7 +53,7 @@ async function expected(where: string, params: unknown[] = []): Promise<number> 
      JOIN initiative i ON i.id = a.initiative_id
      LEFT JOIN submission s ON s.id = ob.submission_id
      WHERE ob.period_id = '${PERIOD}' AND ${where}`,
-    params
+    params,
   );
   return rows[0].n;
 }
@@ -65,14 +67,19 @@ describe("[US-048] finance builds queries from selected criteria", () => {
   });
 
   it("narrows the result when criteria are combined", async () => {
-    const category = (await owner.query("SELECT category FROM initiative GROUP BY 1 ORDER BY count(*) DESC LIMIT 1")).rows[0].category as string;
+    const category = (await owner.query("SELECT category FROM initiative GROUP BY 1 ORDER BY count(*) DESC LIMIT 1"))
+      .rows[0].category as string;
     const combined = await count({ borough: "Brooklyn", category, award_max: "150000" });
-    expect(combined).toBe(await expected("o.borough = 'Brooklyn' AND i.category = $1 AND a.award_amount <= 150000", [category]));
+    expect(combined).toBe(
+      await expected("o.borough = 'Brooklyn' AND i.category = $1 AND a.award_amount <= 150000", [category]),
+    );
     expect(combined).toBeLessThanOrEqual(await count({ borough: "Brooklyn" }));
   });
 
   it("drops unknown values and keeps the criteria in the link to the results", () => {
-    const params = cleanParams({ borough: "Atlantis", award_min: "abc", status: "accepted", district: "99" }, [{ id: PERIOD, dueOn: "2026-09-30" }]);
+    const params = cleanParams({ borough: "Atlantis", award_min: "abc", status: "accepted", district: "99" }, [
+      { id: PERIOD, dueOn: "2026-09-30" },
+    ]);
     expect(params).toEqual({ period: "FY26-YE", status: "accepted" });
     expect(toSearch(params)).toBe("period=FY26-YE&status=accepted");
     expect(resultsHref(params)).toBe("/finance/submissions?period=FY26-YE&status=accepted");

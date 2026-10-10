@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { todayInNewYork } from "@/lib/dates";
-import { formatCompactCurrency, formatCount, formatCurrency } from "@/lib/rules/money";
+import { formatCompactCurrency, formatCount, formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,7 +13,14 @@ import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { ProgressBar } from "@/components/finance/admin/progress-bar";
-import { categorySummary, listAgencies, listCategories, listInitiatives, setupStatus } from "@/lib/finance/admin/initiatives";
+import {
+  categorySummary,
+  listAgencies,
+  listCategories,
+  listInitiatives,
+  setupStatus,
+} from "@/lib/finance/admin/initiatives";
+import { NoPeriods } from "@/components/finance/no-periods";
 import { SetupTaskList } from "@/components/finance/setup-tasks";
 import { loadPeriods } from "@/lib/finance/review/data";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
@@ -33,11 +40,15 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
   const admin = user.role === "finance_admin";
   const today = todayInNewYork();
 
-  const data = await withClaims(user.id, async (tx) => {
+  const loaded = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const setup = admin ? await setupStatus(tx, today) : null;
     const setupPeriod = setup?.fiscalYear ? periods.find((p) => p.fiscalYearId === setup.fiscalYear!.id) : undefined;
-    const period = periods.find((p) => p.id === one(params, "period")) ?? setupPeriod ?? periods.find((p) => p.id === defaultPeriodId(periods))!;
+    const period =
+      periods.find((p) => p.id === one(params, "period")) ??
+      setupPeriod ??
+      periods.find((p) => p.id === defaultPeriodId(periods));
+    if (!period) return null;
     const categories = await listCategories(tx);
     const agencies = await listAgencies(tx);
     const category = categories.includes(one(params, "category")) ? one(params, "category") : "";
@@ -46,11 +57,19 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     const summary = await categorySummary(tx, today, period.id);
     return { periods, period, categories, agencies, category, agency, summary, setup, ...list };
   });
+  if (!loaded) return <NoPeriods title="Initiatives" />;
+  const data = loaded;
 
   const base = "/finance/initiatives";
   const totals = data.summary.reduce(
-    (t, c) => ({ funding: t.funding + Number(c.funding), initiatives: t.initiatives + c.initiatives, accepted: t.accepted + c.accepted, assignments: t.assignments + c.assignments, missing: t.missing + c.missing }),
-    { funding: 0, initiatives: 0, accepted: 0, assignments: 0, missing: 0 }
+    (t, c) => ({
+      funding: t.funding + Number(c.funding),
+      initiatives: t.initiatives + c.initiatives,
+      accepted: t.accepted + c.accepted,
+      assignments: t.assignments + c.assignments,
+      missing: t.missing + c.missing,
+    }),
+    { funding: 0, initiatives: 0, accepted: 0, assignments: 0, missing: 0 },
   );
   const notDue = data.period.dueOn > today;
   const kept = { q, category: data.category, status, agency: data.agency, period: data.period.id, form };
@@ -65,7 +84,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 pb-4 pt-5 sm:px-6">
           <div>
             <h2 className="text-xl font-bold leading-7 text-ink">
-              {data.period.fiscalYearId} initiatives <span className="num font-semibold text-muted">({data.total})</span>
+              {data.period.fiscalYearId} initiatives{" "}
+              <span className="num font-semibold text-muted">({data.total})</span>
             </h2>
             <p className="mt-0.5 text-[15px] text-ink-2">
               {formatCompactCurrency(totals.funding)} across {formatCount(totals.assignments)} awards
@@ -77,7 +97,11 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             </ButtonLink>
           ) : null}
         </div>
-        <FilterBar action={base} clearHref={buildHref(base, { period: data.period.id })} applied={[data.category, data.agency, status, form].filter(Boolean).length}>
+        <FilterBar
+          action={base}
+          clearHref={buildHref(base, { period: data.period.id })}
+          applied={[data.category, data.agency, status, form].filter(Boolean).length}
+        >
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Code or name" />
           </FilterField>
@@ -141,7 +165,9 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
           </THead>
           <tbody>
             {data.rows.length === 0 ? (
-              <EmptyRow colSpan={8}>No initiatives match these filters. Clear the filters to see every initiative.</EmptyRow>
+              <EmptyRow colSpan={8}>
+                No initiatives match these filters. Clear the filters to see every initiative.
+              </EmptyRow>
             ) : (
               data.rows.map((row) => (
                 <TR key={row.id}>
@@ -149,10 +175,17 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                     <span>{row.code}</span>
                   </TD>
                   <TD className="min-w-[14rem]" primary>
-                    <Link href={`${base}/${row.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`${base}/${row.id}`}
+                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {row.name}
                     </Link>
-                    {row.status === "retired" ? <span className="ml-2"><Badge>Retired</Badge></span> : null}
+                    {row.status === "retired" ? (
+                      <span className="ml-2">
+                        <Badge>Retired</Badge>
+                      </span>
+                    ) : null}
                   </TD>
                   <TD label="Category">
                     <span>{row.category}</span>
@@ -173,8 +206,24 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                       <Badge tone="warn">No form</Badge>
                     )}
                   </TD>
-                  <TD label={data.period.label}>{row.orgs > 0 && notDue ? <span className="num text-muted">{row.accepted} of {row.orgs} accepted</span> : row.orgs > 0 ? <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} /> : <span className="text-muted">No organizations</span>}</TD>
-                  <TD align="right" label="Missing">{row.missing > 0 ? <Badge tone="bad">{row.missing} missing</Badge> : <span className="text-muted">None</span>}</TD>
+                  <TD label={data.period.label}>
+                    {row.orgs > 0 && notDue ? (
+                      <span className="num text-muted">
+                        {row.accepted} of {row.orgs} accepted
+                      </span>
+                    ) : row.orgs > 0 ? (
+                      <ProgressBar value={row.accepted} max={row.orgs} label={`${row.name} accepted reports`} />
+                    ) : (
+                      <span className="text-muted">No organizations</span>
+                    )}
+                  </TD>
+                  <TD align="right" label="Missing">
+                    {row.missing > 0 ? (
+                      <Badge tone="bad">{row.missing} missing</Badge>
+                    ) : (
+                      <span className="text-muted">None</span>
+                    )}
+                  </TD>
                 </TR>
               ))
             )}

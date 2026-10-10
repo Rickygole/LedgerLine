@@ -1,7 +1,8 @@
 import type { Bucket } from "@/lib/reporting";
 import type { Answers, BudgetLine, FormDefinition, Issue } from "@/lib/rules/types";
 
-export type FlagReason = "unbalanced" | "incomplete" | "missing" | "validation" | "zero_outcomes" | "low_outcomes" | "manual";
+export type FlagReason =
+  "unbalanced" | "incomplete" | "missing" | "validation" | "zero_outcomes" | "low_outcomes" | "manual";
 
 export type RowFlag = { reason: FlagReason; evidence: string };
 

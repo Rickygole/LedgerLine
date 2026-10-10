@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { StateBadge } from "@/components/ui/status-badge";
 import { formatDate } from "@/lib/dates";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency, plural } from "@/lib/format";
 import { actionFor, type Obligation } from "@/lib/portal/data";
 
 function linkLabel(o: Obligation) {
@@ -16,14 +16,27 @@ function open(o: Obligation) {
 }
 
 function DueNote({ days }: { days: number }) {
-  if (days > 0) return <span className="whitespace-nowrap text-sm font-semibold text-bad">{days} {days === 1 ? "day" : "days"} past due</span>;
-  if (days > -14) return <span className="whitespace-nowrap text-sm font-semibold text-warn">Due in {-days} {days === -1 ? "day" : "days"}</span>;
+  if (days > 0)
+    return (
+      <span className="whitespace-nowrap text-sm font-semibold text-bad">
+        {days} {plural(days, "day", "days")} past due
+      </span>
+    );
+  if (days > -14)
+    return (
+      <span className="whitespace-nowrap text-sm font-semibold text-warn">
+        Due in {-days} {days === -1 ? "day" : "days"}
+      </span>
+    );
   return null;
 }
 
 function ActionLink({ o }: { o: Obligation }) {
   return (
-    <Link href={actionFor(o).href} className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover">
+    <Link
+      href={actionFor(o).href}
+      className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover"
+    >
       {linkLabel(o)}
       <span className="sr-only">
         {" "}
@@ -33,28 +46,7 @@ function ActionLink({ o }: { o: Obligation }) {
   );
 }
 
-type Code = { code: string; fiscalYearId: string };
-
-function currentCodes(obligations: Obligation[]): Map<string, Code> {
-  const codes = new Map<string, Code>();
-  for (const o of obligations) {
-    const known = codes.get(o.initiativeName);
-    if (!known || o.fiscalYearId > known.fiscalYearId) codes.set(o.initiativeName, { code: o.initiativeCode, fiscalYearId: o.fiscalYearId });
-  }
-  return codes;
-}
-
-function InitiativeCode({ o, codes }: { o: Obligation; codes: Map<string, Code> }) {
-  const current = codes.get(o.initiativeName);
-  if (!current || current.code === o.initiativeCode) return <>{o.initiativeCode}</>;
-  return (
-    <abbr title={`${o.fiscalYearId} code ${o.initiativeCode}, carried forward as ${current.code}`} className="no-underline">
-      {current.code}
-    </abbr>
-  );
-}
-
-function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> }) {
+function Rows({ rows }: { rows: Obligation[] }) {
   return (
     <>
       <ul className="divide-y divide-line-soft border-y border-line-soft md:hidden">
@@ -64,10 +56,9 @@ function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> })
               <div className="min-w-0">
                 <p className="text-base font-semibold text-ink">{o.initiativeName}</p>
                 <p className="text-sm text-muted">
-                  {o.periodLabel} <span aria-hidden="true">·</span>
-                  <span className="sr-only">,</span> <span className="font-mono">
-                    <InitiativeCode o={o} codes={codes} />
-                  </span>
+                  {o.periodLabel}
+                  <span aria-hidden="true"> ·</span>
+                  <span className="sr-only">,</span> <span className="font-mono">{o.initiativeCode}</span>
                 </p>
               </div>
               <StateBadge state={o.state} audience="cbo" />
@@ -87,11 +78,21 @@ function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> })
         <table className="w-full table-fixed border-collapse text-[15px] leading-[22px]">
           <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
             <tr className="h-11">
-              <th scope="col" className="w-[28%] px-4 font-semibold">Initiative</th>
-              <th scope="col" className="w-[22%] px-4 font-semibold">Period</th>
-              <th scope="col" className="w-[17%] px-4 font-semibold">Due</th>
-              <th scope="col" className="w-[13%] px-4 text-right font-semibold">Award</th>
-              <th scope="col" className="w-[12%] px-4 font-semibold">Status</th>
+              <th scope="col" className="w-[28%] px-4 font-semibold">
+                Initiative
+              </th>
+              <th scope="col" className="w-[22%] px-4 font-semibold">
+                Period
+              </th>
+              <th scope="col" className="w-[17%] px-4 font-semibold">
+                Due
+              </th>
+              <th scope="col" className="w-[13%] px-4 text-right font-semibold">
+                Award
+              </th>
+              <th scope="col" className="w-[12%] px-4 font-semibold">
+                Status
+              </th>
               <th scope="col" className="w-[8%] px-4 text-right font-semibold">
                 <span className="sr-only">Action</span>
               </th>
@@ -103,7 +104,7 @@ function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> })
                 <td className="px-4 py-3">
                   <p className="font-semibold text-ink">{o.initiativeName}</p>
                   <p className="font-mono text-[13px] text-muted">
-                    <InitiativeCode o={o} codes={codes} />
+                    {o.initiativeCode}
                     {o.referenceNo ? `, ${o.referenceNo}` : ""}
                   </p>
                 </td>
@@ -133,14 +134,14 @@ function Rows({ rows, codes }: { rows: Obligation[]; codes: Map<string, Code> })
   );
 }
 
-function Group({ id, title, rows, codes }: { id: string; title: string; rows: Obligation[]; codes: Map<string, Code> }) {
+function Group({ id, title, rows }: { id: string; title: string; rows: Obligation[] }) {
   if (rows.length === 0) return null;
   return (
     <section aria-labelledby={id}>
       <h3 id={id} className="mb-3 text-[17px] font-bold leading-6 text-ink">
         {title} <span className="num font-semibold text-muted">({rows.length})</span>
       </h3>
-      <Rows rows={rows} codes={codes} />
+      <Rows rows={rows} />
     </section>
   );
 }
@@ -148,27 +149,33 @@ function Group({ id, title, rows, codes }: { id: string; title: string; rows: Ob
 export function ObligationGroups({ obligations }: { obligations: Obligation[] }) {
   const needs = obligations.filter((o) => o.state === "missing" || o.state === "returned" || o.state === "draft");
   const coming = obligations.filter((o) => o.state === "not_started");
-  const done = obligations.filter((o) => o.state === "submitted" || o.state === "under_review" || o.state === "accepted");
-  const codes = currentCodes(obligations);
+  const done = obligations.filter(
+    (o) => o.state === "submitted" || o.state === "under_review" || o.state === "accepted",
+  );
 
   if (obligations.length === 0) {
-    return <p className="py-6 text-[15px] text-muted">No reports are assigned to your organization yet. Council Finance assigns initiatives and reporting periods each fiscal year.</p>;
+    return (
+      <p className="py-6 text-[15px] text-muted">
+        No reports are assigned to your organization yet. Council Finance assigns initiatives and reporting periods each
+        fiscal year.
+      </p>
+    );
   }
 
   return (
     <div className="space-y-8">
-      <Group id="group-needs" title="Needs action" rows={needs} codes={codes} />
-      <Group id="group-coming" title="Coming up" rows={coming} codes={codes} />
+      <Group id="group-needs" title="Needs action" rows={needs} />
+      <Group id="group-coming" title="Coming up" rows={coming} />
       {done.length > 0 ? (
         <details className="group">
           <summary className="cursor-pointer list-none text-[15px] font-bold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">
-              Show {done.length} completed {done.length === 1 ? "report" : "reports"}
+              Show {done.length} completed {plural(done.length, "report", "reports")}
             </span>
             <span className="hidden group-open:inline">Hide completed reports</span>
           </summary>
           <div className="mt-4">
-            <Group id="group-done" title="Done" rows={done} codes={codes} />
+            <Group id="group-done" title="Done" rows={done} />
           </div>
         </details>
       ) : null}

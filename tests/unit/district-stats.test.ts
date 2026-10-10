@@ -4,9 +4,15 @@ import { boroughLabel, boroughsForDistrict, districtInBorough } from "@/lib/geo/
 import { COUNCIL_DISTRICT_SHAPES } from "@/lib/geo";
 import type { Bucket } from "@/lib/reporting";
 
-type Row = { bucket: Bucket; fundingSource: string; sponsors: { district: number; name: string; amount: number }[]; councilDistrict: number | null };
+type Row = {
+  bucket: Bucket;
+  fundingSource: string;
+  sponsors: { district: number; name: string; amount: number }[];
+  councilDistrict: number | null;
+};
 
-const sp = (...districts: number[]) => districts.map((district) => ({ district, name: `Member ${district}`, amount: 1 }));
+const sp = (...districts: number[]) =>
+  districts.map((district) => ({ district, name: `Member ${district}`, amount: 1 }));
 const members = new Map(Array.from({ length: 51 }, (_, i) => [i + 1, `Member ${i + 1}`] as [number, string]));
 
 const rows: Row[] = [
@@ -30,7 +36,9 @@ describe("Council district map numbers", () => {
 
   it("sponsor mode: distinct district reports plus Speaker, citywide and unassigned equal the Missing count", () => {
     const stats = districtStats(rows, "sponsor", members);
-    expect(stats.inDistricts.missing + stats.speaker.missing + stats.citywide.missing + stats.noDistrict.missing).toBe(missing);
+    expect(stats.inDistricts.missing + stats.speaker.missing + stats.citywide.missing + stats.noDistrict.missing).toBe(
+      missing,
+    );
     expect(stats.totalMissing).toBe(missing);
     expect(stats.speaker).toMatchObject({ due: 1, missing: 1 });
     expect(stats.citywide).toMatchObject({ due: 2, missing: 2 });
@@ -38,7 +46,12 @@ describe("Council district map numbers", () => {
     const d17 = stats.districts.find((d) => d.district === 17)!;
     expect(d8).toMatchObject({ due: 2, missing: 2, member: "Member 8", boroughs: "Manhattan and Bronx" });
     expect(d17).toMatchObject({ due: 1, missing: 1 });
-    expect(stats.districts.find((d) => d.district === 22)).toMatchObject({ due: 2, missing: 0, waiting: 1, accepted: 1 });
+    expect(stats.districts.find((d) => d.district === 22)).toMatchObject({
+      due: 2,
+      missing: 0,
+      waiting: 1,
+      accepted: 1,
+    });
   });
 
   it("location mode: districts plus no district on file equal the Missing count exactly", () => {
@@ -58,7 +71,18 @@ describe("Council district map numbers", () => {
   });
 
   it("bins, ranks and places district 8 in both Manhattan and the Bronx", () => {
-    const pairs: [number, number][] = [[0, 10], [1, 20], [1, 11], [1, 10], [2, 9], [6, 25], [3, 7], [1, 2], [2, 2], [3, 0]];
+    const pairs: [number, number][] = [
+      [0, 10],
+      [1, 20],
+      [1, 11],
+      [1, 10],
+      [2, 9],
+      [6, 25],
+      [3, 7],
+      [1, 2],
+      [2, 2],
+      [3, 0],
+    ];
     expect(pairs.map(([m, d]) => binFor(m, d))).toEqual([0, 1, 1, 2, 2, 2, 3, 4, 4, 0]);
     expect(boroughsForDistrict(8)).toEqual(["Manhattan", "Bronx"]);
     expect(districtInBorough(8, "Bronx")).toBe(true);

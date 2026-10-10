@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { submitReport } from "@/app/portal/reports/actions";
 import { Button } from "@/components/ui/button";
-import type { ReportState } from "@/components/ui/status-badge";
+import type { ReportState } from "@/lib/domain";
 import { FieldError, Hint, Input, Label } from "@/components/ui/field";
 import { formatTime } from "@/lib/dates";
 import { amountIssues, linesFromRows, rowsFromLines, type BudgetRow } from "@/lib/report/budget-rows";
@@ -30,7 +30,17 @@ const ATTACHMENTS = "attachments";
 const REVIEW = "review";
 const REVIEW_FIELDS = new Set(["certification", "certifier_name", "certifier_title"]);
 
-export function ReportEditor({ payload, daysLate, state: reportState, notice }: { payload: EditorPayload; daysLate: number; state: ReportState; notice?: React.ReactNode }) {
+export function ReportEditor({
+  payload,
+  daysLate,
+  state: reportState,
+  notice,
+}: {
+  payload: EditorPayload;
+  daysLate: number;
+  state: ReportState;
+  notice?: React.ReactNode;
+}) {
   const { header, definition } = payload;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,11 +71,15 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
   const { state, markDirty, flushNow, lockRef } = useAutosave(
     header.lockVersion,
     () => ({ answers: latest.current.answers, budget: linesFromRows(latest.current.rows) }),
-    header.id
+    header.id,
   );
 
-  const stepKeys = useMemo(() => [...definition.sections.map((section) => section.key), ATTACHMENTS, REVIEW], [definition.sections]);
-  const landing = payload.resumeSection && stepKeys.includes(payload.resumeSection) ? payload.resumeSection : stepKeys[0];
+  const stepKeys = useMemo(
+    () => [...definition.sections.map((section) => section.key), ATTACHMENTS, REVIEW],
+    [definition.sections],
+  );
+  const landing =
+    payload.resumeSection && stepKeys.includes(payload.resumeSection) ? payload.resumeSection : stepKeys[0];
   const requested = searchParams.get("step");
   const step = requested && stepKeys.includes(requested) ? requested : landing;
   const returning = searchParams.get("return") === "review" && step !== REVIEW;
@@ -108,7 +122,20 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
       ...amountIssues(rows),
       ...certificationIssues({ accepted: certified, name: certName, title: certTitle }),
     ],
-    [definition, answers, lines, rows, header.awardAmount, header.ein, header.orgName, header.startsOn, header.endsOn, certified, certName, certTitle]
+    [
+      definition,
+      answers,
+      lines,
+      rows,
+      header.awardAmount,
+      header.ein,
+      header.orgName,
+      header.startsOn,
+      header.endsOn,
+      certified,
+      certName,
+      certTitle,
+    ],
   );
   const blocking = useMemo(() => blockingIssues(issues), [issues]);
   const warnings = useMemo(() => issues.filter((issue) => issue.severity === "warn"), [issues]);
@@ -172,10 +199,26 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
   const steps: Step[] = [
     ...definition.sections.map((section): Step => {
       const count = bySection[section.key]?.length ?? 0;
-      return { key: section.key, title: section.title, errors: count, state: count === 0 ? "complete" : summaryOpen ? "error" : "todo" };
+      return {
+        key: section.key,
+        title: section.title,
+        errors: count,
+        state: count === 0 ? "complete" : summaryOpen ? "error" : "todo",
+      };
     }),
-    { key: ATTACHMENTS, title: "Attachments", errors: 0, state: attachments.length > 0 ? "complete" : "todo", optional: true },
-    { key: REVIEW, title: "Review and submit", errors: reviewIssues.length, state: blocking.length === 0 ? "complete" : summaryOpen && reviewIssues.length > 0 ? "error" : "todo" },
+    {
+      key: ATTACHMENTS,
+      title: "Attachments",
+      errors: 0,
+      state: attachments.length > 0 ? "complete" : "todo",
+      optional: true,
+    },
+    {
+      key: REVIEW,
+      title: "Review and submit",
+      errors: reviewIssues.length,
+      state: blocking.length === 0 ? "complete" : summaryOpen && reviewIssues.length > 0 ? "error" : "todo",
+    },
   ];
   const current = steps[index];
   const previous = index > 0 ? steps[index - 1] : null;
@@ -195,11 +238,16 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
     setMessage("");
     const outcome = await flushNow();
     if (outcome === "saved" || outcome === "idle") router.push("/portal");
-    else if (outcome === "signed_out") setMessage("You are signed out, so your latest changes are not saved. Sign in again in a new tab, then choose Save and exit.");
-    else if (outcome === "retrying") setMessage("Your latest changes are not saved yet. Keep this tab open and try again in a moment.");
+    else if (outcome === "signed_out")
+      setMessage(
+        "You are signed out, so your latest changes are not saved. Sign in again in a new tab, then choose Save and exit.",
+      );
+    else if (outcome === "retrying")
+      setMessage("Your latest changes are not saved yet. Keep this tab open and try again in a moment.");
   }
 
   function saveAndContinue() {
+    if (section) setTouched((current) => new Set([...current, ...section.questions.map((question) => question.key)]));
     void flushNow();
     if (returning) go(REVIEW);
     else if (next) go(next.key);
@@ -218,10 +266,16 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
       const outcome = await flushNow();
       if (outcome === "stale" || outcome === "locked") return;
       if (outcome === "signed_out" || outcome === "retrying") {
-        setMessage("Your latest changes could not be saved, so the report was not submitted. Keep this tab open and try again.");
+        setMessage(
+          "Your latest changes could not be saved, so the report was not submitted. Keep this tab open and try again.",
+        );
         return;
       }
-      const result = await submitReport({ submissionId: header.id, expectedLock: lockRef.current, certification: { accepted: certified, name: certName, title: certTitle } });
+      const result = await submitReport({
+        submissionId: header.id,
+        expectedLock: lockRef.current,
+        certification: { accepted: certified, name: certName, title: certTitle },
+      });
       if (result.status === "blocked") {
         setServerIssues(result.issues);
         showProblems();
@@ -239,7 +293,8 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
     }
   }
 
-  const purpose = section?.kind === "budget" && definition.budget.mustEqualAward ? "The total must equal your award." : null;
+  const purpose =
+    section?.kind === "budget" && definition.budget.mustEqualAward ? "The total must equal your award." : null;
 
   return (
     <>
@@ -257,11 +312,15 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
       {notice}
 
       {staleInfo ? (
-        <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
+        <div
+          role="alert"
+          className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn"
+        >
           <p className="inline-flex items-start gap-2 font-semibold">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
-              {staleInfo.by ?? "Someone"} saved this report at {formatTime(staleInfo.at)}. Reload to see the latest version.
+              {staleInfo.by ?? "Someone"} saved this report at {formatTime(staleInfo.at)}. Reload to see the latest
+              version.
             </span>
           </p>
           <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
@@ -272,13 +331,19 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
       ) : null}
 
       {state.kind === "locked" ? (
-        <div role="alert" className="mb-6 rounded border border-bad/40 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
+        <div
+          role="alert"
+          className="mb-6 rounded border border-bad/40 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad"
+        >
           {state.message}
         </div>
       ) : null}
 
       {message && step !== REVIEW ? (
-        <p role="alert" className="mb-6 rounded border border-bad/40 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad">
+        <p
+          role="alert"
+          className="mb-6 rounded border border-bad/40 bg-bad-bg px-4 py-3 text-sm font-semibold text-bad"
+        >
           {message}
         </p>
       ) : null}
@@ -299,14 +364,21 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                 <p className="num hidden text-sm font-semibold text-muted lg:block">
                   Step {index + 1} of {steps.length}
                 </p>
-                <h2 id="step-heading" ref={headingRef} tabIndex={-1} className="lg:mt-0.5 text-xl font-bold leading-7 text-ink outline-none">
+                <h2
+                  id="step-heading"
+                  ref={headingRef}
+                  tabIndex={-1}
+                  className="lg:mt-0.5 text-xl font-bold leading-7 text-ink outline-none"
+                >
                   {current?.title}
                 </h2>
                 {purpose ? <p className="mt-1 max-w-[70ch] text-[15px] leading-[22px] text-ink-2">{purpose}</p> : null}
               </div>
 
               <div className="px-5 py-6 sm:px-6">
-                {summaryOpen && stepIssues.length > 0 ? <StepProblems issues={stepIssues} onSelect={goToField} scope="step" /> : null}
+                {summaryOpen && stepIssues.length > 0 ? (
+                  <StepProblems issues={stepIssues} onSelect={goToField} scope="step" />
+                ) : null}
 
                 {section && section.kind === "budget" ? (
                   <>
@@ -317,10 +389,18 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                       award={header.awardAmount}
                       maxLines={definition.budget.maxLines}
                       rowErrors={rowErrors}
-                      gridError={summaryOpen ? blocking.find((issue) => issue.field === "budget" && issue.message.startsWith("Add at least"))?.message : undefined}
+                      gridError={
+                        summaryOpen
+                          ? blocking.find(
+                              (issue) => issue.field === "budget" && issue.message.startsWith("Add at least"),
+                            )?.message
+                          : undefined
+                      }
                       varianceNote={String(answers[VARIANCE_NOTE_KEY] ?? "")}
                       onVarianceNote={(value) => changeAnswer(VARIANCE_NOTE_KEY, value)}
-                      varianceError={summaryOpen ? blocking.find((issue) => issue.field === VARIANCE_NOTE_KEY)?.message : undefined}
+                      varianceError={
+                        summaryOpen ? blocking.find((issue) => issue.field === VARIANCE_NOTE_KEY)?.message : undefined
+                      }
                     />
                   </>
                 ) : null}
@@ -356,7 +436,13 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                 {step === REVIEW ? (
                   <div className="space-y-8">
                     {blocking.length > 0 || (summaryOpen && shownIssues.length > 0) ? (
-                      <StepProblems ref={summaryRef} issues={shownIssues} onSelect={goToField} scope="report" alert={summaryOpen} />
+                      <StepProblems
+                        ref={summaryRef}
+                        issues={shownIssues}
+                        onSelect={goToField}
+                        scope="report"
+                        alert={summaryOpen}
+                      />
                     ) : (
                       <p className="flex items-start gap-2 rounded border border-ok/30 bg-ok-bg px-4 py-3 text-[15px] font-semibold text-ok">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -378,7 +464,14 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                       </div>
                     ) : null}
 
-                    <CheckAnswers definition={definition} answers={answers} lines={lines} award={header.awardAmount} attachments={attachments} onChange={(key, target) => go(key, { focus: target, keepReturn: true })} />
+                    <CheckAnswers
+                      definition={definition}
+                      answers={answers}
+                      lines={lines}
+                      award={header.awardAmount}
+                      attachments={attachments}
+                      onChange={(key, target) => go(key, { focus: target, keepReturn: true })}
+                    />
 
                     <fieldset className="rounded border border-line px-5 py-5">
                       <legend className="px-1 text-[17px] font-bold text-ink">Certification</legend>
@@ -395,24 +488,61 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                           {CERTIFICATION_STATEMENT}
                         </label>
                       </div>
-                      <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certification")?.message : undefined}</FieldError>
+                      <FieldError>
+                        {summaryOpen ? blocking.find((issue) => issue.field === "certification")?.message : undefined}
+                      </FieldError>
                       <div className="mt-4 grid gap-4 sm:grid-cols-2">
                         <div>
                           <Label htmlFor="certifier-name">Certifier name</Label>
-                          <Input id="certifier-name" aria-required="true" value={certName} maxLength={120} onChange={(event) => setCertName(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_name") ? true : undefined} autoComplete="name" />
-                          <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_name")?.message : undefined}</FieldError>
+                          <Input
+                            id="certifier-name"
+                            aria-required="true"
+                            value={certName}
+                            maxLength={120}
+                            onChange={(event) => setCertName(event.target.value)}
+                            aria-invalid={
+                              summaryOpen && blocking.some((issue) => issue.field === "certifier_name")
+                                ? true
+                                : undefined
+                            }
+                            autoComplete="name"
+                          />
+                          <FieldError>
+                            {summaryOpen
+                              ? blocking.find((issue) => issue.field === "certifier_name")?.message
+                              : undefined}
+                          </FieldError>
                         </div>
                         <div>
                           <Label htmlFor="certifier-title">Certifier title</Label>
-                          <Input id="certifier-title" aria-required="true" value={certTitle} maxLength={120} onChange={(event) => setCertTitle(event.target.value)} aria-invalid={summaryOpen && blocking.some((issue) => issue.field === "certifier_title") ? true : undefined} autoComplete="organization-title" />
-                          <FieldError>{summaryOpen ? blocking.find((issue) => issue.field === "certifier_title")?.message : undefined}</FieldError>
+                          <Input
+                            id="certifier-title"
+                            aria-required="true"
+                            value={certTitle}
+                            maxLength={120}
+                            onChange={(event) => setCertTitle(event.target.value)}
+                            aria-invalid={
+                              summaryOpen && blocking.some((issue) => issue.field === "certifier_title")
+                                ? true
+                                : undefined
+                            }
+                            autoComplete="organization-title"
+                          />
+                          <FieldError>
+                            {summaryOpen
+                              ? blocking.find((issue) => issue.field === "certifier_title")?.message
+                              : undefined}
+                          </FieldError>
                         </div>
                       </div>
-                      <Hint>The name, title and time are stored with this submission and shown to Council Finance.</Hint>
+                      <Hint>
+                        The name, title and time are stored with this submission and shown to Council Finance.
+                      </Hint>
                     </fieldset>
 
                     <p id="submit-hint" className="max-w-[70ch] text-[15px] leading-[22px] text-ink-2">
-                      After you submit, the report is locked. You can change it again only if Council Finance asks for an update. A copy is saved in Messages.
+                      After you submit, the report is locked. You can change it again only if Council Finance asks for
+                      an update. A copy is saved in Messages.
                     </p>
                     {message ? (
                       <p role="alert" className="text-sm font-semibold text-bad">
@@ -443,7 +573,12 @@ export function ReportEditor({ payload, daysLate, state: reportState, notice }: 
                   <span />
                 )}
                 {step === REVIEW ? (
-                  <Button onClick={() => void submit()} disabled={submitting || halted} aria-describedby="submit-hint" className="max-sm:w-full">
+                  <Button
+                    onClick={() => void submit()}
+                    disabled={submitting || halted}
+                    aria-describedby="submit-hint"
+                    className="max-sm:w-full"
+                  >
                     {submitting ? "Submitting" : "Submit report to Council Finance"}
                   </Button>
                 ) : (

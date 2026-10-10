@@ -1,5 +1,6 @@
 import type { Tx } from "@/lib/db";
 import { iso } from "./sql";
+import { plural } from "@/lib/format";
 
 export const RESPONSE_TARGET_HOURS = 24;
 const HOUR = 3_600_000;
@@ -12,7 +13,6 @@ export const CATEGORIES = [
   { value: "other", label: "Something else" },
 ] as const;
 
-export type SupportCategory = (typeof CATEGORIES)[number]["value"];
 export type SupportState = "open" | "responded" | "overdue" | "closed";
 
 export function categoryLabel(value: string): string {
@@ -23,7 +23,12 @@ export function dueAt(createdAt: Date | string): Date {
   return new Date(new Date(createdAt).getTime() + RESPONSE_TARGET_HOURS * HOUR);
 }
 
-export function supportState(input: { createdAt: Date | string; firstResponseAt: Date | string | null; closedAt?: Date | string | null; now: Date }): SupportState {
+export function supportState(input: {
+  createdAt: Date | string;
+  firstResponseAt: Date | string | null;
+  closedAt?: Date | string | null;
+  now: Date;
+}): SupportState {
   if (input.closedAt) return "closed";
   if (input.firstResponseAt) return "responded";
   return input.now.getTime() > dueAt(input.createdAt).getTime() ? "overdue" : "open";
@@ -44,22 +49,34 @@ export function ageMinutes(createdAt: Date | string, now: Date): number {
 }
 
 export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  if (minutes < 60) return `${minutes} ${plural(minutes, "minute", "minutes")}`;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (hours < 48) return rest === 0 ? `${hours} ${hours === 1 ? "hour" : "hours"}` : `${hours} h ${rest} min`;
+  if (hours < 48) return rest === 0 ? `${hours} ${plural(hours, "hour", "hours")}` : `${hours} h ${rest} min`;
   const days = Math.floor(hours / 24);
-  return `${days} ${days === 1 ? "day" : "days"}`;
+  return `${days} ${plural(days, "day", "days")}`;
 }
 
-export function targetSummary(rows: { createdAt: string; firstResponseAt: string | null }[]): { responded: number; metTarget: number; medianMinutes: number | null } {
-  const times = rows.map((r) => responseMinutes(r.createdAt, r.firstResponseAt)).filter((m): m is number => m !== null).sort((a, b) => a - b);
+export function targetSummary(rows: { createdAt: string; firstResponseAt: string | null }[]): {
+  responded: number;
+  metTarget: number;
+  medianMinutes: number | null;
+} {
+  const times = rows
+    .map((r) => responseMinutes(r.createdAt, r.firstResponseAt))
+    .filter((m): m is number => m !== null)
+    .sort((a, b) => a - b);
   const met = rows.filter((r) => metTarget(r.createdAt, r.firstResponseAt) === true).length;
-  const median = times.length === 0 ? null : times.length % 2 === 1 ? times[(times.length - 1) / 2] : Math.round((times[times.length / 2 - 1] + times[times.length / 2]) / 2);
+  const median =
+    times.length === 0
+      ? null
+      : times.length % 2 === 1
+        ? times[(times.length - 1) / 2]
+        : Math.round((times[times.length / 2 - 1] + times[times.length / 2]) / 2);
   return { responded: times.length, metTarget: met, medianMinutes: median };
 }
 
-export type SupportRow = {
+type SupportRow = {
   id: string;
   reference: string;
   requester: string;
@@ -86,7 +103,10 @@ const SELECT = `
   LEFT JOIN app_user fu ON fu.id = r.first_responder`;
 
 export async function listSupport(tx: Tx, scope: { requester?: string; state?: string }): Promise<SupportRow[]> {
-  const rows = await tx.query<SupportRow>(`${SELECT} WHERE ($1::uuid IS NULL OR r.requester = $1) ORDER BY r.created_at DESC, r.seq DESC LIMIT 500`, [scope.requester ?? null]);
+  const rows = await tx.query<SupportRow>(
+    `${SELECT} WHERE ($1::uuid IS NULL OR r.requester = $1) ORDER BY r.created_at DESC, r.seq DESC LIMIT 500`,
+    [scope.requester ?? null],
+  );
   return rows;
 }
 
@@ -100,6 +120,6 @@ export async function loadMessages(tx: Tx, id: string): Promise<SupportMessage[]
   return tx.query<SupportMessage>(
     `SELECT m.id::text, coalesce(u.full_name, 'Finance support') AS author_name, m.from_staff, m.body, ${iso("m.created_at")} AS created_at
      FROM support_message m LEFT JOIN app_user u ON u.id = m.author WHERE m.request_id = $1 ORDER BY m.created_at, m.id`,
-    [id]
+    [id],
   );
 }

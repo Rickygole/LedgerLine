@@ -75,28 +75,46 @@ const definition: FormDefinition = {
   ],
 };
 
-const line = (amount: number, actual?: number | null): BudgetLine => ({ rowId: "r1", position: 1, category: "PS", description: "Staff", amount, actual });
+const line = (amount: number, actual?: number | null): BudgetLine => ({
+  rowId: "r1",
+  position: 1,
+  category: "PS",
+  description: "Staff",
+  amount,
+  actual,
+});
 
 describe("[US-029][BR-022] submit re-validates bounds", () => {
   it("blocks a negative table cell", () => {
-    const issues = validateSubmission({ definition, answers: { served: "5", ages: [{ group: "5 to 9", count: "-4" }] }, budget: [line(100)], awardAmount: 100 });
+    const issues = validateSubmission({
+      definition,
+      answers: { served: "5", ages: [{ group: "5 to 9", count: "-4" }] },
+      budget: [line(100)],
+      awardAmount: 100,
+    });
     expect(issues.some((i) => i.field === "ages" && i.message.includes("cannot be negative"))).toBe(true);
   });
 
   it("blocks a negative budget line even when the total balances", () => {
     const budget: BudgetLine[] = [line(105000), { ...line(-20000), rowId: "r2", position: 2 }];
-    const issues = blockingIssues(validateSubmission({ definition, answers: { served: "5" }, budget, awardAmount: 85000 }));
+    const issues = blockingIssues(
+      validateSubmission({ definition, answers: { served: "5" }, budget, awardAmount: 85000 }),
+    );
     expect(issues.some((i) => i.message === "Line 2: the amount cannot be negative.")).toBe(true);
   });
 
   it("blocks a negative actual spent value", () => {
-    const issues = blockingIssues(validateSubmission({ definition, answers: { served: "5" }, budget: [line(100, -1)], awardAmount: 100 }));
+    const issues = blockingIssues(
+      validateSubmission({ definition, answers: { served: "5" }, budget: [line(100, -1)], awardAmount: 100 }),
+    );
     expect(issues.some((i) => i.message === "Line 1: actual spent cannot be negative.")).toBe(true);
   });
 
   it("states the line limit with the count", () => {
     const lines = Array.from({ length: 101 }, (_, i) => ({ ...line(1), rowId: `r${i}`, position: i + 1 }));
     const issues = validateSubmission({ definition, answers: { served: "5" }, budget: lines, awardAmount: 101 });
-    expect(issues.find((i) => i.ruleId === "BR-008")?.message).toBe("The budget can have at most 100 lines. This budget has 101.");
+    expect(issues.find((i) => i.ruleId === "BR-008")?.message).toBe(
+      "The budget can have at most 100 lines. This budget has 101.",
+    );
   });
 });

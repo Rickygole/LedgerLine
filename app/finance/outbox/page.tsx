@@ -19,7 +19,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Outbox" };
 
-
 export default async function OutboxPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser(FINANCE_ROLES);
   const params = await searchParams;
@@ -40,10 +39,23 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Outbox" description="Every message LedgerLine has generated, including confirmations, update requests, reminders and password resets." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]} />
-      {emailDeliveryOn() ? null : <p className="mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink">{DELIVERY_OFF_NOTICE}</p>}
+      <PageHeader
+        title="Outbox"
+        description="Every message LedgerLine has generated, including confirmations, update requests, reminders and password resets."
+        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]}
+      />
+      {emailDeliveryOn() ? null : (
+        <p className="mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink">
+          {DELIVERY_OFF_NOTICE}
+        </p>
+      )}
       <Card>
-        <FilterBar action={base} clearHref={base} keep={0} applied={[data.template, data.org, from, to].filter(Boolean).length}>
+        <FilterBar
+          action={base}
+          clearHref={base}
+          keep={0}
+          applied={[data.template, data.org, from, to].filter(Boolean).length}
+        >
           <FilterField label="Template" htmlFor="template">
             <Select id="template" name="template" defaultValue={data.template}>
               <option value="">All templates</option>
@@ -89,7 +101,10 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
               data.rows.map((m) => (
                 <TR key={m.id}>
                   <TD className="min-w-[18rem]" primary>
-                    <Link href={`${base}/${m.id}`} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                    <Link
+                      href={`${base}/${m.id}`}
+                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                    >
                       {m.subject}
                     </Link>
                   </TD>
@@ -103,7 +118,10 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                   </TD>
                   <TD className="min-w-[12rem]" label="Organization">
                     {m.org_id ? (
-                      <Link href={`/finance/organizations/${m.org_id}`} className="text-link underline underline-offset-2 hover:text-link-hover">
+                      <Link
+                        href={`/finance/organizations/${m.org_id}`}
+                        className="text-link underline underline-offset-2 hover:text-link-hover"
+                      >
                         {m.org_name}
                       </Link>
                     ) : (

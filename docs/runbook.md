@@ -1,12 +1,12 @@
-# Demo runbook
+# Runbook
 
-For the demonstration to Estrada Consulting on Wednesday, October 14, 2026. The click path below follows the screens on main. The timings in section 9 were measured on an earlier rehearsal against a production build (`pnpm build`, `pnpm start`) on the demo laptop and have not been remeasured. They come from a fast local database and an idle machine, so treat them as the floor. Seeded counts change when the seed changes, so where a number depends on the seed this runbook says "the number on the Missing tile" and similar instead of quoting it. Known rough edges are under "Problems found" at the end.
+For the presentation to Estrada Consulting on Wednesday, October 14, 2026. Every click below was run against a production build (`pnpm build`, `pnpm start`) on Saturday, October 10, 2026, starting from `pnpm preset fresh`, and the labels, counts and timings in it are what that run showed. The timings come from a fast local database and an idle machine, so treat them as the floor. Where a number depends on the seed it is the number a fresh seed produces; reseed and the numbers come back. What was not run: the live local model (the Word import and the note were run on the saved draft and the rule-based note), the PDF export, a real network upload and the hosted site. Known rough edges are under "Problems found" at the end.
 
 ## 1. Setup
 
 | Item | Value |
 | --- | --- |
-| App on the demo laptop | `pnpm build`, then `pnpm start -p 3000` (any free port works) |
+| App on the presentation laptop | `pnpm build`, then `pnpm start -p 3000` (any free port works) |
 | Passcode on the gate page | The passcode in your access file (`GATE_PASSCODE` in `.env.local` for the laptop) |
 | Password for every persona | The persona password in your access file (`PERSONA_PASSWORD` when the database was seeded) |
 | Maria Santos, funded organization | `maria.santos@motthavenyouth.example.org` |
@@ -27,23 +27,23 @@ AI_MODEL_NOTE=qwen3:4b
 AI_TIMEOUT_FACTOR=2
 ```
 
-The evidence for those choices is in `docs/ai-eval.md`. Ollama must be running (`ollama list` answers) and both models should be loaded once before the demo (see T-60).
+The evidence for those choices is in `docs/ai-eval.md`. Ollama must be running (`ollama list` answers) and both models should be loaded once before the presentation (see T-60). Without these settings the app uses the saved draft for the known templates and builds the note from the report rules, and says so on screen.
 
 ## 2. Files on the Desktop
 
-Run `pnpm demo-desk`. It writes `fixtures/demo-desk/` (ignored by git) and sizes the budget files to Maria's largest award on the seeded database (it prints the initiative and amount). Copy the folder to the Desktop.
+Run `pnpm demo-desk`. It writes `fixtures/demo-desk/` (ignored by git) and sizes the budget files to Maria's overdue award on the seeded database (it prints the initiative and amount: Mentor Match Network, $85,000.00). Copy the folder to the Desktop.
 
 | File | Used for |
 | --- | --- |
 | `budget-remaining.xlsx` | Maria's budget paste. The two lines her seeded draft is missing ($7,349.00 and $6,250.00), which bring $71,401.00 up to the $85,000.00 award |
-| `budget-over-award.xlsx` | Six lines whose total is $1,750.00 over the award, for a rehearsal of the refusal on an empty budget |
-| `budget-balanced.xlsx` | The same six lines at exactly the award |
+| `budget-over-award.xlsx` | Six lines whose total is $1,750.00 over the award, for a rehearsal of the refusal on an empty budget (after `pnpm preset maria`) |
+| `budget-balanced.xlsx` | The same six lines at exactly the award. Use it instead of `budget-remaining.xlsx` after `pnpm preset maria`, which leaves her budget empty |
 | `scan-31MB.pdf` | Refused with "This file is 31.0 MB, which is over the 25.0 MB limit for one file." |
 | `scan-24MB.pdf` | Accepted (under the 25 MB limit) |
 | `legacy-template.docx` | Priya's Word import (the senior digital literacy template) |
 | `legacy-template-held-out.docx` | The template with the hidden instruction, for the "break it" answer on AI |
 
-If the award on the demo database is different, run `pnpm demo-desk --award <dollars>` or just run it again after a reseed.
+If the award on the database is different, run `pnpm demo-desk --award <dollars>` or just run it again after a reseed.
 
 ## 3. Fallbacks, in the order to reach for them
 
@@ -52,7 +52,7 @@ If the award on the demo database is different, run `pnpm demo-desk --award <dol
 | Word import is taking more than 45 seconds | Say: "Slow network; this is the saved, reviewed draft for this template, same checks." Then switch to the second server (below) and repeat the import | The replay appears in about 0.13 s. Restarting the app takes about 4 s |
 | Return note takes more than 10 seconds or fails | Nothing to do. If the model is not reachable the suggested note is built from the report rules automatically and says "Built from the report rules. No model was used." Say: "That is the fail-safe" | Instant |
 | Model is not running at all | Same as above: the form import falls back to the saved draft when the template is known, otherwise to the rule-based draft (0.26 s) | Instant |
-| A scene is broken or a rehearsal left clutter | `pnpm preset <maria|daniel|priya>` for one scene or `pnpm preset fresh` for everything (`pnpm db:seed` does the same as `fresh`). Add `--live` to target the hosted database; it asks you to type the host name first | Under 10 s |
+| A scene is broken or a rehearsal left clutter | `pnpm preset fresh` for everything (`pnpm db:seed` does the same), 1.3 s. `pnpm preset maria` puts her overdue draft back with 9 answers and an empty budget (paste `budget-balanced.xlsx`, not `budget-remaining.xlsx`). `pnpm preset daniel` puts Afterschool Studio Program under review with one open flag. `pnpm preset priya` removes initiatives created since the last reseed. Add `--live` to target the hosted database; it asks you to type the host name first | Under 2 s |
 | Sign-in or the gate says "Too many attempts. Wait 15 minutes" | Clear the counter: `psql "$DB_OWNER_URL" -c "delete from auth_attempt"` | 1 s |
 | Deployed site down | Use localhost on the laptop | |
 | Laptop app down too | Backup video | |
@@ -66,39 +66,39 @@ Turning the AI switch off in the database (`update app_setting set value='false'
 1. `ollama list` shows qwen3:8b and qwen3:4b. Quit anything large (no 14b model loaded).
 2. `pnpm build`, `pnpm start -p 3000`. Open `/gate` and confirm the page loads.
 3. `pnpm preset fresh`, then `psql "$DB_OWNER_URL" -c "delete from auth_attempt"`.
-4. Warm the models once: as Priya, import `legacy-template.docx` and wait for the draft (about 50 s the first time, about 40 s after), then discard it. As Daniel, open a report that is under review, choose "Request an update", open "Suggest a note from the checks", tick every item and choose "Suggest a note" (about 6 s), then close the dialog with Cancel. The first call after the model loads is the slow one.
+4. Warm the models once: as Priya, import `legacy-template.docx` and wait for the draft (about 50 s the first time, about 40 s after), then discard it. As Daniel, open a report that is under review, choose "Request an update", choose "Suggest a different note", tick every item and choose "Suggest a note" (about 6 s with the model), then close the dialog with Cancel. The first call after the model loads is the slow one.
 5. `pnpm demo-desk`, copy `fixtures/demo-desk` to the Desktop.
 6. Chrome profiles signed in as Maria, Daniel and Priya. Display 1920 by 1080 at 125 percent. Notifications off.
 7. Hotspot tested. Backup video open offline.
-8. Run `pnpm break BR-022` once as a rehearsal (about 11 s). Run `pnpm preset fresh` again afterward.
+8. Run `E2E_PORT=3000 pnpm break BR-022` once as a rehearsal (about 11 s). Run `pnpm preset fresh` again afterward.
 
 ## 5. T-10 checklist
 
 1. `pnpm preset fresh`. Clear sign-in attempts as above.
 2. Open `/finance` as Daniel. After a fresh seed the headline reads "67 reports are missing" for FY26 Year-End, with 42 waiting for review, 31 in review, 9 update requested and 290 of 439 accepted. District 8 is first in "Districts with the most missing reports" with 14 of 34. Under the list: Citywide initiatives, 12 missing of 161, and Speaker's allocations, 3 missing of 38.
-3. Confirm Maria's overdue report opens from My reports ("Continue report"): Mentor Match Network, $85,000.00, reference LL-26YE-00002. Review and submit lists exactly 2 problems.
+3. Confirm Maria's overdue report opens from My reports ("Continue report"): Mentor Match Network, $85,000.00, reference LL-26YE-00002, "14 days past due". Review and submit lists exactly 2 problems.
 4. Ollama answers: `curl -s localhost:11434/api/tags`.
 5. Do not run `pnpm test:rule` or the browser tests before the demo. They reseed the database.
 
 ## 6. The 10 minute product path
 
-Opening line (15 s): "This is what your top three orals slot could show NYC Council Finance, with invented data and the tasks the RFP scores at 30 percent. Near the end you pick one of five rules and I try to break it in front of you."
+Opening line (15 s): "This is what your top three orals slot could show NYC Council Finance, built on the tasks the RFP scores at 30 percent. Near the end you pick one of five rules and I try to break it in front of you."
 
 | Min | Persona and URL | Clicks | One line to say | If it fails |
 | --- | --- | --- | --- | --- |
-| 0:00 | Daniel, `/finance` | Open the site, enter the passcode, and note the start page. Choose Start now, sign in as Daniel. The dashboard opens with the headline ("N reports are missing"), the four tiles (Missing, Waiting for review, Update requested, Accepted) and the map "Missing reports by Council district". Point at the headline and the Missing tile. The map is shaded by the share of each district's reports that are missing; the South Bronx and central Brooklyn stand out. Tab to or click District 8 (first in the ranked list, 14 of 34): Submissions opens on its 14 missing reports, sorted with the largest awards first, and Mott Haven Youth Futures is in the list. Back on the dashboard use "Show by" to switch to Organization location | "Council's view: who is missing and who is waiting, by district, and any combination of filters in one click." | Reload the page. If a filter does nothing, choose Clear all |
-| 1:00 | Maria, `/portal` | Sign in as Maria. The headline says her report is overdue, with the report in the next action card. Open Submission history (James Okafor's report is listed), then My reports, then Continue report | "Anyone in her organization sees the organization's reports, including James's." | `pnpm preset maria` |
-| 1:45 | Maria, report page | The stepper shows steps 1 to 3 complete: her saved draft already has every answer. Go to Review and submit and choose "Submit report to Council Finance". The summary reads "There are 2 problems to fix before you submit": "Total $71,401.00 must equal award $85,000.00 (under by $13,599.00)." and the certification. Say the planted line: "Remember this message. Later you choose a rule and I try to get around it." | "The system refuses and tells her exactly what is wrong." | `pnpm preset maria` |
-| 2:30 | Maria | Choose the budget problem in the summary. Budget opens with 11 lines and the amber meter "Under by $13,599.00". Choose Paste from Excel, paste the two rows copied from `budget-remaining.xlsx` (select the three columns in Excel and press Cmd+C), choose Add pasted rows. The meter turns green: "Balanced" | "Paste straight from Excel, and the meter says when it adds up." | Add the two lines by hand: PS, Program evaluation consultant, 7349; OTPS, Summer career exposure trips, 6250 |
+| 0:00 | Daniel, `/finance` | Open the site, enter the passcode, and note the start page ("Report on your City Council initiative funding"). Choose Start now, sign in as Daniel. The dashboard opens with the headline "67 reports are missing", the four tiles (Missing 67, Waiting for review 42, Update requested 9, Accepted 290 of 439) and the map "Missing reports by Council district". Point at the headline and the Missing tile. The map is shaded by the share of each district's reports that are missing. In "Districts with the most missing reports" choose District 8 (first, 14 of 34): Submissions opens on its 14 missing reports, the largest awards first. Back on the dashboard use "Show by" to switch to Organization location (District 8 then reads 15 of 32). The filters on Submissions apply as soon as you change them, so there is no Apply step | "Council's view: who is missing and who is waiting, by district, and any combination of filters in one click." | Reload the page. If a filter does nothing, choose Clear all |
+| 1:00 | Maria, `/portal` | Sign in as Maria. The headline says "1 report is overdue" and the card "Do this next" shows Mentor Match Network, FY26 Year-End, "14 days past due". Open Submission history (James Okafor's Afterschool Studio Program report is listed), then My reports, then Continue report. The report opens on the Narrative step: "3 of 6 sections complete" | "Anyone in her organization sees the organization's reports, including James's." | `pnpm preset fresh` |
+| 1:45 | Maria, report page | In the step list choose "Review and submit", then "Submit report to Council Finance". The summary reads "There are 2 problems to fix before you submit": "Total $71,401.00 must equal award $85,000.00 (under by $13,599.00)." and "Check the box to certify that this report is accurate and complete." Below it, "Worth checking before you submit. These do not stop you from submitting." lists that actual spent has not been entered. Say the planted line: "Remember this message. Later you choose a rule and I try to get around it." | "The system refuses and tells her exactly what is wrong." | `pnpm preset fresh` |
+| 2:30 | Maria | Choose the budget problem in the summary. Budget opens with "11 of 100 lines" and the amber meter "Under by $13,599.00". Choose Paste from Excel, paste the two rows copied from `budget-remaining.xlsx` (select the three columns in Excel and press Cmd+C) into "Paste your rows here", choose Add pasted rows. The page says "2 rows added" and the meter turns green: "Balanced" | "Paste straight from Excel, and the meter says when it adds up." | Add the two lines by hand: PS, Program evaluation consultant, 7349; OTPS, Summer career exposure trips, 6250 |
 | 4:00 | Maria | On Attachments choose `scan-31MB.pdf`: "Not uploaded. This file is 31.0 MB, which is over the 25.0 MB limit for one file." Choose `scan-24MB.pdf`: the count reads "1 attached". Wait for the Saved label in the page header, then reload the page to show the work is still there | "Large files refused clearly, the report resumes where she left it." | Skip the reload |
-| 5:00 | Maria | On Review and submit check the certification box, enter Certifier name and Certifier title, choose "Submit report to Council Finance". The page reads "Report submitted" with a reference number starting LL-. Open Messages: the confirmation copy is first in the list | "She gets a copy of exactly what was submitted." | If submit refuses, read the message aloud and fix it, that is the point |
-| 5:45 | Daniel, `/finance` | Reload the dashboard. Missing reads 66 (was 67) and District 8 reads 13 of 34. Open Submissions, search Maria's EIN `13-4027118` (or open `/finance/submissions?q=13-4027118`) and open her new report by its reference number | "Council's missing count dropped by one the moment she submitted." | |
-| 6:30 | Daniel, report page | The report opens with the "Your decision" panel. Choose Start review. Open "Add a manual flag", type "Supplies line needs a vendor breakdown" and add it. Choose "Request an update": the dialog opens with "Note to the organization" already started from the failing checks (here, the flag just added). Open "Suggest a different note", tick every item under "What needs to change", choose "Suggest a note" (6 to 8 s). Read the suggestion aloud, choose "Use this note", then "Send request". The page says the contact will see the note in Messages and above their report | "The AI only proposes, a named person sends it, and every sentence is tied to a rule." | If the model is slow or errors, the suggestion says "Built from the report rules. No model was used." Say "That is the fail-safe" |
-| 8:00 | Priya, `/finance/initiatives/new` | Step 1 of 3, Initiative details: name "Neighborhood Tutoring Network", pick a Category, type a description, choose "Create and continue". Step 2 of 3, Assign organizations: type Mott in "Find an organization", add the match, enter an award amount, choose "Save and continue". Step 3 of 3, Report form: choose "Import a Word template" | "A new report type without a code change." | |
-| 8:45 | Priya, form page | The import panel opens. Choose `legacy-template.docx` and choose "Suggest questions". About 40 s (see below). While waiting say the governance line. The review is two columns: "From your document" on the left with numbered paragraphs, and the suggested questions on the right, each with a citation check. Selecting a question highlights its quoted paragraph. Choose Accept on each question, then "Add N accepted questions to draft" | Governance line: "The AI only proposes. It sees no contacts and takes no actions. The system checks every citation against the source, and a named person approves." | At 45 s switch to the second server (Section 3) |
-| 9:30 | Priya | Choose "Publish version 1". The dialog "Publish version 1?" says Funded organizations start using it right away. Choose "Yes, publish version 1". Switch to Maria, My reports: the new initiative is there with Start report | "Published, and the organization sees it." | |
+| 5:00 | Maria | On Review and submit check the certification box, confirm the Certifier name and Certifier title, choose "Submit report to Council Finance". The page reads "Report submitted" with the reference number LL-26YE-00002. Open Messages: "Report received: Mentor Match Network, FY26 Year-End" is first in the list. The page says email delivery is not turned on and that each message is recorded, so do not say it was emailed | "She gets a copy of exactly what was submitted, in her messages." | If submit refuses, read the message aloud and fix it, that is the point |
+| 5:45 | Daniel, `/finance` | Reload the dashboard. The headline reads "66 reports are missing" (was 67), Waiting for review reads 43 and District 8 reads 13 of 34. Open Submissions, search Maria's EIN `13-4027118` (or open `/finance/submissions?q=13-4027118`) and open her new report with the organization name link (Mott Haven Youth Futures, Inc., the Mentor Match Network row marked Submitted). The row also says "Submitted N days late" | "Council's missing count dropped by one the moment she submitted." | |
+| 6:30 | Daniel, report page | The report opens with the "Your decision" panel. Choose Start review ("Review started. The report is now in review."). Open "Add a manual flag", type "Supplies line needs a vendor breakdown" and choose "Add manual flag" ("Flag added."). Choose "Request an update": the dialog "Request an update from Maria Santos" opens with an empty "Note to the organization". Choose "Suggest a different note", tick every item under "What needs to change" (the flag, attach supporting documentation for personnel lines, confirm participant counts), choose "Suggest a note". Read the suggestion aloud, choose "Use this note", then "Send request". The page says the contact will see the note in Messages and above their report | "The system only proposes, a named person sends it, and every sentence is tied to a rule. The flag's own text stays internal; the organization is only told Council Finance has a question." | The suggestion says "Built from the report rules. No model was used." when there is no model. Say "That is the fail-safe" |
+| 8:00 | Priya, `/finance/initiatives/new` | Step 1 of 3, Initiative details: name "Neighborhood Tutoring Network", pick a Category, type a description, choose "Create and continue". Step 2 of 3, Assign organizations: type Mott in "Find an organization", add the match, enter an award amount (40000), check "Total funding after saving: $40,000.00", choose "Save and continue". Step 3 of 3, Report form: choose "Import a Word template" | "A new report type without a code change. It gets the next code in the series, CI-27-183 on a fresh seed." | |
+| 8:45 | Priya, form page | The import panel opens. Choose `legacy-template.docx` and choose "Suggest questions". With the saved draft this takes about 0.1 s and the panel says no model was used; with the live model it takes about 40 s (see below), so say the governance line while waiting. The review is two columns: "From your document" on the left with numbered paragraphs, and "Suggested questions (11)" on the right, each with a citation check. Selecting a question highlights its quoted paragraph. Choose Accept on each question, then "Add 11 accepted questions to draft". The page says "Draft applied. 8 questions added, 3 already in the form." | Governance line: "The AI only proposes. It sees no contacts and takes no actions. The system checks every citation against the source, and a named person approves." | With the live model, at 45 s switch to the second server (Section 3) |
+| 9:30 | Priya | Choose "Publish version 1". The dialog "Publish version 1?" says "This is the first version, with 23 questions." and "Funded organizations start using it right away." Choose "Yes, publish version 1". Switch to Maria, My reports: Neighborhood Tutoring Network is listed with Start | "Published, and the organization sees it." | |
 
-The Word import is the only real wait on this path. Everything else responds in a few seconds.
+With the live model the Word import is the only real wait on this path. Everything else responds in under a second.
 
 ## 7. The 20 minute full version
 
@@ -106,11 +106,11 @@ Run the 10 minute path, then add these in this order. If time runs short, drop i
 
 | Min | Beat | Persona and URL | Clicks | One line | If it fails |
 | --- | --- | --- | --- | --- | --- |
-| 10:00 | Resubmit | Maria, `/portal` | The headline reads "Council Finance asked for changes to 1 report" and the report has an Update report button. Open it: the note is shown at the top. Change Report contact title to "Executive Director", wait for the Saved label, go to Review and submit, tick the certification and choose "Submit report to Council Finance" | "She sees the note, fixes it, resubmits. Revision 2." | |
-| 11:00 | Accept and correct | Daniel, same report | In "Your decision" choose Start review if it is offered, then Accept report: the panel reads "This report is accepted". Open "Correct an answer", Question "Report contact title", New value "Chief Program Officer", Reason "Title confirmed by phone with the organization", choose Save correction. Scroll to Audit timeline | "A correction after acceptance needs a reason and leaves a permanent record." | |
-| 12:30 | Excel and charts | Daniel, `/finance/submissions` | Open the export menu and choose "Excel workbook (.xlsx)" (the file name carries the period and date). Back on `/finance`, show the charts and "View as table" | "Everything on screen leaves as Excel." | Choose "CSV file (.csv)" from the same menu |
+| 10:00 | Resubmit | Maria, `/portal` | The headline reads "Council Finance asked for changes to 1 report" and the report has an Update link. Open it: "Council Finance asked for changes" with the note is shown at the top, and the report opens on the step she edited last. Change Report contact title to "Executive Director" on Organization and contact, wait for the Saved label, go to Review and submit, tick the certification and choose "Submit report to Council Finance" | "She sees the note, fixes it, resubmits. Revision 2." | |
+| 11:00 | Accept and correct | Daniel, same report | In "Your decision" choose Start review if it is offered, then Accept report: the panel reads "This report is accepted". Open "Correct an answer", Question "Report contact title", New value "Chief Program Officer", Reason "Title confirmed by phone with the organization", choose Save correction ("Correction saved as a new revision."). Scroll to Audit timeline | "A correction after acceptance needs a reason and leaves a permanent record." | |
+| 12:30 | Excel and charts | Daniel, `/finance/submissions` | Open the Export menu and choose "Excel workbook (.xlsx)" (the file name carries the period and date, for example `ledgerline-submissions-FY26-YE-2026-10-14.xlsx`). Back on `/finance`, show the charts and "View as table" | "Everything on screen leaves as Excel." | Choose "CSV file (.csv)" from the same menu |
 | 13:30 | Five rules | Ricky, terminal | Ask Rafael to pick one. Run the command in Section 8 and read the one plain line | "Pick one. I will show you the test, then try to break it in front of you." | If the command fails, show the same refusal in the browser (see Section 8) |
-| 14:30 | How it was built | Priya, `/trust` (admins only) | Open `/trust`: the requirement IDs, the test counts and the build it came from | "Every claim here has a record you can open." | |
+| 14:30 | How it was built | Priya, `/trust` (admins only) | Open `/trust`: the requirement IDs, the test counts and the build they came from. Run `pnpm evidence` before the presentation so the build shown is the one on the laptop; it reseeds the database, so run `pnpm preset fresh` after | "Every claim here has a record you can open." | |
 | 17:00 | Azure and delivery | Priya, `/finance/platform` | Show the control table, then speak from `docs/azure.md` | "Same database design moves across unchanged." | |
 | 19:00 | Close | | Stop on: "The proposal is due October 20. Here is what I would have ready for it. What would you want first?" | | |
 
@@ -118,46 +118,52 @@ Held-out template (use only if asked "can it be tricked"): as Priya import `lega
 
 ## 8. The five "break it" rules
 
-Run from the repository root with the app running. The default port is 3105, so set `E2E_PORT` to the port the app is on, for example `E2E_PORT=3000 pnpm break BR-022`. Each command signs Maria in once, takes about 11 s for the ones that use a browser and about 1 to 3 s for the database ones, and removes any scratch report it made. The lines below are the refusals the script prints; amounts and counts in them come from the seed.
+Run from the repository root with the app running. The default port is 3105, so set `E2E_PORT` to the port the app is on, for example `E2E_PORT=3000 pnpm break BR-022`. Each command signs Maria in once, takes about 11 s for the ones that use a browser (BR-022, BR-021, BR-012) and 1 to 2 s for the database ones (BR-010, BR-019), and removes any scratch report it made. The lines below are the refusals the script prints; amounts and counts in them come from the seed.
 
 | Rule | Command | What the screen prints |
 | --- | --- | --- |
-| BR-022 budget must equal the award | `pnpm break BR-022` | `REFUSED: A budget of $X against an award of $Y was refused at submit and the report stayed a draft.` and `REFUSED: A direct status change by the organization's own account was refused by the database.` |
+| BR-022 budget must equal the award | `pnpm break BR-022` | `REFUSED: A budget of $68,000.00 against an award of $85,000.00 was refused at submit and the report stayed a draft.` and `REFUSED: A direct status change by the organization's own account was refused by the database.` |
 | BR-010 organizations are isolated | `pnpm break BR-010` | `REFUSED: Another organization's report address returned not found to Maria.`, `REFUSED: Row-level security showed Maria none of the other organizations' reports.`, `REFUSED: A storage path under another organization's EIN was refused.` |
-| BR-021 required answers | `pnpm break BR-021` | `REFUSED: The empty report was refused with N problems listed, and it stayed a draft.` |
+| BR-021 required answers | `pnpm break BR-021` | `REFUSED: The empty report was refused with 14 problems listed, and it stayed a draft.` |
 | BR-012 25 MB file limit | `pnpm break BR-012` | `REFUSED: A 26 MB file was refused before it was sent, with its size and the limit stated.` and `REFUSED: The server upload check refused a 31 MB file and stated the size.` |
-| BR-019 and US-057 audit and retention | `pnpm break BR-019` (also `US-057`) | `REFUSED: An analyst's attempt to edit an audit event was refused by the database.`, `...delete a submitted revision...`, and `REFUSED: Even the table owner's edit of an audit event was rejected by the append-only trigger.` |
+| BR-019 and US-057 audit and retention | `pnpm break BR-019` (also `US-057`) | `REFUSED: An analyst's attempt to edit an audit event was refused by the database.`, `REFUSED: An analyst's attempt to delete a submitted revision was refused by the database.`, and `REFUSED: Even the table owner's edit of an audit event was rejected by the append-only trigger.` |
 
 Each attempt prints a raw line under the plain one (for example `42501 permission denied for table audit_event`). The last line reads "All N attempts on BR-0xx were refused."
 
-Prepared answer to "who can change the audit log": "The database owner can drop the guard, which is how I reset this demo, and that reset is logged. Production adds an Azure immutability policy plus database audit logging."
+Prepared answer to "who can change the audit log": "The database owner can drop the guard, which is how I reset the data between rehearsals, and that reset is logged. Production adds an Azure immutability policy plus database audit logging."
 
 Engineers only: `pnpm test:rule BR-022` runs the tests tagged with the rule. It reseeds the database when it runs the browser part, so run `pnpm preset fresh` afterward.
 
 ## 9. Timings measured in the production build
 
-Chromium driven by script, local Postgres, idle machine. Sign-in includes the gate.
+Chromium driven by script, local Postgres, idle machine, October 10, 2026. Sign-in includes the gate. Each figure is from a fresh seed.
 
 | Step | Measured |
 | --- | --- |
-| Gate and sign in | 0.4 to 0.8 s |
-| Portal pages (list, history, organization, messages) | 0.07 to 0.12 s |
-| Finance dashboard | 0.24 to 1.3 s |
-| Submissions list, filtered | 0.2 to 1.1 s |
-| Open a submission | 0.8 to 2.0 s |
-| Paste six rows and add them | 0.06 s |
-| Submit refused with the balance message | 0.11 s |
-| 31 MB file refused in the browser | 0.02 s |
+| Gate and sign in | 0.4 to 0.5 s |
+| Portal pages (list, history, organization, messages) | 0.07 to 0.14 s |
+| Finance dashboard | 0.18 s |
+| Submissions list, unfiltered or filtered | 0.4 s |
+| Open a submission from the list | 0.9 s |
+| Search by EIN | 0.6 s |
+| Paste two rows and add them | 0.04 s |
+| Submit refused with the balance message | 0.05 s |
+| 31 MB file refused in the browser | 0.01 s |
 | 24 MB file accepted | 0.2 s (local, no real network) |
-| Submit to "Report received" | 0.1 s first time, 2.8 s on resubmit |
-| Return note drafted by qwen3:4b | 6.1 to 8.0 s (three concerns) |
-| Send update request, accept, correction | 0.85 s, 0.65 s, 0.27 s |
-| Excel export, one organization and all of FY26 Year-End (1.2 MB) | 0.20 s and 0.22 s |
-| Word import with qwen3:8b | 49.5 s on the first call after the model loaded, 38 to 40 s after |
-| Word import, saved draft | 0.13 s |
-| Word import, rule-based draft | 0.26 s |
-| `pnpm db:seed` | 1.3 s |
-| `pnpm build` | 44 s |
+| Submit to "Report submitted" | 0.1 s |
+| Rule-based note suggested | 0.1 s |
+| Start review, add flag, send update request | 0.12 s, 0.05 s, 0.12 s |
+| Accept and correction | 0.1 s and 0.12 s |
+| Excel export of all FY26 Year-End (1.2 MB) | 0.2 s |
+| New initiative: create, assign, open import, publish | 0.08 s, 0.11 s, 0.11 s, 0.03 s |
+| Word import, saved draft | 0.11 s |
+| Return note drafted by qwen3:4b | 6.1 to 8.0 s (three concerns), from `docs/ai-eval.md`, not remeasured |
+| Word import with qwen3:8b | 49.5 s on the first call after the model loaded, 38 to 40 s after, from `docs/ai-eval.md`, not remeasured |
+| `pnpm break` | 11 s for BR-022, BR-021 and BR-012; 1.4 s for BR-010; 0.6 s for BR-019 |
+| `pnpm db:seed` or `pnpm preset fresh` | 1.3 s |
+| `pnpm build` | 32 s from a clean `.next` |
+
+On the hosted site the first sign-in after it has been idle can take about 3 s, and the dashboard about 1.5 s, because of the network and a cold database connection. Open the site once before you start.
 
 ## 10. Problems found
 
@@ -166,6 +172,8 @@ Chromium driven by script, local Postgres, idle machine. Sign-in includes the ga
 3. **The AI switch off does not use the saved drafts.** With `ai_enabled` false in `app_setting`, both features use the rule-based draft. The saved draft (replay) is used only when a model is not configured or the call fails or times out. Use the second server in Section 3 for the replay path. There is no screen for the switch.
 4. **Word import is close to the 45 second line.** qwen3:8b took 38 to 40 s warm and 49.5 s on the first call after a model load in the evaluation. With `AI_TIMEOUT_FACTOR=2` the app waits up to 90 s before falling back by itself, so the 45 s decision is the presenter's. Warm the model at T-60.
 5. **Autosave waits 1.2 s.** Paste budget rows and reload the page within a second and the rows are gone. Wait for the Saved label before reloading or leaving.
-6. **`pnpm test:rule` and `pnpm e2e` reseed the database.** The browser part of `test:rule` runs the global setup, which reseeds. Anything staged for the demo is lost. Run `pnpm preset fresh` after.
+6. **`pnpm test:rule` and `pnpm e2e` reseed the database.** The browser part of `test:rule` runs the global setup, which reseeds. Anything staged for the presentation is lost. Run `pnpm preset fresh` after.
 7. **The local model adds or mis-types a field now and then.** qwen3:4b proposed one extra question on two of three templates and qwen3:8b chose one wrong field type on the held-out template (`docs/ai-eval.md`). The reviewer fixes both at accept time, which is the point of the review step, but expect to see it.
-8. **Not verified on main.** The click path in section 6 and 7 was written from the components and routes on main and was not clicked through in a browser for this revision. The deployed site, a real file upload over a network, and the PDF export were not exercised. Run the 10 minute path once end to end before the demonstration.
+8. **The app's today and the clock differ before October 14.** `DEMO_TODAY` pins the date to 2026-10-14, but submission times use the real clock. Rehearsing on another day shows Maria's report as "14 days past due" and, once submitted, "Submitted N days late" counted from the real date. On October 14 the two agree.
+9. **Messages are recorded, not emailed.** Email delivery is off unless it is configured, so every confirmation and update request is shown as recorded in Messages. Say "in her messages", not "by email".
+10. **Not run for this revision.** The live local model path, the PDF export, a real upload over a network and the hosted site. Run the 10 minute path once against the hosted site, and once with the model, before the presentation.

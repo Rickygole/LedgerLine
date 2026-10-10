@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { ageMinutes, dueAt, formatDuration, metTarget, responseMinutes, supportState, targetSummary } from "@/lib/ops/support";
+import {
+  ageMinutes,
+  dueAt,
+  formatDuration,
+  metTarget,
+  responseMinutes,
+  supportState,
+  targetSummary,
+} from "@/lib/ops/support";
 
 const created = "2026-10-06T14:00:00Z";
 const at = (hours: number, minutes = 0) => new Date(new Date(created).getTime() + hours * 3_600_000 + minutes * 60_000);

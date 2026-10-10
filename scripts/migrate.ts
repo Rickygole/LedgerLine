@@ -9,7 +9,7 @@ async function main() {
   const client = new Client({ connectionString: url });
   await client.connect();
   await client.query(
-    "CREATE TABLE IF NOT EXISTS schema_migration (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"
+    "CREATE TABLE IF NOT EXISTS schema_migration (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())",
   );
   const dir = path.join(process.cwd(), "db", "migrations");
   const files = (await readdir(dir)).filter((f) => f.endsWith(".sql")).sort();

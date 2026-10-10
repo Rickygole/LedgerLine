@@ -7,7 +7,13 @@ import { modelPayload } from "@/lib/ai/return-note";
 
 const concerns: Concern[] = [
   { id: "US-029:a", ruleId: "US-029", kind: "rule", label: "Participants targeted this period", detail: null },
-  { id: "BR-022:budget", ruleId: "BR-022", kind: "rule", label: "Budget", detail: "Total $91,750.00 vs award $90,000.00" },
+  {
+    id: "BR-022:budget",
+    ruleId: "BR-022",
+    kind: "rule",
+    label: "Budget",
+    detail: "Total $91,750.00 vs award $90,000.00",
+  },
 ];
 
 describe("[US-044] what the return note model is sent", () => {

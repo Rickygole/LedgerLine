@@ -3,8 +3,16 @@ import { createSupportRequest, replyToSupportRequest } from "@/app/actions/suppo
 import type { CurrentUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime, nowDate } from "@/lib/dates";
-import { isUuid } from "@/lib/finance/admin/params";
-import { CATEGORIES, categoryLabel, listSupport, loadMessages, loadSupport, RESPONSE_TARGET_HOURS, supportState } from "@/lib/ops/support";
+import { isUuid } from "@/lib/ids";
+import {
+  CATEGORIES,
+  categoryLabel,
+  listSupport,
+  loadMessages,
+  loadSupport,
+  RESPONSE_TARGET_HOURS,
+  supportState,
+} from "@/lib/ops/support";
 import { ActionForm } from "@/components/ops/action-form";
 import { SupportStateBadge, Thread } from "@/components/ops/support-parts";
 import { PageHeader } from "@/components/ui/page-header";
@@ -12,7 +20,17 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Label, Select, Textarea } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 
-export async function HelpPage({ user, home, base, selected }: { user: CurrentUser; home: { label: string; href: string }; base: string; selected: string }) {
+export async function HelpPage({
+  user,
+  home,
+  base,
+  selected,
+}: {
+  user: CurrentUser;
+  home: { label: string; href: string };
+  base: string;
+  selected: string;
+}) {
   const now = nowDate();
   const data = await withClaims(user.id, async (tx) => {
     const rows = await listSupport(tx, { requester: user.id });
@@ -29,15 +47,13 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
         description={`Ask Finance support about your account, a report or your data. Support aims to reply to every request within ${RESPONSE_TARGET_HOURS} hours.`}
         crumbs={[{ label: home.label, href: home.href }, { label: "Get help" }]}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <Card>
           <CardHeader title="Send a request" description="Say what you were trying to do and what happened." />
           <CardBody>
             <ActionForm action={createSupportRequest} submitLabel="Send request" pendingLabel="Sending">
               <div>
-                <Label htmlFor="category">
-                  What do you need help with
-                </Label>
+                <Label htmlFor="category">What do you need help with</Label>
                 <Select id="category" name="category" defaultValue="" aria-required="true">
                   <option value="" disabled>
                     Choose one
@@ -50,21 +66,17 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
                 </Select>
               </div>
               <div>
-                <Label htmlFor="subject">
-                  Subject
-                </Label>
+                <Label htmlFor="subject">Subject</Label>
                 <Input id="subject" name="subject" maxLength={120} aria-required="true" />
               </div>
               <div>
-                <Label htmlFor="body">
-                  Details
-                </Label>
+                <Label htmlFor="body">Details</Label>
                 <Textarea id="body" name="body" maxLength={4000} rows={6} aria-required="true" />
               </div>
             </ActionForm>
           </CardBody>
         </Card>
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader title="Your requests" description="Only you can see these." />
             <Table density="compact">
@@ -84,12 +96,22 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
                     <TR key={row.id}>
                       <TD className="whitespace-nowrap font-semibold">{row.reference}</TD>
                       <TD>
-                        <Link href={`${base}?request=${row.id}`} className="text-link underline underline-offset-2 hover:text-link-hover">
+                        <Link
+                          href={`${base}?request=${row.id}`}
+                          className="text-link underline underline-offset-2 hover:text-link-hover"
+                        >
                           {row.subject}
                         </Link>
                       </TD>
                       <TD>
-                        <SupportStateBadge state={supportState({ createdAt: row.created_at, firstResponseAt: row.first_response_at, closedAt: row.closed_at, now })} />
+                        <SupportStateBadge
+                          state={supportState({
+                            createdAt: row.created_at,
+                            firstResponseAt: row.first_response_at,
+                            closedAt: row.closed_at,
+                            now,
+                          })}
+                        />
                       </TD>
                       <TD className="whitespace-nowrap text-muted">{formatDateTime(row.created_at)}</TD>
                     </TR>
@@ -104,9 +126,16 @@ export async function HelpPage({ user, home, base, selected }: { user: CurrentUs
               <CardBody className="space-y-4">
                 <Thread messages={data.messages} />
                 {open.closed_at ? (
-                  <p className="text-sm text-muted">This request is closed. Send a new request if you still need help.</p>
+                  <p className="text-sm text-muted">
+                    This request is closed. Send a new request if you still need help.
+                  </p>
                 ) : (
-                  <ActionForm action={replyToSupportRequest} hidden={{ requestId: open.id }} submitLabel="Send message" pendingLabel="Sending">
+                  <ActionForm
+                    action={replyToSupportRequest}
+                    hidden={{ requestId: open.id }}
+                    submitLabel="Send message"
+                    pendingLabel="Sending"
+                  >
                     <div>
                       <Label htmlFor="reply">Add a message</Label>
                       <Textarea id="reply" name="body" maxLength={4000} rows={4} />

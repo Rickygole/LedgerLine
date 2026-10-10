@@ -6,11 +6,17 @@ import { FlagBadge } from "@/components/ui/status-badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
-import type { AttachmentRow, AuditRecord, FlagRecord, RevisionRecord, SubmissionDetail } from "@/lib/finance/review/detail";
+import type {
+  AttachmentRow,
+  AuditRecord,
+  FlagRecord,
+  RevisionRecord,
+  SubmissionDetail,
+} from "@/lib/finance/review/detail";
 import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
-import { formatCount, formatCurrency } from "@/lib/rules/money";
+import { formatCount, formatCurrency } from "@/lib/format";
 import { cellText } from "@/lib/report/format";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
 
@@ -47,9 +53,11 @@ function formatValue(question: Question, value: AnswerValue | undefined): React.
       </div>
     );
   }
-  if (question.type === "currency") return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")))}</span>;
+  if (question.type === "currency")
+    return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")))}</span>;
   if (question.type === "percent") return <span className="num">{String(value)}%</span>;
-  if (question.type === "integer" || question.type === "number") return <span className="num">{formatCount(String(value))}</span>;
+  if (question.type === "integer" || question.type === "number")
+    return <span className="num">{formatCount(String(value))}</span>;
   if (question.type === "textarea") return <span className="block whitespace-pre-wrap">{String(value)}</span>;
   return String(value);
 }
@@ -78,7 +86,9 @@ function CorrectionNote({ fix }: { fix: Correction | undefined }) {
           {". Was "}
           <del>{String(fix.original)}</del>
         </>
-      ) : ". Was blank"}
+      ) : (
+        ". Was blank"
+      )}
     </span>
   );
 }
@@ -108,7 +118,9 @@ function Served({ detail }: { detail: SubmissionDetail }) {
         {formatCount(actual)}
         {target !== null ? ` of ${formatCount(target)} targeted` : ""}
       </span>
-      {share !== null ? <span className={share < 40 ? "num font-semibold text-bad" : "num text-ink-2"}> ({share} percent)</span> : null}
+      {share !== null ? (
+        <span className={share < 40 ? "num font-semibold text-bad" : "num text-ink-2"}> ({share} percent)</span>
+      ) : null}
       {detail.earlier && periodId.endsWith("-YE") ? (
         <span className="num block text-[13px] text-muted">
           {detail.earlier.label.replace(/^FY\d+ /, "")} reported {formatCount(detail.earlier.served)}
@@ -131,35 +143,59 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
           const all = section.questions.filter((q) => isVisible(q, row.answers));
           const compactContact = section.key === "organization" && !contactCorrected;
           const merged = all.some((q) => q.key === "participants_actual") && !corrections.participants_target;
-          const questions = all.filter((q) => !(compactContact && CONTACT_KEYS.includes(q.key)) && !(merged && q.key === "participants_target"));
-          const contactLine = [[text(row.answers.contact_name), text(row.answers.contact_title)].filter(Boolean).join(", "), text(row.answers.contact_email), text(row.answers.contact_phone)].filter(Boolean);
+          const questions = all.filter(
+            (q) => !(compactContact && CONTACT_KEYS.includes(q.key)) && !(merged && q.key === "participants_target"),
+          );
+          const contactLine = [
+            [text(row.answers.contact_name), text(row.answers.contact_title)].filter(Boolean).join(", "),
+            text(row.answers.contact_email),
+            text(row.answers.contact_phone),
+          ].filter(Boolean);
           return (
-            <section key={section.key} id={`review-${section.key}`} aria-labelledby={`review-${section.key}-title`} className={index > 0 ? "mt-6 scroll-mt-4 border-t border-line-soft pt-6" : "scroll-mt-4"}>
+            <section
+              key={section.key}
+              id={`review-${section.key}`}
+              aria-labelledby={`review-${section.key}-title`}
+              className={index > 0 ? "mt-6 scroll-mt-4 border-t border-line-soft pt-6" : "scroll-mt-4"}
+            >
               <h2 id={`review-${section.key}-title`} className="text-xl font-bold leading-7 text-ink">
                 {section.title}
               </h2>
               {compactContact ? (
                 <div className="mt-2 text-[15px] leading-[22px]">
                   <p className="text-ink">
-                    {contactLine.length > 0
-                      ? contactLine.map((part, i) => (
-                          <span key={part}>
-                            {i > 0 ? " · " : null}
-                            <span className="whitespace-nowrap">{part}</span>
-                          </span>
-                        ))
-                      : <span className="text-muted">No report contact entered</span>}
+                    {contactLine.length > 0 ? (
+                      contactLine.map((part, i) => (
+                        <span key={part}>
+                          {i > 0 ? " · " : null}
+                          <span className="whitespace-nowrap">{part}</span>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-muted">No report contact entered</span>
+                    )}
                   </p>
-                  <p className="num text-[13px] text-muted">{[text(row.answers.org_legal_name), text(row.answers.org_ein)].filter(Boolean).join(" · ")}</p>
+                  <p className="num text-[13px] text-muted">
+                    {[text(row.answers.org_legal_name), text(row.answers.org_ein)].filter(Boolean).join(" · ")}
+                  </p>
                 </div>
               ) : null}
               {questions.length > 0 ? (
                 <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
                   {questions.map((q) => (
-                    <div key={q.key} className={q.type === "textarea" || q.type === "table" ? "min-w-0 md:col-span-2" : "min-w-0"}>
-                      <dt className="text-[13px] font-semibold text-muted">{merged && q.key === "participants_actual" ? "Participants served" : q.label}</dt>
+                    <div
+                      key={q.key}
+                      className={q.type === "textarea" || q.type === "table" ? "min-w-0 md:col-span-2" : "min-w-0"}
+                    >
+                      <dt className="text-[13px] font-semibold text-muted">
+                        {merged && q.key === "participants_actual" ? "Participants served" : q.label}
+                      </dt>
                       <dd className="mt-1 break-words text-sm text-ink">
-                        {merged && q.key === "participants_actual" ? <Served detail={detail} /> : formatValue(q, row.answers[q.key])}
+                        {merged && q.key === "participants_actual" ? (
+                          <Served detail={detail} />
+                        ) : (
+                          formatValue(q, row.answers[q.key])
+                        )}
                         <CorrectionNote fix={corrections[q.key]} />
                       </dd>
                     </div>
@@ -170,13 +206,18 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
           );
         })}
         {detail.certification ? (
-          <section id="review-certification" aria-labelledby="review-certification-title" className="mt-6 scroll-mt-4 border-t border-line-soft pt-6">
+          <section
+            id="review-certification"
+            aria-labelledby="review-certification-title"
+            className="mt-6 scroll-mt-4 border-t border-line-soft pt-6"
+          >
             <h2 id="review-certification-title" className="text-xl font-bold leading-7 text-ink">
               Certification
             </h2>
             <p className="mt-0.5 text-sm leading-5 text-muted">{detail.certification.statement}</p>
             <p className="mt-3 text-[15px] text-ink">
-              {detail.certification.name}, {detail.certification.title} · <span className="num">{formatDateTime(detail.certification.certifiedAt)} ET</span>
+              {detail.certification.name}, {detail.certification.title} ·{" "}
+              <span className="num">{formatDateTime(detail.certification.certifiedAt)} ET</span>
             </p>
           </section>
         ) : null}
@@ -236,7 +277,10 @@ export function AttachmentsTab({ submissionId, attachments }: { submissionId: st
                   {a.uploadedBy ? ` by ${a.uploadedBy}` : ""}
                 </TD>
                 <TD className="text-right">
-                  <a href={`/finance/submissions/${submissionId}/attachments/${a.id}`} className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                  <a
+                    href={`/finance/submissions/${submissionId}/attachments/${a.id}`}
+                    className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                  >
                     <Download className="h-4 w-4" aria-hidden="true" />
                     Download
                   </a>
@@ -266,12 +310,15 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
         <p className="mt-1.5 text-sm text-ink">{flag.note ?? "No note"}</p>
         {flag.status !== "open" ? (
           <p className="mt-1 text-xs text-muted">
-            {flag.status === "resolved" ? "Resolved" : "Dismissed"} {flag.resolvedAt ? formatDateTime(flag.resolvedAt) : ""}
+            {flag.status === "resolved" ? "Resolved" : "Dismissed"}{" "}
+            {flag.resolvedAt ? formatDateTime(flag.resolvedAt) : ""}
             {flag.resolvedBy ? ` by ${flag.resolvedBy}` : ""}
           </p>
         ) : null}
       </div>
-      {flag.status === "open" && canReview ? <FlagResolve submissionId={detail.row.submissionId!} flagId={flag.id} /> : null}
+      {flag.status === "open" && canReview ? (
+        <FlagResolve submissionId={detail.row.submissionId!} flagId={flag.id} />
+      ) : null}
     </li>
   );
   return (
@@ -279,7 +326,9 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
       <Card>
         <CardHeader title="Automatic findings" description="Computed from the report as it stands now." />
         {detail.row.flags.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-muted">No automatic findings. The report passes the budget, completeness and outcome checks.</p>
+          <p className="px-5 py-6 text-sm text-muted">
+            No automatic findings. The report passes the budget, completeness and outcome checks.
+          </p>
         ) : (
           <ul className="divide-y divide-line">
             {detail.row.flags.map((flag) => (
@@ -293,7 +342,11 @@ export function FlagsTab({ detail, canReview }: { detail: SubmissionDetail; canR
       </Card>
       <Card>
         <CardHeader title={`Open flags (${open.length})`} />
-        {open.length === 0 ? <p className="px-5 py-6 text-sm text-muted">There are no open flags on this report.</p> : <ul className="divide-y divide-line">{open.map(item)}</ul>}
+        {open.length === 0 ? (
+          <p className="px-5 py-6 text-sm text-muted">There are no open flags on this report.</p>
+        ) : (
+          <ul className="divide-y divide-line">{open.map(item)}</ul>
+        )}
       </Card>
       {closed.length > 0 ? (
         <Card>
@@ -310,16 +363,31 @@ export function AuditTab({ audit, labels }: { audit: AuditRecord[]; labels: Reco
     <Card>
       <CardHeader title="Audit timeline" description="Oldest first. Entries cannot be changed or deleted." />
       <CardBody className="py-5">
-        {audit.length === 0 ? <p className="py-8 text-center text-sm text-muted">No actions have been recorded.</p> : <AuditTimeline events={audit} labels={labels} />}
+        {audit.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted">No actions have been recorded.</p>
+        ) : (
+          <AuditTimeline events={audit} labels={labels} />
+        )}
       </CardBody>
     </Card>
   );
 }
 
-export function RevisionsTab({ revisions, submissionId, fileIds }: { revisions: RevisionRecord[]; submissionId: string; fileIds: Record<string, string> }) {
+export function RevisionsTab({
+  revisions,
+  submissionId,
+  fileIds,
+}: {
+  revisions: RevisionRecord[];
+  submissionId: string;
+  fileIds: Record<string, string>;
+}) {
   return (
     <Card>
-      <CardHeader title="Revisions" description="A frozen copy of the report is kept each time it is submitted or corrected." />
+      <CardHeader
+        title="Revisions"
+        description="A frozen copy of the report is kept each time it is submitted or corrected."
+      />
       <Table>
         <THead>
           <tr>
@@ -350,7 +418,10 @@ export function RevisionsTab({ revisions, submissionId, fileIds }: { revisions: 
                       {r.files.map((file) => (
                         <li key={file.path} className="flex items-center gap-1.5">
                           {fileIds[file.path] ? (
-                            <a href={`/finance/submissions/${submissionId}/attachments/${fileIds[file.path]}`} className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                            <a
+                              href={`/finance/submissions/${submissionId}/attachments/${fileIds[file.path]}`}
+                              className="inline-flex items-center gap-1.5 font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                            >
                               <Download className="h-3.5 w-3.5" aria-hidden="true" />
                               {file.filename}
                             </a>
@@ -378,7 +449,17 @@ export function RevisionsTab({ revisions, submissionId, fileIds }: { revisions: 
   );
 }
 
-export function TabNav({ id, current, counts, query = "" }: { id: string; current: string; counts: Record<string, number | undefined>; query?: string }) {
+export function TabNav({
+  id,
+  current,
+  counts,
+  query = "",
+}: {
+  id: string;
+  current: string;
+  counts: Record<string, number | undefined>;
+  query?: string;
+}) {
   const tabs = [
     ["report", "Report"],
     ["budget", "Budget"],
@@ -399,7 +480,13 @@ export function TabNav({ id, current, counts, query = "" }: { id: string; curren
             className={`inline-flex items-center gap-1.5 whitespace-nowrap border-b-[3px] px-3 py-3 text-[15px] font-semibold ${active ? "border-action text-harbor-900" : "border-transparent text-ink-2 hover:border-line-strong hover:text-ink"}`}
           >
             {label}
-            {counts[key] !== undefined ? <span className={`num rounded-sm px-1.5 text-xs font-semibold ${active ? "bg-harbor-800 text-white" : "bg-surface text-muted"}`}>{counts[key]}</span> : null}
+            {counts[key] !== undefined ? (
+              <span
+                className={`num rounded-sm px-1.5 text-xs font-semibold ${active ? "bg-harbor-800 text-white" : "bg-surface text-muted"}`}
+              >
+                {counts[key]}
+              </span>
+            ) : null}
           </Link>
         );
       })}

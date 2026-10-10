@@ -44,7 +44,14 @@ export function TableQuestion({
   }
 
   return (
-    <div id={`q-${question.key}`} role="group" aria-labelledby={`q-${question.key}-legend`} tabIndex={-1} aria-describedby={describedBy} className="rounded-md border border-line">
+    <div
+      id={`q-${question.key}`}
+      role="group"
+      aria-labelledby={`q-${question.key}-legend`}
+      tabIndex={-1}
+      aria-describedby={describedBy}
+      className="rounded-md border border-line"
+    >
       {rows.length === 0 ? (
         <p className="px-4 py-5 text-sm text-muted">No rows yet. Use Add row to start the table.</p>
       ) : (
@@ -72,7 +79,12 @@ export function TableQuestion({
                   </div>
                 );
               })}
-              <Button variant="ghost" size="sm" onClick={() => removeRow(rowIndex)} aria-label={`Remove row ${rowIndex + 1} from ${question.label}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => removeRow(rowIndex)}
+                aria-label={`Remove row ${rowIndex + 1} from ${question.label}`}
+              >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Remove
               </Button>

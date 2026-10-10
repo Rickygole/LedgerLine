@@ -3,7 +3,13 @@ import path from "node:path";
 import mammoth from "mammoth";
 import { describe, expect, it } from "vitest";
 import { REPLAYS } from "@/lib/ai/replays";
-import { checkField, parseWithRules, proposalSchema, splitParagraphs, type ProposedField } from "@/lib/forms/editor/draft-core";
+import {
+  checkField,
+  parseWithRules,
+  proposalSchema,
+  splitParagraphs,
+  type ProposedField,
+} from "@/lib/forms/editor/draft-core";
 import { templateSha } from "@/lib/forms/editor/template-hash";
 
 type Label = { label: string; type: string; required: boolean; paragraph: number; library_key: string | null };
@@ -21,8 +27,12 @@ async function load(file: string) {
 function score(expected: Label[], proposed: ProposedField[]) {
   const matched = proposed.filter((p) => expected.some((e) => e.paragraph === p.citation.paragraph));
   const recalled = expected.filter((e) => proposed.some((p) => p.citation.paragraph === e.paragraph));
-  const typeHits = expected.filter((e) => proposed.some((p) => p.citation.paragraph === e.paragraph && p.type === e.type));
-  const requiredHits = expected.filter((e) => proposed.some((p) => p.citation.paragraph === e.paragraph && p.required === e.required));
+  const typeHits = expected.filter((e) =>
+    proposed.some((p) => p.citation.paragraph === e.paragraph && p.type === e.type),
+  );
+  const requiredHits = expected.filter((e) =>
+    proposed.some((p) => p.citation.paragraph === e.paragraph && p.required === e.required),
+  );
   return {
     precision: proposed.length ? matched.length / proposed.length : 1,
     recall: expected.length ? recalled.length / expected.length : 1,

@@ -28,7 +28,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const page = pageNumber(params);
   const { list, orgs } = await withClaims(admin.id, async (tx) => ({
     list: await listUsers(tx, { q, role, page }),
-    orgs: await tx.query<{ id: string; name: string; ein: string }>(`SELECT id, legal_name AS name, ein FROM organization ORDER BY legal_name`),
+    orgs: await tx.query<{ id: string; name: string; ein: string }>(
+      `SELECT id, legal_name AS name, ein FROM organization ORDER BY legal_name`,
+    ),
   }));
   const { rows, total } = list;
 
@@ -37,7 +39,11 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Users" description="Manage who can use LedgerLine. Changes are written to the audit log." crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Users" }]} />
+      <PageHeader
+        title="Users"
+        description="Manage who can use LedgerLine. Changes are written to the audit log."
+        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Users" }]}
+      />
       <Card className="mb-6">
         <CardHeader title="Add a user" />
         <CreateUserForm orgs={orgs} />
@@ -79,7 +85,11 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                 <TR key={u.id}>
                   <TD className="min-w-[10rem]" primary>
                     <span className="font-semibold">{u.full_name}</span>
-                    {u.id === admin.id ? <span className="ml-2 rounded-sm bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">You</span> : null}
+                    {u.id === admin.id ? (
+                      <span className="ml-2 rounded-sm bg-navy-800 px-1.5 py-px text-[11px] font-semibold text-white">
+                        You
+                      </span>
+                    ) : null}
                     {u.title ? <div className="text-xs font-normal text-muted">{u.title}</div> : null}
                   </TD>
                   <TD className="max-w-[17rem] text-muted" label="Email">
@@ -91,7 +101,11 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                     <span>{roleLabel(u.role)}</span>
                   </TD>
                   <TD className="max-w-56" label="Organization">
-                    {u.org_name ? <span>{u.org_name}</span> : <span className="whitespace-nowrap text-muted">Council Finance</span>}
+                    {u.org_name ? (
+                      <span>{u.org_name}</span>
+                    ) : (
+                      <span className="whitespace-nowrap text-muted">Council Finance</span>
+                    )}
                   </TD>
                   <TD className="whitespace-nowrap" label="Status">
                     <span>
@@ -102,14 +116,20 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                           Active
                         </Badge>
                       ) : (
-                        <Badge tone="info">
-                          Invited, no password yet
-                        </Badge>
+                        <Badge tone="info">Invited, no password yet</Badge>
                       )}
                     </span>
                   </TD>
                   <TD className="text-right" action>
-                    <UserActions userId={u.id} name={u.full_name} email={u.email} role={u.role} active={u.active} isSelf={u.id === admin.id} isCbo={u.role === "cbo_submitter"} />
+                    <UserActions
+                      userId={u.id}
+                      name={u.full_name}
+                      email={u.email}
+                      role={u.role}
+                      active={u.active}
+                      isSelf={u.id === admin.id}
+                      isCbo={u.role === "cbo_submitter"}
+                    />
                   </TD>
                 </TR>
               ))

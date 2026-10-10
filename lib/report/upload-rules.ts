@@ -1,6 +1,6 @@
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
-export const ALLOWED_EXTENSIONS = ["pdf", "docx", "xlsx", "csv"] as const;
+const ALLOWED_EXTENSIONS = ["pdf", "docx", "xlsx", "csv"] as const;
 
 export const FILE_TYPE_HELP = "Use PDF, Word (.docx), Excel (.xlsx) or CSV.";
 
@@ -28,6 +28,9 @@ export function clientCheckUpload(filename: string, bytes: number): string | nul
 
 export function contentDisposition(filename: string): string {
   const fallback = filename.replace(/[^\x20-\x7e]|["\\]/g, "_");
-  const encoded = encodeURIComponent(filename).replace(/['()*]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+  const encoded = encodeURIComponent(filename).replace(
+    /['()*]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
   return `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`;
 }

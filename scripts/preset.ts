@@ -9,7 +9,11 @@ async function main() {
   const scene = args.find((arg) => !arg.startsWith("--")) as Scene | undefined;
   if (!scene || !SCENES.includes(scene)) throw new Error(`Usage: pnpm preset <${SCENES.join("|")}> [--live]`);
   const target = live ? liveTarget() : localTarget();
-  if (live) await confirmHost(target, scene === "fresh" ? "erase everything and reseed the database" : `apply the ${scene} scene`);
+  if (live)
+    await confirmHost(
+      target,
+      scene === "fresh" ? "erase everything and reseed the database" : `apply the ${scene} scene`,
+    );
   else console.log(`Target host: ${target.host}`);
 
   if (scene === "fresh") {

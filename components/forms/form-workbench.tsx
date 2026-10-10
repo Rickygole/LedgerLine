@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Lock } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { publishForm, saveDefinition } from "@/app/finance/forms/[formId]/actions";
+import { counted } from "@/lib/format";
 import { FormPreview } from "@/components/forms/form-preview";
 import { ImportPanel } from "@/components/forms/import-panel";
 import { QuestionEditor } from "@/components/forms/question-editor";
@@ -14,7 +15,17 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Label, Select } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
-import { FIELD_TYPES, TYPE_LABEL, addQuestion, cleanDefinition, moveQuestion, newQuestion, removeQuestion, updateQuestion, validateDefinition } from "@/lib/forms/editor/definition";
+import {
+  FIELD_TYPES,
+  TYPE_LABEL,
+  addQuestion,
+  cleanDefinition,
+  moveQuestion,
+  newQuestion,
+  removeQuestion,
+  updateQuestion,
+  validateDefinition,
+} from "@/lib/forms/editor/definition";
 import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
 import type { FieldType, FormDefinition, Question } from "@/lib/rules/types";
 
@@ -32,7 +43,8 @@ type Props = {
 };
 
 function changesSince(before: FormDefinition | null, after: FormDefinition) {
-  const list = (d: FormDefinition | null) => new Map((d?.sections ?? []).flatMap((s) => s.questions.map((q) => [q.key, JSON.stringify(q)] as const)));
+  const list = (d: FormDefinition | null) =>
+    new Map((d?.sections ?? []).flatMap((s) => s.questions.map((q) => [q.key, JSON.stringify(q)] as const)));
   const old = list(before);
   const now = list(after);
   let added = 0;
@@ -47,18 +59,27 @@ function changesSince(before: FormDefinition | null, after: FormDefinition) {
   return { added, changed, removed, budget, total: [...now.keys()].length };
 }
 
-function count(n: number, word: string) {
-  return `${n} ${n === 1 ? word : `${word}s`}`;
-}
-
 const BUDGET = "__budget";
 
-export function FormWorkbench({ formId, version, status, initiativeId, initiativeName, initialDefinition, canEdit, openImport, publishedVersion, publishedDefinition }: Props) {
+export function FormWorkbench({
+  formId,
+  version,
+  status,
+  initiativeId,
+  initiativeName,
+  initialDefinition,
+  canEdit,
+  openImport,
+  publishedVersion,
+  publishedDefinition,
+}: Props) {
   const router = useRouter();
   const [saved, setSaved] = useState<FormDefinition>(initialDefinition);
   const [definition, setDefinition] = useState<FormDefinition>(initialDefinition);
   const [view, setView] = useState<"edit" | "preview">("edit");
-  const [sectionKey, setSectionKey] = useState<string>(initialDefinition.sections.find((s) => s.kind === "questions")?.key ?? BUDGET);
+  const [sectionKey, setSectionKey] = useState<string>(
+    initialDefinition.sections.find((s) => s.kind === "questions")?.key ?? BUDGET,
+  );
   const [errors, setErrors] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(openImport && canEdit);
@@ -75,7 +96,10 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
   const confirmRef = useRef<HTMLDialogElement>(null);
 
   const editable = canEdit && status === "draft";
-  const dirty = useMemo(() => JSON.stringify(cleanDefinition(definition)) !== JSON.stringify(cleanDefinition(saved)), [definition, saved]);
+  const dirty = useMemo(
+    () => JSON.stringify(cleanDefinition(definition)) !== JSON.stringify(cleanDefinition(saved)),
+    [definition, saved],
+  );
   const section = definition.sections.find((s) => s.key === sectionKey);
   const used = new Set(definition.sections.flatMap((s) => s.questions.map((q) => q.key)));
   const available = STANDARD_QUESTIONS.filter((q) => !used.has(q.key));
@@ -166,7 +190,10 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
             <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             Version {published} is published.
           </p>
-          <p className="text-sm text-ink">New reports for {initiativeName} use version {published}. Reports already started keep their version. The change is recorded in the audit log.</p>
+          <p className="text-sm text-ink">
+            New reports for {initiativeName} use version {published}. Reports already started keep their version. The
+            change is recorded in the audit log.
+          </p>
           <div className="flex gap-2">
             <ButtonLink href={`/finance/initiatives/${initiativeId}`}>Back to the initiative</ButtonLink>
             <ButtonLink variant="secondary" href={`/finance/forms/${formId}`} onClick={() => setPublished(null)}>
@@ -181,11 +208,33 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Form view" className="inline-flex rounded-md border border-line bg-white p-0.5 shadow-sm">
-          <button type="button" role="tab" aria-selected={view === "edit"} onClick={() => setView("edit")} className={cn("inline-flex h-8 items-center rounded px-3 text-sm font-semibold", view === "edit" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
+        <div
+          role="tablist"
+          aria-label="Form view"
+          className="inline-flex rounded-md border border-line bg-white p-0.5 shadow-sm"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "edit"}
+            onClick={() => setView("edit")}
+            className={cn(
+              "inline-flex h-8 items-center rounded px-3 text-sm font-semibold",
+              view === "edit" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50",
+            )}
+          >
             {editable ? "Edit form" : "Structure"}
           </button>
-          <button type="button" role="tab" aria-selected={view === "preview"} onClick={() => setView("preview")} className={cn("inline-flex h-8 items-center rounded px-3 text-sm font-semibold", view === "preview" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50")}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "preview"}
+            onClick={() => setView("preview")}
+            className={cn(
+              "inline-flex h-8 items-center rounded px-3 text-sm font-semibold",
+              view === "preview" ? "bg-harbor-800 text-white" : "text-ink hover:bg-harbor-50",
+            )}
+          >
             Preview as organization
           </button>
         </div>
@@ -201,20 +250,46 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
               </span>
             )}
             {importOpen ? null : (
-              <Button variant="secondary" onClick={() => setImportOpen(true)} disabled={dirty} title={dirty ? "Save your changes before importing" : undefined}>
+              <Button
+                variant="secondary"
+                onClick={() => setImportOpen(true)}
+                disabled={dirty}
+                title={dirty ? "Save your changes before importing" : undefined}
+              >
                 Import from Word
               </Button>
             )}
             {review && importOpen ? (
-              <span className={cn("num rounded-sm px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset", reviewing ? "bg-harbor-100 text-harbor-700 ring-harbor-700/20" : "bg-ok-bg text-ok ring-ok/25")} aria-live="polite">
+              <span
+                className={cn(
+                  "num rounded-sm px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset",
+                  reviewing ? "bg-harbor-100 text-harbor-700 ring-harbor-700/20" : "bg-ok-bg text-ok ring-ok/25",
+                )}
+                aria-live="polite"
+              >
                 {review.reviewed} of {review.total} reviewed
               </span>
             ) : null}
-            <Button onClick={openPublish} disabled={pending || dirty || importOpen || confirming} aria-describedby="publish-why" title={dirty ? "Save your changes before publishing" : importOpen ? "Finish the import review first" : undefined}>
+            <Button
+              onClick={openPublish}
+              disabled={pending || dirty || importOpen || confirming}
+              aria-describedby="publish-why"
+              title={
+                dirty
+                  ? "Save your changes before publishing"
+                  : importOpen
+                    ? "Finish the import review first"
+                    : undefined
+              }
+            >
               Publish version {version}
             </Button>
             <span id="publish-why" className="sr-only">
-              {dirty ? "Save your changes before publishing." : importOpen ? "Review every imported question first." : ""}
+              {dirty
+                ? "Save your changes before publishing."
+                : importOpen
+                  ? "Review every imported question first."
+                  : ""}
             </span>
           </div>
         ) : null}
@@ -233,18 +308,29 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           {(() => {
             const diff = changesSince(publishedDefinition, definition);
             const parts = publishedDefinition
-              ? [diff.added ? `${count(diff.added, "question")} added` : null, diff.changed ? `${diff.changed} changed` : null, diff.removed ? `${diff.removed} removed` : null, diff.budget ? "budget settings changed" : null].filter(Boolean)
+              ? [
+                  diff.added ? `${counted(diff.added, "question")} added` : null,
+                  diff.changed ? `${diff.changed} changed` : null,
+                  diff.removed ? `${diff.removed} removed` : null,
+                  diff.budget ? "budget settings changed" : null,
+                ].filter(Boolean)
               : [];
             return (
               <p className="mt-2 text-[15px] leading-[22px]">
-                {publishedVersion ? `Changes since version ${publishedVersion}: ${parts.length ? parts.join(", ") : "no question changes"}.` : `This is the first version, with ${count(diff.total, "question")}.`}
+                {publishedVersion
+                  ? `Changes since version ${publishedVersion}: ${parts.length ? parts.join(", ") : "no question changes"}.`
+                  : `This is the first version, with ${counted(diff.total, "question")}.`}
               </p>
             );
           })()}
           <p className="mt-2 text-[15px] leading-[22px] text-ink-2">
-            {publishedVersion ? `New reports use version ${version}. Organizations already reporting keep version ${publishedVersion}.` : "Funded organizations start using it right away."}
+            {publishedVersion
+              ? `New reports use version ${version}. Organizations already reporting keep version ${publishedVersion}.`
+              : "Funded organizations start using it right away."}
           </p>
-          <p className="mt-2 text-sm text-muted">Published versions cannot be changed. The change is recorded in the audit log under your name.</p>
+          <p className="mt-2 text-sm text-muted">
+            Published versions cannot be changed. The change is recorded in the audit log under your name.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-4 border-t border-line-soft px-6 py-4">
           <Button onClick={confirmPublish} disabled={pending} className="h-11 px-5 text-base">
@@ -257,18 +343,29 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
       </dialog>
 
       {status !== "draft" ? (
-        <div className="mb-4 flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink" role="note">
+        <div
+          className="mb-4 flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink"
+          role="note"
+        >
           <Lock className="h-4 w-4 text-muted" aria-hidden="true" />
           Published versions cannot change. Create a draft to edit.
         </div>
       ) : !canEdit ? (
-        <div className="mb-4 flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink" role="note">
+        <div
+          className="mb-4 flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink"
+          role="note"
+        >
           <Lock className="h-4 w-4 text-muted" aria-hidden="true" />
           Only finance administrators can edit or publish a draft. You can review it here.
         </div>
       ) : null}
 
-      <ErrorSummary ref={errorRef} title={problemsTitle(errors.length, "you save or publish")} items={errors.map((message) => ({ message }))} className="mb-4" />
+      <ErrorSummary
+        ref={errorRef}
+        title={problemsTitle(errors.length, "you save or publish")}
+        items={errors.map((message) => ({ message }))}
+        className="mb-4"
+      />
       {notice ? (
         <p className="mb-4 flex items-center gap-2 text-sm font-semibold text-ok" role="status">
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -285,7 +382,15 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
             setReview(null);
             setShowBuilder(false);
           }}
-          onProgress={(reviewed, total) => setReview((current) => (total === 0 ? null : current && current.reviewed === reviewed && current.total === total ? current : { reviewed, total }))}
+          onProgress={(reviewed, total) =>
+            setReview((current) =>
+              total === 0
+                ? null
+                : current && current.reviewed === reviewed && current.total === total
+                  ? current
+                  : { reviewed, total },
+            )
+          }
           onApplied={(summary) => {
             setImportOpen(false);
             setShowBuilder(false);
@@ -302,17 +407,21 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
           Current form:{" "}
           {definition.sections
             .filter((s) => s.kind === "questions")
-            .map((s, i) => `${i === 0 ? count(s.questions.length, "question") : s.questions.length} in ${s.title}`)
+            .map((s, i) => `${i === 0 ? counted(s.questions.length, "question") : s.questions.length} in ${s.title}`)
             .join(", ")}
           .{" "}
-          <button type="button" onClick={() => setShowBuilder(true)} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+          <button
+            type="button"
+            onClick={() => setShowBuilder(true)}
+            className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+          >
             Show
           </button>
         </p>
       ) : view === "preview" ? (
         <FormPreview definition={definition} />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_22rem]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_22rem]">
           <div className="self-start lg:sticky lg:top-4">
             <QuestionOutline
               definition={definition}
@@ -338,16 +447,49 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                 <CardHeader title="Budget settings" />
                 <CardBody className="space-y-4">
                   <label className="flex items-center gap-2 text-sm font-semibold text-ink">
-                    <input type="checkbox" className="h-4 w-4 rounded border-line" checked={definition.budget.enabled} disabled={!editable} onChange={(e) => setDefinition({ ...definition, budget: { ...definition.budget, enabled: e.target.checked } })} />
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-line"
+                      checked={definition.budget.enabled}
+                      disabled={!editable}
+                      onChange={(e) =>
+                        setDefinition({ ...definition, budget: { ...definition.budget, enabled: e.target.checked } })
+                      }
+                    />
                     Collect a budget with this report
                   </label>
                   <label className="flex items-center gap-2 text-sm font-semibold text-ink">
-                    <input type="checkbox" className="h-4 w-4 rounded border-line" checked={definition.budget.mustEqualAward} disabled={!editable || !definition.budget.enabled} onChange={(e) => setDefinition({ ...definition, budget: { ...definition.budget, mustEqualAward: e.target.checked } })} />
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-line"
+                      checked={definition.budget.mustEqualAward}
+                      disabled={!editable || !definition.budget.enabled}
+                      onChange={(e) =>
+                        setDefinition({
+                          ...definition,
+                          budget: { ...definition.budget, mustEqualAward: e.target.checked },
+                        })
+                      }
+                    />
                     Budget total must equal the award
                   </label>
                   <div className="max-w-48">
                     <Label htmlFor="max-lines">Maximum budget lines</Label>
-                    <Input id="max-lines" type="number" min={1} max={100} className="num" value={definition.budget.maxLines} disabled={!editable || !definition.budget.enabled} onChange={(e) => setDefinition({ ...definition, budget: { ...definition.budget, maxLines: Number(e.target.value) } })} />
+                    <Input
+                      id="max-lines"
+                      type="number"
+                      min={1}
+                      max={100}
+                      className="num"
+                      value={definition.budget.maxLines}
+                      disabled={!editable || !definition.budget.enabled}
+                      onChange={(e) =>
+                        setDefinition({
+                          ...definition,
+                          budget: { ...definition.budget, maxLines: Number(e.target.value) },
+                        })
+                      }
+                    />
                   </div>
                 </CardBody>
               </Card>
@@ -357,7 +499,10 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                   <CardHeader title={section.title} description={section.description} />
                   <CardBody>
                     {section.questions.length === 0 ? (
-                      <p className="text-sm text-muted">No questions in this section yet.{editable ? " Add one below or from the standard library." : ""}</p>
+                      <p className="text-sm text-muted">
+                        No questions in this section yet.
+                        {editable ? " Add one below or from the standard library." : ""}
+                      </p>
                     ) : (
                       <ol className="space-y-3">
                         {section.questions.map((question, index) => (
@@ -370,7 +515,9 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                             readOnly={!editable}
                             problems={[]}
                             onChange={(patch) => setDefinition(updateQuestion(definition, question.key, patch))}
-                            onMove={(direction) => setDefinition(moveQuestion(definition, section.key, index, direction))}
+                            onMove={(direction) =>
+                              setDefinition(moveQuestion(definition, section.key, index, direction))
+                            }
                             onRemove={() => setDefinition(removeQuestion(definition, question.key))}
                             selected={selectedKey === question.key}
                           />
@@ -382,11 +529,20 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                         <div className="flex flex-wrap items-end gap-2">
                           <div className="min-w-48 flex-1">
                             <Label htmlFor="new-label">Question label</Label>
-                            <Input id="new-label" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNew())} />
+                            <Input
+                              id="new-label"
+                              value={newLabel}
+                              onChange={(e) => setNewLabel(e.target.value)}
+                              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNew())}
+                            />
                           </div>
                           <div className="w-40">
                             <Label htmlFor="new-type">Answer type</Label>
-                            <Select id="new-type" value={newType} onChange={(e) => setNewType(e.target.value as FieldType)}>
+                            <Select
+                              id="new-type"
+                              value={newType}
+                              onChange={(e) => setNewType(e.target.value as FieldType)}
+                            >
                               {FIELD_TYPES.filter((type) => type !== "table").map((type) => (
                                 <option key={type} value={type}>
                                   {TYPE_LABEL[type]}
@@ -402,7 +558,9 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                           <div className="min-w-48 flex-1">
                             <Label htmlFor="library">Standard question</Label>
                             <Select id="library" value={libraryKey} onChange={(e) => setLibraryKey(e.target.value)}>
-                              <option value="">{available.length ? "Choose a question" : "All standard questions are in this form"}</option>
+                              <option value="">
+                                {available.length ? "Choose a question" : "All standard questions are in this form"}
+                              </option>
                               {available.map((q) => (
                                 <option key={q.key} value={q.key}>
                                   {q.label}
@@ -418,20 +576,28 @@ export function FormWorkbench({ formId, version, status, initiativeId, initiativ
                     ) : null}
                   </CardBody>
                 </Card>
-
               </>
             ) : null}
           </div>
 
-          <aside aria-label="Live preview" className="hidden self-start xl:sticky xl:top-4 xl:block xl:max-h-[calc(100dvh-2rem)] xl:overflow-y-auto">
+          <aside
+            aria-label="Live preview"
+            className="hidden self-start xl:sticky xl:top-4 xl:block xl:max-h-[calc(100dvh-2rem)] xl:overflow-y-auto"
+          >
             <p className="mb-2 text-[13px] font-semibold text-muted">Live preview</p>
-            <FormPreview definition={definition} only={definition.sections.find((s) => (s.kind === "budget" ? BUDGET : s.key) === sectionKey)?.key} />
+            <FormPreview
+              definition={definition}
+              only={definition.sections.find((s) => (s.kind === "budget" ? BUDGET : s.key) === sectionKey)?.key}
+            />
           </aside>
         </div>
       )}
 
       <p className="mt-6 text-sm text-muted">
-        <Link href={`/finance/initiatives/${initiativeId}`} className="text-link underline underline-offset-2 hover:text-link-hover">
+        <Link
+          href={`/finance/initiatives/${initiativeId}`}
+          className="text-link underline underline-offset-2 hover:text-link-hover"
+        >
           Back to {initiativeName}
         </Link>
       </p>

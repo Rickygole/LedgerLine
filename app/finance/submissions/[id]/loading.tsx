@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <LoadingRegion label="Loading report">
       <HeaderSkeleton />
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-8">
           <CardSkeleton lines={6} />
           <CardSkeleton lines={5} />

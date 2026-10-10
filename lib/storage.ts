@@ -53,14 +53,16 @@ export async function getFile(pathname: string): Promise<Buffer> {
   if (usingBlob()) {
     const blob = await import("@vercel/blob");
     const meta = await blob.head(pathname);
-    const response = await fetch(meta.downloadUrl ?? meta.url, { headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` } });
+    const response = await fetch(meta.downloadUrl ?? meta.url, {
+      headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+    });
     if (!response.ok) throw new Error("file not found");
     return Buffer.from(await response.arrayBuffer());
   }
   return readFile(path.join(localRoot(), pathname));
 }
 
-export type StoredFile = { pathname: string; modifiedAt: Date; url?: string };
+type StoredFile = { pathname: string; modifiedAt: Date; url?: string };
 
 async function walk(root: string, dir: string, out: StoredFile[]): Promise<void> {
   let names: string[];
@@ -84,7 +86,8 @@ export async function listStoredFiles(): Promise<StoredFile[]> {
     let cursor: string | undefined;
     do {
       const page = await list({ cursor, limit: 1000 });
-      for (const blob of page.blobs) files.push({ pathname: blob.pathname, modifiedAt: new Date(blob.uploadedAt), url: blob.url });
+      for (const blob of page.blobs)
+        files.push({ pathname: blob.pathname, modifiedAt: new Date(blob.uploadedAt), url: blob.url });
       cursor = page.hasMore ? page.cursor : undefined;
     } while (cursor);
     return files;

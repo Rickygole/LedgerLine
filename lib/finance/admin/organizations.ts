@@ -32,7 +32,20 @@ export type OrgRow = {
   full_count: number;
 };
 
-export async function listOrganizations(tx: Tx, today: string, periodId: string, filters: { q: string; borough: string; type: string; missing: boolean; sort: OrgSort; dir: "asc" | "desc"; page: number }) {
+export async function listOrganizations(
+  tx: Tx,
+  today: string,
+  periodId: string,
+  filters: {
+    q: string;
+    borough: string;
+    type: string;
+    missing: boolean;
+    sort: OrgSort;
+    dir: "asc" | "desc";
+    page: number;
+  },
+) {
   const direction = filters.dir === "desc" ? "DESC" : "ASC";
   const orderBy = `${ORG_SORTS[filters.sort]} ${direction} NULLS LAST, legal_name ASC, id ASC`;
   const rows = await tx.query<OrgRow>(
@@ -53,7 +66,16 @@ export async function listOrganizations(tx: Tx, today: string, periodId: string,
      WHERE (NOT $7::boolean OR missing > 0)
      ORDER BY ${orderBy}
      LIMIT ${PAGE_SIZE} OFFSET $8`,
-    [today, periodId, filters.q, likePattern(filters.q), filters.borough, filters.type, filters.missing, (filters.page - 1) * PAGE_SIZE]
+    [
+      today,
+      periodId,
+      filters.q,
+      likePattern(filters.q),
+      filters.borough,
+      filters.type,
+      filters.missing,
+      (filters.page - 1) * PAGE_SIZE,
+    ],
   );
   return { rows, total: rows[0]?.full_count ?? 0 };
 }
@@ -95,7 +117,7 @@ export type OrgAward = {
   periods: AwardPeriod[] | null;
 };
 
-export type OrgReport = {
+type OrgReport = {
   id: string;
   reference_no: string;
   period_id: string;
@@ -113,7 +135,7 @@ export async function loadOrganization(tx: Tx, orgId: string) {
   const org = await tx.one<OrgProfile>(
     `SELECT id, ein, legal_name, dba_name, org_type, borough, council_district, address_line, city, state, postal_code, phone, website, mission, founded_year, annual_budget
      FROM organization WHERE id = $1`,
-    [orgId]
+    [orgId],
   );
   if (!org) return null;
   const awards = await tx.query<OrgAward>(
@@ -125,7 +147,7 @@ export async function loadOrganization(tx: Tx, orgId: string) {
      JOIN initiative i ON i.id = a.initiative_id
      WHERE a.org_id = $1
      ORDER BY i.fiscal_year_id DESC, i.code`,
-    [orgId]
+    [orgId],
   );
   const reports = await tx.query<OrgReport>(
     `SELECT s.id, s.reference_no, s.period_id, p.label AS period_label, p.due_on::text AS due_on, s.status, s.revision, i.code AS initiative_code, i.name AS initiative_name,
@@ -137,19 +159,41 @@ export async function loadOrganization(tx: Tx, orgId: string) {
      LEFT JOIN app_user u ON u.id = s.submitted_by
      WHERE a.org_id = $1
      ORDER BY p.due_on DESC, i.code`,
-    [orgId]
+    [orgId],
   );
-  const contacts = await tx.query<{ id: string; full_name: string; title: string; email: string; phone: string | null; is_primary: boolean }>(
+  const contacts = await tx.query<{
+    id: string;
+    full_name: string;
+    title: string;
+    email: string;
+    phone: string | null;
+    is_primary: boolean;
+  }>(
     `SELECT id, full_name, title, email, phone, is_primary FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name`,
-    [orgId]
+    [orgId],
   );
-  const team = await tx.query<{ id: string; full_name: string; title: string | null; email: string; role: string; active: boolean; can_sign_in: boolean }>(
+  const team = await tx.query<{
+    id: string;
+    full_name: string;
+    title: string | null;
+    email: string;
+    role: string;
+    active: boolean;
+    can_sign_in: boolean;
+  }>(
     `SELECT id, full_name, title, email, role, active, can_sign_in FROM app_user WHERE org_id = $1 ORDER BY full_name`,
-    [orgId]
+    [orgId],
   );
-  const messages = await tx.query<{ id: string; to_email: string; template: string; subject: string; status: string; created_at: string }>(
+  const messages = await tx.query<{
+    id: string;
+    to_email: string;
+    template: string;
+    subject: string;
+    status: string;
+    created_at: string;
+  }>(
     `SELECT id, to_email, template, subject, status, created_at FROM outbox WHERE org_id = $1 ORDER BY created_at DESC LIMIT 50`,
-    [orgId]
+    [orgId],
   );
   return { org, awards, reports, contacts, team, messages };
 }

@@ -24,7 +24,15 @@ const BADGE: Record<EvidenceRow["state"], { label: string; tone: "ok" | "warn" |
   planned: { label: "Planned", tone: "neutral" },
 };
 
-export function RequirementTable({ rows, repository, commit }: { rows: EvidenceRow[]; repository: string; commit: string }) {
+export function RequirementTable({
+  rows,
+  repository,
+  commit,
+}: {
+  rows: EvidenceRow[];
+  repository: string;
+  commit: string;
+}) {
   const [state, setState] = useState("");
   const [kind, setKind] = useState("");
   const [q, setQ] = useState("");
@@ -34,9 +42,9 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
         (r) =>
           (!state || r.state === state) &&
           (!kind || r.id.startsWith(kind)) &&
-          (!q || `${r.id} ${r.summary} ${r.area}`.toLowerCase().includes(q.toLowerCase()))
+          (!q || `${r.id} ${r.summary} ${r.area}`.toLowerCase().includes(q.toLowerCase())),
       ),
-    [rows, state, kind, q]
+    [rows, state, kind, q],
   );
   return (
     <Card className="mt-6">
@@ -45,15 +53,27 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
         description={`${filtered.length} of ${rows.length} shown`}
         actions={
           <div className="flex flex-wrap gap-2">
-            <label className="sr-only" htmlFor="trust-q">Search requirements</label>
-            <Input id="trust-q" placeholder="Search ID or text" value={q} onChange={(e) => setQ(e.target.value)} className="h-9 w-48" />
-            <label className="sr-only" htmlFor="trust-kind">Type</label>
+            <label className="sr-only" htmlFor="trust-q">
+              Search requirements
+            </label>
+            <Input
+              id="trust-q"
+              placeholder="Search ID or text"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="h-9 w-48"
+            />
+            <label className="sr-only" htmlFor="trust-kind">
+              Type
+            </label>
             <Select id="trust-kind" value={kind} onChange={(e) => setKind(e.target.value)} className="h-9 w-48">
               <option value="">Stories and rules</option>
               <option value="US">User stories</option>
               <option value="BR">Business rules</option>
             </Select>
-            <label className="sr-only" htmlFor="trust-state">Status</label>
+            <label className="sr-only" htmlFor="trust-state">
+              Status
+            </label>
             <Select id="trust-state" value={state} onChange={(e) => setState(e.target.value)} className="h-9 w-44">
               <option value="">All statuses</option>
               <option value="verified">Verified by test</option>
@@ -94,16 +114,25 @@ export function RequirementTable({ rows, repository, commit }: { rows: EvidenceR
                   <ul className="space-y-1">
                     {row.tests.slice(0, 4).map((test) => (
                       <li key={`${test.file}-${test.title}`} className="text-xs">
-                        <a className="text-link underline underline-offset-2 hover:text-link-hover" href={`https://github.com/${repository}/blob/${commit}/${test.file}`}>
+                        <a
+                          className="text-link underline underline-offset-2 hover:text-link-hover"
+                          href={`https://github.com/${repository}/blob/${commit}/${test.file}`}
+                        >
                           {test.title}
                         </a>
                         <span className="ml-1 text-muted">({test.suite})</span>
                       </li>
                     ))}
-                    {row.tests.length > 4 ? <li className="text-xs text-muted">and {row.tests.length - 4} more</li> : null}
+                    {row.tests.length > 4 ? (
+                      <li className="text-xs text-muted">and {row.tests.length - 4} more</li>
+                    ) : null}
                   </ul>
                 ) : (
-                  <span className="text-xs text-muted">{row.state === "planned" ? "Not an application behavior that a test asserts." : "No automated test is tagged to this requirement."}</span>
+                  <span className="text-xs text-muted">
+                    {row.state === "planned"
+                      ? "Not an application behavior that a test asserts."
+                      : "No automated test is tagged to this requirement."}
+                  </span>
                 )}
               </TD>
             </TR>

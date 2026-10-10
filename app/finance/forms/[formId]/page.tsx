@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/dates";
 import type { FormDefinition } from "@/lib/rules/types";
 import { CheckCircle2, CircleDashed, History } from "lucide-react";
 import { CreateDraftForm } from "@/components/finance/admin/create-draft-form";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,13 +29,17 @@ type FormRow = {
   published_definition: FormDefinition | null;
 };
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export default async function FormPage({ params, searchParams }: { params: Promise<{ formId: string }>; searchParams: Promise<{ import?: string }> }) {
+export default async function FormPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ formId: string }>;
+  searchParams: Promise<{ import?: string }>;
+}) {
   const user = await requireUser(FINANCE_ROLES);
   const { formId } = await params;
   const query = await searchParams;
-  if (!uuid.test(formId)) notFound();
+  if (!isUuid(formId)) notFound();
   const form = await withClaims(user.id, (tx) =>
     tx.one<FormRow>(
       `SELECT f.id, f.version, f.status, f.definition, f.initiative_id, i.name AS initiative_name, i.code AS initiative_code,
@@ -45,12 +50,16 @@ export default async function FormPage({ params, searchParams }: { params: Promi
        JOIN initiative i ON i.id = f.initiative_id
        LEFT JOIN app_user u ON u.id = f.published_by
        WHERE f.id = $1`,
-      [formId]
-    )
+      [formId],
+    ),
   );
   if (!form) notFound();
   const editable = user.role === "finance_admin" && form.status === "draft";
-  const hasDraft = await withClaims(user.id, async (tx) => Boolean(await tx.one("SELECT 1 FROM form_version WHERE initiative_id = $1 AND status = 'draft'", [form.initiative_id])));
+  const hasDraft = await withClaims(user.id, async (tx) =>
+    Boolean(
+      await tx.one("SELECT 1 FROM form_version WHERE initiative_id = $1 AND status = 'draft'", [form.initiative_id]),
+    ),
+  );
   const tone = form.status === "published" ? "ok" : "neutral";
   const icon = form.status === "published" ? CheckCircle2 : form.status === "draft" ? CircleDashed : History;
   const statusLabel = { draft: "Draft", published: "Published", superseded: "Superseded" }[form.status];
@@ -59,20 +68,35 @@ export default async function FormPage({ params, searchParams }: { params: Promi
     <>
       <PageHeader
         title={`${form.initiative_name}: report form`}
-        crumbs={[{ label: "Initiatives", href: "/finance/initiatives" }, { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` }, { label: `Form version ${form.version}` }]}
-        description={form.status === "draft" ? "A draft is invisible to funded organizations until it is published." : "This version is read-only. Organizations reporting on it see exactly these questions."}
+        crumbs={[
+          { label: "Initiatives", href: "/finance/initiatives" },
+          { label: form.initiative_name, href: `/finance/initiatives/${form.initiative_id}` },
+          { label: `Form version ${form.version}` },
+        ]}
+        description={
+          form.status === "draft"
+            ? "A draft is invisible to funded organizations until it is published."
+            : "This version is read-only. Organizations reporting on it see exactly these questions."
+        }
         meta={
           <>
             <Badge tone={tone} icon={icon}>
               {statusLabel}
             </Badge>
             <span className="text-[15px] text-ink-2">
-              Version <span className="num">{form.version}</span> · {statusLabel} · <span className="font-mono text-sm">{form.initiative_code}</span>
-              {form.published_at ? ` · Published ${formatDate(form.published_at)}${form.published_by_name ? ` by ${form.published_by_name}` : ""}` : ""}
+              Version <span className="num">{form.version}</span> · {statusLabel} ·{" "}
+              <span className="font-mono text-sm">{form.initiative_code}</span>
+              {form.published_at
+                ? ` · Published ${formatDate(form.published_at)}${form.published_by_name ? ` by ${form.published_by_name}` : ""}`
+                : ""}
             </span>
           </>
         }
-        actions={user.role === "finance_admin" && form.status !== "draft" && !hasDraft ? <CreateDraftForm initiativeId={form.initiative_id} label="Create a draft to edit" /> : null}
+        actions={
+          user.role === "finance_admin" && form.status !== "draft" && !hasDraft ? (
+            <CreateDraftForm initiativeId={form.initiative_id} label="Create a draft to edit" />
+          ) : null
+        }
       />
       <FormWorkbench
         formId={form.id}

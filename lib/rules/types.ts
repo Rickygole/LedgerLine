@@ -13,7 +13,7 @@ export type FieldType =
   | "yesno"
   | "table";
 
-export type TableColumn = {
+type TableColumn = {
   key: string;
   label: string;
   type: "text" | "integer" | "currency" | "percent";

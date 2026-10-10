@@ -14,7 +14,9 @@ async function totalOf(page: Page): Promise<number> {
   return cells.reduce((sum, text) => sum + Number(text), 0);
 }
 
-test("[US-062] the health endpoint answers without the passcode and reveals nothing sensitive", async ({ playwright }) => {
+test("[US-062] the health endpoint answers without the passcode and reveals nothing sensitive", async ({
+  playwright,
+}) => {
   const api = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL });
   const response = await api.get("/api/health");
   expect(response.status()).toBe(200);
@@ -22,11 +24,20 @@ test("[US-062] the health endpoint answers without the passcode and reveals noth
   const body = await response.json();
   expect(body.status).toBe("ok");
   expect(body.database.ok).toBe(true);
-  const files = readdirSync(path.resolve(__dirname, "../../db/migrations")).filter((f) => f.endsWith(".sql")).sort();
+  const files = readdirSync(path.resolve(__dirname, "../../db/migrations"))
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
   expect(body.migrations.latest).toBe(files[files.length - 1]);
   expect(body.requestId).toBe(response.headers()["x-request-id"]);
   const text = JSON.stringify(body);
-  for (const secret of [process.env.APP_DATABASE_URL, process.env.DB_OWNER_URL, process.env.AUTH_SECRET, process.env.GATE_PASSCODE, "postgres://"]) if (secret) expect(text).not.toContain(secret);
+  for (const secret of [
+    process.env.APP_DATABASE_URL,
+    process.env.DB_OWNER_URL,
+    process.env.AUTH_SECRET,
+    process.env.GATE_PASSCODE,
+    "postgres://",
+  ])
+    if (secret) expect(text).not.toContain(secret);
   const other = await api.get("/api/export?period=FY26-YE");
   expect(other.status()).toBe(401);
   const second = await api.get("/api/health");
@@ -57,7 +68,9 @@ test("[US-062] the platform page shows the health status to administrators only"
   await analyst.context.close();
 });
 
-test("[US-050] the trend and comparison charts draw from the reports and change with the filters", async ({ browser }) => {
+test("[US-050] the trend and comparison charts draw from the reports and change with the filters", async ({
+  browser,
+}) => {
   const { context, page } = await as(browser, "daniel");
   await page.goto("/finance/trends");
   await expect(page.getByRole("heading", { name: "Trends and comparisons", level: 1 })).toBeVisible();
@@ -83,7 +96,9 @@ test("[US-050] the trend and comparison charts draw from the reports and change 
   await context.close();
 });
 
-test("[US-061][US-063][BR-029] users send help requests, see only their own, and an administrator answers from the queue", async ({ browser }) => {
+test("[US-061][US-063][BR-029] users send help requests, see only their own, and an administrator answers from the queue", async ({
+  browser,
+}) => {
   const subject = `Cannot find the budget grid ${Date.now()}`;
   const maria = await as(browser, "maria");
   await maria.page.goto("/portal");
@@ -109,7 +124,9 @@ test("[US-061][US-063][BR-029] users send help requests, see only their own, and
   await admin.page.goto("/finance/support");
   await expect(admin.page.getByText(/\d+ open, \d+ overdue/)).toBeVisible();
   await admin.page.getByRole("link", { name: subject }).click();
-  await admin.page.getByLabel(/Reply to Maria Santos/).fill("The grid appears under Budget once the first two sections are saved.");
+  await admin.page
+    .getByLabel(/Reply to Maria Santos/)
+    .fill("The grid appears under Budget once the first two sections are saved.");
   await admin.page.getByRole("button", { name: "Send reply" }).click();
   await expect(admin.page.getByRole("status")).toContainText("Your message was sent.");
   await admin.page.reload();
@@ -132,26 +149,45 @@ test("an administrator reaches every operations area from one Administration ent
   if (!(await main.getByRole("link", { name: "Administration" }).isVisible())) await main.getByText(/^More/).click();
   await main.getByRole("link", { name: "Administration" }).click();
   await expect(page).toHaveURL(/\/finance\/admin$/);
-  for (const name of ["Support queue", "Security incidents", "Annual structure review", "Go-live readiness", "Export all data", "Platform and status"]) {
+  for (const name of [
+    "Support queue",
+    "Security incidents",
+    "Annual structure review",
+    "Go-live readiness",
+    "Export all data",
+    "Platform and status",
+  ]) {
     await expect(page.getByRole("link", { name })).toBeVisible();
   }
-  for (const id of ["US-058, BR-025", "US-064, BR-028", "US-065, US-066", "US-055, BR-020"]) await expect(page.getByText(id)).toBeVisible();
+  for (const id of ["US-058, BR-025", "US-064, BR-028", "US-065, US-066", "US-055, BR-020"])
+    await expect(page.getByText(id)).toBeVisible();
   await context.close();
 });
 
-test("[US-058][BR-025] an administrator records a breach, the Council's contacts are queued a notice, and remediation is tracked", async ({ browser }) => {
+test("[US-058][BR-025] an administrator records a breach, the Council's contacts are queued a notice, and remediation is tracked", async ({
+  browser,
+}) => {
   const { context, page } = await as(browser, "priya");
   await page.goto("/finance/incidents");
   const marker = `shared folder ${Date.now()}`;
   const detected = new Date(Date.now() - 3 * 3_600_000);
-  const local = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/New_York", dateStyle: "short", timeStyle: "short" }).format(detected).replace(" ", "T");
+  const local = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/New_York",
+    dateStyle: "short",
+    timeStyle: "short",
+  })
+    .format(detected)
+    .replace(" ", "T");
   await page.getByLabel("Detected at (Eastern time)").fill(local);
   await page.getByLabel("Severity").selectOption("high");
   await page.getByLabel("What happened").fill(`A support export was left in a ${marker} for about an hour.`);
   await page.getByLabel("Data affected").fill("Organization names and contact emails for 40 organizations.");
   await page.getByRole("button", { name: "Record and notify" }).click();
   await expect(page.getByRole("status")).toContainText(/INC-\d{4} recorded\. 3 designated contacts were notified/);
-  const mail = await ownerQuery<{ to_email: string }>("SELECT to_email FROM outbox WHERE template = 'security_incident' AND body_text LIKE $1 ORDER BY to_email", [`%${marker}%`]);
+  const mail = await ownerQuery<{ to_email: string }>(
+    "SELECT to_email FROM outbox WHERE template = 'security_incident' AND body_text LIKE $1 ORDER BY to_email",
+    [`%${marker}%`],
+  );
   expect(mail).toHaveLength(3);
 
   await page.reload();
@@ -161,12 +197,16 @@ test("[US-058][BR-025] an administrator records a breach, the Council's contacts
   await expect(page.getByText(/Report due in/).first()).toBeVisible();
   await page.getByLabel("Root cause").fill("A sharing setting on the folder was changed by mistake.");
   await page.getByLabel("Actions taken").fill("Removed the file, reset the setting and checked the access log.");
-  await page.getByLabel("Plan to reduce the risk of a repeat").fill("Lock the setting and review folder sharing monthly.");
+  await page
+    .getByLabel("Plan to reduce the risk of a repeat")
+    .fill("Lock the setting and review folder sharing monthly.");
   await page.getByRole("button", { name: "Save report" }).click();
   await expect(page.getByRole("status")).toContainText("Remediation report saved");
   await page.reload();
   await expect(page.getByText("Remediation in progress").first()).toBeVisible();
-  await page.getByLabel("Completed on").fill(new Intl.DateTimeFormat("sv-SE", { timeZone: "America/New_York" }).format(new Date()));
+  await page
+    .getByLabel("Completed on")
+    .fill(new Intl.DateTimeFormat("sv-SE", { timeZone: "America/New_York" }).format(new Date()));
   await page.getByRole("button", { name: "Save updated report" }).click();
   await expect(page.getByRole("status")).toContainText("marked complete");
   await page.reload();
@@ -200,7 +240,9 @@ test("[US-064][BR-028] the annual review is kept per fiscal year and appears in 
   await context.close();
 });
 
-test("[US-065][US-066] readiness shows the share of Finance users trained and the test pass rate", async ({ browser }) => {
+test("[US-065][US-066] readiness shows the share of Finance users trained and the test pass rate", async ({
+  browser,
+}) => {
   const { context, page } = await as(browser, "priya");
   await page.goto("/finance/readiness");
   await expect(page.getByText(/Finance users trained: \d+%/)).toBeVisible();
@@ -220,7 +262,9 @@ test("[US-065][US-066] readiness shows the share of Finance users trained and th
   await context.close();
 });
 
-test("[US-055][BR-020] only an administrator can download the data package, which holds every table and a README", async ({ browser }) => {
+test("[US-055][BR-020] only an administrator can download the data package, which holds every table and a README", async ({
+  browser,
+}) => {
   const admin = await as(browser, "priya");
   await admin.page.goto("/finance/data");
   await expect(admin.page.getByRole("link", { name: "Download data package" })).toBeVisible();
@@ -230,9 +274,20 @@ test("[US-055][BR-020] only an administrator can download the data package, whic
   expect(response.headers()["content-disposition"]).toMatch(/ledgerline-data-package-\d{4}-\d{2}-\d{2}\.zip/);
   const zip = await response.body();
   expect(zip.subarray(0, 2).toString()).toBe("PK");
-  for (const name of ["README.txt", "manifest.csv", "data/submission.csv", "data/organization.csv", "data/audit_event.csv", "data/support_request.csv", "data/security_incident.csv"]) expect(zip.includes(Buffer.from(name))).toBe(true);
+  for (const name of [
+    "README.txt",
+    "manifest.csv",
+    "data/submission.csv",
+    "data/organization.csv",
+    "data/audit_event.csv",
+    "data/support_request.csv",
+    "data/security_incident.csv",
+  ])
+    expect(zip.includes(Buffer.from(name))).toBe(true);
   expect(zip.includes(Buffer.from("data/password_token.csv"))).toBe(false);
-  const [audit] = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM audit_event WHERE action = 'export_all'");
+  const [audit] = await ownerQuery<{ n: number }>(
+    "SELECT count(*)::int AS n FROM audit_event WHERE action = 'export_all'",
+  );
   expect(audit.n).toBeGreaterThan(0);
   await admin.context.close();
 

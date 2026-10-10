@@ -2,29 +2,47 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { CheckCircle2, Flag, Pencil } from "lucide-react";
-import { addFlagAction, correctionAction, transitionAction, type ActionResult } from "@/app/finance/submissions/[id]/actions";
+import { addFlagAction, correctionAction, transitionAction } from "@/app/finance/submissions/[id]/actions";
 import { RequestUpdate } from "@/components/finance/review/request-update";
 import { StaleNotice, isStale } from "@/components/finance/review/stale-notice";
+import type { ActionResult, ActionState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
 import type { Concern } from "@/lib/finance/review/return-note-core";
 
 export type CorrectableQuestion = { key: string; label: string; current: string };
 
-function Message({ state }: { state: ActionResult | undefined }) {
+function Message({ state }: { state: ActionState }) {
   if (!state) return <div aria-live="polite" />;
-  if (!state.ok && isStale(state.message)) return <StaleNotice />;
+  if (state.error && isStale(state.error)) return <StaleNotice />;
   return (
-    <p role={state.ok ? "status" : "alert"} className={state.ok ? "text-sm font-semibold text-ok" : "text-sm font-semibold text-bad"}>
-      {state.message}
+    <p
+      role={state.error ? "alert" : "status"}
+      className={state.error ? "text-sm font-semibold text-bad" : "text-sm font-semibold text-ok"}
+    >
+      {state.error ?? state.ok}
     </p>
   );
 }
 
-function TransitionButton({ submissionId, lockVersion, action, label, variant, onDone }: { submissionId: string; lockVersion: number; action: "start_review" | "accept"; label: string; variant: "primary" | "secondary" | "ghost"; onDone: (message: string) => void }) {
-  const [state, formAction, pending] = useActionState(async (previous: ActionResult | undefined, formData: FormData) => {
+function TransitionButton({
+  submissionId,
+  lockVersion,
+  action,
+  label,
+  variant,
+  onDone,
+}: {
+  submissionId: string;
+  lockVersion: number;
+  action: "start_review" | "accept";
+  label: string;
+  variant: "primary" | "secondary" | "ghost";
+  onDone: (message: string) => void;
+}) {
+  const [state, formAction, pending] = useActionState(async (previous: ActionState, formData: FormData) => {
     const result = await transitionAction(previous, formData);
-    if (result.ok) onDone(result.message);
+    if (result.ok) onDone(result.ok);
     return result;
   }, undefined);
   return (
@@ -32,7 +50,12 @@ function TransitionButton({ submissionId, lockVersion, action, label, variant, o
       <input type="hidden" name="submissionId" value={submissionId} />
       <input type="hidden" name="lockVersion" value={lockVersion} />
       <input type="hidden" name="action" value={action} />
-      <Button type="submit" variant={variant} className={variant === "ghost" ? "px-0" : "h-11 w-full text-base"} disabled={pending}>
+      <Button
+        type="submit"
+        variant={variant}
+        className={variant === "ghost" ? "px-0" : "h-11 w-full text-base"}
+        disabled={pending}
+      >
         {pending ? "Working" : label}
       </Button>
       {state?.ok ? null : <Message state={state} />}
@@ -41,7 +64,7 @@ function TransitionButton({ submissionId, lockVersion, action, label, variant, o
 }
 
 function useGuardedAction(run: (fd: FormData) => Promise<ActionResult>) {
-  const [state, setState] = useState<ActionResult | undefined>();
+  const [state, setState] = useState<ActionState>();
   const [pending, startTransition] = useTransition();
   const submit = (fd: FormData, onOk: () => void) => {
     startTransition(async () => {
@@ -67,11 +90,17 @@ function FlagForm({ submissionId }: { submissionId: string }) {
         submit(fd, () => setNote(""));
       }}
     >
-      <Label htmlFor="flag-note">
-        Flag note
-      </Label>
-      <Textarea id="flag-note" aria-required="true" rows={3} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby={state && !state.ok ? "flag-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
-      {state && !state.ok ? <FieldError id="flag-error">{state.message}</FieldError> : null}
+      <Label htmlFor="flag-note">Flag note</Label>
+      <Textarea
+        id="flag-note"
+        aria-required="true"
+        rows={3}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        aria-describedby={state?.error ? "flag-error" : undefined}
+        aria-invalid={state?.error ? true : undefined}
+      />
+      {state?.error ? <FieldError id="flag-error">{state.error}</FieldError> : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Flag className="h-4 w-4" aria-hidden="true" />
         {pending ? "Adding" : "Add manual flag"}
@@ -81,7 +110,15 @@ function FlagForm({ submissionId }: { submissionId: string }) {
   );
 }
 
-function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId: string; lockVersion: number; questions: CorrectableQuestion[] }) {
+function CorrectionForm({
+  submissionId,
+  lockVersion,
+  questions,
+}: {
+  submissionId: string;
+  lockVersion: number;
+  questions: CorrectableQuestion[];
+}) {
   const [question, setQuestion] = useState("");
   const [value, setValue] = useState("");
   const [reason, setReason] = useState("");
@@ -105,11 +142,10 @@ function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId
       }}
     >
       <div>
-        <Label htmlFor="corr-question">
-          Question
-        </Label>
+        <Label htmlFor="corr-question">Question</Label>
         <Select
-          id="corr-question" aria-required="true"
+          id="corr-question"
+          aria-required="true"
           value={question}
           onChange={(event) => {
             setQuestion(event.target.value);
@@ -127,18 +163,28 @@ function CorrectionForm({ submissionId, lockVersion, questions }: { submissionId
         </Select>
       </div>
       <div>
-        <Label htmlFor="corr-value">
-          New value
-        </Label>
+        <Label htmlFor="corr-value">New value</Label>
         <Input id="corr-value" aria-required="true" value={value} onChange={(event) => setValue(event.target.value)} />
       </div>
       <div>
-        <Label htmlFor="corr-reason">
-          Reason
-        </Label>
-        <Textarea id="corr-reason" aria-required="true" rows={2} value={reason} onChange={(event) => setReason(event.target.value)} aria-describedby={state && !state.ok ? "corr-error" : undefined} aria-invalid={state && !state.ok ? true : undefined} />
+        <Label htmlFor="corr-reason">Reason</Label>
+        <Textarea
+          id="corr-reason"
+          aria-required="true"
+          rows={2}
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          aria-describedby={state?.error ? "corr-error" : undefined}
+          aria-invalid={state?.error ? true : undefined}
+        />
       </div>
-      {state && !state.ok ? isStale(state.message) ? <StaleNotice /> : <FieldError id="corr-error">{state.message}</FieldError> : null}
+      {state?.error ? (
+        isStale(state.error) ? (
+          <StaleNotice />
+        ) : (
+          <FieldError id="corr-error">{state.error}</FieldError>
+        )
+      ) : null}
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Pencil className="h-4 w-4" aria-hidden="true" />
         {pending ? "Saving" : "Save correction"}
@@ -185,7 +231,10 @@ export function ActionsPanel({
       <div className="space-y-4 px-5 py-5">
         <div aria-live="polite">
           {notice ? (
-            <p role="status" className="flex items-start gap-2 rounded border border-ok/25 bg-ok-bg px-3 py-2 text-[15px] font-semibold text-ok">
+            <p
+              role="status"
+              className="flex items-start gap-2 rounded border border-ok/25 bg-ok-bg px-3 py-2 text-[15px] font-semibold text-ok"
+            >
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               {notice}
             </p>
@@ -198,7 +247,13 @@ export function ActionsPanel({
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line-soft pt-3 text-sm">
               <span className="w-full text-muted">Or decide now:</span>
               <TransitionButton {...common} action="accept" label="Accept report" variant="ghost" />
-              <RequestUpdate {...common} concerns={concerns} contactName={contactName} prefill={prefill} variant="ghost" />
+              <RequestUpdate
+                {...common}
+                concerns={concerns}
+                contactName={contactName}
+                prefill={prefill}
+                variant="ghost"
+              />
             </div>
           </div>
         ) : status === "under_review" ? (
@@ -232,13 +287,17 @@ export function ActionsPanel({
               <Pencil className="h-4 w-4" aria-hidden="true" />
               Correct an answer
             </summary>
-            <p className="mt-2 text-sm text-muted">Creates a new revision under your name. The status does not change.</p>
+            <p className="mt-2 text-sm text-muted">
+              Creates a new revision under your name. The status does not change.
+            </p>
             <div className="mt-3">
               <CorrectionForm submissionId={submissionId} lockVersion={lockVersion} questions={questions} />
             </div>
           </details>
         ) : null}
-        <p className="border-t border-line-soft pt-3 text-[13px] text-muted">Every action is recorded in the audit timeline under your name.</p>
+        <p className="border-t border-line-soft pt-3 text-[13px] text-muted">
+          Every action is recorded in the audit timeline under your name.
+        </p>
       </div>
     </section>
   );

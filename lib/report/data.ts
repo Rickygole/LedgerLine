@@ -30,7 +30,7 @@ type HeaderRow = {
   submitted_by_name: string | null;
 };
 
-export type LoadedReport = {
+type LoadedReport = {
   header: ReportHeader;
   definition: FormDefinition;
   formVersionId: string;
@@ -53,7 +53,7 @@ export async function loadReport(tx: Tx, submissionId: string): Promise<LoadedRe
      LEFT JOIN app_user uu ON uu.id = s.updated_by
      LEFT JOIN app_user sb ON sb.id = s.submitted_by
      WHERE s.id = $1`,
-    [submissionId]
+    [submissionId],
   );
   if (!row) return null;
   return {
@@ -82,10 +82,13 @@ export async function loadReport(tx: Tx, submissionId: string): Promise<LoadedRe
   };
 }
 
-export async function loadAnswers(tx: Tx, submissionId: string): Promise<{ answers: Answers; updatedAt: Record<string, string> }> {
+export async function loadAnswers(
+  tx: Tx,
+  submissionId: string,
+): Promise<{ answers: Answers; updatedAt: Record<string, string> }> {
   const rows = await tx.query<{ question_key: string; value: AnswerValue; updated_at: string }>(
     "SELECT question_key, value, updated_at FROM answer WHERE submission_id = $1",
-    [submissionId]
+    [submissionId],
   );
   const answers: Answers = {};
   const updatedAt: Record<string, string> = {};
@@ -97,9 +100,16 @@ export async function loadAnswers(tx: Tx, submissionId: string): Promise<{ answe
 }
 
 export async function loadBudget(tx: Tx, submissionId: string): Promise<BudgetLine[]> {
-  const rows = await tx.query<{ row_id: string; position: number; category: "PS" | "OTPS"; description: string; amount: string; actual_spent: string | null }>(
+  const rows = await tx.query<{
+    row_id: string;
+    position: number;
+    category: "PS" | "OTPS";
+    description: string;
+    amount: string;
+    actual_spent: string | null;
+  }>(
     "SELECT row_id, position, category, description, amount, actual_spent FROM budget_line WHERE submission_id = $1 ORDER BY position, row_id",
-    [submissionId]
+    [submissionId],
   );
   return rows.map((row) => ({
     rowId: row.row_id,
@@ -112,11 +122,17 @@ export async function loadBudget(tx: Tx, submissionId: string): Promise<BudgetLi
 }
 
 export async function loadAttachments(tx: Tx, submissionId: string): Promise<AttachmentItem[]> {
-  const rows = await tx.query<{ id: string; filename: string; bytes: string; created_at: string; full_name: string | null }>(
+  const rows = await tx.query<{
+    id: string;
+    filename: string;
+    bytes: string;
+    created_at: string;
+    full_name: string | null;
+  }>(
     `SELECT t.id, t.filename, t.bytes, t.created_at, u.full_name
      FROM attachment t LEFT JOIN app_user u ON u.id = t.uploaded_by
      WHERE t.submission_id = $1 AND t.removed_at IS NULL ORDER BY t.created_at, t.id`,
-    [submissionId]
+    [submissionId],
   );
   return rows.map((row) => ({
     id: row.id,
@@ -127,13 +143,14 @@ export async function loadAttachments(tx: Tx, submissionId: string): Promise<Att
   }));
 }
 
-export function sectionOfQuestion(definition: FormDefinition, key: string): string | null {
+function sectionOfQuestion(definition: FormDefinition, key: string): string | null {
   return definition.sections.find((section) => section.questions.some((question) => question.key === key))?.key ?? null;
 }
 
 export function withOrgDefaults(answers: Answers, orgName: string, ein: string): Answers {
   const merged: Answers = { ...answers };
-  const blank = (value: AnswerValue | undefined) => value === undefined || value === null || (typeof value === "string" && value.trim() === "");
+  const blank = (value: AnswerValue | undefined) =>
+    value === undefined || value === null || (typeof value === "string" && value.trim() === "");
   if (blank(merged.org_legal_name)) merged.org_legal_name = orgName;
   if (blank(merged.org_ein)) merged.org_ein = ein;
   return merged;
@@ -151,20 +168,26 @@ export function resumeSectionFor(definition: FormDefinition, updatedAt: Record<s
   return best?.key ?? null;
 }
 
-export function landingSection(
+function landingSection(
   definition: FormDefinition,
   updatedAt: Record<string, string>,
-  activity: { reportSavedAt: string; hasBudget: boolean; lastUploadAt: string | null }
+  activity: { reportSavedAt: string; hasBudget: boolean; lastUploadAt: string | null },
 ): string | null {
   const latestAnswer = Object.values(updatedAt).reduce<string>((max, at) => (at > max ? at : max), "");
   const saved = activity.reportSavedAt;
-  if (activity.lastUploadAt && activity.lastUploadAt > saved && activity.lastUploadAt > latestAnswer) return "attachments";
+  if (activity.lastUploadAt && activity.lastUploadAt > saved && activity.lastUploadAt > latestAnswer)
+    return "attachments";
   const budgetKey = definition.sections.find((section) => section.kind === "budget")?.key ?? null;
   if (budgetKey && activity.hasBudget && saved > latestAnswer) return budgetKey;
   return resumeSectionFor(definition, updatedAt);
 }
 
-export async function loadEditorPayload(tx: Tx, report: LoadedReport, currentUserName: string, currentUserTitle: string): Promise<EditorPayload> {
+export async function loadEditorPayload(
+  tx: Tx,
+  report: LoadedReport,
+  currentUserName: string,
+  currentUserTitle: string,
+): Promise<EditorPayload> {
   const { answers, updatedAt } = await loadAnswers(tx, report.header.id);
   const budget = await loadBudget(tx, report.header.id);
   const attachments = await loadAttachments(tx, report.header.id);
@@ -178,10 +201,14 @@ export async function loadEditorPayload(tx: Tx, report: LoadedReport, currentUse
     resumeSection: landingSection(report.definition, updatedAt, {
       reportSavedAt: report.header.updatedAt,
       hasBudget: budget.length > 0,
-      lastUploadAt: attachments.reduce<string | null>((max, item) => (max === null || item.uploadedAt > max ? item.uploadedAt : max), null),
+      lastUploadAt: attachments.reduce<string | null>(
+        (max, item) => (max === null || item.uploadedAt > max ? item.uploadedAt : max),
+        null,
+      ),
     }),
     today: todayInNewYork(),
-    hasProgress: Object.keys(updatedAt).some((key) => key !== "org_legal_name" && key !== "org_ein") || budget.length > 0,
+    hasProgress:
+      Object.keys(updatedAt).some((key) => key !== "org_legal_name" && key !== "org_ein") || budget.length > 0,
     currentUserName,
     currentUserTitle,
   };

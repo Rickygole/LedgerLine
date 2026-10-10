@@ -16,6 +16,8 @@ export function buildCsp(nonce: string, dev: boolean): string {
   return directives.join("; ");
 }
 
-export function cspHeaderName(mode: string | undefined): "Content-Security-Policy" | "Content-Security-Policy-Report-Only" {
+export function cspHeaderName(
+  mode: string | undefined,
+): "Content-Security-Policy" | "Content-Security-Policy-Report-Only" {
   return mode === "report-only" ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
 }

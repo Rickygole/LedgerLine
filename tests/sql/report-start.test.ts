@@ -22,7 +22,7 @@ beforeAll(async () => {
        WHERE NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = rp.id)
          AND EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published')
        LIMIT 1`,
-      [maria]
+      [maria],
     )
   ).rows[0];
   target = row ? { assignment: row.assignment, period: row.period } : null;
@@ -37,7 +37,12 @@ afterAll(async () => {
 });
 
 async function countSubmissions(): Promise<number> {
-  return (await owner.query("SELECT count(*)::int AS n FROM submission WHERE assignment_id = $1 AND period_id = $2", [target!.assignment, target!.period])).rows[0].n;
+  return (
+    await owner.query("SELECT count(*)::int AS n FROM submission WHERE assignment_id = $1 AND period_id = $2", [
+      target!.assignment,
+      target!.period,
+    ])
+  ).rows[0].n;
 }
 
 describe("[US-016] opening the start page does not create a draft", () => {
@@ -64,13 +69,26 @@ describe("[US-016] opening the start page does not create a draft", () => {
     expect(result.created).toBe(true);
     expect(await countSubmissions()).toBe(1);
 
-    const audit = (await owner.query("SELECT action, actor_id FROM audit_event WHERE entity = 'submission' AND entity_id = $1", [created])).rows;
+    const audit = (
+      await owner.query("SELECT action, actor_id FROM audit_event WHERE entity = 'submission' AND entity_id = $1", [
+        created,
+      ])
+    ).rows;
     expect(audit).toEqual([{ action: "start", actor_id: maria }]);
 
     const again = await startReport(maria, target!.assignment, target!.period);
     expect(again).toEqual({ status: "ok", submissionId: created, created: false });
-    expect(await findReport(maria, target!.assignment, target!.period)).toEqual({ status: "found", submissionId: created });
-    expect((await owner.query("SELECT count(*)::int AS n FROM audit_event WHERE entity = 'submission' AND entity_id = $1", [created])).rows[0].n).toBe(1);
+    expect(await findReport(maria, target!.assignment, target!.period)).toEqual({
+      status: "found",
+      submissionId: created,
+    });
+    expect(
+      (
+        await owner.query("SELECT count(*)::int AS n FROM audit_event WHERE entity = 'submission' AND entity_id = $1", [
+          created,
+        ])
+      ).rows[0].n,
+    ).toBe(1);
   });
 });
 
@@ -88,7 +106,7 @@ describe("[BR-009][US-016] a report is only started for a period the initiative 
          JOIN reporting_period rp ON rp.fiscal_year_id <> i.fiscal_year_id
          WHERE NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = rp.id)
          LIMIT 1`,
-        [maria]
+        [maria],
       )
     ).rows[0];
     crossAssignment = row?.assignment ?? null;
@@ -103,19 +121,31 @@ describe("[BR-009][US-016] a report is only started for a period the initiative 
     const { startReport, findReport } = await import("@/lib/report/create");
     expect(await startReport(maria, crossAssignment!, crossPeriod!)).toEqual({ status: "not_found" });
     expect(await findReport(maria, crossAssignment!, crossPeriod!)).toEqual({ status: "not_found" });
-    const n = (await owner.query("SELECT count(*)::int AS n FROM submission WHERE assignment_id = $1 AND period_id = $2", [crossAssignment, crossPeriod])).rows[0].n;
+    const n = (
+      await owner.query("SELECT count(*)::int AS n FROM submission WHERE assignment_id = $1 AND period_id = $2", [
+        crossAssignment,
+        crossPeriod,
+      ])
+    ).rows[0].n;
     expect(n).toBe(0);
   });
 
   it("refuses the same row from any database path", async () => {
-    const form = (await owner.query("SELECT fv.id FROM form_version fv JOIN assignment a ON a.initiative_id = fv.initiative_id WHERE a.id = $1 LIMIT 1", [crossAssignment])).rows[0];
+    const form = (
+      await owner.query(
+        "SELECT fv.id FROM form_version fv JOIN assignment a ON a.initiative_id = fv.initiative_id WHERE a.id = $1 LIMIT 1",
+        [crossAssignment],
+      )
+    ).rows[0];
     await expect(
       owner.query(
         "INSERT INTO submission (reference_no, assignment_id, period_id, form_version_id, status) VALUES ('LL-TEST-99999', $1, $2, $3, 'draft')",
-        [crossAssignment, crossPeriod, form.id]
-      )
+        [crossAssignment, crossPeriod, form.id],
+      ),
     ).rejects.toMatchObject({ code: "23514" });
-    expect((await owner.query("SELECT count(*)::int AS n FROM submission WHERE reference_no = 'LL-TEST-99999'")).rows[0].n).toBe(0);
+    expect(
+      (await owner.query("SELECT count(*)::int AS n FROM submission WHERE reference_no = 'LL-TEST-99999'")).rows[0].n,
+    ).toBe(0);
   });
 
   it("numbers new references in sequence per period", async () => {
@@ -123,7 +153,12 @@ describe("[BR-009][US-016] a report is only started for a period the initiative 
     const second = (await owner.query("SELECT app.next_reference_no($1) AS n", [target!.period])).rows[0].n as string;
     expect(first).toMatch(/^LL-\d{2}(MY|YE)-\d{5}$/);
     expect(Number(second.slice(-5))).toBe(Number(first.slice(-5)) + 1);
-    const max = (await owner.query("SELECT max(substring(reference_no from '-(0\\d{4})$')::int) AS m FROM submission WHERE period_id = $1", [target!.period])).rows[0].m as number;
+    const max = (
+      await owner.query(
+        "SELECT max(substring(reference_no from '-(0\\d{4})$')::int) AS m FROM submission WHERE period_id = $1",
+        [target!.period],
+      )
+    ).rows[0].m as number;
     expect(Number(first.slice(-5))).toBeGreaterThan(max);
   });
 });

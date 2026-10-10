@@ -10,7 +10,13 @@ async function serious(page: Page) {
   const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
   return results.violations
     .filter((v) => v.impact === "serious" || v.impact === "critical")
-    .map((v) => `${v.id} (${v.impact}): ${v.help} at ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(", ")}`);
+    .map(
+      (v) =>
+        `${v.id} (${v.impact}): ${v.help} at ${v.nodes
+          .slice(0, 3)
+          .map((n) => n.target.join(" "))
+          .join(", ")}`,
+    );
 }
 
 async function check(page: Page, path: string, ready?: () => Promise<void>) {
@@ -27,7 +33,10 @@ test.describe("automated accessibility checks", () => {
     await check(page, "/gate", async () => {
       await page.getByLabel("Passcode").waitFor();
     });
-    const withGate = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("priya") });
+    const withGate = await browser.newContext({
+      baseURL: test.info().project.use.baseURL,
+      storageState: authFile("priya"),
+    });
     const cookies = (await withGate.cookies()).filter((c) => c.name !== "ll_session");
     await withGate.close();
     const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
@@ -54,7 +63,10 @@ test.describe("automated accessibility checks", () => {
   });
 
   test("reporting portal", async ({ browser }) => {
-    const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+    const context = await browser.newContext({
+      baseURL: test.info().project.use.baseURL,
+      storageState: authFile("maria"),
+    });
     const page = await context.newPage();
     await check(page, "/portal");
     await check(page, "/portal/history");
@@ -62,12 +74,12 @@ test.describe("automated accessibility checks", () => {
     await check(page, "/portal/organization");
     const [draft] = await ownerQuery<{ id: string }>(
       `SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id JOIN app_user u ON u.org_id = a.org_id
-       WHERE u.email = 'maria.santos@motthavenyouth.example.org' AND s.status IN ('draft', 'returned') LIMIT 1`
+       WHERE u.email = 'maria.santos@motthavenyouth.example.org' AND s.status IN ('draft', 'returned') LIMIT 1`,
     );
     if (draft) await check(page, `/portal/reports/${draft.id}`);
     const [done] = await ownerQuery<{ id: string }>(
       `SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id JOIN app_user u ON u.org_id = a.org_id
-       WHERE u.email = 'maria.santos@motthavenyouth.example.org' AND s.status IN ('submitted', 'under_review', 'accepted') LIMIT 1`
+       WHERE u.email = 'maria.santos@motthavenyouth.example.org' AND s.status IN ('submitted', 'under_review', 'accepted') LIMIT 1`,
     );
     if (done) {
       await check(page, `/portal/reports/${done.id}`);
@@ -77,9 +89,26 @@ test.describe("automated accessibility checks", () => {
   });
 
   test("finance workspace", async ({ browser }) => {
-    const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("priya") });
+    const context = await browser.newContext({
+      baseURL: test.info().project.use.baseURL,
+      storageState: authFile("priya"),
+    });
     const page = await context.newPage();
-    for (const path of ["/finance", "/finance/submissions", "/finance/flagged", "/finance/initiatives", "/finance/organizations", "/finance/outbox", "/finance/audit", "/finance/users", "/finance/reminders", "/finance/queries", "/finance/rollover", "/finance/platform", "/finance/initiatives/new"]) {
+    for (const path of [
+      "/finance",
+      "/finance/submissions",
+      "/finance/flagged",
+      "/finance/initiatives",
+      "/finance/organizations",
+      "/finance/outbox",
+      "/finance/audit",
+      "/finance/users",
+      "/finance/reminders",
+      "/finance/queries",
+      "/finance/rollover",
+      "/finance/platform",
+      "/finance/initiatives/new",
+    ]) {
       await check(page, path);
     }
     const [sub] = await ownerQuery<{ id: string }>("SELECT id FROM submission WHERE status = 'accepted' LIMIT 1");

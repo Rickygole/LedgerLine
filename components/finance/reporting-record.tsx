@@ -1,6 +1,7 @@
 import { daysPastDue } from "@/lib/dates";
 import type { OrgAward } from "@/lib/finance/admin/organizations";
 import { STATUS_COLOR } from "@/components/ui/status-colors";
+import { plural } from "@/lib/format";
 
 type Worst = { label: string; color: string; rank: number };
 
@@ -39,14 +40,18 @@ export function ReportingRecord({ awards }: { awards: OrgAward[] }) {
       <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-3">
         {list.map((p) => (
           <li key={p.label} className="flex items-center gap-2.5">
-            <span aria-hidden="true" className="inline-block h-6 w-6 rounded-sm border border-black/10" style={{ background: p.worst.color }} />
+            <span
+              aria-hidden="true"
+              className="inline-block h-6 w-6 rounded-sm border border-black/10"
+              style={{ background: p.worst.color }}
+            />
             <span className="text-[13px] leading-4">
               <span className="block font-semibold text-ink">{p.label}</span>
               <span className="text-ink-2">
                 {p.worst.label}
                 <span className="text-muted">
                   {" "}
-                  · {p.count} {p.count === 1 ? "report" : "reports"}
+                  · {p.count} {plural(p.count, "report", "reports")}
                 </span>
               </span>
             </span>

@@ -4,7 +4,17 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime, nowDate } from "@/lib/dates";
 import { one, pickOne, type SearchParams } from "@/lib/finance/admin/params";
-import { ageMinutes, categoryLabel, formatDuration, listSupport, metTarget, responseMinutes, RESPONSE_TARGET_HOURS, supportState, targetSummary } from "@/lib/ops/support";
+import {
+  ageMinutes,
+  categoryLabel,
+  formatDuration,
+  listSupport,
+  metTarget,
+  responseMinutes,
+  RESPONSE_TARGET_HOURS,
+  supportState,
+  targetSummary,
+} from "@/lib/ops/support";
 import { SupportStateBadge } from "@/components/ops/support-parts";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
@@ -24,11 +34,22 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
   const filter = pickOne(one(params, "state"), FILTERS, "all");
   const now = nowDate();
   const all = await withClaims(admin.id, (tx) => listSupport(tx, {}));
-  const rows = all.map((row) => ({ row, state: supportState({ createdAt: row.created_at, firstResponseAt: row.first_response_at, closedAt: row.closed_at, now }) }));
+  const rows = all.map((row) => ({
+    row,
+    state: supportState({
+      createdAt: row.created_at,
+      firstResponseAt: row.first_response_at,
+      closedAt: row.closed_at,
+      now,
+    }),
+  }));
   const count = (state: string) => rows.filter((r) => r.state === state).length;
   const shown = rows.filter((r) => filter === "all" || r.state === filter);
   const summary = targetSummary(all.map((r) => ({ createdAt: r.created_at, firstResponseAt: r.first_response_at })));
-  const share = summary.responded === 0 ? "No replies yet" : `${Math.round((summary.metTarget / summary.responded) * 100)}% of ${summary.responded} replies`;
+  const share =
+    summary.responded === 0
+      ? "No replies yet"
+      : `${Math.round((summary.metTarget / summary.responded) * 100)}% of ${summary.responded} replies`;
 
   return (
     <>
@@ -38,7 +59,9 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Support queue" }]}
       />
       <p className="mb-4 text-sm">
-        {count("open")} open, {count("overdue")} overdue, {count("responded")} responded and waiting to be closed. First replies within the target: {share}. Median first reply: {summary.medianMinutes === null ? "none yet" : formatDuration(summary.medianMinutes)}.
+        {count("open")} open, {count("overdue")} overdue, {count("responded")} responded and waiting to be closed. First
+        replies within the target: {share}. Median first reply:{" "}
+        {summary.medianMinutes === null ? "none yet" : formatDuration(summary.medianMinutes)}.
       </p>
       <Card>
         <form action="/finance/support" className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-4">
@@ -81,7 +104,10 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
                       <div className="text-xs text-muted">{row.org_name ?? "Council Finance"}</div>
                     </TD>
                     <TD>
-                      <Link href={`/finance/support/${row.id}`} className="text-link underline underline-offset-2 hover:text-link-hover">
+                      <Link
+                        href={`/finance/support/${row.id}`}
+                        className="text-link underline underline-offset-2 hover:text-link-hover"
+                      >
                         {row.subject}
                       </Link>
                       <div className="text-xs text-muted">{categoryLabel(row.category)}</div>
@@ -92,11 +118,15 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
                     <TD className="whitespace-nowrap text-muted">{formatDateTime(row.created_at)}</TD>
                     <TD className="whitespace-nowrap">
                       {replied === null ? (
-                        <span className={state === "overdue" ? "font-semibold text-bad" : undefined}>{formatDuration(ageMinutes(row.created_at, now))} waiting</span>
+                        <span className={state === "overdue" ? "font-semibold text-bad" : undefined}>
+                          {formatDuration(ageMinutes(row.created_at, now))} waiting
+                        </span>
                       ) : (
                         <span>
                           {formatDuration(replied)}
-                          {metTarget(row.created_at, row.first_response_at) === false ? <span className="ml-1 font-semibold text-bad">(late)</span> : null}
+                          {metTarget(row.created_at, row.first_response_at) === false ? (
+                            <span className="ml-1 font-semibold text-bad">(late)</span>
+                          ) : null}
                         </span>
                       )}
                     </TD>

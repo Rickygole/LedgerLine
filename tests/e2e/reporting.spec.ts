@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { authFile, fillRequiredAnswers, gotoStep, openOverdueDraft, PEOPLE, REPORT_URL, setBudget, signIn, savedNow } from "./support/app";
+import {
+  authFile,
+  fillRequiredAnswers,
+  gotoStep,
+  openOverdueDraft,
+  PEOPLE,
+  REPORT_URL,
+  setBudget,
+  signIn,
+  savedNow,
+} from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -8,7 +18,10 @@ test.use({ storageState: authFile("maria") });
 let submittedId = "";
 
 test("[BR-011][US-013] a submitter signs in through the passcode gate with a personal account", async ({ browser }) => {
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: { cookies: [], origins: [] } });
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: { cookies: [], origins: [] },
+  });
   const page = await context.newPage();
   await page.goto("/portal");
   await expect(page).toHaveURL(/\/gate/);
@@ -23,7 +36,7 @@ test("[BR-010][US-014] a submitter cannot open another organization's report by 
   const [foreign] = await ownerQuery<{ id: string }>(
     `SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id
      WHERE a.org_id <> (SELECT org_id FROM app_user WHERE email = $1) LIMIT 1`,
-    [PEOPLE.maria]
+    [PEOPLE.maria],
   );
   const response = await page.goto(`/portal/reports/${foreign.id}`);
   expect(response?.status()).toBe(404);
@@ -33,7 +46,12 @@ test("[BR-010][US-014] a submitter cannot open another organization's report by 
 
 test("[US-016] a submitter starts the report the organization owes from the portal", async ({ page }) => {
   await page.goto("/portal");
-  await expect(page.getByRole("heading", { name: /report is overdue|reports are overdue|asked for changes|next report is due|up to date/, level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: /report is overdue|reports are overdue|asked for changes|next report is due|up to date/,
+      level: 1,
+    }),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Continue report" })).toHaveCount(1);
   const id = await openOverdueDraft(page);
   expect(id).toMatch(/^[0-9a-f-]{36}$/);
@@ -44,7 +62,10 @@ test("[BR-021][US-031] submitting the seeded draft lists the two things left to 
   await openOverdueDraft(page);
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
-  const summary = page.getByRole("alert").filter({ hasText: /problems? to fix before you submit/ }).first();
+  const summary = page
+    .getByRole("alert")
+    .filter({ hasText: /problems? to fix before you submit/ })
+    .first();
   await expect(summary).toBeVisible();
   await expect(summary).toContainText("There are 2 problems to fix before you submit");
   await expect(summary).toContainText("Total $71,401.00 must equal award $85,000.00 (under by $13,599.00).");
@@ -56,7 +77,10 @@ test("[BR-021][US-031] submitting the seeded draft lists the two things left to 
 
 test("[US-016] an overdue report carries one red signal on My reports and in the report header", async ({ page }) => {
   await page.goto("/portal");
-  const row = page.locator("table tbody tr").filter({ hasText: /days? past due/ }).first();
+  const row = page
+    .locator("table tbody tr")
+    .filter({ hasText: /days? past due/ })
+    .first();
   await expect(row).toBeVisible();
   await expect(row.getByText("Overdue", { exact: true })).toHaveCount(1);
   await expect(row.getByText(/\d+ days? past due/)).toHaveCount(1);
@@ -66,7 +90,9 @@ test("[US-016] an overdue report carries one red signal on My reports and in the
   await expect(header.getByText("Overdue", { exact: true })).toHaveCount(0);
 });
 
-test("[US-017] report labels mark only optional fields and required fields say so to assistive tech", async ({ page }) => {
+test("[US-017] report labels mark only optional fields and required fields say so to assistive tech", async ({
+  page,
+}) => {
   await openOverdueDraft(page);
   await gotoStep(page, "Organization and contact");
   await expect(page.getByText("(required)")).toHaveCount(0);
@@ -96,7 +122,10 @@ test("[BR-021][US-031] submitting with required answers missing lists each one",
   await page.locator("#q-participants_actual").fill("");
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
-  const summary = page.getByRole("alert").filter({ hasText: /problems? to fix before you submit/ }).first();
+  const summary = page
+    .getByRole("alert")
+    .filter({ hasText: /problems? to fix before you submit/ })
+    .first();
   await expect(summary).toBeVisible();
   await expect(summary).toContainText("Enter the number of participants served this period.");
   await expect(summary).toContainText(/Add at least one budget line\.|must equal award/);
@@ -130,20 +159,31 @@ test("[US-022][US-023] several supporting documents of the allowed types attach 
     { name: "invoice.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\nInvoice 1042\n") },
   ]);
   await expect(page.getByText("2 attached")).toBeVisible();
-  const files = await ownerQuery<{ filename: string }>("SELECT filename FROM attachment WHERE submission_id = $1 ORDER BY filename", [id]);
+  const files = await ownerQuery<{ filename: string }>(
+    "SELECT filename FROM attachment WHERE submission_id = $1 ORDER BY filename",
+    [id],
+  );
   expect(files.map((f) => f.filename)).toEqual(["invoice.pdf", "roster.csv"]);
-  await page.locator("#attachment-input").setInputFiles({ name: "setup.exe", mimeType: "application/octet-stream", buffer: Buffer.from("MZ") });
+  await page
+    .locator("#attachment-input")
+    .setInputFiles({ name: "setup.exe", mimeType: "application/octet-stream", buffer: Buffer.from("MZ") });
   await expect(page.getByText("Use PDF, Word (.docx), Excel (.xlsx) or CSV.")).toBeVisible();
 });
 
 test("[BR-012] the browser refuses a file over 25 MB before sending it and says why", async ({ page }) => {
   await openOverdueDraft(page);
   await gotoStep(page, "Attachments");
-  await page.locator("#attachment-input").setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]) });
+  await page.locator("#attachment-input").setInputFiles({
+    name: "scan.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(26 * 1024 * 1024, 66)]),
+  });
   await expect(page.getByText(/over the 25\.0 MB limit for one file/)).toBeVisible();
 });
 
-test("[BR-022] actual spent shows a variance per line and a submitter must explain a large unspent balance", async ({ page }) => {
+test("[BR-022] actual spent shows a variance per line and a submitter must explain a large unspent balance", async ({
+  page,
+}) => {
   await openOverdueDraft(page);
   await fillRequiredAnswers(page);
   await setBudget(page, [
@@ -156,17 +196,24 @@ test("[BR-022] actual spent shows a variance per line and a submitter must expla
   await expect(page.getByLabel("Variance explanation")).toBeVisible();
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
-  const summary = page.getByRole("alert").filter({ hasText: /problems? to fix before you submit/ }).first();
+  const summary = page
+    .getByRole("alert")
+    .filter({ hasText: /problems? to fix before you submit/ })
+    .first();
   await expect(summary).toContainText("of the award is unspent. Explain why in the variance explanation.");
   await summary.getByRole("link", { name: /of the award is unspent/ }).click();
   await expect(page.getByLabel("Variance explanation")).toBeFocused();
-  await page.getByLabel("Variance explanation").fill("Two mentor positions were vacant until March and supplies were bought in bulk last year.");
+  await page
+    .getByLabel("Variance explanation")
+    .fill("Two mentor positions were vacant until March and supplies were bought in bulk last year.");
   await page.getByRole("button", { name: "Save and return to review" }).click();
   await expect(page.getByText("Everything required is complete. You can submit this report.")).toBeVisible();
   await expect(page).toHaveURL(REPORT_URL);
 });
 
-test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the amount, then submits once fixed", async ({ page }) => {
+test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the amount, then submits once fixed", async ({
+  page,
+}) => {
   await openOverdueDraft(page);
   await fillRequiredAnswers(page);
   await setBudget(page, [
@@ -176,7 +223,10 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
   await expect(page.getByText("Under by $5,000.00", { exact: true })).toBeVisible();
   await gotoStep(page, "Review and submit");
   await page.getByRole("button", { name: "Submit report" }).click();
-  const refusal = page.getByRole("alert").filter({ hasText: /must equal award/ }).first();
+  const refusal = page
+    .getByRole("alert")
+    .filter({ hasText: /must equal award/ })
+    .first();
   await expect(refusal).toContainText("Total $80,000.00 must equal award $85,000.00 (under by $5,000.00).");
   await expect(page).toHaveURL(REPORT_URL);
   await refusal.getByRole("link", { name: /must equal award/ }).click();
@@ -196,13 +246,18 @@ test("[BR-022][US-028][US-032][US-035] an unbalanced budget is refused with the 
   submittedId = page.url().split("/").slice(-2)[0];
 });
 
-test("[US-019][US-020][BR-014] a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed", async ({ page }) => {
+test("[US-019][US-020][BR-014] a submission is locked and a copy with the full content is recorded in Messages, not claimed as emailed", async ({
+  page,
+}) => {
   expect(submittedId).toMatch(/^[0-9a-f-]{36}$/);
-  const [sub] = await ownerQuery<{ status: string; revision: number }>("SELECT status, revision FROM submission WHERE id = $1", [submittedId]);
+  const [sub] = await ownerQuery<{ status: string; revision: number }>(
+    "SELECT status, revision FROM submission WHERE id = $1",
+    [submittedId],
+  );
   expect(sub).toEqual({ status: "submitted", revision: 1 });
   const [mail] = await ownerQuery<{ to_email: string; body_text: string; template: string; status: string }>(
     "SELECT to_email, body_text, template, status FROM outbox WHERE submission_id = $1",
-    [submittedId]
+    [submittedId],
   );
   expect(mail.to_email).toBe(PEOPLE.maria);
   expect(mail.template).toBe("submission_confirmation");
@@ -215,11 +270,13 @@ test("[US-019][US-020][BR-014] a submission is locked and a copy with the full c
   await expect(page.getByText(/A copy of this report is in\s+Messages/)).toBeVisible();
   await expect(page.getByText(/was emailed to/)).toHaveCount(0);
   await page.goto("/portal/messages");
-  await expect(page.getByText("Email delivery is not turned on in this environment. Each message is recorded here.")).toBeVisible();
+  await expect(
+    page.getByText("Email delivery is not turned on in this environment. Each message is recorded here."),
+  ).toBeVisible();
   await expect(page.getByText(/Report received/).first()).toBeVisible();
   const addresses = await ownerQuery<{ to_email: string }>(
     "SELECT DISTINCT o.to_email FROM outbox o WHERE o.org_id = (SELECT org_id FROM app_user WHERE email = $1)",
-    [PEOPLE.maria]
+    [PEOPLE.maria],
   );
   if (addresses.length === 1) {
     await expect(page.getByText(`Addressed to ${addresses[0].to_email}.`)).toBeVisible();
@@ -231,7 +288,10 @@ test("[US-019][US-020][BR-014] a submission is locked and a copy with the full c
 test("[US-021] the submitted copy prints without the site chrome and saves as a PDF", async ({ page }) => {
   await page.goto(`/portal/reports/${submittedId}`);
   await expect(page.getByRole("button", { name: "Print" })).toBeVisible();
-  const [revision] = await ownerQuery<{ sha256: string }>("SELECT sha256 FROM submission_revision WHERE submission_id = $1 AND kind = 'submit'", [submittedId]);
+  const [revision] = await ownerQuery<{ sha256: string }>(
+    "SELECT sha256 FROM submission_revision WHERE submission_id = $1 AND kind = 'submit'",
+    [submittedId],
+  );
   await expect(page.getByText(revision.sha256.slice(0, 12))).toBeVisible();
   await expect(page.getByRole("banner")).toBeVisible();
   await page.emulateMedia({ media: "print" });

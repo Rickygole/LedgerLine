@@ -1,5 +1,6 @@
 import { formatDate, formatDateTime, formatTime, isToday, todayInNewYork } from "@/lib/dates";
-import { formatCount, formatCurrency, parseAmount } from "@/lib/rules/money";
+import { parseAmount } from "@/lib/rules/money";
+import { formatCount, formatCurrency } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
 import type { Certification } from "@/lib/rules/certify";
@@ -42,7 +43,7 @@ export function tableRows(question: Question, value: AnswerValue | undefined): s
     .filter((cells) => cells.some((cell) => cell !== ""));
 }
 
-export type SummaryInput = {
+type SummaryInput = {
   title: string;
   referenceNo: string;
   periodLabel: string;
@@ -71,7 +72,8 @@ export function plainTextReport(input: SummaryInput): string {
     if (section.kind === "budget") {
       const totals = budgetTotals(input.budget.map((line) => ({ ...line, rowId: String(line.position) })));
       for (const line of input.budget) {
-        const spent = line.actual === null || line.actual === undefined ? "" : `, actual spent ${formatCurrency(line.actual)}`;
+        const spent =
+          line.actual === null || line.actual === undefined ? "" : `, actual spent ${formatCurrency(line.actual)}`;
         lines.push(`${line.position}. [${line.category}] ${line.description}: ${formatCurrency(line.amount)}${spent}`);
       }
       lines.push(`Personal services (PS) subtotal: ${formatCurrency(totals.ps)}`);
@@ -79,10 +81,15 @@ export function plainTextReport(input: SummaryInput): string {
       lines.push(`Total: ${formatCurrency(totals.total)}`);
       lines.push(`Award: ${formatCurrency(input.awardAmount)}`);
       lines.push(balanceMessage(totals.total, input.awardAmount).message);
-      const spend = spendSummary(input.budget.map((line) => ({ ...line, rowId: String(line.position) })), input.awardAmount);
+      const spend = spendSummary(
+        input.budget.map((line) => ({ ...line, rowId: String(line.position) })),
+        input.awardAmount,
+      );
       if (spend.entered) {
         lines.push(`Actual spent: ${formatCurrency(spend.actual)}`);
-        lines.push(`Unspent balance: ${formatCurrency(spend.unspent)} (${spend.unspentPercent.toFixed(1)}% of the award)`);
+        lines.push(
+          `Unspent balance: ${formatCurrency(spend.unspent)} (${spend.unspentPercent.toFixed(1)}% of the award)`,
+        );
         const note = input.answers[VARIANCE_NOTE_KEY];
         if (typeof note === "string" && note.trim() !== "") lines.push(`Variance explanation: ${note.trim()}`);
       }
@@ -96,7 +103,9 @@ export function plainTextReport(input: SummaryInput): string {
         const rows = tableRows(question, value);
         if (rows.length === 0) lines.push("  No rows entered.");
         const headers = (question.columns ?? []).map((column) => column.label);
-        rows.forEach((row, index) => lines.push(`  ${index + 1}. ${row.map((cell, i) => `${headers[i]}: ${cell || "not provided"}`).join("; ")}`));
+        rows.forEach((row, index) =>
+          lines.push(`  ${index + 1}. ${row.map((cell, i) => `${headers[i]}: ${cell || "not provided"}`).join("; ")}`),
+        );
         continue;
       }
       const shown = displayScalar(question, value);
@@ -125,7 +134,9 @@ export function plainTextReport(input: SummaryInput): string {
 const TZ = "America/New_York";
 
 function asDate(value: string | Date): Date {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00Z`) : new Date(value);
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T12:00:00Z`)
+    : new Date(value);
 }
 
 export function formatShortDate(value: string | Date, today: string = todayInNewYork()): string {

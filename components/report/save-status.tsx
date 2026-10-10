@@ -5,7 +5,15 @@ import { cn } from "@/lib/cn";
 import { savedAtLabel } from "@/lib/report/format";
 import type { SaveState } from "@/lib/report/use-autosave";
 
-export function SaveStatus({ state, lastSavedAt, today }: { state: SaveState; lastSavedAt: string | null; today: string }) {
+export function SaveStatus({
+  state,
+  lastSavedAt,
+  today,
+}: {
+  state: SaveState;
+  lastSavedAt: string | null;
+  today: string;
+}) {
   let text = "Changes save automatically.";
   let tone = "text-muted";
   let icon = <CheckCircle2 className="h-4 w-4" aria-hidden="true" />;
@@ -33,7 +41,12 @@ export function SaveStatus({ state, lastSavedAt, today }: { state: SaveState; la
   }
 
   return (
-    <p role="status" aria-live="polite" data-save-state={state.kind} className={cn("inline-flex items-center gap-2 text-sm font-semibold", tone)}>
+    <p
+      role="status"
+      aria-live="polite"
+      data-save-state={state.kind}
+      className={cn("inline-flex items-center gap-2 text-sm font-semibold", tone)}
+    >
       {icon}
       <span>{text}</span>
       {state.kind === "signed_out" ? (

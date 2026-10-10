@@ -2,7 +2,25 @@
 
 import { useRef } from "react";
 
-export function AutoSelect({ id, name, label, value, options, keep, action, className }: { id: string; name: string; label: string; value: string; options: { value: string; label: string }[]; keep: Record<string, string>; action?: string; className?: string }) {
+export function AutoSelect({
+  id,
+  name,
+  label,
+  value,
+  options,
+  keep,
+  action,
+  className,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  keep: Record<string, string>;
+  action?: string;
+  className?: string;
+}) {
   const form = useRef<HTMLFormElement>(null);
   return (
     <form ref={form} method="get" action={action} className={className ?? "flex items-center gap-2"}>
@@ -14,7 +32,13 @@ export function AutoSelect({ id, name, label, value, options, keep, action, clas
       <label htmlFor={id} className="whitespace-nowrap text-sm font-semibold text-ink">
         {label}
       </label>
-      <select id={id} name={name} defaultValue={value} onChange={() => form.current?.requestSubmit()} className="block h-9 rounded-sm border border-field bg-white pl-2 pr-8 text-sm text-ink">
+      <select
+        id={id}
+        name={name}
+        defaultValue={value}
+        onChange={() => form.current?.requestSubmit()}
+        className="block h-9 rounded-sm border border-field bg-white pl-2 pr-8 text-sm text-ink"
+      >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

@@ -4,7 +4,10 @@ import { authFile } from "./support/app";
 test.describe("requirements traceability page", () => {
   test("is not available to finance analysts or organizations", async ({ browser }) => {
     for (const who of ["daniel", "maria"] as const) {
-      const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile(who) });
+      const context = await browser.newContext({
+        baseURL: test.info().project.use.baseURL,
+        storageState: authFile(who),
+      });
       const page = await context.newPage();
       const response = await page.goto("/trust");
       expect(response?.status()).toBe(403);
@@ -13,7 +16,10 @@ test.describe("requirements traceability page", () => {
   });
 
   test("sends a visitor who is not signed in to the sign-in page", async ({ browser }) => {
-    const gate = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("priya") });
+    const gate = await browser.newContext({
+      baseURL: test.info().project.use.baseURL,
+      storageState: authFile("priya"),
+    });
     const cookies = (await gate.cookies()).filter((c) => c.name !== "ll_session");
     await gate.close();
     const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
@@ -32,14 +38,18 @@ test.describe("requirements traceability page", () => {
       await page.getByRole("link", { name: "Requirements traceability" }).click();
       await expect(page).toHaveURL(/\/trust$/);
       await expect(page.getByRole("heading", { name: "Requirements traceability", level: 1 })).toBeVisible();
-      for (const label of ["Verified by test", "Demonstrated", "Planned"]) await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
+      for (const label of ["Verified by test", "Demonstrated", "Planned"])
+        await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
       await expect(page.getByText("Build", { exact: true })).toBeVisible();
       await expect(page.getByText("Generated", { exact: true })).toBeVisible();
       await expect(page.locator("tbody tr")).toHaveCount(95);
     });
 
     test("is not offered to an analyst on the platform page", async ({ browser }) => {
-      const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("daniel") });
+      const context = await browser.newContext({
+        baseURL: test.info().project.use.baseURL,
+        storageState: authFile("daniel"),
+      });
       const page = await context.newPage();
       await page.goto("/finance/platform");
       await expect(page.getByRole("heading", { name: "Platform and delivery", level: 1 })).toBeVisible();

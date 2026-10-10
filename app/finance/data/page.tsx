@@ -15,7 +15,11 @@ export const metadata: Metadata = { title: "Export all data" };
 
 export default async function DataPage() {
   const admin = await requireUser(["finance_admin"]);
-  const catalog = await withClaims(admin.id, (tx) => tx.query<CatalogColumn>("SELECT table_name, column_name, data_type, is_nullable, ordinal FROM app.export_catalog()"));
+  const catalog = await withClaims(admin.id, (tx) =>
+    tx.query<CatalogColumn>(
+      "SELECT table_name, column_name, data_type, is_nullable, ordinal FROM app.export_catalog()",
+    ),
+  );
   const tables = [...groupCatalog(catalog)];
 
   return (
@@ -26,10 +30,20 @@ export default async function DataPage() {
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Export all data" }]}
       />
       <Card className="mb-6">
-        <CardHeader title="Data package" description="A zip file with one CSV file per table, a manifest of row counts, and a README that describes every table and column." />
+        <CardHeader
+          title="Data package"
+          description="A zip file with one CSV file per table, a manifest of row counts, and a README that describes every table and column."
+        />
         <CardBody className="space-y-3 text-sm">
-          <p>The package covers {tables.length} tables: organizations, initiatives, forms, reports and their answers, budget lines, revisions, the audit log, messages, accounts, support requests, security incidents, reviews and readiness records.</p>
-          <p>Uploaded files stay in file storage. The attachment table lists each one with its path so it can be retrieved. Each download is written to the audit log.</p>
+          <p>
+            The package covers {tables.length} tables: organizations, initiatives, forms, reports and their answers,
+            budget lines, revisions, the audit log, messages, accounts, support requests, security incidents, reviews
+            and readiness records.
+          </p>
+          <p>
+            Uploaded files stay in file storage. The attachment table lists each one with its path so it can be
+            retrieved. Each download is written to the audit log.
+          </p>
           <a href="/api/export/all" className={buttonClass("primary", "md")}>
             <Download className="h-4 w-4" aria-hidden="true" /> Download data package
           </a>
@@ -57,7 +71,10 @@ export default async function DataPage() {
         </Table>
       </Card>
       <Card>
-        <CardHeader title="Not in the package" description="Left out on purpose because they hold credentials or internal housekeeping only." />
+        <CardHeader
+          title="Not in the package"
+          description="Left out on purpose because they hold credentials or internal housekeeping only."
+        />
         <CardBody>
           <ul className="list-disc space-y-1 pl-5 text-sm">
             {NOT_EXPORTED.map((item) => (

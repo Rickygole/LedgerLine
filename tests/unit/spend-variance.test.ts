@@ -10,7 +10,14 @@ const definition: FormDefinition = {
   sections: [{ key: "budget", title: "Budget", kind: "budget", questions: [] }],
 };
 
-const line = (position: number, amount: number, actual: number | null = null): BudgetLine => ({ rowId: `r${position}`, position, category: "PS", description: `Line ${position}`, amount, actual });
+const line = (position: number, amount: number, actual: number | null = null): BudgetLine => ({
+  rowId: `r${position}`,
+  position,
+  category: "PS",
+  description: `Line ${position}`,
+  amount,
+  actual,
+});
 
 describe("[BR-022] approved budget must still equal the award", () => {
   it("stays blocking when actual spent is entered and the approved total is short", () => {
@@ -28,7 +35,14 @@ describe("[LL-ACTUAL] actual spent summary", () => {
   const budget = [line(1, 50000, 40000), line(2, 35000, 30000)];
 
   it("totals actual spent, variance and unspent balance in cents", () => {
-    expect(spendSummary(budget, 85000)).toEqual({ entered: true, approved: 85000, actual: 70000, variance: 15000, unspent: 15000, unspentPercent: 17.65 });
+    expect(spendSummary(budget, 85000)).toEqual({
+      entered: true,
+      approved: 85000,
+      actual: 70000,
+      variance: 15000,
+      unspent: 15000,
+      unspentPercent: 17.65,
+    });
   });
 
   it("reports a line variance only when actual spent was entered", () => {
@@ -81,7 +95,12 @@ describe("[LL-VARIANCE] underspend above 10 percent needs an explanation", () =>
 
 describe("[LL-ACTUAL] snapshot keeps actual spent", () => {
   it("includes actual spent only for lines that have it", () => {
-    const snapshot = buildSnapshot({ formVersionId: "f", answers: {}, budget: [line(1, 100, 40), line(2, 50)], attachments: [] });
+    const snapshot = buildSnapshot({
+      formVersionId: "f",
+      answers: {},
+      budget: [line(1, 100, 40), line(2, 50)],
+      attachments: [],
+    });
     expect(snapshot.budget).toEqual([
       { actual: 40, amount: 100, category: "PS", description: "Line 1", position: 1 },
       { amount: 50, category: "PS", description: "Line 2", position: 2 },

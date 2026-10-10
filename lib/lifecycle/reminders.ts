@@ -1,7 +1,8 @@
 import type { Tx } from "@/lib/db";
 import { daysBetween } from "@/lib/dates";
+import { plural } from "@/lib/format";
 
-export type PeriodOption = { id: string; label: string; due_on: string };
+type PeriodOption = { id: string; label: string; due_on: string };
 
 export type RuleRow = {
   id: string;
@@ -15,7 +16,7 @@ export type RuleRow = {
   last_sent: string | null;
 };
 
-export type TargetRow = {
+type TargetRow = {
   rule_id: string;
   offset_days: number;
   org_id: string;
@@ -32,7 +33,9 @@ export const PLACEHOLDERS = ["{contact}", "{organization}", "{initiative}", "{pe
 
 export function longDate(isoDate: string): string {
   const [y, m, d] = isoDate.slice(0, 10).split("-").map(Number);
-  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d)));
+  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(y, m - 1, d)),
+  );
 }
 
 export function renderSubject(template: string, period: { label: string; dueOn: string }): string {
@@ -46,12 +49,12 @@ export function renderSubject(template: string, period: { label: string; dueOn: 
 export function describeOffset(days: number): string {
   if (days === 0) return "On the due date";
   const n = Math.abs(days);
-  return `${n} ${n === 1 ? "day" : "days"} ${days < 0 ? "before" : "after"} the due date`;
+  return `${n} ${plural(n, "day", "days")} ${days < 0 ? "before" : "after"} the due date`;
 }
 
 export function sendNowSummary(orgs: number, emails: number, date: string): string {
-  const org = `${orgs} ${orgs === 1 ? "organization" : "organizations"}`;
-  const mail = `${emails} ${emails === 1 ? "email" : "emails"}`;
+  const org = `${orgs} ${plural(orgs, "organization", "organizations")}`;
+  const mail = `${emails} ${plural(emails, "message", "messages")}`;
   return `This will add ${mail} to the outbox for ${org} for ${date}.`;
 }
 
@@ -75,7 +78,7 @@ export async function listRules(tx: Tx, periodId: string): Promise<RuleRow[]> {
             (SELECT count(*)::int FROM outbox o WHERE o.reminder_key LIKE r.id::text || ':%') AS sent,
             (SELECT max(o.created_at)::text FROM outbox o WHERE o.reminder_key LIKE r.id::text || ':%') AS last_sent
      FROM reminder_rule r WHERE r.period_id = $1 ORDER BY r.offset_days`,
-    [periodId]
+    [periodId],
   );
 }
 

@@ -5,14 +5,27 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { ActionState } from "@/lib/actions";
 import { homeFor, type Role } from "@/lib/auth";
 import { anonymous, withClaims } from "@/lib/db";
 import { safeNext } from "@/lib/redirect";
 import { allowed, blocked, clearAttempts, clientKey, TOO_MANY } from "@/lib/throttle";
-import { GATE_COOKIE, SESSION_COOKIE, sessionCookieOptions, signGate, signSession, verifySessionClaims } from "@/lib/session";
+import {
+  GATE_COOKIE,
+  SESSION_COOKIE,
+  sessionCookieOptions,
+  signGate,
+  signSession,
+  verifySessionClaims,
+} from "@/lib/session";
+import { writeAudit } from "@/lib/audit";
 
 const loginSchema = z.object({
-  email: z.string().trim().min(1, "Enter your work email.").email("Enter a work email address in the right format, like name@example.org."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Enter your work email.")
+    .email("Enter a work email address in the right format, like name@example.org."),
   password: z.string().min(1, "Enter your password."),
 });
 
@@ -20,8 +33,6 @@ const IP_FAILURE_LIMIT = 30;
 const EMAIL_FAILURE_LIMIT = 8;
 
 const DUMMY_HASH = "$2b$10$ub.I6pzHcfPjvdwuphNjf.D0PorzRHkVo7g34JoMBQE4O5FnPI8TO";
-
-export type FormState = { error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | undefined;
 
 async function lookup(email: string): Promise<{ id: string; password_hash: string } | null> {
   const rows = await anonymous<{ id: string; password_hash: string }>("SELECT * FROM app.login_lookup($1)", [email]);
@@ -34,7 +45,7 @@ function sameSecret(a: string, b: string): boolean {
   return timingSafeEqual(left, right);
 }
 
-export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function signIn(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const rawEmail = String(formData.get("email") ?? "").slice(0, 254);
   const values = { email: rawEmail };
   const parsed = loginSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
@@ -47,7 +58,8 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   const email = parsed.data.email.toLowerCase();
   const ipKey = `login-ip:${ip}`;
   const emailKey = `login-email:${email}`;
-  if ((await blocked(ipKey, IP_FAILURE_LIMIT)) || (await blocked(emailKey, EMAIL_FAILURE_LIMIT))) return { error: TOO_MANY, values };
+  if ((await blocked(ipKey, IP_FAILURE_LIMIT)) || (await blocked(emailKey, EMAIL_FAILURE_LIMIT)))
+    return { error: TOO_MANY, values };
 
   const account = await lookup(email);
   const valid = await bcrypt.compare(parsed.data.password, account?.password_hash ?? DUMMY_HASH);
@@ -60,8 +72,10 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   await clearAttempts(emailKey);
 
   const session = await withClaims(account.id, async (tx) => {
-    const row = await tx.one<{ role: Role; version: number }>("SELECT role, app.current_session_version() AS version FROM app_user WHERE id = app.uid()");
-    await tx.query("SELECT app.write_audit('user', $1, 'sign_in', NULL, NULL, NULL, NULL)", [account.id]);
+    const row = await tx.one<{ role: Role; version: number }>(
+      "SELECT role, app.current_session_version() AS version FROM app_user WHERE id = app.uid()",
+    );
+    await writeAudit(tx, { entity: "user", entityId: account.id, action: "sign_in" });
     return row;
   });
   if (!session) return { error: "This account is not active.", values };
@@ -76,13 +90,15 @@ export async function signOut() {
   const store = await cookies();
   const claims = await verifySessionClaims(store.get(SESSION_COOKIE)?.value);
   if (claims) {
-    await withClaims(claims.sub, (tx) => tx.query("SELECT app.revoke_session($1::uuid, $2::timestamptz)", [claims.jti, claims.expiresAt.toISOString()]));
+    await withClaims(claims.sub, (tx) =>
+      tx.query("SELECT app.revoke_session($1::uuid, $2::timestamptz)", [claims.jti, claims.expiresAt.toISOString()]),
+    );
   }
   store.delete(SESSION_COOKIE);
   redirect("/login");
 }
 
-export async function unlockGate(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function unlockGate(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const ip = await clientKey();
   if (!(await allowed(`gate:${ip}`, 20))) return { error: TOO_MANY };
   const passcode = String(formData.get("passcode") ?? "").trim();
@@ -93,6 +109,7 @@ export async function unlockGate(_prev: FormState, formData: FormData): Promise<
   const requested = safeNext(formData.get("next"), "/");
   const target = requested === "/" || /^\/[^/\\]/.test(requested) ? requested : "/";
   const needsSession = target.startsWith("/portal") || target.startsWith("/finance");
-  if (needsSession && !(await verifySessionClaims(store.get(SESSION_COOKIE)?.value))) redirect(`/login?next=${encodeURIComponent(target)}`);
+  if (needsSession && !(await verifySessionClaims(store.get(SESSION_COOKIE)?.value)))
+    redirect(`/login?next=${encodeURIComponent(target)}`);
   redirect(target);
 }

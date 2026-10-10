@@ -1,7 +1,7 @@
 import type { Certification } from "@/lib/rules/certify";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
 
-export type SnapshotAttachment = { path: string; filename: string; bytes: number; mime: string };
+type SnapshotAttachment = { path: string; filename: string; bytes: number; mime: string };
 
 export type Snapshot = {
   formVersionId: string;
@@ -17,7 +17,7 @@ function sortKeys(value: unknown): unknown {
     return Object.fromEntries(
       Object.keys(value as Record<string, unknown>)
         .sort()
-        .map((key) => [key, sortKeys((value as Record<string, unknown>)[key])])
+        .map((key) => [key, sortKeys((value as Record<string, unknown>)[key])]),
     );
   }
   return value;

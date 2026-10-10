@@ -30,7 +30,9 @@ export async function asUser<T>(app: Client, userId: string | null, fn: () => Pr
 }
 
 export async function userId(owner: Client, emailPrefix: string): Promise<string> {
-  const { rows } = await owner.query<{ id: string }>("SELECT id FROM app_user WHERE email LIKE $1 LIMIT 1", [`${emailPrefix}%`]);
+  const { rows } = await owner.query<{ id: string }>("SELECT id FROM app_user WHERE email LIKE $1 LIMIT 1", [
+    `${emailPrefix}%`,
+  ]);
   if (!rows[0]) throw new Error(`no user ${emailPrefix}`);
   return rows[0].id;
 }

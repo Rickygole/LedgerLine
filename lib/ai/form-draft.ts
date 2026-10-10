@@ -16,7 +16,7 @@ import { LIBRARY_KEYS } from "@/lib/forms/editor/draft-core";
 import { templateSha } from "@/lib/forms/editor/template-hash";
 import { DRAFTABLE_TYPES } from "@/lib/forms/editor/definition";
 
-export const PROMPT_VERSION = "form-draft-v1";
+const PROMPT_VERSION = "form-draft-v1";
 
 const SYSTEM_PROMPT = [
   "You turn the text of a legacy reporting template into a draft of structured form questions for a city finance office.",
@@ -30,7 +30,7 @@ const SYSTEM_PROMPT = [
   "Mark a question required unless the template says it is optional. You have no tools. Return only the JSON that matches the schema.",
 ].join("\n");
 
-export type CheckedField = { id: number; field: ProposedField; check: FieldCheck };
+type CheckedField = { id: number; field: ProposedField; check: FieldCheck };
 
 export type DraftResult = {
   mode: AiMode;
@@ -44,13 +44,17 @@ export type DraftResult = {
   schemaValid: boolean;
 };
 
-export const MODE_LABEL: Record<AiMode, string> = {
+const MODE_LABEL: Record<AiMode, string> = {
   live: "Drafted by the AI model",
   replay: "Offline replay of a reviewed draft for this template",
   fallback: "Drafted by rule-based parser",
 };
 
-export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; paragraphs: string[] }): Promise<DraftResult> {
+export async function draftFormFromDocx(input: {
+  tx: Tx;
+  initiativeId: string;
+  paragraphs: string[];
+}): Promise<DraftResult> {
   const { tx, initiativeId, paragraphs } = input;
   const inputSha256 = templateSha(paragraphs);
   const notices = injectionNotices(paragraphs);
@@ -63,14 +67,15 @@ export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; p
   const switchOn = await aiEnabled(tx);
   let live: Awaited<ReturnType<typeof callStructured>> = null;
   try {
-    if (switchOn) live = await callStructured({
-      feature: "form_draft",
-      system: SYSTEM_PROMPT,
-      user: `Template text:\n${quotedData(paragraphs)}`,
-      schema: JSON_SCHEMA,
-      maxTokens: 4000,
-      timeoutMs: 45_000,
-    });
+    if (switchOn)
+      live = await callStructured({
+        feature: "form_draft",
+        system: SYSTEM_PROMPT,
+        user: `Template text:\n${quotedData(paragraphs)}`,
+        schema: JSON_SCHEMA,
+        maxTokens: 4000,
+        timeoutMs: 45_000,
+      });
   } catch {
     live = null;
   }
@@ -118,5 +123,15 @@ export async function draftFormFromDocx(input: { tx: Tx; initiativeId: string; p
     ...usage,
   });
 
-  return { mode, modeLabel: MODE_LABEL[mode], model, inputSha256, paragraphs, fields, notices, aiActionId, schemaValid };
+  return {
+    mode,
+    modeLabel: MODE_LABEL[mode],
+    model,
+    inputSha256,
+    paragraphs,
+    fields,
+    notices,
+    aiActionId,
+    schemaValid,
+  };
 }

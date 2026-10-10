@@ -1,6 +1,7 @@
 import { inflateRawSync } from "node:zlib";
 
-const MACRO_PARTS = /(^|\/)(vbaProject\.bin|vbaProjectSignature\.bin|vbaData\.xml)$|(^|\/)(macrosheets|dialogsheets)\//i;
+const MACRO_PARTS =
+  /(^|\/)(vbaProject\.bin|vbaProjectSignature\.bin|vbaData\.xml)$|(^|\/)(macrosheets|dialogsheets)\//i;
 const MAX_CONTENT_TYPES_BYTES = 1024 * 1024;
 const MAX_ENTRIES = 20000;
 
@@ -19,7 +20,14 @@ function readEntries(buffer: Buffer): Entry[] | null {
   const count = buffer.readUInt16LE(eocd + 10);
   const size = buffer.readUInt32LE(eocd + 12);
   const offset = buffer.readUInt32LE(eocd + 16);
-  if (count === 0xffff || size === 0xffffffff || offset === 0xffffffff || count > MAX_ENTRIES || offset + size > buffer.length) return null;
+  if (
+    count === 0xffff ||
+    size === 0xffffffff ||
+    offset === 0xffffffff ||
+    count > MAX_ENTRIES ||
+    offset + size > buffer.length
+  )
+    return null;
   const entries: Entry[] = [];
   let at = offset;
   for (let n = 0; n < count; n++) {
@@ -31,7 +39,15 @@ function readEntries(buffer: Buffer): Entry[] | null {
     const commentLength = buffer.readUInt16LE(at + 32);
     const localOffset = buffer.readUInt32LE(at + 42);
     if (at + 46 + nameLength > buffer.length) return null;
-    entries.push({ name: buffer.subarray(at + 46, at + 46 + nameLength).toString("utf8").replace(/\\/g, "/"), method, compressedSize, localOffset });
+    entries.push({
+      name: buffer
+        .subarray(at + 46, at + 46 + nameLength)
+        .toString("utf8")
+        .replace(/\\/g, "/"),
+      method,
+      compressedSize,
+      localOffset,
+    });
     at += 46 + nameLength + extraLength + commentLength;
   }
   return entries;
@@ -56,9 +72,11 @@ export function ooxmlProblem(extension: string, buffer: Buffer): string | null {
   const entries = readEntries(buffer);
   const contentTypes = entries?.find((entry) => entry.name === "[Content_Types].xml");
   if (!entries || !contentTypes) return `This file does not look like ${label} file.`;
-  if (entries.some((entry) => MACRO_PARTS.test(entry.name))) return "Files that contain macros are not accepted. Save a copy without macros and upload that.";
+  if (entries.some((entry) => MACRO_PARTS.test(entry.name)))
+    return "Files that contain macros are not accepted. Save a copy without macros and upload that.";
   const types = readEntry(buffer, contentTypes);
   if (!types) return `This file does not look like ${label} file.`;
-  if (/<Override\b[^>]*ContentType="[^"]*(macroEnabled|vbaProject)/i.test(types.toString("utf8"))) return "Files that contain macros are not accepted. Save a copy without macros and upload that.";
+  if (/<Override\b[^>]*ContentType="[^"]*(macroEnabled|vbaProject)/i.test(types.toString("utf8")))
+    return "Files that contain macros are not accepted. Save a copy without macros and upload that.";
   return null;
 }

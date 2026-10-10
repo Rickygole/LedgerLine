@@ -1,16 +1,25 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import { binFor, missingShare, rankDistricts, type DistrictStats, type MapMode, type Tally } from "@/lib/finance/district-stats";
+import {
+  binFor,
+  byMostMissing,
+  missingShare,
+  rankDistricts,
+  type DistrictStats,
+  type MapMode,
+  type Tally,
+} from "@/lib/finance/district-stats";
 import { BOROUGH_SHAPES, COUNCIL_DISTRICT_SHAPES, GEO_VIEWBOX } from "@/lib/geo";
-import { districtInBorough, GEO_BOROUGHS } from "@/lib/geo/boroughs";
+import { boroughsForDistrict, districtInBorough, GEO_BOROUGHS } from "@/lib/geo/boroughs";
 import { AutoSelect } from "./auto-select";
 import { DistrictMapView, type MapDistrict } from "./district-map-view";
+import { plural } from "@/lib/format";
 
-export const MAP_SOURCE = "Council district boundaries: NYC Department of City Planning, via NYC Open Data.";
+const MAP_SOURCE = "Council district boundaries: NYC Department of City Planning, via NYC Open Data.";
 
 type Common = { stats: DistrictStats; borough: string; periodId: string };
 
-export function districtHref(periodId: string, district: number, mode: MapMode, missing: number) {
+function districtHref(periodId: string, district: number, mode: MapMode, missing: number) {
   const params = new URLSearchParams({ period: periodId, district: String(district), by: mode });
   if (missing > 0) params.set("bucket", "missing");
   return `/finance/submissions?${params.toString()}`;
@@ -22,10 +31,16 @@ function dashHref(params: Record<string, string>, hash = "") {
 }
 
 function reportsWord(n: number) {
-  return n === 1 ? "report" : "reports";
+  return plural(n, "report", "reports");
 }
 
-export function DistrictMapCard({ stats, borough, periodId, table, sort }: Common & { table: boolean; sort: "missing" | "district" }) {
+export function DistrictMapCard({
+  stats,
+  borough,
+  periodId,
+  table,
+  sort,
+}: Common & { table: boolean; sort: "missing" | "district" }) {
   const mode = stats.mode;
   const byNumber = new Map(stats.districts.map((d) => [d.district, d]));
   const top = rankDistricts(stats.districts, borough, 1)[0]?.district ?? null;
@@ -51,8 +66,9 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
   const keep = { period: periodId, map: mode === "sponsor" ? "" : mode, borough };
   const tableRows = [...stats.districts]
     .filter((d) => borough === "" || districtInBorough(d.district, borough))
-    .sort((a, b) => (sort === "missing" ? b.missing - a.missing || a.district - b.district : a.district - b.district));
-  const multiSponsor = mode === "sponsor" && stats.districts.reduce((sum, d) => sum + d.missing, 0) > stats.inDistricts.missing;
+    .sort((a, b) => (sort === "missing" ? byMostMissing(a, b) : a.district - b.district));
+  const districtSum = stats.districts.reduce((sum, d) => sum + d.missing, 0);
+  const multiSponsor = mode === "sponsor" && districtSum > stats.inDistricts.missing;
 
   return (
     <section aria-labelledby="map-title" className="min-w-0 rounded border border-line bg-white lg:col-span-7">
@@ -80,7 +96,9 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
                       aria-current={selected ? "true" : undefined}
                       className={cn(
                         "inline-flex h-8 items-center rounded border px-3 text-sm font-semibold",
-                        selected ? "border-harbor-900 bg-harbor-900 text-white" : "border-line-strong bg-white text-ink hover:bg-harbor-50"
+                        selected
+                          ? "border-harbor-900 bg-harbor-900 text-white"
+                          : "border-line-strong bg-white text-ink hover:bg-harbor-50",
                       )}
                     >
                       {b || "All boroughs"}
@@ -114,10 +132,20 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
 
         <div className="space-y-1 text-[13px] leading-5 text-muted">
           {mode === "sponsor" ? (
-            multiSponsor ? <p>Awards with more than one sponsor count in each sponsoring district.</p> : null
+            multiSponsor ? (
+              <p>
+                District counts add up to <span className="num">{districtSum}</span> because an award with more than one
+                sponsor counts in each sponsoring district. That is{" "}
+                <span className="num">{stats.inDistricts.missing}</span> missing{" "}
+                {reportsWord(stats.inDistricts.missing)} funded by a district, plus{" "}
+                <span className="num">{stats.speaker.missing}</span> Speaker&apos;s allocation and{" "}
+                <span className="num">{stats.citywide.missing}</span> citywide.
+              </p>
+            ) : null
           ) : stats.noDistrict.due > 0 ? (
             <p>
-              No district on file: <span className="num">{stats.noDistrict.missing}</span> missing of <span className="num">{stats.noDistrict.due}</span> {reportsWord(stats.noDistrict.due)}.
+              No district on file: <span className="num">{stats.noDistrict.missing}</span> missing of{" "}
+              <span className="num">{stats.noDistrict.due}</span> {reportsWord(stats.noDistrict.due)}.
             </p>
           ) : (
             <p>Every organization has a Council district on file, so the districts add up to all missing reports.</p>
@@ -144,26 +172,45 @@ export function DistrictMapCard({ stats, borough, periodId, table, sort }: Commo
               <thead className="bg-harbor-50 text-left text-sm font-semibold text-ink-2">
                 <tr>
                   <th scope="col" aria-sort={sort === "district" ? "ascending" : undefined} className="h-11 px-2">
-                    <Link href={dashHref({ ...keep, table: "1", sort: "" }, "#district-table")} scroll={false} className="underline underline-offset-2">
+                    <Link
+                      href={dashHref({ ...keep, table: "1", sort: "" }, "#district-table")}
+                      scroll={false}
+                      className="underline underline-offset-2"
+                    >
                       District
                     </Link>
                   </th>
-                  <th scope="col" className="px-2">Council Member</th>
-                  <th scope="col" className="px-2">Borough</th>
-                  <th scope="col" className="px-3 text-right">Due</th>
+                  <th scope="col" className="px-2">
+                    Council Member
+                  </th>
+                  <th scope="col" className="px-2">
+                    Borough
+                  </th>
+                  <th scope="col" className="px-3 text-right">
+                    Due
+                  </th>
                   <th scope="col" aria-sort={sort === "missing" ? "descending" : undefined} className="px-2 text-right">
-                    <Link href={dashHref({ ...keep, table: "1", sort: "missing" }, "#district-table")} scroll={false} className="underline underline-offset-2">
+                    <Link
+                      href={dashHref({ ...keep, table: "1", sort: "missing" }, "#district-table")}
+                      scroll={false}
+                      className="underline underline-offset-2"
+                    >
                       Missing
                     </Link>
                   </th>
-                  <th scope="col" className="px-2 text-right leading-5">Waiting for review</th>
+                  <th scope="col" className="px-2 text-right leading-5">
+                    Waiting for review
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {tableRows.map((d) => (
                   <tr key={d.district} className="border-b border-line-soft hover:bg-harbor-50">
                     <th scope="row" className="h-11 px-2 text-left font-semibold">
-                      <Link href={districtHref(periodId, d.district, mode, d.missing)} className="text-link underline underline-offset-2 hover:text-link-hover">
+                      <Link
+                        href={districtHref(periodId, d.district, mode, d.missing)}
+                        className="text-link underline underline-offset-2 hover:text-link-hover"
+                      >
                         District {d.district}
                       </Link>
                     </th>
@@ -206,34 +253,70 @@ function OffMapLink({ label, tally, href }: { label: string; tally: Tally; href:
 export function DistrictRanking({ stats, borough, periodId }: Common) {
   const ranked = rankDistricts(stats.districts, borough, 8);
   const mode = stats.mode;
-  const missingHref = (funding: string) => `/finance/submissions?${new URLSearchParams({ period: periodId, funding, bucket: "missing" }).toString()}`;
-  const allHref = dashHref({ period: periodId, map: mode === "sponsor" ? "" : mode, borough, table: "1", sort: "missing" }, "#district-table");
+  const shared =
+    borough === ""
+      ? []
+      : stats.districts
+          .filter((d) => boroughsForDistrict(d.district).length > 1 && districtInBorough(d.district, borough))
+          .map((d) => d.district);
+  const missingHref = (funding: string) =>
+    `/finance/submissions?${new URLSearchParams({ period: periodId, funding, bucket: "missing" }).toString()}`;
+  const allHref = dashHref(
+    { period: periodId, map: mode === "sponsor" ? "" : mode, borough, table: "1", sort: "missing" },
+    "#district-table",
+  );
   return (
-    <section aria-labelledby="rank-title" className="min-w-0 self-start rounded border border-line bg-white lg:col-span-5">
+    <section
+      aria-labelledby="rank-title"
+      className="min-w-0 self-start rounded border border-line bg-white lg:col-span-5"
+    >
       <div className="border-b border-line-soft px-5 pb-4 pt-5 sm:px-6">
         <h2 id="rank-title" className="text-xl font-bold leading-7 text-ink">
           Districts with the most missing reports
         </h2>
-        {borough ? <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">{borough} only</p> : null}
+        {borough ? (
+          <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">
+            {borough} only
+            {mode === "location" && shared.length > 0
+              ? `. District ${shared.join(" and ")} counts only organizations located in ${borough}.`
+              : ""}
+          </p>
+        ) : null}
       </div>
       {ranked.length === 0 ? (
-        <p className="px-5 py-8 text-[15px] text-muted sm:px-6">No reports were due in {borough ? `${borough} districts` : "any district"} for this period.</p>
+        <p className="px-5 py-8 text-[15px] text-muted sm:px-6">
+          No reports were due in {borough ? `${borough} districts` : "any district"} for this period.
+        </p>
       ) : !ranked.some((d) => d.missing > 0) ? (
-        <p className="px-5 py-8 text-[15px] text-muted sm:px-6">Nothing is past due in {borough ? `${borough} districts` : "any district"} for this period.</p>
+        <p className="px-5 py-8 text-[15px] text-muted sm:px-6">
+          Nothing is past due in {borough ? `${borough} districts` : "any district"} for this period.
+        </p>
       ) : (
         <ol className="divide-y divide-line-soft">
           {ranked.map((d) => (
-            <li key={d.district} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_110px_64px] sm:px-6">
+            <li
+              key={d.district}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_110px_64px] sm:px-6"
+            >
               <div className="min-w-0">
-                <Link href={districtHref(periodId, d.district, mode, d.missing)} className="text-[17px] font-bold leading-6 text-link underline underline-offset-2 hover:text-link-hover">
+                <Link
+                  href={districtHref(periodId, d.district, mode, d.missing)}
+                  className="text-[17px] font-bold leading-6 text-link underline underline-offset-2 hover:text-link-hover"
+                >
                   District {d.district}
                 </Link>
                 <p className="text-[13px] leading-5 text-muted">
                   {d.member ?? "No Council Member on file"} · {d.boroughs}
                 </p>
               </div>
-              <span aria-hidden="true" className="col-span-2 row-start-2 block h-2 overflow-hidden rounded-sm bg-geo-0 sm:col-span-1 sm:col-start-2 sm:row-start-1">
-                <span className="block h-full bg-geo-4" style={{ width: `${d.due === 0 ? 0 : Math.round((d.missing / d.due) * 100)}%` }} />
+              <span
+                aria-hidden="true"
+                className="col-span-2 row-start-2 block h-2 overflow-hidden rounded-sm bg-geo-0 sm:col-span-1 sm:col-start-2 sm:row-start-1"
+              >
+                <span
+                  className="block h-full bg-geo-4"
+                  style={{ width: `${d.due === 0 ? 0 : Math.round((d.missing / d.due) * 100)}%` }}
+                />
               </span>
               <p className="num whitespace-nowrap text-right text-[15px] text-ink sm:col-start-3 sm:row-start-1">
                 <span className="font-bold">{d.missing}</span> of {d.due}
@@ -243,12 +326,18 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
         </ol>
       )}
       <div className="space-y-3 border-t border-line-soft px-5 py-4 text-[15px] leading-[22px] sm:px-6">
-        {mode === "sponsor" ? (
+        {mode === "sponsor" && borough === "" ? (
           <p className="text-ink-2">
-            Not shown on the map: <OffMapLink label="Citywide initiatives" tally={stats.citywide} href={missingHref("citywide")} /> · <OffMapLink label="Speaker's allocations" tally={stats.speaker} href={missingHref("speaker")} />
+            Not shown on the map:{" "}
+            <OffMapLink label="Citywide initiatives" tally={stats.citywide} href={missingHref("citywide")} /> ·{" "}
+            <OffMapLink label="Speaker's allocations" tally={stats.speaker} href={missingHref("speaker")} />
           </p>
         ) : null}
-        <Link href={allHref} scroll={false} className="inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+        <Link
+          href={allHref}
+          scroll={false}
+          className="inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+        >
           See all 51 districts
         </Link>
       </div>

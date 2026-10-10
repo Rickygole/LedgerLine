@@ -45,7 +45,11 @@ export function marksFromCalendar(calendar: CalendarLike, options: { dueOnly?: b
   if (!options.dueOnly) marks.push({ date: startsOn, label: `${id} begins`, kind: "boundary" });
   for (const period of calendar.periods) {
     if (!options.dueOnly && period.fiscalYearId === id && period.endsOn !== endsOn && inside(period.endsOn)) {
-      marks.push({ date: period.endsOn, label: `${period.label.replace(`${id} `, "")} period ends`, kind: "period-end" });
+      marks.push({
+        date: period.endsOn,
+        label: `${period.label.replace(`${id} `, "")} period ends`,
+        kind: "period-end",
+      });
     }
     if (inside(period.dueOn)) marks.push({ date: period.dueOn, label: `${period.label} due`, kind: "due" });
   }
@@ -92,8 +96,22 @@ export function FiscalYearTimeline({
   const captionClass = variant === "compact" ? "hidden lg:block" : "block";
   const name = label ?? `${fiscalYear} reporting calendar`;
 
-  type Row = { key: string; iso: string; text: string; kind: TimelineMark["kind"] | "today"; state?: string; next?: boolean };
-  const rows: Row[] = items.map((m, i) => ({ key: `${m.iso}-${m.label}`, iso: m.iso, text: m.label, kind: m.kind, state: m.state, next: i === nextIndex }));
+  type Row = {
+    key: string;
+    iso: string;
+    text: string;
+    kind: TimelineMark["kind"] | "today";
+    state?: string;
+    next?: boolean;
+  };
+  const rows: Row[] = items.map((m, i) => ({
+    key: `${m.iso}-${m.label}`,
+    iso: m.iso,
+    text: m.label,
+    kind: m.kind,
+    state: m.state,
+    next: i === nextIndex,
+  }));
   if (showToday) {
     const at = rows.findIndex((r) => r.iso > todayIso);
     rows.splice(at === -1 ? rows.length : at, 0, { key: "today", iso: todayIso, text: "Today", kind: "today" });
@@ -107,19 +125,37 @@ export function FiscalYearTimeline({
           const above = m.kind === "period-end";
           const align = m.at < 8 ? "left" : m.at > 92 ? "right" : "center";
           const past = m.state === "past";
-          const shift = align === "left" ? "translate-x-0 text-left" : align === "right" ? "-translate-x-full text-right" : "-translate-x-1/2 text-center";
+          const shift =
+            align === "left"
+              ? "translate-x-0 text-left"
+              : align === "right"
+                ? "-translate-x-full text-right"
+                : "-translate-x-1/2 text-center";
           return (
             <li key={`${m.iso}-${m.label}`} className="absolute top-0 h-full" style={{ left: `${m.at}%` }}>
               <span
                 aria-hidden="true"
                 className={cn(
                   "absolute top-[56px] -translate-x-1/2 -translate-y-1/2",
-                  m.kind === "due" ? (past ? "h-3.5 w-3.5 rounded-sm bg-harbor-300" : "h-3.5 w-3.5 rounded-sm bg-action") : cn("h-2.5 w-2.5 rounded-full border-2 bg-white", past ? "border-harbor-300" : "border-harbor-600"),
+                  m.kind === "due"
+                    ? past
+                      ? "h-3.5 w-3.5 rounded-sm bg-harbor-300"
+                      : "h-3.5 w-3.5 rounded-sm bg-action"
+                    : cn(
+                        "h-2.5 w-2.5 rounded-full border-2 bg-white",
+                        past ? "border-harbor-300" : "border-harbor-600",
+                      ),
                   align === "left" && "translate-x-0",
-                  align === "right" && "-translate-x-full"
+                  align === "right" && "-translate-x-full",
                 )}
               />
-              <span className={cn("absolute whitespace-nowrap text-[13px] leading-[17px]", shift, above ? "bottom-[84px]" : "top-[70px]")}>
+              <span
+                className={cn(
+                  "absolute whitespace-nowrap text-[13px] leading-[17px]",
+                  shift,
+                  above ? "bottom-[84px]" : "top-[70px]",
+                )}
+              >
                 <span className={cn("block font-bold", past ? "text-muted" : "text-ink")}>{longDate(m.iso)}</span>
                 <span className={cn(captionClass, past ? "text-muted" : "text-ink-2")}>
                   {m.label}
@@ -130,8 +166,13 @@ export function FiscalYearTimeline({
           );
         })}
         {showToday ? (
-          <li className="absolute top-[26px] h-[34px] border-l-2 border-dashed border-bad" style={{ left: `${todayPct}%` }}>
-            <span className="absolute -top-[2px] left-1.5 whitespace-nowrap text-[13px] font-bold leading-[17px] text-bad">Today, {shortDate(todayIso)}</span>
+          <li
+            className="absolute top-[26px] h-[34px] border-l-2 border-dashed border-bad"
+            style={{ left: `${todayPct}%` }}
+          >
+            <span className="absolute -top-[2px] left-1.5 whitespace-nowrap text-[13px] font-bold leading-[17px] text-bad">
+              Today, {shortDate(todayIso)}
+            </span>
           </li>
         ) : null}
       </ol>
@@ -142,19 +183,39 @@ export function FiscalYearTimeline({
               aria-hidden="true"
               className={cn(
                 "mt-1.5 shrink-0",
-                row.kind === "today" ? "h-3 w-3 border-l-2 border-dashed border-bad" : row.kind === "due" ? cn("h-3 w-3 rounded-sm", row.state === "past" ? "bg-harbor-300" : "bg-action") : cn("h-2.5 w-2.5 rounded-full border-2 bg-white", row.state === "past" ? "border-harbor-300" : "border-harbor-600")
+                row.kind === "today"
+                  ? "h-3 w-3 border-l-2 border-dashed border-bad"
+                  : row.kind === "due"
+                    ? cn("h-3 w-3 rounded-sm", row.state === "past" ? "bg-harbor-300" : "bg-action")
+                    : cn(
+                        "h-2.5 w-2.5 rounded-full border-2 bg-white",
+                        row.state === "past" ? "border-harbor-300" : "border-harbor-600",
+                      ),
               )}
             />
             <span className="min-w-0 flex-1">
-              <span className={cn("block text-[15px] font-bold leading-[22px]", row.kind === "today" ? "text-bad" : row.state === "past" ? "text-muted" : "text-ink")}>
+              <span
+                className={cn(
+                  "block text-[15px] font-bold leading-[22px]",
+                  row.kind === "today" ? "text-bad" : row.state === "past" ? "text-muted" : "text-ink",
+                )}
+              >
                 {row.kind === "today" ? `Today, ${shortDate(row.iso)}` : longDate(row.iso)}
               </span>
-              {row.kind === "today" ? null : <span className={cn("block text-sm leading-5", row.state === "past" ? "text-muted" : "text-ink-2")}>{row.text}</span>}
+              {row.kind === "today" ? null : (
+                <span className={cn("block text-sm leading-5", row.state === "past" ? "text-muted" : "text-ink-2")}>
+                  {row.text}
+                </span>
+              )}
             </span>
             {row.state === "past" ? (
-              <span className="shrink-0 rounded-sm bg-white px-2 py-0.5 text-[13px] font-semibold leading-5 text-ink-2 ring-1 ring-inset ring-line-strong">Passed</span>
+              <span className="shrink-0 rounded-sm bg-white px-2 py-0.5 text-[13px] font-semibold leading-5 text-ink-2 ring-1 ring-inset ring-line-strong">
+                Passed
+              </span>
             ) : row.next ? (
-              <span className="shrink-0 rounded-sm bg-info-bg px-2 py-0.5 text-[13px] font-semibold leading-5 text-info ring-1 ring-inset ring-info/20">Next due</span>
+              <span className="shrink-0 rounded-sm bg-info-bg px-2 py-0.5 text-[13px] font-semibold leading-5 text-info ring-1 ring-inset ring-info/20">
+                Next due
+              </span>
             ) : null}
           </li>
         ))}

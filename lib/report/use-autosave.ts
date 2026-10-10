@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveDraft } from "@/app/portal/reports/actions";
+import { sessionIsAlive } from "./session-probe";
 import { newRowId } from "./budget-rows";
 import type { SaveInput, SaveResult } from "./types";
 
@@ -14,20 +15,15 @@ export type SaveState =
   | { kind: "stale"; by: string | null; at: string }
   | { kind: "locked"; message: string };
 
-export type DrainOutcome = "saved" | "idle" | "retrying" | "signed_out" | "stale" | "locked";
+type DrainOutcome = "saved" | "idle" | "retrying" | "signed_out" | "stale" | "locked";
 
 const DEBOUNCE_MS = 1200;
 
-async function sessionAlive(): Promise<boolean> {
-  try {
-    const response = await fetch("/api/upload/session", { cache: "no-store" });
-    return response.ok;
-  } catch {
-    return true;
-  }
-}
-
-export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "expectedLock" | "submissionId" | "saveId">, submissionId: string) {
+export function useAutosave(
+  initialLock: number,
+  build: () => Omit<SaveInput, "expectedLock" | "submissionId" | "saveId">,
+  submissionId: string,
+) {
   const [state, setState] = useState<SaveState>({ kind: "idle" });
   const lockRef = useRef(initialLock);
   const dirty = useRef(false);
@@ -53,9 +49,14 @@ export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "e
         setState({ kind: "saving" });
         let result: SaveResult;
         try {
-          result = await saveDraft({ submissionId, expectedLock: lockRef.current, saveId: saveId.current, ...buildRef.current() });
+          result = await saveDraft({
+            submissionId,
+            expectedLock: lockRef.current,
+            saveId: saveId.current,
+            ...buildRef.current(),
+          });
         } catch {
-          result = (await sessionAlive()) ? { status: "error", message: "network" } : { status: "signed_out" };
+          result = (await sessionIsAlive()) ? { status: "error", message: "network" } : { status: "signed_out" };
         }
         if (result.status === "saved") {
           lockRef.current = result.lockVersion;
@@ -82,7 +83,14 @@ export function useAutosave(initialLock: number, build: () => Omit<SaveInput, "e
         const delay = result.status === "signed_out" ? 8000 : Math.min(4000 * attempts.current, 30000);
         if (retry.current) clearTimeout(retry.current);
         retry.current = setTimeout(() => void drain(), delay);
-        setState(result.status === "signed_out" ? { kind: "signed_out" } : { kind: "retrying", message: result.status === "error" && result.message !== "network" ? result.message : undefined });
+        setState(
+          result.status === "signed_out"
+            ? { kind: "signed_out" }
+            : {
+                kind: "retrying",
+                message: result.status === "error" && result.message !== "network" ? result.message : undefined,
+              },
+        );
         return result.status === "signed_out" ? "signed_out" : "retrying";
       }
       return outcome;

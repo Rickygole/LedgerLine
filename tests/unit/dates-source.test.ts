@@ -39,7 +39,8 @@ describe("[US-040] one source of today", () => {
           const relative = path.relative(root, full);
           if (allowed.has(relative)) continue;
           const text = readFileSync(full, "utf8");
-          if (/new Date\(\)|Date\.now\(\)|Intl\.DateTimeFormat\([^)]*\)\.format\(new Date\(\)\)/.test(text)) found.push(relative);
+          if (/new Date\(\)|Date\.now\(\)|Intl\.DateTimeFormat\([^)]*\)\.format\(new Date\(\)\)/.test(text))
+            found.push(relative);
         }
       }
     };

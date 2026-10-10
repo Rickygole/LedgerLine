@@ -6,7 +6,9 @@ const env = { RESEND_API_KEY: "re_test", EMAIL_FROM: "LedgerLine <no-reply@examp
 const message = { to: "maria@example.org", subject: "Report received", text: "Body" };
 
 function reply(status: number, body: unknown): typeof fetch {
-  return vi.fn(async () => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } })) as unknown as typeof fetch;
+  return vi.fn(
+    async () => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }),
+  ) as unknown as typeof fetch;
 }
 
 describe("[US-020][BR-014] the email transport", () => {
@@ -24,16 +26,29 @@ describe("[US-020][BR-014] the email transport", () => {
     const [url, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
     expect(url).toBe("https://api.resend.com/emails");
     expect((init.headers as Record<string, string>).authorization).toBe("Bearer re_test");
-    expect(JSON.parse(init.body as string)).toMatchObject({ from: env.EMAIL_FROM, to: ["maria@example.org"], subject: "Report received", text: "Body" });
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      from: env.EMAIL_FROM,
+      to: ["maria@example.org"],
+      subject: "Report received",
+      text: "Body",
+    });
   });
 
   it("reports a provider error as failed with a short reason", async () => {
-    const result = await sendEmail(transportFrom(env)!, message, reply(422, { message: "The from address is not verified" }));
+    const result = await sendEmail(
+      transportFrom(env)!,
+      message,
+      reply(422, { message: "The from address is not verified" }),
+    );
     expect(result).toEqual({ status: "failed", reason: "Provider returned 422: The from address is not verified" });
   });
 
   it("reports an unreachable provider as failed", async () => {
-    const result = await sendEmail(transportFrom(env)!, message, vi.fn(async () => Promise.reject(new Error("socket hang up"))) as unknown as typeof fetch);
+    const result = await sendEmail(
+      transportFrom(env)!,
+      message,
+      vi.fn(async () => Promise.reject(new Error("socket hang up"))) as unknown as typeof fetch,
+    );
     expect(result.status).toBe("failed");
     expect(result.status === "failed" && result.reason).toContain("socket hang up");
   });
@@ -67,7 +82,14 @@ function fakeStore(rows: Claimed[], limitOfAttempts = 3) {
   return { store, state };
 }
 
-const row = (id: string, attempts = 1, template = "submission_confirmation"): Claimed => ({ id, to_email: "maria@example.org", template, subject: "S", body_text: "B", attempts });
+const row = (id: string, attempts = 1, template = "submission_confirmation"): Claimed => ({
+  id,
+  to_email: "maria@example.org",
+  template,
+  subject: "S",
+  body_text: "B",
+  attempts,
+});
 
 describe("[US-020][BR-014] the outbox dispatcher", () => {
   const transport = transportFrom(env)!;
@@ -81,10 +103,14 @@ describe("[US-020][BR-014] the outbox dispatcher", () => {
 
   it("requeues a failed send and gives up after the third attempt", async () => {
     const first = fakeStore([row("c", 1)]);
-    expect(await dispatch(first.store, transport, { send: async () => ({ status: "failed", reason: "boom" }) })).toMatchObject({ retry: 1, failed: 0 });
+    expect(
+      await dispatch(first.store, transport, { send: async () => ({ status: "failed", reason: "boom" }) }),
+    ).toMatchObject({ retry: 1, failed: 0 });
     expect(first.state.get("c")!.status).toBe("queued");
     const last = fakeStore([row("d", 3)]);
-    expect(await dispatch(last.store, transport, { send: async () => ({ status: "failed", reason: "boom" }) })).toMatchObject({ retry: 0, failed: 1 });
+    expect(
+      await dispatch(last.store, transport, { send: async () => ({ status: "failed", reason: "boom" }) }),
+    ).toMatchObject({ retry: 0, failed: 1 });
     expect(last.state.get("d")!.status).toBe("failed");
   });
 
@@ -97,7 +123,9 @@ describe("[US-020][BR-014] the outbox dispatcher", () => {
     expect(state.get("a")!.status).toBe("sent");
     expect(state.get("b")!.status).toBe("held");
     const thrown = fakeStore([row("z")]);
-    expect(await dispatch(thrown.store, transport, { send: async () => Promise.reject(new Error("down")) })).toMatchObject({ retry: 1 });
+    expect(
+      await dispatch(thrown.store, transport, { send: async () => Promise.reject(new Error("down")) }),
+    ).toMatchObject({ retry: 1 });
   });
 
   it("never emails a password link template", async () => {

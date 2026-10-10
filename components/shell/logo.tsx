@@ -15,7 +15,7 @@ export function Mark({ className = "h-8 w-8", tone = "light" }: { className?: st
   );
 }
 
-export const TAGLINE = "Initiative reporting for NYC Council Finance";
+const TAGLINE = "Initiative reporting for NYC Council Finance";
 
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean; subtitle?: string }) {
   return (
@@ -23,7 +23,11 @@ export function Logo({ className, compact = false }: { className?: string; compa
       <Mark className="h-8 w-8 shrink-0" />
       <span className="flex min-w-0 flex-col">
         <span className="text-[21px] font-extrabold leading-6 tracking-[-0.01em] text-white">LedgerLine</span>
-        {compact ? null : <span className="hidden truncate text-[12.5px] font-medium leading-4 text-harbor-200 min-[400px]:block">{TAGLINE}</span>}
+        {compact ? null : (
+          <span className="hidden truncate text-[12.5px] font-medium leading-4 text-harbor-200 min-[400px]:block">
+            {TAGLINE}
+          </span>
+        )}
       </span>
     </span>
   );

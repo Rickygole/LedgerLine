@@ -18,8 +18,14 @@ test("[US-039] clicking a district on the map opens its missing reports on the s
 
   await expect(page).toHaveURL(new RegExp(`/finance/submissions\\?.*district=${district}&by=sponsor&bucket=missing`));
   await expect(page.getByRole("heading", { level: 1, name: "Submissions" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "Active filters" }).getByRole("link", { name: new RegExp(`District ${district}, funded by its Council Member`) })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Filter by bucket" }).getByRole("link", { name: /^Missing/ })).toHaveAttribute("aria-current", "true");
+  await expect(
+    page
+      .getByRole("list", { name: "Active filters" })
+      .getByRole("link", { name: new RegExp(`District ${district}, funded by its Council Member`) }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Filter by bucket" }).getByRole("link", { name: /^Missing/ }),
+  ).toHaveAttribute("aria-current", "true");
   await expect(page.locator("main tbody tr")).toHaveCount(Number(missing));
 });
 
@@ -38,13 +44,18 @@ test("the map has a table view, borough chips and an organization location mode"
   await page.getByLabel("Show by").selectOption("location");
   await expect(page).toHaveURL(/map=location/);
   await expect(page.getByText("Reports from organizations located in each district")).toBeVisible();
-  await page.getByRole("group", { name: /Map of the 51/ }).getByRole("link", { name: /^District 8,/ }).focus();
+  await page
+    .getByRole("group", { name: /Map of the 51/ })
+    .getByRole("link", { name: /^District 8,/ })
+    .focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/district=8&by=location/);
   await expect(page.getByRole("link", { name: /District 8, organization location/ })).toBeVisible();
 });
 
-test("District 8 ranks in the top three, the map is shaded by share missing, and its missing reports include Mott Haven", async ({ page }) => {
+test("District 8 ranks in the top three, the map is shaded by share missing, and its missing reports include Mott Haven", async ({
+  page,
+}) => {
   await page.goto("/finance?period=FY26-YE");
   await expect(page.getByText("Share of reports missing", { exact: true })).toBeVisible();
   await expect(page.getByText(/^Not shown on the map:/)).toContainText(/Citywide initiatives, \d+ missing of \d+/);

@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Tx } from "@/lib/db";
 import { buildDefinition } from "@/lib/forms/standard";
-import { buildConcerns, containsRuleId, dollarFigures, PRESET_CONCERNS, type Concern } from "@/lib/finance/review/return-note-core";
+import {
+  buildConcerns,
+  containsRuleId,
+  dollarFigures,
+  PRESET_CONCERNS,
+  type Concern,
+} from "@/lib/finance/review/return-note-core";
 import type { Answers, BudgetLine } from "@/lib/rules/types";
 import { blockingIssues, validateSubmission } from "@/lib/rules/validate";
 
@@ -33,22 +39,64 @@ const complete: Answers = {
   accomplishments: "We served families.",
 };
 
-const line = (amount: number): BudgetLine[] => [{ rowId: "r1", position: 1, category: "PS", description: "Staff", amount }];
+const line = (amount: number): BudgetLine[] => [
+  { rowId: "r1", position: 1, category: "PS", description: "Staff", amount },
+];
 
-type Case = { name: string; answers: Answers; budget: BudgetLine[]; award: number; extra?: Concern[]; flags?: { id: string; kind: string; note: string | null }[]; status?: string };
+type Case = {
+  name: string;
+  answers: Answers;
+  budget: BudgetLine[];
+  award: number;
+  extra?: Concern[];
+  flags?: { id: string; kind: string; note: string | null }[];
+  status?: string;
+};
 
 const cases: Case[] = [
-  { name: "missing required contact email", answers: { ...complete, contact_email: "" }, budget: line(90000), award: 90000 },
+  {
+    name: "missing required contact email",
+    answers: { ...complete, contact_email: "" },
+    budget: line(90000),
+    award: 90000,
+  },
   { name: "unbalanced budget", answers: complete, budget: line(91750), award: 90000 },
-  { name: "participant count is not a whole number", answers: { ...complete, participants_target: "about 100" }, budget: line(90000), award: 90000 },
-  { name: "narrative too long", answers: { ...complete, accomplishments: Array.from({ length: 520 }, () => "word").join(" ") }, budget: line(90000), award: 90000 },
-  { name: "several rules plus presets and a flag", answers: { ...complete, contact_name: "", sites_count: "two" }, budget: line(88500.5), award: 90000, extra: PRESET_CONCERNS, flags: [{ id: "f1", kind: "manual", note: "Check invoice for Alex Rivera at alex@example.org" }] },
+  {
+    name: "participant count is not a whole number",
+    answers: { ...complete, participants_target: "about 100" },
+    budget: line(90000),
+    award: 90000,
+  },
+  {
+    name: "narrative too long",
+    answers: { ...complete, accomplishments: Array.from({ length: 520 }, () => "word").join(" ") },
+    budget: line(90000),
+    award: 90000,
+  },
+  {
+    name: "several rules plus presets and a flag",
+    answers: { ...complete, contact_name: "", sites_count: "two" },
+    budget: line(88500.5),
+    award: 90000,
+    extra: PRESET_CONCERNS,
+    flags: [{ id: "f1", kind: "manual", note: "Check invoice for Alex Rivera at alex@example.org" }],
+  },
 ];
 
 function concernsFor(c: Case): Concern[] {
-  const issues = blockingIssues(validateSubmission({ definition, answers: c.answers, budget: c.budget, awardAmount: c.award }));
+  const issues = blockingIssues(
+    validateSubmission({ definition, answers: c.answers, budget: c.budget, awardAmount: c.award }),
+  );
   return [
-    ...buildConcerns({ definition, issues, budget: c.budget, award: c.award, status: c.status ?? "submitted", answers: c.answers, openFlags: c.flags ?? [] }),
+    ...buildConcerns({
+      definition,
+      issues,
+      budget: c.budget,
+      award: c.award,
+      status: c.status ?? "submitted",
+      answers: c.answers,
+      openFlags: c.flags ?? [],
+    }),
     ...(c.extra ?? []),
   ];
 }
@@ -97,23 +145,37 @@ describe.each(cases)("return note, $name", (c) => {
   });
 });
 
-describe("[US-044] the analyst's own flag text reaches the drafted note", () => {
-  const flagged = { ...cases[4], flags: [{ id: "f9", kind: "manual", note: "Youth age-group table was submitted blank, ask for the real counts. Contact alex@example.org or 718-555-0142." }] };
+describe("[US-044] the analyst's own flag text stays out of the drafted note", () => {
+  const flagged = {
+    ...cases[4],
+    flags: [
+      {
+        id: "f9",
+        kind: "manual",
+        note: "Youth age-group table was submitted blank, ask for the real counts. Contact alex@example.org or 718-555-0142.",
+      },
+    ],
+  };
   const concerns = concernsFor(flagged);
 
   it("carries the flag note into the concern", () => {
-    expect(concerns.find((c) => c.kind === "flag")?.detail).toBe("Youth age-group table was submitted blank, ask for the real counts. Contact [email removed] or [phone removed].");
+    expect(concerns.find((c) => c.kind === "flag")?.detail).toBe(
+      "Youth age-group table was submitted blank, ask for the real counts. Contact [email removed] or [phone removed].",
+    );
   });
 
-  it("writes the flag text into the rule based note and leaves contact details out", async () => {
+  it("tells the organization only that Council Finance has a question, without the flag text or contact details", async () => {
     const draft = await draftReturnNote(fakeTx(), { submissionId: "s1", concerns });
     expect(draft.mode).toBe("fallback");
-    expect(draft.text).toContain("Youth age-group table was submitted blank, ask for the real counts.");
+    expect(draft.text).toContain("Council Finance has a question about this report. Please review it and respond.");
+    expect(draft.text).not.toContain("age-group table was submitted blank");
     expect(draft.text).not.toMatch(/alex@|718-555|555-0142/);
   });
 
   it("falls back to the kind of flag when the analyst left no text", () => {
-    const bare = concernsFor({ ...cases[4], flags: [{ id: "f8", kind: "manual", note: "  " }] }).find((c) => c.kind === "flag");
+    const bare = concernsFor({ ...cases[4], flags: [{ id: "f8", kind: "manual", note: "  " }] }).find(
+      (c) => c.kind === "flag",
+    );
     expect(bare?.detail).toBeNull();
   });
 });
@@ -147,7 +209,14 @@ describe("return note validation of model output", () => {
   });
 
   it("fills a concern the model skipped with the template sentence", async () => {
-    live.result = { output: { sentences: [] }, model: "test-model", tokensIn: 1, tokensOut: 1, costUsd: 0, latencyMs: 1 };
+    live.result = {
+      output: { sentences: [] },
+      model: "test-model",
+      tokensIn: 1,
+      tokensOut: 1,
+      costUsd: 0,
+      latencyMs: 1,
+    };
     const draft = await draftReturnNote(fakeTx(), { submissionId: "s1", concerns });
     expect(draft.sentences.length).toBe(concerns.length);
     expect(draft.aiActionId).toBe("ai-action-1");

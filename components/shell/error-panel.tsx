@@ -26,7 +26,8 @@ export function ErrorPanel({ digest, reset }: { digest?: string; reset: () => vo
       footnote={
         digest ? (
           <>
-            If it keeps happening, contact your LedgerLine administrator and quote reference <span className="font-mono text-ink">{digest}</span>. See <HelpLink /> for support hours.
+            If it keeps happening, contact your LedgerLine administrator and quote reference{" "}
+            <span className="font-mono text-ink">{digest}</span>. See <HelpLink /> for support hours.
           </>
         ) : (
           <>
@@ -35,7 +36,11 @@ export function ErrorPanel({ digest, reset }: { digest?: string; reset: () => vo
         )
       }
     >
-      <p>{portal ? "Anything you saved before this happened is safe. Try again, or go back and open the report from My reports." : "Nothing was changed. Try again, or go back and pick up from the dashboard."}</p>
+      <p>
+        {portal
+          ? "Anything you saved before this happened is safe. Try again, or go back and open the report from My reports."
+          : "Nothing was changed. Try again, or go back and pick up from the dashboard."}
+      </p>
     </StatusPanel>
   );
 }

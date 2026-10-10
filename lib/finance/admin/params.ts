@@ -28,10 +28,6 @@ export function buildHref(base: string, params: Record<string, string | number |
   return text ? `${base}?${text}` : base;
 }
 
-export function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
 export const PAGE_SIZE = 25;
 
 export function isoDate(value: string): string {

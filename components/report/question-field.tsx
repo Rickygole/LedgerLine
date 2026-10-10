@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { wordCount } from "@/lib/rules/validate";
 import type { AnswerValue, Question } from "@/lib/rules/types";
 import { TableQuestion, type TableRow } from "./table-question";
+import { plural } from "@/lib/format";
 
 function asText(value: AnswerValue | undefined): string {
   if (value === null || value === undefined || Array.isArray(value)) return "";
@@ -26,7 +27,9 @@ const INPUT_WIDTHS: Partial<Record<Question["type"], string>> = {
   phone: "max-w-[16rem]",
 };
 
-const INPUT_TYPES: Partial<Record<Question["type"], { type: string; inputMode?: "numeric" | "decimal" | "tel" | "email"; autoComplete?: string }>> = {
+const INPUT_TYPES: Partial<
+  Record<Question["type"], { type: string; inputMode?: "numeric" | "decimal" | "tel" | "email"; autoComplete?: string }>
+> = {
   email: { type: "email", inputMode: "email", autoComplete: "email" },
   phone: { type: "tel", inputMode: "tel", autoComplete: "tel" },
   date: { type: "date" },
@@ -80,7 +83,7 @@ export function QuestionField({
           rows={6}
         />
         <p id={`${id}-count`} className={cn("mt-1.5 text-xs", over ? "font-semibold text-bad" : "text-muted")}>
-          {words} {words === 1 ? "word" : "words"}
+          {words} {plural(words, "word", "words")}
           {question.maxWords ? ` of ${question.maxWords} allowed` : ""}
           {over ? `. Remove ${words - (question.maxWords ?? 0)} to continue.` : ""}
         </p>
@@ -88,7 +91,16 @@ export function QuestionField({
     );
   } else if (question.type === "select") {
     control = (
-      <Select id={id} value={asText(value)} aria-invalid={error ? true : undefined} aria-required={required} aria-describedby={describedBy} disabled={disabled} onChange={(event) => onChange(event.target.value)} onBlur={onBlur}>
+      <Select
+        id={id}
+        value={asText(value)}
+        aria-invalid={error ? true : undefined}
+        aria-required={required}
+        aria-describedby={describedBy}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
+      >
         <option value="">Choose one</option>
         {(question.options ?? []).map((option) => (
           <option key={option} value={option}>
@@ -99,14 +111,25 @@ export function QuestionField({
     );
   } else if (question.type === "yesno") {
     control = (
-      <div id={id} role="radiogroup" tabIndex={-1} aria-required={required} aria-invalid={error ? true : undefined} aria-labelledby={`${id}-legend`} aria-describedby={describedBy} className="flex gap-3">
+      <div
+        id={id}
+        role="radiogroup"
+        tabIndex={-1}
+        aria-required={required}
+        aria-invalid={error ? true : undefined}
+        aria-labelledby={`${id}-legend`}
+        aria-describedby={describedBy}
+        className="flex gap-3"
+      >
         {["Yes", "No"].map((option) => (
           <label
             key={option}
             className={cn(
               "inline-flex h-10 min-w-24 cursor-pointer items-center justify-center gap-2 rounded-md border px-4 text-sm font-semibold shadow-sm",
-              asText(value) === option ? "border-harbor-700 bg-harbor-50 text-harbor-900" : "border-line bg-white text-ink hover:bg-harbor-50",
-              disabled && "cursor-not-allowed opacity-60"
+              asText(value) === option
+                ? "border-harbor-700 bg-harbor-50 text-harbor-900"
+                : "border-line bg-white text-ink hover:bg-harbor-50",
+              disabled && "cursor-not-allowed opacity-60",
             )}
           >
             <input
@@ -127,14 +150,26 @@ export function QuestionField({
       </div>
     );
   } else if (question.type === "table") {
-    control = <TableQuestion question={question} rows={asRows(value)} onChange={onChange} onBlur={onBlur} describedBy={describedBy} invalid={Boolean(error)} />;
+    control = (
+      <TableQuestion
+        question={question}
+        rows={asRows(value)}
+        onChange={onChange}
+        onBlur={onBlur}
+        describedBy={describedBy}
+        invalid={Boolean(error)}
+      />
+    );
   } else {
     const spec = INPUT_TYPES[question.type] ?? { type: "text" };
     const width = INPUT_WIDTHS[question.type];
     control = (
       <div className={cn("relative", width)}>
         {question.type === "currency" ? (
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
+          <span
+            className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted"
+            aria-hidden="true"
+          >
             $
           </span>
         ) : null}
@@ -150,10 +185,17 @@ export function QuestionField({
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           onBlur={onBlur}
-          className={cn(numeric && "num", question.type === "currency" && "pl-7", question.type === "percent" && "pr-8")}
+          className={cn(
+            numeric && "num",
+            question.type === "currency" && "pl-7",
+            question.type === "percent" && "pr-8",
+          )}
         />
         {question.type === "percent" ? (
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted" aria-hidden="true">
+          <span
+            className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted"
+            aria-hidden="true"
+          >
             %
           </span>
         ) : null}

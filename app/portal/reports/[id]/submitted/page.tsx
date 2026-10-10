@@ -6,17 +6,17 @@ import { requireUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
 import { loadReport } from "@/lib/report/data";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Report submitted" };
 
-const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function SubmittedPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!ID.test(id)) notFound();
+  if (!isUuid(id)) notFound();
   const user = await requireUser(["cbo_submitter"]);
   const report = await withClaims(user.id, (tx) => loadReport(tx, id));
   if (!report) notFound();

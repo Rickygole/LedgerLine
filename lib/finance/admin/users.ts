@@ -2,7 +2,7 @@ import type { Tx } from "@/lib/db";
 import type { Role } from "@/lib/auth";
 import { PAGE_SIZE, likePattern } from "./params";
 
-export type UserRow = {
+type UserRow = {
   id: string;
   email: string;
   full_name: string;
@@ -26,7 +26,7 @@ export async function listUsers(tx: Tx, filters: { q: string; role: string; page
        AND ($3 = '' OR u.role = $3)
      ORDER BY (u.role = 'cbo_submitter'), u.can_sign_in DESC, u.full_name
      LIMIT ${PAGE_SIZE} OFFSET $4`,
-    [filters.q, likePattern(filters.q), filters.role, (filters.page - 1) * PAGE_SIZE]
+    [filters.q, likePattern(filters.q), filters.role, (filters.page - 1) * PAGE_SIZE],
   );
   return { rows, total: rows[0]?.full_count ?? 0 };
 }

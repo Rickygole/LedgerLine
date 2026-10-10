@@ -50,14 +50,17 @@ const CONTROLS = [
   {
     ids: ["BR-022"],
     title: "Budgets must equal the award",
-    attempt: "Submit a budget that does not equal the award, or change a report's status with a direct database update.",
-    result: "The server re-checks every rule at submit and refuses an unbalanced budget, stating the amount over or under. Separately, the database refuses any status change made outside the workflow function. The balance rule itself is enforced by the application server, not by a database constraint.",
+    attempt:
+      "Submit a budget that does not equal the award, or change a report's status with a direct database update.",
+    result:
+      "The server re-checks every rule at submit and refuses an unbalanced budget, stating the amount over or under. Separately, the database refuses any status change made outside the workflow function. The balance rule itself is enforced by the application server, not by a database constraint.",
   },
   {
     ids: ["BR-010"],
     title: "Organizations see only their own reports",
     attempt: "Open another organization's report by its address, or query the database as one organization's user.",
-    result: "The application returns not found. Row-level security returns no rows from other organizations, and storage paths under another organization's EIN are refused.",
+    result:
+      "The application returns not found. Row-level security returns no rows from other organizations, and storage paths under another organization's EIN are refused.",
   },
   {
     ids: ["BR-021"],
@@ -69,13 +72,15 @@ const CONTROLS = [
     ids: ["BR-012"],
     title: "Uploads are limited to 25 MB",
     attempt: "Add a file larger than 25 MB.",
-    result: "The browser refuses it before sending and states the size and the limit. The server-side upload check used by both upload paths applies the same limit.",
+    result:
+      "The browser refuses it before sending and states the size and the limit. The server-side upload check used by both upload paths applies the same limit.",
   },
   {
     ids: ["US-057", "BR-019"],
     title: "History cannot be rewritten",
     attempt: "Update or delete an audit event or a submitted revision.",
-    result: "The application role has no permission to do so. A trigger also rejects update, delete and truncate for every role, including the table owner, while the trigger is enabled. The table owner can still disable or drop the trigger with an explicit schema change; the application role cannot.",
+    result:
+      "The application role has no permission to do so. A trigger also rejects update, delete and truncate for every role, including the table owner, while the trigger is enabled. The table owner can still disable or drop the trigger with an explicit schema change; the application role cannot.",
   },
 ];
 
@@ -103,10 +108,14 @@ export default async function TraceabilityPage() {
       <PageHeader
         title="Requirements traceability"
         description="Every user story and business rule, mapped to the screen that delivers it and to the automated tests that check it. Results come from the test run identified below."
-        crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Platform and delivery", href: "/finance/platform" }, { label: "Requirements traceability" }]}
+        crumbs={[
+          { label: "Dashboard", href: "/finance" },
+          { label: "Platform and delivery", href: "/finance/platform" },
+          { label: "Requirements traceability" },
+        ]}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <Card>
           <CardHeader title="Test run" description="Where these results came from." />
           <CardBody>
@@ -114,7 +123,10 @@ export default async function TraceabilityPage() {
               columns={1}
               items={[
                 { label: "Build", value: <span className="font-mono">{data.commit.slice(0, 7)}</span> },
-                { label: "Generated", value: data.generatedAt ? `${formatDateTime(data.generatedAt)} ET` : "Not available" },
+                {
+                  label: "Generated",
+                  value: data.generatedAt ? `${formatDateTime(data.generatedAt)} ET` : "Not available",
+                },
                 {
                   label: "Source",
                   value: data.runUrl ? (
@@ -123,7 +135,8 @@ export default async function TraceabilityPage() {
                     </a>
                   ) : (
                     <span>
-                      Local run{data.uncommittedChanges ? " with uncommitted changes" : ""}. Not produced by continuous integration.
+                      Local run{data.uncommittedChanges ? " with uncommitted changes" : ""}. Not produced by continuous
+                      integration.
                     </span>
                   ),
                 },
@@ -133,7 +146,8 @@ export default async function TraceabilityPage() {
                     <span className="num">
                       {data.totals.passed} of {data.totals.tests} passed
                       <span className="block text-xs text-muted">
-                        {data.suites.unit} unit, {data.suites.sql} database, {data.suites.eval} evaluation, {data.suites.e2e} browser
+                        {data.suites.unit} unit, {data.suites.sql} database, {data.suites.eval} evaluation,{" "}
+                        {data.suites.e2e} browser
                       </span>
                     </span>
                   ),
@@ -144,7 +158,10 @@ export default async function TraceabilityPage() {
         </Card>
 
         <Card>
-          <CardHeader title="How to read the status" description="Statuses are assigned from the test report when it is generated. They are not set by hand." />
+          <CardHeader
+            title="How to read the status"
+            description="Statuses are assigned from the test report when it is generated. They are not set by hand."
+          />
           <CardBody>
             <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
               {LEGEND.map((item) => {
@@ -186,7 +203,13 @@ export default async function TraceabilityPage() {
       <Card className="mt-6">
         <CardHeader
           title="Controls tested by attack"
-          description={<>Five rules, the attempt made against each and what refused it. Run <span className="font-mono text-[13px]">pnpm break BR-022</span> or another rule ID to repeat an attempt against a local copy.</>}
+          description={
+            <>
+              Five rules, the attempt made against each and what refused it. Run{" "}
+              <span className="font-mono text-[13px]">pnpm break BR-022</span> or another rule ID to repeat an attempt
+              against a local copy.
+            </>
+          }
           actions={<ShieldCheck className="h-5 w-5 text-navy-700" aria-hidden="true" />}
         />
         <ul className="divide-y divide-line">
@@ -194,7 +217,10 @@ export default async function TraceabilityPage() {
             const rows = data.requirements.filter((r) => control.ids.includes(r.id));
             const verified = rows.length > 0 && rows.every((r) => r.state === "verified");
             return (
-              <li key={control.title} className="grid gap-3 px-5 py-4 md:grid-cols-[220px_1fr_1fr_150px] md:items-start">
+              <li
+                key={control.title}
+                className="grid gap-3 px-5 py-4 md:grid-cols-[220px_1fr_1fr_150px] md:items-start"
+              >
                 <div>
                   <p className="font-mono text-xs text-muted">{control.ids.join(" and ")}</p>
                   <p className="font-semibold text-ink">{control.title}</p>

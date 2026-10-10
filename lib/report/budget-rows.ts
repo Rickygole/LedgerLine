@@ -80,10 +80,20 @@ export function amountIssues(rows: BudgetRow[]): Issue[] {
   const issues: Issue[] = [];
   rows.forEach((row, index) => {
     if (amountProblem(row)) {
-      issues.push({ field: `budget.${row.rowId}`, ruleId: RULES.type, severity: "block", message: `Line ${index + 1}: enter the amount as a number with at most 2 decimal places, like 1,250.00.` });
+      issues.push({
+        field: `budget.${row.rowId}`,
+        ruleId: RULES.type,
+        severity: "block",
+        message: `Line ${index + 1}: enter the amount as a number with at most 2 decimal places, like 1,250.00.`,
+      });
     }
     if (actualProblem(row)) {
-      issues.push({ field: `budget.${row.rowId}`, ruleId: RULES.type, severity: "block", message: `Line ${index + 1}: enter actual spent as a number with at most 2 decimal places, like 1,250.00.` });
+      issues.push({
+        field: `budget.${row.rowId}`,
+        ruleId: RULES.type,
+        severity: "block",
+        message: `Line ${index + 1}: enter actual spent as a number with at most 2 decimal places, like 1,250.00.`,
+      });
     }
   });
   return issues;

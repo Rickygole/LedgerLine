@@ -12,7 +12,6 @@ import { formatTime, nowIso } from "@/lib/dates";
 
 type Draft = { text: string; mode: "live" | "fallback"; aiActionId: string | null; ruleIds: string[]; dropped: number };
 
-
 export function RequestUpdate({
   submissionId,
   lockVersion,
@@ -40,7 +39,8 @@ export function RequestUpdate({
   const [sent, setSent] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const toggle = (id: string) => setSelected((current) => (current.includes(id) ? current.filter((c) => c !== id) : [...current, id]));
+  const toggle = (id: string) =>
+    setSelected((current) => (current.includes(id) ? current.filter((c) => c !== id) : [...current, id]));
 
   const makeDraft = () => {
     setError(null);
@@ -68,10 +68,12 @@ export function RequestUpdate({
     }
     startTransition(async () => {
       const res = await sendUpdateAction({ submissionId, lockVersion, text, aiActionId: usedDraft });
-      if (!res.ok) return setError(res.message);
+      if (res.error) return setError(res.error);
       setSent(true);
       dialog.current?.close();
-      onDone(`Update requested at ${formatTime(nowIso())}. ${contactName ?? "The organization's primary contact"} will see the note in Messages and above their report.`);
+      onDone(
+        `Update requested at ${formatTime(nowIso())}. ${contactName ?? "The organization's primary contact"} will see the note in Messages and above their report.`,
+      );
       requestAnimationFrame(() => document.getElementById("queue-next")?.focus());
     });
   };
@@ -83,7 +85,11 @@ export function RequestUpdate({
 
   return (
     <>
-      <Button variant={variant} className={variant === "secondary" ? "h-11 w-full text-base" : "px-0"} onClick={() => dialog.current?.showModal()}>
+      <Button
+        variant={variant}
+        className={variant === "secondary" ? "h-11 w-full text-base" : "px-0"}
+        onClick={() => dialog.current?.showModal()}
+      >
         Request an update
       </Button>
       <dialog
@@ -95,7 +101,12 @@ export function RequestUpdate({
           <h2 id="request-title" className="text-xl font-bold leading-7">
             {title}
           </h2>
-          <button type="button" onClick={() => dialog.current?.close()} className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded text-ink hover:bg-surface" aria-label="Close">
+          <button
+            type="button"
+            onClick={() => dialog.current?.close()}
+            className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded text-ink hover:bg-surface"
+            aria-label="Close"
+          >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
@@ -117,21 +128,37 @@ export function RequestUpdate({
               aria-describedby={["return-note-hint", error ? "return-note-error" : null].filter(Boolean).join(" ")}
               aria-invalid={error && !isStale(error) ? true : undefined}
             />
-            {usedDraft ? <p className="mt-1 text-sm text-muted">Started from a suggested note. Your name is recorded as the sender.</p> : null}
+            {usedDraft ? (
+              <p className="mt-1 text-sm text-muted">
+                Started from a suggested note. Your name is recorded as the sender.
+              </p>
+            ) : null}
             {error && isStale(error) ? <StaleNotice /> : <FieldError id="return-note-error">{error}</FieldError>}
           </div>
 
           {prefill !== "" && concerns.length > 0 ? (
             <details className="group">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">Suggest a different note</summary>
+              <summary className="cursor-pointer list-none text-sm font-semibold text-link underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                Suggest a different note
+              </summary>
               <div className="mt-3 space-y-3">
                 <fieldset>
                   <legend className="text-sm font-semibold">What needs to change</legend>
                   <ul className="mt-1.5 space-y-1">
                     {concerns.map((concern) => (
                       <li key={concern.id}>
-                        <label htmlFor={`concern-${concern.id}`} className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 text-[15px] hover:bg-harbor-50">
-                          <input id={`concern-${concern.id}`} type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-harbor-800" checked={selected.includes(concern.id)} onChange={() => toggle(concern.id)} disabled={pending} />
+                        <label
+                          htmlFor={`concern-${concern.id}`}
+                          className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 text-[15px] hover:bg-harbor-50"
+                        >
+                          <input
+                            id={`concern-${concern.id}`}
+                            type="checkbox"
+                            className="mt-1 h-4 w-4 shrink-0 accent-harbor-800"
+                            checked={selected.includes(concern.id)}
+                            onChange={() => toggle(concern.id)}
+                            disabled={pending}
+                          />
                           <span className="min-w-0">
                             {concern.label}
                             {concern.detail ? <span className="block text-sm text-muted">{concern.detail}</span> : null}
@@ -147,10 +174,12 @@ export function RequestUpdate({
                 {draft ? (
                   <section aria-label="Suggested note" className="rounded border border-line bg-harbor-50 p-3">
                     <p className="flex flex-wrap items-center gap-2">
-                      <Badge tone="info">
-                        Suggested
-                      </Badge>
-                      <span className="text-[13px] text-muted">{live ? "Written by a language model from the checks you chose." : "Built from the report rules. No model was used."}</span>
+                      <Badge tone="info">Suggested</Badge>
+                      <span className="text-[13px] text-muted">
+                        {live
+                          ? "Written by a language model from the checks you chose."
+                          : "Built from the report rules. No model was used."}
+                      </span>
                     </p>
                     <p className="mt-2 whitespace-pre-wrap text-[15px] leading-6">{draft.text}</p>
                     <div className="mt-3 flex flex-wrap gap-4">

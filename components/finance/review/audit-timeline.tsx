@@ -16,7 +16,15 @@ const DOT: Record<string, string> = {
   flag_dismiss: "bg-line-strong",
 };
 
-export function AuditTimeline({ events, labels, compact = false }: { events: AuditRecord[]; labels: Record<string, string>; compact?: boolean }) {
+export function AuditTimeline({
+  events,
+  labels,
+  compact = false,
+}: {
+  events: AuditRecord[];
+  labels: Record<string, string>;
+  compact?: boolean;
+}) {
   return (
     <ol className="relative">
       {events.map((event, index) => {
@@ -27,14 +35,24 @@ export function AuditTimeline({ events, labels, compact = false }: { events: Aud
         return (
           <li key={event.id} className={cn("relative pl-6", last ? "pb-0" : compact ? "pb-4" : "pb-6")}>
             {!last ? <span className="absolute left-[4px] top-3 bottom-0 w-0.5 bg-line" aria-hidden="true" /> : null}
-            <span className={cn("absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white", DOT[event.action] ?? "bg-line-strong")} aria-hidden="true" />
+            <span
+              className={cn(
+                "absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white",
+                DOT[event.action] ?? "bg-line-strong",
+              )}
+              aria-hidden="true"
+            />
             <p className="text-sm text-ink">
               <span className="font-semibold">{event.actor ?? "System"}</span> {actionInWords(event.action)}
             </p>
             <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
               <time dateTime={event.at}>{formatDateTime(event.at)}</time>
               {event.aiActionId ? (
-                event.aiMode === "fallback" ? <Badge>{`Drafted from the rules, sent by ${event.actor ?? "a reviewer"}`}</Badge> : <AiDraftBadge label={`AI draft, sent by ${event.actor ?? "a reviewer"}`} />
+                event.aiMode === "fallback" ? (
+                  <Badge>{`Drafted from the rules, sent by ${event.actor ?? "a reviewer"}`}</Badge>
+                ) : (
+                  <AiDraftBadge label={`AI draft, sent by ${event.actor ?? "a reviewer"}`} />
+                )
               ) : null}
             </p>
             {beforeStatus && afterStatus && beforeStatus !== afterStatus && !compact ? (
@@ -44,10 +62,27 @@ export function AuditTimeline({ events, labels, compact = false }: { events: Aud
             ) : null}
             {key ? (
               <p className="mt-1 text-sm text-muted">
-                {labels[key] ?? key}: <del className="text-muted">{String(event.before?.value ?? "blank")}</del> <span className="font-semibold text-ink">{String(event.after?.value ?? "blank")}</span>
+                {labels[key] ?? key}:{" "}
+                <del className="text-muted">
+                  <span className="sr-only">from </span>
+                  {String(event.before?.value ?? "blank")}
+                </del>{" "}
+                <span className="font-semibold text-ink">
+                  <span className="sr-only">to </span>
+                  {String(event.after?.value ?? "blank")}
+                </span>
               </p>
             ) : null}
-            {event.note ? <p className={cn("mt-2 whitespace-pre-wrap rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink", compact && "line-clamp-4")}>{event.note}</p> : null}
+            {event.note ? (
+              <p
+                className={cn(
+                  "mt-2 whitespace-pre-wrap rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink",
+                  compact && "line-clamp-4",
+                )}
+              >
+                {event.note}
+              </p>
+            ) : null}
           </li>
         );
       })}

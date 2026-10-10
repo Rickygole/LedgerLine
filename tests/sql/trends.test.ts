@@ -49,7 +49,8 @@ describe("[US-050] trend and comparison data follows the selected criteria", () 
   it("totals every submitted report across months, and narrows when a category or borough is chosen", async () => {
     await asUser(app, daniel, async () => {
       const all = await monthlySubmissions(tx, { category: "", borough: "" });
-      const submitted = (await owner.query("SELECT count(*)::int AS n FROM submission WHERE submitted_at IS NOT NULL")).rows[0].n;
+      const submitted = (await owner.query("SELECT count(*)::int AS n FROM submission WHERE submitted_at IS NOT NULL"))
+        .rows[0].n;
       expect(all.reduce((sum, p) => sum + p.total, 0)).toBe(submitted);
       expect(all.length).toBeGreaterThan(6);
       expect(all.some((p) => p.late > 0)).toBe(true);
@@ -70,11 +71,22 @@ describe("[US-050] trend and comparison data follows the selected criteria", () 
 
   it("compares groups for a reporting period and changes with the period and the filters", async () => {
     await asUser(app, daniel, async () => {
-      const byCategory = await submissionShareByGroup(tx, { category: "", borough: "", period: "FY26-YE", compare: "category" });
-      const byBorough = await submissionShareByGroup(tx, { category: "", borough: "", period: "FY26-YE", compare: "borough" });
+      const byCategory = await submissionShareByGroup(tx, {
+        category: "",
+        borough: "",
+        period: "FY26-YE",
+        compare: "category",
+      });
+      const byBorough = await submissionShareByGroup(tx, {
+        category: "",
+        borough: "",
+        period: "FY26-YE",
+        compare: "borough",
+      });
       expect(byCategory.length).toBe(12);
       expect(byBorough.length).toBeGreaterThanOrEqual(4);
-      const due = (await owner.query("SELECT count(*)::int AS n FROM obligation WHERE period_id = 'FY26-YE'")).rows[0].n;
+      const due = (await owner.query("SELECT count(*)::int AS n FROM obligation WHERE period_id = 'FY26-YE'")).rows[0]
+        .n;
       expect(byCategory.reduce((s, g) => s + g.due, 0)).toBe(due);
       expect(byBorough.reduce((s, g) => s + g.due, 0)).toBe(due);
       for (const group of byCategory) {
@@ -85,9 +97,19 @@ describe("[US-050] trend and comparison data follows the selected criteria", () 
       const sorted = [...byCategory].sort((a, b) => b.share - a.share || a.name.localeCompare(b.name));
       expect(byCategory.map((g) => g.name)).toEqual(sorted.map((g) => g.name));
 
-      const filtered = await submissionShareByGroup(tx, { category: "Health", borough: "", period: "FY26-YE", compare: "category" });
+      const filtered = await submissionShareByGroup(tx, {
+        category: "Health",
+        borough: "",
+        period: "FY26-YE",
+        compare: "category",
+      });
       expect(filtered.map((g) => g.name)).toEqual(["Health"]);
-      const current = await submissionShareByGroup(tx, { category: "", borough: "", period: "FY27-YE", compare: "category" });
+      const current = await submissionShareByGroup(tx, {
+        category: "",
+        borough: "",
+        period: "FY27-YE",
+        compare: "category",
+      });
       expect(JSON.stringify(current)).not.toBe(JSON.stringify(byCategory));
     });
   });

@@ -23,7 +23,7 @@ beforeAll(async () => {
     await owner.query(
       `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
        WHERE a.org_id = $1 AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY') LIMIT 1`,
-      [orgId]
+      [orgId],
     )
   ).rows[0];
 });
@@ -63,7 +63,7 @@ async function startDraft(): Promise<string> {
   await app.query(
     `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
      VALUES ($1, $2, $3, 'FY27-MY', $4, 'draft', app.uid(), app.uid())`,
-    [id, `LL-TEST-${id.slice(0, 8)}`, target.assignment, target.form]
+    [id, `LL-TEST-${id.slice(0, 8)}`, target.assignment, target.form],
   );
   return id;
 }
@@ -73,15 +73,25 @@ const SNAPSHOT = JSON.stringify({ formVersionId: "f", answers: {}, budget: [], a
 async function submit(id: string) {
   await as(maria);
   const lock = (await app.query("SELECT lock_version FROM submission WHERE id = $1", [id])).rows[0].lock_version;
-  await app.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, NULL, NULL)", [id, lock, SNAPSHOT]);
+  await app.query("SELECT * FROM app.transition_submission($1, 'submit', $2, $3::jsonb, NULL, NULL, NULL)", [
+    id,
+    lock,
+    SNAPSHOT,
+  ]);
 }
 
 describe("[BR-019][US-056] submitted data is kept and cannot be removed or edited by the organization", () => {
   it("denies deleting a submission, an answer or a budget line once the report is submitted", async () => {
     await inTransaction(async () => {
       const id = await startDraft();
-      await app.query("INSERT INTO answer (submission_id, question_key, value, updated_by) VALUES ($1, 'contact_name', '\"Maria\"', app.uid())", [id]);
-      await app.query("INSERT INTO budget_line (submission_id, row_id, position, category, description, amount) VALUES ($1, gen_random_uuid(), 1, 'PS', 'Coordinator', 100)", [id]);
+      await app.query(
+        "INSERT INTO answer (submission_id, question_key, value, updated_by) VALUES ($1, 'contact_name', '\"Maria\"', app.uid())",
+        [id],
+      );
+      await app.query(
+        "INSERT INTO budget_line (submission_id, row_id, position, category, description, amount) VALUES ($1, gen_random_uuid(), 1, 'PS', 'Coordinator', 100)",
+        [id],
+      );
       await submit(id);
       await app.query("SAVEPOINT a");
       expect(await errorCode(() => app.query("DELETE FROM submission WHERE id = $1", [id]))).toBe("42501");
@@ -124,7 +134,9 @@ describe("[US-057][BR-019] what the append-only triggers do", () => {
   it("does not let the application role switch the triggers off", async () => {
     await inTransaction(async () => {
       await as(daniel);
-      expect(await errorCode(() => app.query("ALTER TABLE audit_event DISABLE TRIGGER audit_event_append_only"))).toBe("42501");
+      expect(await errorCode(() => app.query("ALTER TABLE audit_event DISABLE TRIGGER audit_event_append_only"))).toBe(
+        "42501",
+      );
       await app.query("ROLLBACK");
       await app.query("BEGIN");
       await as(daniel);
@@ -136,7 +148,9 @@ describe("[US-057][BR-019] what the append-only triggers do", () => {
     await owner.query("BEGIN");
     try {
       await owner.query("ALTER TABLE audit_event DISABLE TRIGGER audit_event_append_only");
-      const updated = await owner.query("UPDATE audit_event SET note = note WHERE id = (SELECT min(id) FROM audit_event)");
+      const updated = await owner.query(
+        "UPDATE audit_event SET note = note WHERE id = (SELECT min(id) FROM audit_event)",
+      );
       expect(updated.rowCount).toBe(1);
     } finally {
       await owner.query("ROLLBACK");
@@ -151,16 +165,32 @@ describe("[US-022] several supporting documents can be attached to one report", 
       const id = await startDraft();
       const tx = asTx(app);
       for (let n = 1; n <= 3; n++) {
-        const item = await insertAttachment(tx, { submissionId: id, pathname: `${ein}/${id}/f${n}.pdf`, filename: `invoice-${n}.pdf`, bytes: 1000 * n, mime: "application/pdf" });
+        const item = await insertAttachment(tx, {
+          submissionId: id,
+          pathname: `${ein}/${id}/f${n}.pdf`,
+          filename: `invoice-${n}.pdf`,
+          bytes: 1000 * n,
+          mime: "application/pdf",
+        });
         expect(item.filename).toBe(`invoice-${n}.pdf`);
       }
-      const names = (await app.query("SELECT filename FROM attachment WHERE submission_id = $1 ORDER BY filename", [id])).rows.map((r) => r.filename);
+      const names = (
+        await app.query("SELECT filename FROM attachment WHERE submission_id = $1 ORDER BY filename", [id])
+      ).rows.map((r) => r.filename);
       expect(names).toEqual(["invoice-1.pdf", "invoice-2.pdf", "invoice-3.pdf"]);
       expect(await attachmentLimitProblem(tx, id, 1000)).toBeNull();
       for (let n = 4; n <= 20; n++) {
-        await insertAttachment(tx, { submissionId: id, pathname: `${ein}/${id}/f${n}.pdf`, filename: `invoice-${n}.pdf`, bytes: 1000, mime: "application/pdf" });
+        await insertAttachment(tx, {
+          submissionId: id,
+          pathname: `${ein}/${id}/f${n}.pdf`,
+          filename: `invoice-${n}.pdf`,
+          bytes: 1000,
+          mime: "application/pdf",
+        });
       }
-      expect(await attachmentLimitProblem(tx, id, 1000)).toBe("A report can have at most 20 files. Remove one to add another.");
+      expect(await attachmentLimitProblem(tx, id, 1000)).toBe(
+        "A report can have at most 20 files. Remove one to add another.",
+      );
     });
   });
 
@@ -170,7 +200,10 @@ describe("[US-022] several supporting documents can be attached to one report", 
       await submit(id);
       await as(maria);
       const code = await errorCode(() =>
-        app.query("INSERT INTO attachment (submission_id, path, filename, bytes, mime, uploaded_by) VALUES ($1, 'p', 'late.pdf', 10, 'application/pdf', app.uid())", [id])
+        app.query(
+          "INSERT INTO attachment (submission_id, path, filename, bytes, mime, uploaded_by) VALUES ($1, 'p', 'late.pdf', 10, 'application/pdf', app.uid())",
+          [id],
+        ),
       );
       expect(code).toBe("42501");
     });

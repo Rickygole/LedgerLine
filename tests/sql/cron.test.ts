@@ -22,7 +22,11 @@ afterAll(async () => {
 
 function call(token: string | null) {
   return import("@/app/api/cron/reminders/route").then(({ GET }) =>
-    GET(new NextRequest("http://localhost/api/cron/reminders", { headers: token ? { authorization: `Bearer ${token}` } : {} }))
+    GET(
+      new NextRequest("http://localhost/api/cron/reminders", {
+        headers: token ? { authorization: `Bearer ${token}` } : {},
+      }),
+    ),
   );
 }
 
@@ -46,7 +50,12 @@ describe("[US-052] the reminder cron sends what is due on the real date", () => 
     const body = await first.json();
     expect(body.date).toBe(key);
     expect(body.queued).toBeGreaterThan(0);
-    const rows = (await owner.query("SELECT subject, status FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1", [key])).rows;
+    const rows = (
+      await owner.query(
+        "SELECT subject, status FROM outbox WHERE template = 'reminder' AND reminder_key LIKE '%:' || $1",
+        [key],
+      )
+    ).rows;
     expect(rows).toHaveLength(body.queued);
     expect(rows[0].subject).toContain("Second notice");
     const second = await (await call("local-cron-test")).json();

@@ -8,19 +8,38 @@ import { DistrictMiniMap } from "@/components/portal/district-mini-map";
 import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatCurrency } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 import { ContractCell } from "@/components/finance/admin/award-cells";
 import { todayInNewYork } from "@/lib/dates";
 import { currentFiscalYear, loadObligations, loadOrganization } from "@/lib/portal/data";
-import { orgTypeLabel } from "@/lib/finance/admin/sql";
+import { orgTypeLabel } from "@/lib/domain";
 
 export const metadata: Metadata = { title: "Organization" };
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Contact = { id: string; full_name: string; title: string; email: string; phone: string | null; is_primary: boolean };
+type Contact = {
+  id: string;
+  full_name: string;
+  title: string;
+  email: string;
+  phone: string | null;
+  is_primary: boolean;
+};
 type Member = { id: string; full_name: string; title: string | null; email: string; role: Role };
-type Funded = { assignment_id: string; fiscal_year_id: string; code: string; name: string; category: string; sponsoring_agency: string | null; award_amount: string; contract_status: string; contract_number: string | null; contract_registered_on: string | null; reports_on_file: number };
+type Funded = {
+  assignment_id: string;
+  fiscal_year_id: string;
+  code: string;
+  name: string;
+  category: string;
+  sponsoring_agency: string | null;
+  award_amount: string;
+  contract_status: string;
+  contract_number: string | null;
+  contract_registered_on: string | null;
+  reports_on_file: number;
+};
 
 const TABS = ["overview", "people", "initiatives"] as const;
 
@@ -30,8 +49,14 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
   const tab = TABS.find((t) => t === requested) ?? "overview";
   const data = await withClaims(user.id, async (tx) => ({
     org: await loadOrganization(tx, user.orgId!),
-    contacts: await tx.query<Contact>(`SELECT id, full_name, title, email, phone, is_primary FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name`, [user.orgId]),
-    members: await tx.query<Member>(`SELECT id, full_name, title, email, role FROM app_user WHERE org_id = $1 AND active ORDER BY full_name`, [user.orgId]),
+    contacts: await tx.query<Contact>(
+      `SELECT id, full_name, title, email, phone, is_primary FROM contact WHERE org_id = $1 ORDER BY is_primary DESC, full_name`,
+      [user.orgId],
+    ),
+    members: await tx.query<Member>(
+      `SELECT id, full_name, title, email, role FROM app_user WHERE org_id = $1 AND active ORDER BY full_name`,
+      [user.orgId],
+    ),
     funded: await tx.query<Funded>(
       `SELECT a.id AS assignment_id, i.fiscal_year_id, i.code, i.name, i.category, a.sponsoring_agency, a.award_amount::text AS award_amount,
               a.contract_status, a.contract_number, a.contract_registered_on::text AS contract_registered_on,
@@ -46,12 +71,16 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
   if (!data.org) notFound();
   const { org, contacts, members, funded, obligations, fiscalYear } = data;
   const primary = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
-  const totalAward = funded.filter((f) => f.fiscal_year_id === fiscalYear).reduce((sum, f) => sum + Number(f.award_amount), 0);
+  const totalAward = funded
+    .filter((f) => f.fiscal_year_id === fiscalYear)
+    .reduce((sum, f) => sum + Number(f.award_amount), 0);
   const totalReports = funded.reduce((sum, f) => sum + f.reports_on_file, 0);
   const accepted = obligations.filter((o) => o.status === "accepted").length;
   const submitted = obligations.filter((o) => o.status === "submitted" || o.status === "under_review").length;
   const overdue = obligations.filter((o) => o.state === "missing").length;
-  const outstanding = obligations.filter((o) => o.status === null || o.status === "draft" || o.status === "returned").length;
+  const outstanding = obligations.filter(
+    (o) => o.status === null || o.status === "draft" || o.status === "returned",
+  ).length;
 
   return (
     <>
@@ -60,9 +89,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         subtitle={org.dbaName ? `Doing business as ${org.dbaName}` : undefined}
         crumbs={[{ label: "My reports", href: "/portal" }, { label: "Organization" }]}
         meta={[
-          <Badge key="type">
-            {orgTypeLabel(org.orgType)}
-          </Badge>,
+          <Badge key="type">{orgTypeLabel(org.orgType)}</Badge>,
           <span key="ein" className="whitespace-nowrap font-mono text-[13px]">
             EIN {org.ein}
           </span>,
@@ -102,8 +129,16 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                 </h2>
                 <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 text-[15px] sm:grid-cols-2">
                   {[
-                    { label: `${fiscalYear} awards`, value: <span className="num">{funded.filter((f) => f.fiscal_year_id === fiscalYear).length}</span> },
-                    { label: `${fiscalYear} total awarded`, value: <span className="num font-semibold">{formatCurrency(totalAward)}</span> },
+                    {
+                      label: `${fiscalYear} awards`,
+                      value: (
+                        <span className="num">{funded.filter((f) => f.fiscal_year_id === fiscalYear).length}</span>
+                      ),
+                    },
+                    {
+                      label: `${fiscalYear} total awarded`,
+                      value: <span className="num font-semibold">{formatCurrency(totalAward)}</span>,
+                    },
                   ].map((item) => (
                     <div key={item.label} className="min-w-0">
                       <dt className="text-sm font-semibold text-muted">{item.label}</dt>
@@ -123,7 +158,9 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                         {tile.bad ? <span className="h-2 w-2 shrink-0 rounded-full bg-bad" aria-hidden="true" /> : null}
                         {tile.label}
                       </p>
-                      <p className="num mt-1 text-[28px] font-extrabold leading-9 tracking-[-0.02em] text-ink">{tile.value}</p>
+                      <p className="num mt-1 text-[28px] font-extrabold leading-9 tracking-[-0.02em] text-ink">
+                        {tile.value}
+                      </p>
                       <p className="text-sm text-muted">{tile.note}</p>
                     </li>
                   ))}
@@ -137,12 +174,20 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
               <CardHeader title="About" />
               <CardBody>
                 <h3 className="text-[13px] font-semibold text-muted">Mission</h3>
-                <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">{org.mission ?? "No mission statement on file."}</p>
+                <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed text-ink">
+                  {org.mission ?? "No mission statement on file."}
+                </p>
                 <div className="mt-5 border-t border-line pt-5">
                   <DescriptionList
                     columns={2}
                     items={[
-                      { label: "Annual budget", value: org.annualBudget !== null ? <span className="num">{formatCurrency(org.annualBudget)}</span> : null },
+                      {
+                        label: "Annual budget",
+                        value:
+                          org.annualBudget !== null ? (
+                            <span className="num">{formatCurrency(org.annualBudget)}</span>
+                          ) : null,
+                      },
                       { label: "Reports on file", value: <span className="num">{totalReports}</span> },
                     ]}
                   />
@@ -177,7 +222,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       ) : null}
 
       {tab === "people" ? (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader title="Contacts" />
             <Table>
@@ -196,11 +241,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                       <TD>
                         <p className="flex items-center gap-2 font-medium text-ink">
                           {c.full_name}
-                          {c.is_primary ? (
-                            <Badge tone="info">
-                              Primary
-                            </Badge>
-                          ) : null}
+                          {c.is_primary ? <Badge tone="info">Primary</Badge> : null}
                         </p>
                         <p className="text-xs text-muted">{c.title}</p>
                       </TD>
@@ -275,7 +316,11 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                     <TD className="whitespace-nowrap">{f.fiscal_year_id}</TD>
                     <TD>{f.sponsoring_agency ?? <span className="text-muted">Not provided</span>}</TD>
                     <TD>
-                      <ContractCell status={f.contract_status} number={f.contract_number} registeredOn={f.contract_registered_on} />
+                      <ContractCell
+                        status={f.contract_status}
+                        number={f.contract_number}
+                        registeredOn={f.contract_registered_on}
+                      />
                     </TD>
                     <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
                     <TD align="right">{f.reports_on_file}</TD>

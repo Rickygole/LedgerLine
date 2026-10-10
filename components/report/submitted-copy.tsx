@@ -43,12 +43,18 @@ export function SubmittedCopy({
             columns={3}
             items={[
               { label: "Revision", value: <span className="num">{revision.revision}</span> },
-              { label: revision.kind === "correction" ? "Corrected by" : "Submitted by", value: revision.actorName ?? "Not recorded" },
+              {
+                label: revision.kind === "correction" ? "Corrected by" : "Submitted by",
+                value: revision.actorName ?? "Not recorded",
+              },
               { label: "Submitted on", value: `${formatDateTime(revision.createdAt)} ET` },
               {
                 label: "Receipt code",
                 value: (
-                  <span className="font-mono text-sm" title="Council Finance can use this code to confirm this copy has not changed.">
+                  <span
+                    className="font-mono text-sm"
+                    title="Council Finance can use this code to confirm this copy has not changed."
+                  >
                     {revision.sha256.slice(0, 12)}
                   </span>
                 ),
@@ -137,7 +143,11 @@ export function SubmittedCopy({
                   <span className="flex items-center gap-4 text-muted">
                     <span className="num">{formatBytes(file.bytes)}</span>
                     {files[file.path] ? (
-                      <a href={`/portal/reports/${submissionId}/files/${files[file.path]}`} className="no-print font-semibold text-link underline underline-offset-2 hover:text-link-hover" aria-label={`Download ${file.filename}`}>
+                      <a
+                        href={`/portal/reports/${submissionId}/files/${files[file.path]}`}
+                        className="no-print font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                        aria-label={`Download ${file.filename}`}
+                      >
                         Download
                       </a>
                     ) : null}

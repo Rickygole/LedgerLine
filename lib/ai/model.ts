@@ -3,20 +3,20 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createHash } from "node:crypto";
 import type { Tx } from "@/lib/db";
 
-export type AiFeature = "form_draft" | "return_note";
+type AiFeature = "form_draft" | "return_note";
 export type AiMode = "live" | "replay" | "fallback";
 
 export function sha256(text: string): string {
   return createHash("sha256").update(text).digest("hex");
 }
 
-export type AiProvider = "anthropic" | "ollama";
+type AiProvider = "anthropic" | "ollama";
 
-export function providerName(): AiProvider {
+function providerName(): AiProvider {
   return process.env.AI_PROVIDER === "ollama" ? "ollama" : "anthropic";
 }
 
-export function modelFor(feature: AiFeature): string | null {
+function modelFor(feature: AiFeature): string | null {
   const model = feature === "form_draft" ? process.env.AI_MODEL_FORM : process.env.AI_MODEL_NOTE;
   if (!model) return null;
   if (providerName() === "ollama") return model;
@@ -39,7 +39,7 @@ function priceFor(model: string) {
   return PRICES[model] ?? { input: 0, output: 0 };
 }
 
-export type StructuredCall = {
+type StructuredCall = {
   feature: AiFeature;
   system: string;
   user: string;
@@ -48,7 +48,7 @@ export type StructuredCall = {
   timeoutMs: number;
 };
 
-export type StructuredResult = {
+type StructuredResult = {
   output: unknown;
   model: string;
   tokensIn: number;
@@ -140,7 +140,7 @@ export async function logAiAction(
     latencyMs?: number;
     submissionId?: string | null;
     initiativeId?: string | null;
-  }
+  },
 ): Promise<string> {
   const inserted = await tx.one<{ id: string }>(
     `INSERT INTO ai_action (feature, mode, model, prompt_version, input_sha256, output, validation, tokens_in, tokens_out, cost_usd, latency_ms, submission_id, initiative_id, created_by)
@@ -160,7 +160,7 @@ export async function logAiAction(
       row.latencyMs ?? null,
       row.submissionId ?? null,
       row.initiativeId ?? null,
-    ]
+    ],
   );
   if (!inserted) throw new Error("could not log ai action");
   return inserted.id;

@@ -1,6 +1,6 @@
-export type TableDoc = { description: string; columns: Record<string, string> };
+type TableDoc = { description: string; columns: Record<string, string> };
 
-export const COMMON_COLUMNS: Record<string, string> = {
+const COMMON_COLUMNS: Record<string, string> = {
   id: "Unique identifier of the record.",
   created_at: "When the record was created.",
   created_by: "Identifier of the user who created the record (app_user.id).",
@@ -20,7 +20,8 @@ export const COMMON_COLUMNS: Record<string, string> = {
 
 export const TABLES: Record<string, TableDoc> = {
   ai_action: {
-    description: "Every drafting suggestion produced by the assistant, with the model used, cost and whether a staff member accepted it.",
+    description:
+      "Every drafting suggestion produced by the assistant, with the model used, cost and whether a staff member accepted it.",
     columns: {
       feature: "Which assistant feature produced the output.",
       mode: "Whether the output came from a hosted or local model.",
@@ -82,7 +83,8 @@ export const TABLES: Record<string, TableDoc> = {
     columns: { key: "Name of the setting.", value: "Value of the setting." },
   },
   app_user: {
-    description: "Every person who can sign in, Finance staff and organization submitters. Password hashes and session counters are not exported.",
+    description:
+      "Every person who can sign in, Finance staff and organization submitters. Password hashes and session counters are not exported.",
     columns: {
       email: "Work email address, used to sign in.",
       full_name: "Full name.",
@@ -113,7 +115,8 @@ export const TABLES: Record<string, TableDoc> = {
     },
   },
   attachment: {
-    description: "Supporting documents uploaded with a report. The files themselves are held in file storage; this table lists them.",
+    description:
+      "Supporting documents uploaded with a report. The files themselves are held in file storage; this table lists them.",
     columns: {
       path: "Location of the file in storage.",
       filename: "Original file name.",
@@ -263,7 +266,8 @@ export const TABLES: Record<string, TableDoc> = {
       template: "Kind of message.",
       subject: "Subject line.",
       body_text: "Message text.",
-      status: "queued, sending, sent, held, recorded or failed. Only sent means a mail provider accepted the message. recorded means the message was kept on file and not delivered because no mail service is connected.",
+      status:
+        "queued, sending, sent, held, recorded or failed. Only sent means a mail provider accepted the message. recorded means the message was kept on file and not delivered because no mail service is connected.",
       reminder_key: "Key that stops the same reminder being queued twice in one day.",
       attempts: "How many times delivery has been tried.",
       sent_at: "When the mail provider accepted the message. Empty unless the status is sent.",
@@ -316,7 +320,11 @@ export const TABLES: Record<string, TableDoc> = {
   },
   saved_query: {
     description: "Searches Finance staff saved.",
-    columns: { owner: "User who saved the search (app_user.id).", name: "Name of the saved search.", params: "Filters stored with the search." },
+    columns: {
+      owner: "User who saved the search (app_user.id).",
+      name: "Name of the saved search.",
+      params: "Filters stored with the search.",
+    },
   },
   security_incident: {
     description: "Append-only record of each security incident, with the deadlines for notice and remediation.",
@@ -424,7 +432,11 @@ export function describeColumn(table: string, column: string): string | null {
 export const NOT_EXPORTED: { table: string; reason: string }[] = [
   { table: "auth_attempt", reason: "Sign-in throttle counters. They hold network details and no business data." },
   { table: "password_token", reason: "One-time password links. These are credentials." },
-  { table: "upload_ticket", reason: "Short-lived permissions to upload one attachment. They expire within minutes and are security plumbing, not records." },
+  {
+    table: "upload_ticket",
+    reason:
+      "Short-lived permissions to upload one attachment. They expire within minutes and are security plumbing, not records.",
+  },
   { table: "revoked_session", reason: "Signed-out session identifiers. These are credentials." },
   { table: "demo_reset", reason: "Internal log of environment resets." },
   { table: "schema_migration", reason: "Internal record of database upgrades." },

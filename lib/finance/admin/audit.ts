@@ -1,9 +1,10 @@
 import type { Tx } from "@/lib/db";
 import { roleLabel, type Role } from "@/lib/auth";
-import { PAGE_SIZE, isUuid } from "./params";
+import { PAGE_SIZE } from "./params";
+import { isUuid } from "@/lib/ids";
 import { actionVerb, entityLabel } from "@/lib/finance/audit-actions";
 import { describeOffset } from "@/lib/lifecycle/reminders";
-import { formatCount } from "@/lib/rules/money";
+import { formatCount, plural } from "@/lib/format";
 
 export { actionLabel, entityLabel } from "@/lib/finance/audit-actions";
 
@@ -49,7 +50,10 @@ const SELECT_AUDIT = `
   LEFT JOIN organization o ON e.entity = 'organization' AND o.id::text = e.entity_id
   LEFT JOIN organization ao ON ao.id::text = coalesce(e.after ->> 'org_id', e.before ->> 'org_id')`;
 
-export async function listAudit(tx: Tx, filters: { actor: string; entity: string; action: string; from: string; to: string; page: number }) {
+export async function listAudit(
+  tx: Tx,
+  filters: { actor: string; entity: string; action: string; from: string; to: string; page: number },
+) {
   const rows = await tx.query<AuditRow>(
     `${SELECT_AUDIT}
      WHERE ($1 = '' OR e.actor_id::text = $1)
@@ -59,25 +63,16 @@ export async function listAudit(tx: Tx, filters: { actor: string; entity: string
        AND ($5 = '' OR e.at < (($5::date) + 1)::timestamp AT TIME ZONE 'America/New_York')
      ORDER BY e.at DESC, e.id DESC
      LIMIT ${PAGE_SIZE} OFFSET $6`,
-    [filters.actor && isUuid(filters.actor) ? filters.actor : "", filters.entity, filters.action, filters.from, filters.to, (filters.page - 1) * PAGE_SIZE]
+    [
+      filters.actor && isUuid(filters.actor) ? filters.actor : "",
+      filters.entity,
+      filters.action,
+      filters.from,
+      filters.to,
+      (filters.page - 1) * PAGE_SIZE,
+    ],
   );
   return { rows, total: rows[0]?.full_count ?? 0 };
-}
-
-export async function recentActivity(tx: Tx, quiet: string[], limit = 10) {
-  return tx.query<AuditRow & { initiative_name: string | null }>(
-    `SELECT q.*, si.name AS initiative_name FROM (
-       ${SELECT_AUDIT}
-       WHERE e.action <> ALL ($1::text[]) AND (u.email IS NULL OR u.email <> 'system.scheduler@ledgerline.example')
-       ORDER BY e.at DESC, e.id DESC
-       LIMIT ${limit}
-     ) q
-     LEFT JOIN submission s2 ON q.entity = 'submission' AND s2.id::text = q.entity_id
-     LEFT JOIN assignment a2 ON a2.id = s2.assignment_id
-     LEFT JOIN initiative si ON si.id = a2.initiative_id
-     ORDER BY q.at DESC, q.id::bigint DESC`,
-    [quiet]
-  );
 }
 
 export async function orgActivity(tx: Tx, orgId: string, limit = 40) {
@@ -86,7 +81,7 @@ export async function orgActivity(tx: Tx, orgId: string, limit = 40) {
      WHERE sa.org_id = $1
      ORDER BY e.at DESC, e.id DESC
      LIMIT ${limit}`,
-    [orgId]
+    [orgId],
   );
 }
 
@@ -121,15 +116,30 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
     case "organization":
       return { actor, verb, subject: label };
     case "assignment":
-      return { actor, verb: "added an award for", subject: `${text(after.org_name) || "an organization"} under ${text(after.initiative_code) || "an initiative"}` };
+      return {
+        actor,
+        verb: "added an award for",
+        subject: `${text(after.org_name) || "an organization"} under ${text(after.initiative_code) || "an initiative"}`,
+      };
     case "app_user":
-      if (row.action === "role_change") return { actor, verb, subject: `${label} from ${roleLabel(text(before.role) as Role)} to ${roleLabel(text(after.role) as Role)}` };
-      if (row.action === "password_set" && row.actor_id && row.actor_id === row.entity_id) return { actor, verb: "set their password", subject: "" };
+      if (row.action === "role_change")
+        return {
+          actor,
+          verb,
+          subject: `${label} from ${roleLabel(text(before.role) as Role)} to ${roleLabel(text(after.role) as Role)}`,
+        };
+      if (row.action === "password_set" && row.actor_id && row.actor_id === row.entity_id)
+        return { actor, verb: "set their password", subject: "" };
       return { actor, verb, subject: label };
     case "user":
       return { actor, verb, subject: "" };
     case "reminder_rule": {
-      const offset = typeof after.offset_days === "number" ? after.offset_days : typeof before.offset_days === "number" ? before.offset_days : null;
+      const offset =
+        typeof after.offset_days === "number"
+          ? after.offset_days
+          : typeof before.offset_days === "number"
+            ? before.offset_days
+            : null;
       const period = text(after.period) || text(before.period);
       const which = offset === null ? "a reminder rule" : `the reminder rule ${describeOffset(offset).toLowerCase()}`;
       return { actor, verb, subject: period ? `${which} for ${period}` : which };
@@ -142,11 +152,16 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
       if (row.action === "export_all") {
         const tables = typeof after.tables === "number" ? after.tables : null;
         const total = typeof after.rows === "number" ? after.rows : null;
-        const detail = tables === null || total === null ? "" : ` (${formatCount(tables)} tables, ${formatCount(total)} rows)`;
+        const detail =
+          tables === null || total === null ? "" : ` (${formatCount(tables)} tables, ${formatCount(total)} rows)`;
         return { actor, verb, subject: `the complete data package${detail}` };
       }
       const rows = typeof after.rows === "number" ? after.rows : null;
-      return { actor, verb, subject: `${row.entity_id} submissions${rows === null ? "" : ` (${formatCount(rows)} ${rows === 1 ? "row" : "rows"})`}` };
+      return {
+        actor,
+        verb,
+        subject: `${row.entity_id} submissions${rows === null ? "" : ` (${formatCount(rows)} ${plural(rows, "row", "rows")})`}`,
+      };
     }
     default:
       return { actor, verb, subject: row.label ?? row.note ?? entityLabel(row.entity).toLowerCase() };
@@ -155,7 +170,7 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
 
 export async function auditFilterOptions(tx: Tx) {
   const actors = await tx.query<{ id: string; full_name: string }>(
-    `SELECT DISTINCT u.id, u.full_name FROM audit_event e JOIN app_user u ON u.id = e.actor_id ORDER BY u.full_name`
+    `SELECT DISTINCT u.id, u.full_name FROM audit_event e JOIN app_user u ON u.id = e.actor_id ORDER BY u.full_name`,
   );
   const entities = await tx.query<{ entity: string }>(`SELECT DISTINCT entity FROM audit_event ORDER BY entity`);
   const actions = await tx.query<{ action: string }>(`SELECT DISTINCT action FROM audit_event ORDER BY action`);

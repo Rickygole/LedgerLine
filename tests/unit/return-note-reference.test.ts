@@ -8,7 +8,17 @@ const live = vi.hoisted(() => ({ output: null as unknown }));
 
 vi.mock("@/lib/ai/model", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/ai/model")>();
-  return { ...original, callStructured: vi.fn(async () => ({ output: live.output, model: "m (local)", tokensIn: 1, tokensOut: 1, costUsd: 0, latencyMs: 1 })) };
+  return {
+    ...original,
+    callStructured: vi.fn(async () => ({
+      output: live.output,
+      model: "m (local)",
+      tokensIn: 1,
+      tokensOut: 1,
+      costUsd: 0,
+      latencyMs: 1,
+    })),
+  };
 });
 
 import { draftReturnNote, withoutRuleReferences } from "@/lib/ai/return-note";
@@ -33,12 +43,19 @@ describe("[US-044] a model sentence that names a rule never reaches the organiza
       ],
     });
     expect(removed).toBe(2);
-    expect((output as { sentences: { text: string }[] }).sentences.map((s) => s.text)).toEqual(["Please confirm the FY26 participant counts."]);
+    expect((output as { sentences: { text: string }[] }).sentences.map((s) => s.text)).toEqual([
+      "Please confirm the FY26 participant counts.",
+    ]);
   });
 
   it("covers the concern from the template instead", async () => {
-    live.output = { sentences: [{ text: "Please verify the participant counts as per rule PR-0:02.", rule_ids: ["PR-002"] }] };
-    const draft = await draftReturnNote(tx, { submissionId: "s1", concerns: PRESET_CONCERNS.filter((c) => c.ruleId === "PR-002") });
+    live.output = {
+      sentences: [{ text: "Please verify the participant counts as per rule PR-0:02.", rule_ids: ["PR-002"] }],
+    };
+    const draft = await draftReturnNote(tx, {
+      submissionId: "s1",
+      concerns: PRESET_CONCERNS.filter((c) => c.ruleId === "PR-002"),
+    });
     expect(draft.text).not.toMatch(/PR-0|rule/i);
     expect(draft.sentences.some((s) => s.ruleIds.includes("PR-002"))).toBe(true);
     expect(draft.dropped).toBe(1);

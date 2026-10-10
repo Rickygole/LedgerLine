@@ -26,7 +26,7 @@ beforeAll(async () => {
     await owner.query(
       `SELECT a.id AS assignment, f.id AS form FROM assignment a JOIN initiative i ON i.id = a.initiative_id AND i.fiscal_year_id = 'FY27' JOIN form_version f ON f.initiative_id = a.initiative_id AND f.status = 'published'
        WHERE a.org_id = $1 AND NOT EXISTS (SELECT 1 FROM submission s WHERE s.assignment_id = a.id AND s.period_id = 'FY27-MY') LIMIT 1`,
-      [orgId]
+      [orgId],
     )
   ).rows[0];
 });
@@ -55,25 +55,32 @@ async function startDraft(user: string): Promise<string> {
   await app.query(
     `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
      VALUES ($1, $2, $3, 'FY27-MY', $4, 'draft', app.uid(), app.uid())`,
-    [id, `LL-TEST-${id.slice(0, 8)}`, target.assignment, target.form]
+    [id, `LL-TEST-${id.slice(0, 8)}`, target.assignment, target.form],
   );
   return id;
 }
 
-const SNAPSHOT = JSON.stringify({ formVersionId: "f", answers: { contact_name: "Maria Santos" }, budget: [], attachments: [] });
+const SNAPSHOT = JSON.stringify({
+  formVersionId: "f",
+  answers: { contact_name: "Maria Santos" },
+  budget: [],
+  attachments: [],
+});
 
-async function transition(user: string, id: string, action: string, note: string | null = null, outbox: object | null = null) {
+async function transition(
+  user: string,
+  id: string,
+  action: string,
+  note: string | null = null,
+  outbox: object | null = null,
+) {
   await as(daniel);
   const lock = (await app.query("SELECT lock_version FROM submission WHERE id = $1", [id])).rows[0].lock_version;
   await as(user);
-  const result = await app.query("SELECT * FROM app.transition_submission($1, $2, $3, $4::jsonb, $5, $6::jsonb, NULL)", [
-    id,
-    action,
-    lock,
-    action === "submit" ? SNAPSHOT : null,
-    note,
-    outbox ? JSON.stringify(outbox) : null,
-  ]);
+  const result = await app.query(
+    "SELECT * FROM app.transition_submission($1, $2, $3, $4::jsonb, $5, $6::jsonb, NULL)",
+    [id, action, lock, action === "submit" ? SNAPSHOT : null, note, outbox ? JSON.stringify(outbox) : null],
+  );
   return result.rows[0] as { status: string; revision: number; lock_version: number };
 }
 
@@ -83,12 +90,16 @@ describe("[US-019] a submitter submits a completed report", () => {
       const id = await startDraft(maria);
       const result = await transition(maria, id, "submit");
       expect(result).toMatchObject({ status: "submitted", revision: 1 });
-      const revision = (await app.query("SELECT kind, snapshot, sha256 FROM submission_revision WHERE submission_id = $1", [id])).rows[0];
+      const revision = (
+        await app.query("SELECT kind, snapshot, sha256 FROM submission_revision WHERE submission_id = $1", [id])
+      ).rows[0];
       expect(revision.kind).toBe("submit");
       expect(revision.snapshot.answers.contact_name).toBe("Maria Santos");
       expect(revision.sha256).toMatch(/^[0-9a-f]{64}$/);
       await as(daniel);
-      const audit = (await app.query("SELECT action, actor_id FROM audit_event WHERE entity = 'submission' AND entity_id = $1", [id])).rows;
+      const audit = (
+        await app.query("SELECT action, actor_id FROM audit_event WHERE entity = 'submission' AND entity_id = $1", [id])
+      ).rows;
       expect(audit).toEqual([{ action: "submit", actor_id: maria }]);
     });
   });
@@ -115,7 +126,11 @@ describe("[US-020][BR-014] submitting queues an email with the submitted content
         body: "Contact name: Maria Santos\nTotal budget: $85,000.00",
       });
       await as(daniel);
-      const mail = (await app.query("SELECT to_email, template, body_text, submission_id FROM outbox WHERE submission_id = $1", [id])).rows;
+      const mail = (
+        await app.query("SELECT to_email, template, body_text, submission_id FROM outbox WHERE submission_id = $1", [
+          id,
+        ])
+      ).rows;
       expect(mail).toHaveLength(1);
       expect(mail[0].to_email).toBe("maria.santos@motthavenyouth.example.org");
       expect(mail[0].body_text).toContain("Total budget: $85,000.00");
@@ -126,7 +141,9 @@ describe("[US-020][BR-014] submitting queues an email with the submitted content
     await inTransaction(async () => {
       const id = await startDraft(maria);
       await app.query("SAVEPOINT s");
-      const code = await errorCode(() => transition(tomas, id, "submit", null, { to: "x@example.org", template: "t", subject: "s", body: "b" }));
+      const code = await errorCode(() =>
+        transition(tomas, id, "submit", null, { to: "x@example.org", template: "t", subject: "s", body: "b" }),
+      );
       expect(code).toBe("42501");
       await app.query("ROLLBACK TO SAVEPOINT s");
       await as(daniel);
@@ -168,7 +185,11 @@ describe("[US-044] finance requests an update and the organization resubmits", (
       expect(accepted.status).toBe("accepted");
 
       await as(daniel);
-      const actions = (await app.query("SELECT action FROM audit_event WHERE entity = 'submission' AND entity_id = $1 ORDER BY id", [id])).rows.map((r) => r.action);
+      const actions = (
+        await app.query("SELECT action FROM audit_event WHERE entity = 'submission' AND entity_id = $1 ORDER BY id", [
+          id,
+        ])
+      ).rows.map((r) => r.action);
       expect(actions).toEqual(["submit", "request_update", "submit", "accept"]);
     });
   });
@@ -180,7 +201,11 @@ describe("[US-044] finance requests an update and the organization resubmits", (
       await transition(daniel, id, "request_update", "Fix the contact name");
       await transition(maria, id, "submit");
       await as(daniel);
-      const revisions = (await app.query("SELECT revision, kind FROM submission_revision WHERE submission_id = $1 ORDER BY revision", [id])).rows;
+      const revisions = (
+        await app.query("SELECT revision, kind FROM submission_revision WHERE submission_id = $1 ORDER BY revision", [
+          id,
+        ])
+      ).rows;
       expect(revisions).toEqual([
         { revision: 1, kind: "submit" },
         { revision: 2, kind: "submit" },
@@ -211,7 +236,9 @@ describe("[US-044] finance requests an update and the organization resubmits", (
       const id = await startDraft(maria);
       await transition(maria, id, "submit");
       await as(daniel);
-      const code = await errorCode(() => app.query("SELECT * FROM app.transition_submission($1, 'accept', 0, NULL, NULL, NULL, NULL)", [id]));
+      const code = await errorCode(() =>
+        app.query("SELECT * FROM app.transition_submission($1, 'accept', 0, NULL, NULL, NULL, NULL)", [id]),
+      );
       expect(code).toBe("40001");
     });
   });
@@ -221,23 +248,47 @@ describe("[US-045] authorized staff correct submitted data with an audit record"
   it("needs a reason, adds a correction revision and records the old and new value", async () => {
     await inTransaction(async () => {
       const id = await startDraft(maria);
-      await app.query("INSERT INTO answer (submission_id, question_key, value, updated_by) VALUES ($1, 'contact_title', '\"Director\"', app.uid())", [id]);
+      await app.query(
+        "INSERT INTO answer (submission_id, question_key, value, updated_by) VALUES ($1, 'contact_title', '\"Director\"', app.uid())",
+        [id],
+      );
       await transition(maria, id, "submit");
       await as(daniel);
 
       await app.query("SAVEPOINT noreason");
-      expect(await errorCode(() => app.query("SELECT app.correct_answer($1, 'contact_title', '\"Executive Director\"', '', $2::jsonb)", [id, SNAPSHOT]))).toBe("23514");
+      expect(
+        await errorCode(() =>
+          app.query("SELECT app.correct_answer($1, 'contact_title', '\"Executive Director\"', '', $2::jsonb)", [
+            id,
+            SNAPSHOT,
+          ]),
+        ),
+      ).toBe("23514");
       await app.query("ROLLBACK TO SAVEPOINT noreason");
 
-      const revision = (await app.query("SELECT app.correct_answer($1, 'contact_title', '\"Executive Director\"', 'Confirmed by phone', $2::jsonb) AS rev", [id, SNAPSHOT])).rows[0].rev;
+      const revision = (
+        await app.query(
+          "SELECT app.correct_answer($1, 'contact_title', '\"Executive Director\"', 'Confirmed by phone', $2::jsonb) AS rev",
+          [id, SNAPSHOT],
+        )
+      ).rows[0].rev;
       expect(revision).toBe(2);
-      const value = (await app.query("SELECT value FROM answer WHERE submission_id = $1 AND question_key = 'contact_title'", [id])).rows[0].value;
+      const value = (
+        await app.query("SELECT value FROM answer WHERE submission_id = $1 AND question_key = 'contact_title'", [id])
+      ).rows[0].value;
       expect(value).toBe("Executive Director");
-      const audit = (await app.query("SELECT note, before, after FROM audit_event WHERE entity = 'submission' AND entity_id = $1 AND action = 'correction'", [id])).rows[0];
+      const audit = (
+        await app.query(
+          "SELECT note, before, after FROM audit_event WHERE entity = 'submission' AND entity_id = $1 AND action = 'correction'",
+          [id],
+        )
+      ).rows[0];
       expect(audit.note).toBe("Confirmed by phone");
       expect(audit.before).toEqual({ question_key: "contact_title", value: "Director" });
       expect(audit.after).toEqual({ question_key: "contact_title", value: "Executive Director" });
-      const kinds = (await app.query("SELECT kind FROM submission_revision WHERE submission_id = $1 ORDER BY revision", [id])).rows.map((r) => r.kind);
+      const kinds = (
+        await app.query("SELECT kind FROM submission_revision WHERE submission_id = $1 ORDER BY revision", [id])
+      ).rows.map((r) => r.kind);
       expect(kinds).toEqual(["submit", "correction"]);
     });
   });
@@ -248,10 +299,18 @@ describe("[US-045] authorized staff correct submitted data with an audit record"
       await transition(maria, id, "submit");
       await as(grace);
       await app.query("SAVEPOINT g");
-      expect(await errorCode(() => app.query("SELECT app.correct_answer($1, 'contact_title', '\"X\"', 'why', $2::jsonb)", [id, SNAPSHOT]))).toBe("42501");
+      expect(
+        await errorCode(() =>
+          app.query("SELECT app.correct_answer($1, 'contact_title', '\"X\"', 'why', $2::jsonb)", [id, SNAPSHOT]),
+        ),
+      ).toBe("42501");
       await app.query("ROLLBACK TO SAVEPOINT g");
       await as(maria);
-      expect(await errorCode(() => app.query("SELECT app.correct_answer($1, 'contact_title', '\"X\"', 'why', $2::jsonb)", [id, SNAPSHOT]))).toBe("42501");
+      expect(
+        await errorCode(() =>
+          app.query("SELECT app.correct_answer($1, 'contact_title', '\"X\"', 'why', $2::jsonb)", [id, SNAPSHOT]),
+        ),
+      ).toBe("42501");
     });
   });
 });
@@ -265,8 +324,8 @@ describe("[BR-006] one report per initiative and period", () => {
         app.query(
           `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
            VALUES (gen_random_uuid(), 'LL-TEST-DUP', $1, 'FY27-MY', $2, 'draft', app.uid(), app.uid())`,
-          [target.assignment, target.form]
-        )
+          [target.assignment, target.form],
+        ),
       );
       expect(code).toBe("23505");
     });
@@ -275,11 +334,11 @@ describe("[BR-006] one report per initiative and period", () => {
   it("gives an organization with several initiatives a separate report for each", async () => {
     const { rows } = await owner.query(
       `SELECT o.id, count(DISTINCT a.initiative_id)::int AS initiatives
-       FROM organization o JOIN assignment a ON a.org_id = o.id GROUP BY o.id HAVING count(DISTINCT a.initiative_id) > 1 LIMIT 1`
+       FROM organization o JOIN assignment a ON a.org_id = o.id GROUP BY o.id HAVING count(DISTINCT a.initiative_id) > 1 LIMIT 1`,
     );
     expect(rows[0].initiatives).toBeGreaterThan(1);
     const sharedKeys = await owner.query(
-      `SELECT count(*)::int AS n FROM (SELECT assignment_id, period_id FROM submission GROUP BY 1, 2 HAVING count(*) > 1) d`
+      `SELECT count(*)::int AS n FROM (SELECT assignment_id, period_id FROM submission GROUP BY 1, 2 HAVING count(*) > 1) d`,
     );
     expect(sharedKeys.rows[0].n).toBe(0);
   });
@@ -292,19 +351,21 @@ describe("[BR-005] an initiative can fund one organization or more than one hund
       const initiative = (
         await owner.query(
           `INSERT INTO initiative (code, name, category, description, fiscal_year_id, total_funding)
-           VALUES ('ZZ-TEST-BIG', 'Capacity fixture', 'Education', 'Capacity check', (SELECT id FROM fiscal_year ORDER BY id LIMIT 1), 1010000) RETURNING id`
+           VALUES ('ZZ-TEST-BIG', 'Capacity fixture', 'Education', 'Capacity check', (SELECT id FROM fiscal_year ORDER BY id LIMIT 1), 1010000) RETURNING id`,
         )
       ).rows[0].id as string;
       await owner.query(
         `INSERT INTO organization (ein, legal_name, org_type, borough, address_line, postal_code)
-         SELECT '99-' || lpad(g::text, 7, '0'), 'Capacity Fixture ' || g, 'cbo', 'Bronx', '1 Main St', '10451' FROM generate_series(1, 101) g`
+         SELECT '99-' || lpad(g::text, 7, '0'), 'Capacity Fixture ' || g, 'cbo', 'Bronx', '1 Main St', '10451' FROM generate_series(1, 101) g`,
       );
       await owner.query(
         `INSERT INTO assignment (initiative_id, org_id, award_amount)
          SELECT $1, id, 10000 FROM organization WHERE ein LIKE '99-%'`,
-        [initiative]
+        [initiative],
       );
-      const count = (await owner.query("SELECT count(*)::int AS n FROM assignment WHERE initiative_id = $1", [initiative])).rows[0].n;
+      const count = (
+        await owner.query("SELECT count(*)::int AS n FROM assignment WHERE initiative_id = $1", [initiative])
+      ).rows[0].n;
       expect(count).toBe(101);
     } finally {
       await owner.query("ROLLBACK");
@@ -331,7 +392,12 @@ describe("[US-036][US-013] finance administers its own users, each person has an
     try {
       const email = (await owner.query("SELECT email FROM app_user WHERE id = $1", [maria])).rows[0].email as string;
       await owner.query("SAVEPOINT dup");
-      const duplicate = await errorCode(() => owner.query("INSERT INTO app_user (email, full_name, role, org_id) SELECT email, 'Copy', role, org_id FROM app_user WHERE id = $1", [maria]));
+      const duplicate = await errorCode(() =>
+        owner.query(
+          "INSERT INTO app_user (email, full_name, role, org_id) SELECT email, 'Copy', role, org_id FROM app_user WHERE id = $1",
+          [maria],
+        ),
+      );
       expect(duplicate).toBe("23505");
       await owner.query("ROLLBACK TO SAVEPOINT dup");
       const before = (await owner.query("SELECT count(*)::int AS n FROM app.login_lookup($1)", [email])).rows[0].n;
@@ -339,7 +405,11 @@ describe("[US-036][US-013] finance administers its own users, each person has an
       await owner.query("UPDATE app_user SET active = false WHERE id = $1", [maria]);
       const after = (await owner.query("SELECT count(*)::int AS n FROM app.login_lookup($1)", [email])).rows[0].n;
       expect(after).toBe(0);
-      const ids = (await owner.query("SELECT count(DISTINCT id)::int AS n FROM app.login_lookup('james.okafor@motthavenyouth.example.org')")).rows[0].n;
+      const ids = (
+        await owner.query(
+          "SELECT count(DISTINCT id)::int AS n FROM app.login_lookup('james.okafor@motthavenyouth.example.org')",
+        )
+      ).rows[0].n;
       expect(ids).toBe(1);
     } finally {
       await owner.query("ROLLBACK");

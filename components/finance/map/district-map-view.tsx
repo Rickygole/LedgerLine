@@ -19,13 +19,25 @@ export type MapDistrict = {
   label: string;
 };
 
-export function DistrictMapView({ viewBox, districts, outlines, initial, caption }: { viewBox: string; districts: MapDistrict[]; outlines: string[]; initial: number | null; caption: string }) {
+export function DistrictMapView({
+  viewBox,
+  districts,
+  outlines,
+  initial,
+  caption,
+}: {
+  viewBox: string;
+  districts: MapDistrict[];
+  outlines: string[];
+  initial: number | null;
+  caption: string;
+}) {
   const [active, setActive] = useState<number | null>(initial);
   const [focused, setFocused] = useState<number | null>(null);
   const current = districts.find((d) => d.district === active) ?? null;
   const ring = districts.find((d) => d.district === focused) ?? null;
   return (
-    <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_13rem] md:items-start">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_13rem] md:items-start">
       <svg viewBox={viewBox} className="block h-auto w-full max-w-[520px]" role="group" aria-label={caption}>
         {districts.map((d) => {
           const shape = (
@@ -39,7 +51,12 @@ export function DistrictMapView({ viewBox, districts, outlines, initial, caption
               className="transition-[fill,opacity] duration-[120ms] ease-out motion-reduce:transition-none"
             />
           );
-          if (!d.href) return <g key={d.district} aria-hidden="true">{shape}</g>;
+          if (!d.href)
+            return (
+              <g key={d.district} aria-hidden="true">
+                {shape}
+              </g>
+            );
           return (
             <a
               key={d.district}
@@ -62,7 +79,9 @@ export function DistrictMapView({ viewBox, districts, outlines, initial, caption
           {outlines.map((path, i) => (
             <path key={i} d={path} fill="none" stroke="#a9aeb1" strokeWidth={1} strokeLinejoin="round" />
           ))}
-          {current && !current.dim && current !== ring ? <path d={current.path} fill="none" stroke={MAP_INK} strokeWidth={2.5} strokeLinejoin="round" /> : null}
+          {current && !current.dim && current !== ring ? (
+            <path d={current.path} fill="none" stroke={MAP_INK} strokeWidth={2.5} strokeLinejoin="round" />
+          ) : null}
           {ring ? (
             <>
               <path d={ring.path} fill="none" stroke={FOCUS_RING} strokeWidth={5} strokeLinejoin="round" />
@@ -77,30 +96,45 @@ export function DistrictMapView({ viewBox, districts, outlines, initial, caption
           <ul className="mt-1.5 space-y-1 text-sm text-ink">
             {GEO_BIN_LABEL.map((label, bin) => (
               <li key={label} className="flex items-center gap-2">
-                <span aria-hidden="true" className="inline-block h-3 w-4 border border-line" style={{ background: GEO_FILL[bin] }} />
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-3 w-4 border border-line"
+                  style={{ background: GEO_FILL[bin] }}
+                />
                 {label}
               </li>
             ))}
           </ul>
         </div>
-        <div aria-live="polite" className="min-h-[8.5rem] border-l-4 border-harbor-900 bg-white py-2 pl-3 pr-2 text-sm leading-5 ring-1 ring-inset ring-line">
+        <div
+          aria-live="polite"
+          className="min-h-[8.5rem] border-l-4 border-harbor-900 bg-white py-2 pl-3 pr-2 text-sm leading-5 ring-1 ring-inset ring-line"
+        >
           {current ? (
             <>
               <p className="font-bold text-ink">District {current.district}</p>
-              <p className="text-ink">{current.member ? `Council Member ${current.member}` : "No Council Member on file"}</p>
+              <p className="text-ink">
+                {current.member ? `Council Member ${current.member}` : "No Council Member on file"}
+              </p>
               <p className="text-muted">{current.boroughs}</p>
               <p className="mt-1 text-ink">
                 {current.due === 0 ? (
                   "No reports due"
                 ) : (
                   <>
-                    <span className={current.missing > 0 ? "num font-bold text-bad" : "num font-bold"}>{current.missing}</span> of <span className="num">{current.due}</span> missing
+                    <span className={current.missing > 0 ? "num font-bold text-bad" : "num font-bold"}>
+                      {current.missing}
+                    </span>{" "}
+                    of <span className="num">{current.due}</span> missing
                     {current.missing > 0 ? <span className="num text-muted"> ({current.share} percent)</span> : null}
                   </>
                 )}
               </p>
               {current.href && current.due > 0 ? (
-                <Link href={current.href} className="mt-1 inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover">
+                <Link
+                  href={current.href}
+                  className="mt-1 inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                >
                   View these reports<span className="sr-only"> for District {current.district}</span>
                 </Link>
               ) : null}

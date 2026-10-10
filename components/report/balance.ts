@@ -1,6 +1,7 @@
-import { formatCurrency, toCents } from "@/lib/rules/money";
+import { toCents } from "@/lib/rules/money";
+import { formatCurrency } from "@/lib/format";
 
-export type BalanceTone = "ok" | "warn" | "bad";
+type BalanceTone = "ok" | "warn" | "bad";
 
 export function balanceCopy(total: number, award: number): { tone: BalanceTone; text: string } {
   const diff = toCents(total) - toCents(award);

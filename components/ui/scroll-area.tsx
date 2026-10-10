@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
-export function ScrollArea({ className, label = "Scrollable table", children }: { className?: string; label?: string; children: React.ReactNode }) {
+export function ScrollArea({
+  className,
+  label = "Scrollable table",
+  children,
+}: {
+  className?: string;
+  label?: string;
+  children: React.ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(false);
   const [scrollable, setScrollable] = useState(false);
@@ -27,14 +35,20 @@ export function ScrollArea({ className, label = "Scrollable table", children }: 
 
   return (
     <div className="relative min-w-0 last:overflow-hidden last:rounded-b">
-      <div ref={ref} tabIndex={scrollable ? 0 : undefined} role={scrollable ? "region" : undefined} aria-label={scrollable ? label : undefined} className={cn("relative overflow-x-auto overscroll-x-contain", className)}>
+      <div
+        ref={ref}
+        tabIndex={scrollable ? 0 : undefined}
+        role={scrollable ? "region" : undefined}
+        aria-label={scrollable ? label : undefined}
+        className={cn("relative overflow-x-auto overscroll-x-contain", className)}
+      >
         {children}
       </div>
       <span
         aria-hidden="true"
         className={cn(
           "pointer-events-none absolute inset-y-0 right-0 z-[11] w-px bg-line-strong",
-          more ? "opacity-100" : "opacity-0"
+          more ? "opacity-100" : "opacity-0",
         )}
       />
     </div>

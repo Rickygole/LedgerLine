@@ -4,24 +4,38 @@ import { AlertTriangle } from "lucide-react";
 import { ReportEditor } from "@/components/report/report-editor";
 import { ReportHeader } from "@/components/report/report-header";
 import { SubmittedCopy } from "@/components/report/submitted-copy";
-import { requireUser } from "@/lib/auth";
+import { getCurrentUser, requireUser } from "@/lib/auth";
 import { daysPastDue, formatDateTime } from "@/lib/dates";
 import { reportState } from "@/lib/reporting";
 import { withClaims } from "@/lib/db";
 import { loadEditorPayload, loadReport } from "@/lib/report/data";
 import { loadFileIds, loadLatestRevision, loadReturnNote } from "@/lib/report/revision";
 import { formatBytes } from "@/lib/report/upload-rules";
+import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Report" };
-
-const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const user = isUuid(id) ? await getCurrentUser().catch(() => null) : null;
+  if (!user) return { title: "Report" };
+  const row = await withClaims(user.id, (tx) =>
+    tx.one<{ name: string; period: string }>(
+      `SELECT i.name, p.label AS period FROM submission s
+       JOIN assignment a ON a.id = s.assignment_id
+       JOIN initiative i ON i.id = a.initiative_id
+       JOIN reporting_period p ON p.id = s.period_id
+       WHERE s.id = $1`,
+      [id]
+    )
+  ).catch(() => null);
+  return { title: row ? `${row.name}, ${row.period}` : "Report" };
+}
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!ID.test(id)) notFound();
+  if (!isUuid(id)) notFound();
   const user = await requireUser(["cbo_submitter"]);
 
   const data = await withClaims(user.id, async (tx) => {

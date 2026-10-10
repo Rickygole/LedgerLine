@@ -4,7 +4,15 @@ import { Logo } from "./logo";
 
 const link = "text-white underline underline-offset-2 hover:decoration-2";
 
-export function SiteFooter({ className, signedIn = false, width = "max-w-[1376px]" }: { className?: string; signedIn?: boolean; width?: string }) {
+export function SiteFooter({
+  className,
+  signedIn = false,
+  width = "max-w-[1376px]",
+}: {
+  className?: string;
+  signedIn?: boolean;
+  width?: string;
+}) {
   const service = [
     ...(signedIn ? [] : [{ href: "/login", label: "Sign in" }]),
     { href: "/help", label: "Help and contact" },
@@ -20,7 +28,10 @@ export function SiteFooter({ className, signedIn = false, width = "max-w-[1376px
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-[2fr_1fr_1fr] sm:gap-10">
           <div className="col-span-2 sm:col-span-1">
             <Logo />
-            <p className="mt-3.5 max-w-[420px]">Reporting for organizations that receive New York City Council discretionary funding, and review tools for the Council Finance Division.</p>
+            <p className="mt-3.5 max-w-[420px]">
+              Reporting for organizations that receive New York City Council discretionary funding, and review tools for
+              the Council Finance Division.
+            </p>
           </div>
           <nav aria-labelledby="footer-service">
             <h2 id="footer-service" className="mb-2 text-sm font-semibold text-white">

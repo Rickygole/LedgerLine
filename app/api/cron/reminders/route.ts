@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { logError } from "@/lib/ops/log";
 import { NextResponse, type NextRequest } from "next/server";
 import { anonymous, withClaims } from "@/lib/db";
 import { dispatchFor } from "@/lib/outbox-dispatch";
@@ -21,7 +22,8 @@ function authorized(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  if (!process.env.CRON_SECRET) return NextResponse.json({ error: "The scheduler is not configured." }, { status: 503 });
+  if (!process.env.CRON_SECRET)
+    return NextResponse.json({ error: "The scheduler is not configured." }, { status: 503 });
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
   const today = todayInNewYork();
@@ -31,7 +33,9 @@ export async function GET(request: NextRequest) {
   const result = await withClaims(scheduler, async (tx) => {
     const who = await tx.one<{ email: string }>("SELECT email FROM app_user WHERE id = app.uid()");
     if (who?.email !== SCHEDULER_EMAIL) throw new Error("scheduler identity mismatch");
-    const periods = await tx.query<{ id: string; due_on: string }>("SELECT id, due_on::text FROM reporting_period ORDER BY due_on");
+    const periods = await tx.query<{ id: string; due_on: string }>(
+      "SELECT id, due_on::text FROM reporting_period ORDER BY due_on",
+    );
     const open = periods.filter((p) => Math.abs(daysBetween(p.due_on, today)) <= OPEN_WINDOW_DAYS);
     const queued: Record<string, number> = {};
     for (const period of open) {
@@ -43,8 +47,8 @@ export async function GET(request: NextRequest) {
 
   const delivery = await dispatchFor(scheduler, { limit: 100, rounds: 5 });
 
-  const orphans = await withClaims(scheduler, (tx) => sweepOrphanFiles(tx)).catch((error: unknown) => {
-    console.error("orphan sweep failed", error);
+  const orphans = await withClaims(scheduler, (tx) => sweepOrphanFiles(tx)).catch(async (error: unknown) => {
+    await logError("orphan_sweep_failed", error);
     return { checked: 0, deleted: 0, failed: true };
   });
 

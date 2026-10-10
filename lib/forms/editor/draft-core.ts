@@ -4,11 +4,11 @@ import { DRAFTABLE_TYPES, slugKey, uniqueKey } from "@/lib/forms/editor/definiti
 import type { FormDefinition, Question } from "@/lib/rules/types";
 
 export const SECTION_KEYS = ["performance", "narrative", "organization"] as const;
-export type DraftSection = (typeof SECTION_KEYS)[number];
+type DraftSection = (typeof SECTION_KEYS)[number];
 
 export const LIBRARY_KEYS = STANDARD_QUESTIONS.map((q) => q.key);
 
-export type ProposedColumn = { label: string; type: "text" | "integer" | "currency" | "percent" };
+type ProposedColumn = { label: string; type: "text" | "integer" | "currency" | "percent" };
 
 export type ProposedField = {
   label: string;
@@ -39,11 +39,11 @@ export function attachStructure(paragraphs: string[], structure: TemplateStructu
   return paragraphs;
 }
 
-export function structureOf(paragraphs: string[]): TemplateStructure | undefined {
+function structureOf(paragraphs: string[]): TemplateStructure | undefined {
   return STRUCTURES.get(paragraphs);
 }
 
-export const COLUMN_TYPES = ["text", "integer", "currency", "percent"] as const;
+const COLUMN_TYPES = ["text", "integer", "currency", "percent"] as const;
 
 export const proposalSchema = z.object({
   questions: z.array(
@@ -59,7 +59,7 @@ export const proposalSchema = z.object({
       columns: z.array(z.object({ label: z.string().min(1), type: z.enum(COLUMN_TYPES) })).optional(),
       section_title: z.string().optional(),
       citation: z.object({ paragraph: z.number().int(), quote: z.string() }),
-    })
+    }),
   ),
 });
 
@@ -114,7 +114,10 @@ export function quotedData(paragraphs: string[]): string {
   return paragraphs.map((p, i) => `[${i + 1}] "${p.replace(/"/g, "'")}"`).join("\n");
 }
 
-export function checkCitation(paragraphs: string[], citation: { paragraph: number; quote: string } | undefined): boolean {
+export function checkCitation(
+  paragraphs: string[],
+  citation: { paragraph: number; quote: string } | undefined,
+): boolean {
   if (!citation || !Number.isInteger(citation.paragraph)) return false;
   const text = paragraphs[citation.paragraph - 1];
   if (text === undefined) return false;
@@ -130,26 +133,35 @@ export function checkField(paragraphs: string[], field: ProposedField): FieldChe
   const citationOk = checkCitation(paragraphs, field.citation);
   if (!citationOk) problems.push("Citation not found in the template");
   if (!field.label.trim()) problems.push("Label is empty");
-  if (!(DRAFTABLE_TYPES as string[]).includes(field.type) && field.type !== "table") problems.push("Type is not allowed");
+  if (!(DRAFTABLE_TYPES as string[]).includes(field.type) && field.type !== "table")
+    problems.push("Type is not allowed");
   if (field.type === "table") {
     const columns = field.columns ?? [];
-    if (columns.length === 0 || columns.length > 8 || columns.some((column) => !column.label.trim())) problems.push("A table needs one to eight named columns");
+    if (columns.length === 0 || columns.length > 8 || columns.some((column) => !column.label.trim()))
+      problems.push("A table needs one to eight named columns");
   }
   if (!(SECTION_KEYS as readonly string[]).includes(field.section)) problems.push("Section is not allowed");
-  if (field.library_key !== undefined && !LIBRARY_KEYS.includes(field.library_key)) problems.push("Library question does not exist");
+  if (field.library_key !== undefined && !LIBRARY_KEYS.includes(field.library_key))
+    problems.push("Library question does not exist");
   if (field.type === "select") {
     const options = (field.options ?? []).map((option) => option.trim());
-    if (options.length < 2 || options.some((option) => !option)) problems.push("A choice list needs at least two options");
+    if (options.length < 2 || options.some((option) => !option))
+      problems.push("A choice list needs at least two options");
   }
-  if (field.max_words !== undefined && (!Number.isInteger(field.max_words) || field.max_words < 1)) problems.push("Word limit must be at least 1");
+  if (field.max_words !== undefined && (!Number.isInteger(field.max_words) || field.max_words < 1))
+    problems.push("Word limit must be at least 1");
   return { ok: problems.length === 0, citationOk, problems };
 }
 
 export function injectionNotices(paragraphs: string[]): string[] {
-  const pattern = /(ignore|disregard|forget)\b.{0,30}\b(previous|prior|above|earlier)\b.{0,20}\b(instruction|prompt|rule)s?|\b(you must|you are now|system prompt)\b/i;
+  const pattern =
+    /(ignore|disregard|forget)\b.{0,30}\b(previous|prior|above|earlier)\b.{0,20}\b(instruction|prompt|rule)s?|\b(you must|you are now|system prompt)\b/i;
   const notices: string[] = [];
   paragraphs.forEach((text, index) => {
-    if (pattern.test(text)) notices.push(`Paragraph ${index + 1} reads like an instruction to the drafting tool. It was treated as template text and ignored.`);
+    if (pattern.test(text))
+      notices.push(
+        `Paragraph ${index + 1} reads like an instruction to the drafting tool. It was treated as template text and ignored.`,
+      );
   });
   return notices;
 }
@@ -189,17 +201,29 @@ const YES_NO_TAIL = /\s*[(\[]?\s*yes\s*(?:\/|\bor\b|\|)\s*no\s*[)\]]?\s*[.?]?\s*
 
 function plausibleOptions(parts: string[]): boolean {
   if (parts.length < 2 || parts.length > 12) return false;
-  return parts.every((part) => part.length > 0 && part.length <= 40 && part.split(/\s+/).length <= 5 && !/^(e\.g\.|i\.e\.|for example|such as)/i.test(part));
+  return parts.every(
+    (part) =>
+      part.length > 0 &&
+      part.length <= 40 &&
+      part.split(/\s+/).length <= 5 &&
+      !/^(e\.g\.|i\.e\.|for example|such as)/i.test(part),
+  );
 }
 
 function splitList(inner: string): string[] | null {
   if (/\b(words?|characters?|optional|required|max|maximum)\b/i.test(inner)) return null;
   if (/[\/|;]/.test(inner)) {
-    const parts = inner.split(/\s*[\/|;]\s*/).map((part) => collapse(part).replace(/^(?:or|and)\s+/i, "")).filter(Boolean);
+    const parts = inner
+      .split(/\s*[\/|;]\s*/)
+      .map((part) => collapse(part).replace(/^(?:or|and)\s+/i, ""))
+      .filter(Boolean);
     return plausibleOptions(parts) ? parts : null;
   }
   if (/,\s*(?:or|and)\s+\S/i.test(inner) || /\s+or\s+/i.test(inner)) {
-    const parts = inner.split(/\s*,\s*(?:or\s+|and\s+)?|\s+or\s+/i).map((part) => collapse(part)).filter(Boolean);
+    const parts = inner
+      .split(/\s*,\s*(?:or\s+|and\s+)?|\s+or\s+/i)
+      .map((part) => collapse(part))
+      .filter(Boolean);
     return plausibleOptions(parts) ? parts : null;
   }
   return null;
@@ -219,18 +243,29 @@ function trailingOptions(stem: string): { stem: string; options: string[] } | nu
   const afterVerb = stem.match(/^(.*?\b(?:choose|select|pick)(?: one| all that apply)?(?: of)?\s*:)\s*(.+)$/i);
   if (afterVerb) {
     const options = splitList(afterVerb[2].replace(/\.$/, ""));
-    if (options) return { stem: afterVerb[1].replace(/\s*(?:choose|select|pick)(?: one| all that apply)?(?: of)?\s*:$/i, "").trim() || afterVerb[1], options };
+    if (options)
+      return {
+        stem:
+          afterVerb[1].replace(/\s*(?:choose|select|pick)(?: one| all that apply)?(?: of)?\s*:$/i, "").trim() ||
+          afterVerb[1],
+        options,
+      };
   }
   return null;
 }
 
-function detectType(stem: string, hadQuestionMark: boolean): { type: Exclude<(typeof DRAFTABLE_TYPES)[number], never>; maxWords?: number } {
+function detectType(
+  stem: string,
+  hadQuestionMark: boolean,
+): { type: Exclude<(typeof DRAFTABLE_TYPES)[number], never>; maxWords?: number } {
   const text = stem.toLowerCase();
   if (/\b(yes\s*\/\s*no|yes or no)\b/.test(text)) return { type: "yesno" };
-  if (hadQuestionMark && /^(did|does|do|is|are|was|were|has|have|will|can|could)\b/.test(text)) return { type: "yesno" };
+  if (hadQuestionMark && /^(did|does|do|is|are|was|were|has|have|will|can|could)\b/.test(text))
+    return { type: "yesno" };
   if (/^(number of|how many|count of|total number of|total count)/.test(text)) return { type: "integer" };
   if (/\bpercent(age)?\b|%/.test(text)) return { type: "percent" };
-  if (/^(describe|explain|summarize|discuss|tell us|provide a (narrative|description|summary))/.test(text)) return { type: "textarea", maxWords: 300 };
+  if (/^(describe|explain|summarize|discuss|tell us|provide a (narrative|description|summary))/.test(text))
+    return { type: "textarea", maxWords: 300 };
   if (/\be-?mail\b/.test(text)) return { type: "email" };
   if (/\bphone\b|\btelephone\b/.test(text)) return { type: "phone" };
   if (/^date\b|\bdate of\b|\bdate\b.*\b(last|final|first)\b/.test(text)) return { type: "date" };
@@ -240,21 +275,26 @@ function detectType(stem: string, hadQuestionMark: boolean): { type: Exclude<(ty
 
 function detectSection(label: string, type: string): DraftSection {
   if (type === "textarea") return "narrative";
-  if (/\b(contact|organization|agency|director|address|phone|email|ein)\b/i.test(label) && type !== "integer") return "organization";
+  if (/\b(contact|organization|agency|director|address|phone|email|ein)\b/i.test(label) && type !== "integer")
+    return "organization";
   return "performance";
 }
 
 function sectionForHeading(heading: string | undefined, label: string, type: string): DraftSection {
   if (heading) {
-    if (/\b(narrative|story|stories|challenges?|outcomes?|description|accomplishments?)\b/i.test(heading) && type === "textarea") return "narrative";
+    if (
+      /\b(narrative|story|stories|challenges?|outcomes?|description|accomplishments?)\b/i.test(heading) &&
+      type === "textarea"
+    )
+      return "narrative";
     if (/\b(organization|contact|about (you|your))\b/i.test(heading) && type !== "integer") return "organization";
   }
   return detectSection(label, type);
 }
 
-const HEADING_PREFIX = /^\s*(?:section|part|module)\s+[0-9a-z]{1,4}\s*[:.\-–—]\s*/i;
+const HEADING_PREFIX = /^\s*(?:section|part|module)\s+[0-9a-z]{1,4}\s*[:.\-\u2013\u2014]\s*/i;
 
-export function headingTitle(text: string): string {
+function headingTitle(text: string): string {
   const cleaned = collapse(text.replace(HEADING_PREFIX, "")).replace(/[:.\s]+$/, "");
   return cleaned.length > 80 ? cleaned.slice(0, 80).trim() : cleaned;
 }
@@ -262,7 +302,8 @@ export function headingTitle(text: string): string {
 function inferStructure(paragraphs: string[]): TemplateStructure {
   const headings: TemplateStructure["headings"] = [];
   paragraphs.forEach((text, index) => {
-    if (HEADING_PREFIX.test(text) && !/[?]$/.test(text.trim()) && text.length <= 100) headings.push({ paragraph: index + 1, text });
+    if (HEADING_PREFIX.test(text) && !/[?]$/.test(text.trim()) && text.length <= 100)
+      headings.push({ paragraph: index + 1, text });
   });
   return { headings, tables: [], listItems: [] };
 }
@@ -271,14 +312,22 @@ function columnType(label: string): ProposedColumn["type"] {
   const text = label.toLowerCase();
   if (/\bpercent(age)?\b|%/.test(text)) return "percent";
   if (/\b(amount|cost|dollars?|\$|funds?|revenue|spent|budget)\b/.test(text)) return "currency";
-  if (/\b(number|count|total|how many|sessions?|hours|participants?|clients|people|attendees|enrolled|served|trained|held|completed|seniors|youth|students|visits|meals|made|loans?|events|workshops|referrals|meetings|classes)\b/.test(text)) return "integer";
+  if (
+    /\b(number|count|total|how many|sessions?|hours|participants?|clients|people|attendees|enrolled|served|trained|held|completed|seniors|youth|students|visits|meals|made|loans?|events|workshops|referrals|meetings|classes)\b/.test(
+      text,
+    )
+  )
+    return "integer";
   return "text";
 }
 
 function tablePromptLabel(text: string): string {
   const { body } = stripNumber(text);
   const label = collapse(body)
-    .replace(/\s*(?:in|using|with)?\s*(?:the|this)?\s*(?:table|grid|chart)?\s*(?:below|as follows|that follows|following)\s*[.:]?$/i, "")
+    .replace(
+      /\s*(?:in|using|with)?\s*(?:the|this)?\s*(?:table|grid|chart)?\s*(?:below|as follows|that follows|following)\s*[.:]?$/i,
+      "",
+    )
     .replace(/[.:\s]+$/, "")
     .trim();
   return label;
@@ -299,10 +348,15 @@ function classify(paragraph: string, index: number, heading: string | undefined,
   const optional = /\(\s*optional\s*\)/i.test(body);
   let working = body.replace(/\(\s*optional\s*\)\.?/i, "").trim();
   let maxWords: number | undefined;
-  working = working.replace(/\s*\(\s*(?:max(?:imum)?\.?|up to|limit)?\s*(\d{1,4})\s*words?(?:\s*(?:max(?:imum)?|or fewer|or less))?\s*\)\s*/i, (_m, n: string) => {
-    maxWords = Number(n);
-    return " ";
-  }).trim();
+  working = working
+    .replace(
+      /\s*\(\s*(?:max(?:imum)?\.?|up to|limit)?\s*(\d{1,4})\s*words?(?:\s*(?:max(?:imum)?|or fewer|or less))?\s*\)\s*/i,
+      (_m, n: string) => {
+        maxWords = Number(n);
+        return " ";
+      },
+    )
+    .trim();
   const hadQuestionMark = /\?\s*$/.test(working) || /\?\s*\(/.test(working) || /\?\s*yes\s*(\/|or)\s*no/i.test(working);
   let options: string[] | undefined;
   let stem = working;
@@ -320,9 +374,18 @@ function classify(paragraph: string, index: number, heading: string | undefined,
       options = found.options;
     }
   }
-  stem = stem.replace(/\(\s*yes\s*\/\s*no\s*\)/i, "").replace(/[:\s]+$/, "").trim();
-  const detected = forceYesNo ? { type: "yesno" as const, maxWords: undefined } : options ? { type: "select" as const, maxWords: undefined } : detectType(stem, hadQuestionMark);
-  const label = collapse(stem.replace(/^(describe|explain)\b/i, (m) => m[0].toUpperCase() + m.slice(1).toLowerCase())).replace(/[.:\s]+$/, "");
+  stem = stem
+    .replace(/\(\s*yes\s*\/\s*no\s*\)/i, "")
+    .replace(/[:\s]+$/, "")
+    .trim();
+  const detected = forceYesNo
+    ? { type: "yesno" as const, maxWords: undefined }
+    : options
+      ? { type: "select" as const, maxWords: undefined }
+      : detectType(stem, hadQuestionMark);
+  const label = collapse(
+    stem.replace(/^(describe|explain)\b/i, (m) => m[0].toUpperCase() + m.slice(1).toLowerCase()),
+  ).replace(/[.:\s]+$/, "");
   if (!label) return null;
   const field: ProposedField = {
     label,
@@ -341,7 +404,12 @@ function classify(paragraph: string, index: number, heading: string | undefined,
 
 function isLabelAnswerTable(rows: TemplateCell[][]): boolean {
   if (rows.length < 2) return false;
-  if (!rows.every((row) => row.length >= 2 && row[0].text.trim() !== "" && row.slice(1).every((cell) => cell.text.trim() === ""))) return false;
+  if (
+    !rows.every(
+      (row) => row.length >= 2 && row[0].text.trim() !== "" && row.slice(1).every((cell) => cell.text.trim() === ""),
+    )
+  )
+    return false;
   return rows.every((row) => /[?:]$/.test(row[0].text.trim()) || row[0].text.trim().split(/\s+/).length >= 2);
 }
 
@@ -378,16 +446,25 @@ export function parseWithRules(paragraphs: string[], structure?: TemplateStructu
         continue;
       }
       if (header.length === 0) continue;
-      const columns: ProposedColumn[] = header.slice(0, 8).map((cell) => ({ label: collapse(cell.text), type: columnType(cell.text) }));
+      const columns: ProposedColumn[] = header
+        .slice(0, 8)
+        .map((cell) => ({ label: collapse(cell.text), type: columnType(cell.text) }));
       const previous = n - 1;
-      const promptText = previous >= 1 && !headingAt.has(previous) && !inTable.has(previous) ? paragraphs[previous - 1] : undefined;
+      const promptText =
+        previous >= 1 && !headingAt.has(previous) && !inTable.has(previous) ? paragraphs[previous - 1] : undefined;
       const last = fields[fields.length - 1];
       const promptField = last && last.citation.paragraph === previous ? last : undefined;
       if (promptField) fields.pop();
-      const promptLabel = promptText && (promptField || /\b(below|following|list|table|each)\b/i.test(promptText)) ? tablePromptLabel(promptText) : "";
+      const promptLabel =
+        promptText && (promptField || /\b(below|following|list|table|each)\b/i.test(promptText))
+          ? tablePromptLabel(promptText)
+          : "";
       const required = promptField ? promptField.required : true;
       const label = promptLabel || (current ? headingTitle(current) : "") || "Table";
-      const anchor = promptLabel && promptText ? { paragraph: previous, quote: collapse(promptText).slice(0, 160) } : { paragraph: header[0].paragraph ?? n, quote: collapse(header[0].text).slice(0, 160) };
+      const anchor =
+        promptLabel && promptText
+          ? { paragraph: previous, quote: collapse(promptText).slice(0, 160) }
+          : { paragraph: header[0].paragraph ?? n, quote: collapse(header[0].text).slice(0, 160) };
       fields.push(
         withTitle({
           label,
@@ -396,7 +473,7 @@ export function parseWithRules(paragraphs: string[], structure?: TemplateStructu
           section: "performance",
           columns,
           citation: anchor,
-        })
+        }),
       );
       continue;
     }
@@ -407,7 +484,7 @@ export function parseWithRules(paragraphs: string[], structure?: TemplateStructu
   return fields;
 }
 
-export function toQuestion(definition: FormDefinition, field: ProposedField, extraKeys: string[]): Question {
+function toQuestion(definition: FormDefinition, field: ProposedField, extraKeys: string[]): Question {
   const question: Question = {
     key: uniqueKey(definition, field.label, extraKeys),
     label: field.label.trim(),
@@ -437,7 +514,7 @@ export function toQuestion(definition: FormDefinition, field: ProposedField, ext
   return question;
 }
 
-export type MergeOutcome = { definition: FormDefinition; added: string[]; linked: string[]; alreadyPresent: string[] };
+type MergeOutcome = { definition: FormDefinition; added: string[]; linked: string[]; alreadyPresent: string[] };
 
 export function mergeFields(definition: FormDefinition, fields: ProposedField[]): MergeOutcome {
   const next: FormDefinition = JSON.parse(JSON.stringify(definition));
@@ -445,12 +522,16 @@ export function mergeFields(definition: FormDefinition, fields: ProposedField[])
   const linked: string[] = [];
   const alreadyPresent: string[] = [];
   const present = () => new Set(next.sections.flatMap((s) => s.questions.map((q) => q.key)));
-  const fallbackSection = next.sections.find((s) => s.kind === "questions" && s.key === "performance") ?? next.sections.find((s) => s.kind === "questions");
+  const fallbackSection =
+    next.sections.find((s) => s.kind === "questions" && s.key === "performance") ??
+    next.sections.find((s) => s.kind === "questions");
   if (!fallbackSection) return { definition: next, added, linked, alreadyPresent };
   const sectionFor = (field: ProposedField) => {
     const title = field.section_title ? collapse(field.section_title).slice(0, 80) : "";
     if (!title) return next.sections.find((s) => s.kind === "questions" && s.key === field.section) ?? fallbackSection;
-    const existing = next.sections.find((s) => s.kind === "questions" && collapse(s.title).toLowerCase() === title.toLowerCase());
+    const existing = next.sections.find(
+      (s) => s.kind === "questions" && collapse(s.title).toLowerCase() === title.toLowerCase(),
+    );
     if (existing) return existing;
     const keys = new Set(next.sections.map((s) => s.key));
     let key = slugKey(title);
@@ -466,7 +547,9 @@ export function mergeFields(definition: FormDefinition, fields: ProposedField[])
     return created;
   };
   for (const field of fields) {
-    const section = field.library_key ? (next.sections.find((s) => s.kind === "questions" && s.key === field.section) ?? fallbackSection) : sectionFor(field);
+    const section = field.library_key
+      ? (next.sections.find((s) => s.kind === "questions" && s.key === field.section) ?? fallbackSection)
+      : sectionFor(field);
     if (field.library_key) {
       const standard = STANDARD_QUESTIONS.find((q) => q.key === field.library_key);
       if (standard && present().has(standard.key)) {
