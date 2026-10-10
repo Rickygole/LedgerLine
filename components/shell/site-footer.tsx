@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms of use" },
   { href: "/help", label: "Help" },
+  { href: "/get-help", label: "Get help" },
 ];
 
 export function SiteFooter({ className }: { className?: string }) {

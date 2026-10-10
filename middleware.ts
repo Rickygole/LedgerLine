@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { buildCsp, cspHeaderName } from "@/lib/csp";
+import { REQUEST_ID_HEADER } from "@/lib/ops/log";
 import { GATE_COOKIE, SESSION_COOKIE, verifyGate, verifySession } from "@/lib/session";
 
-const OPEN_PATHS = ["/gate", "/robots.txt", "/favicon.ico", "/icon.svg", "/apple-icon.png"];
+const OPEN_PATHS = ["/gate", "/robots.txt", "/favicon.ico", "/icon.svg", "/apple-icon.png", "/api/health"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -10,11 +11,13 @@ export async function middleware(request: NextRequest) {
   const csp = buildCsp(nonce, process.env.NODE_ENV !== "production");
   const header = cspHeaderName(process.env.CSP_MODE);
 
+  const requestId = crypto.randomUUID();
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set(REQUEST_ID_HEADER, requestId);
   requestHeaders.set(header, csp);
-  const next = () => withHeaders(NextResponse.next({ request: { headers: requestHeaders } }), header, csp);
-  const redirect = (url: URL) => withHeaders(NextResponse.redirect(url), header, csp);
+  const next = () => withHeaders(NextResponse.next({ request: { headers: requestHeaders } }), header, csp, requestId);
+  const redirect = (url: URL) => withHeaders(NextResponse.redirect(url), header, csp, requestId);
 
   if (OPEN_PATHS.some((p) => pathname === p) || pathname.startsWith("/_next") || pathname.startsWith("/api/cron/")) {
     return next();
@@ -22,7 +25,7 @@ export async function middleware(request: NextRequest) {
 
   const gated = await verifyGate(request.cookies.get(GATE_COOKIE)?.value);
   if (!gated) {
-    if (pathname.startsWith("/api")) return withHeaders(new NextResponse("Passcode required", { status: 401 }), header, csp);
+    if (pathname.startsWith("/api")) return withHeaders(new NextResponse("Passcode required", { status: 401 }), header, csp, requestId);
     const url = request.nextUrl.clone();
     url.pathname = "/gate";
     url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(`${pathname}${request.nextUrl.search}`)}`;
@@ -41,7 +44,8 @@ export async function middleware(request: NextRequest) {
   return next();
 }
 
-function withHeaders(response: NextResponse, cspName: string, csp: string) {
+function withHeaders(response: NextResponse, cspName: string, csp: string, requestId: string) {
+  response.headers.set(REQUEST_ID_HEADER, requestId);
   response.headers.set(cspName, csp);
   response.headers.set("X-Robots-Tag", "noindex, nofollow");
   response.headers.set("X-Frame-Options", "DENY");

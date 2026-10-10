@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCurrentUser, roleLabel, type CurrentUser } from "@/lib/auth";
 import { AppShell } from "@/components/shell/app-shell";
+import { RequestReference } from "@/components/ops/request-reference";
 import { MissingPage } from "@/components/shell/missing-page";
 import { PlainFrame } from "@/components/shell/plain-frame";
 
@@ -13,6 +14,11 @@ export default async function NotFound() {
   } catch {
     user = null;
   }
-  const content = <MissingPage role={user?.role ?? null} roleText={user ? roleLabel(user.role) : null} />;
+  const content = (
+    <>
+      <MissingPage role={user?.role ?? null} roleText={user ? roleLabel(user.role) : null} />
+      <RequestReference />
+    </>
+  );
   return user ? <AppShell user={user}>{content}</AppShell> : <PlainFrame>{content}</PlainFrame>;
 }

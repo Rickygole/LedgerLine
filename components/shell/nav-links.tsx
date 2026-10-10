@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import {
   BellRing,
+  Settings,
   Bookmark,
   Building2,
   FileText,
@@ -70,6 +71,7 @@ const FINANCE: NavGroup[] = [
       { href: "/finance/rollover/lineage", label: "Lineage", icon: GitBranch, match: under("/finance/rollover/lineage") },
       { href: "/finance/users", label: "Users", icon: Users, match: under("/finance/users"), roles: ["finance_admin"] },
       { href: "/finance/platform", label: "Platform", icon: ShieldCheck, match: under("/finance/platform") },
+      { href: "/finance/admin", label: "Administration", icon: Settings, match: under("/finance/admin", "/finance/support", "/finance/incidents", "/finance/reviews", "/finance/readiness", "/finance/data"), roles: ["finance_admin"] },
     ],
   },
 ];

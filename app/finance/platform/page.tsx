@@ -3,8 +3,13 @@ import Link from "next/link";
 import { CheckCircle2, Clock, Download, FileLock2, Headset, Server, ShieldAlert, Users2 } from "lucide-react";
 import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDate } from "@/lib/dates";
+import { formatDate, formatDateTime } from "@/lib/dates";
 import { platformFacts } from "@/lib/lifecycle/platform";
+import { getHealth, hostingInfo } from "@/lib/ops/health";
+import { listSupport, supportState } from "@/lib/ops/support";
+import { listIncidents } from "@/lib/ops/incidents";
+import { loadReadiness } from "@/lib/ops/readiness";
+import { listReviews } from "@/lib/ops/reviews";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
@@ -86,7 +91,30 @@ function Ids({ ids }: { ids: string[] }) {
 
 export default async function PlatformPage() {
   const user = await requireUser(FINANCE_ROLES);
-  const facts = await withClaims(user.id, (tx) => platformFacts(tx));
+  const isAdmin = user.role === "finance_admin";
+  const now = new Date();
+  const { facts, ops } = await withClaims(user.id, async (tx) => {
+    const facts = await platformFacts(tx);
+    if (!isAdmin) return { facts, ops: null };
+    const support = await listSupport(tx, {});
+    const states = support.map((r) => supportState({ createdAt: r.created_at, firstResponseAt: r.first_response_at, closedAt: r.closed_at, now }));
+    const incidents = await listIncidents(tx);
+    const readiness = await loadReadiness(tx);
+    const reviews = await listReviews(tx);
+    return {
+      facts,
+      ops: {
+        supportOpen: states.filter((x) => x === "open" || x === "overdue").length,
+        supportOverdue: states.filter((x) => x === "overdue").length,
+        incidents: incidents.length,
+        training: readiness.training,
+        uat: readiness.uat,
+        reviewsSigned: reviews.filter((r) => r.status === "signed_off").length,
+      },
+    };
+  });
+  const health = isAdmin ? await getHealth() : null;
+  const hosting = health?.hosting ?? hostingInfo();
   const financeUsers = facts.usersByRole.filter((r) => r.role !== "cbo_submitter").reduce((sum, r) => sum + r.n, 0);
 
   return (
@@ -106,19 +134,38 @@ export default async function PlatformPage() {
       />
 
       <div className="space-y-6">
+        {isAdmin && health ? (
+          <Card>
+            <CardHeader title="Platform status" description="Read from the same health check that monitoring tools call at /api/health." actions={<Ids ids={["US-062"]} />} />
+            <CardBody>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Stat label="Service" value={health.status === "ok" ? "Healthy" : "Degraded"} tone={health.status === "ok" ? "ok" : "bad"} hint={`Checked ${formatDateTime(health.checkedAt)}`} />
+                <Stat label="Database" value={health.database.ok ? "Connected" : "Unreachable"} tone={health.database.ok ? "ok" : "bad"} hint={health.database.latencyMs === null ? "No response" : `${health.database.latencyMs} ms`} />
+                <Stat label="Database version" value={health.migrations.applied} tone={health.migrations.ok ? "ok" : "bad"} hint={health.migrations.latest ?? "None applied"} />
+                <Stat label="Build" value={health.build.commit ?? "Not recorded"} hint={`Hosting: ${health.hosting.provider}, ${health.hosting.region}`} />
+              </div>
+              <p className="mt-3 text-sm text-muted">Every response carries a request ID. It is shown on error pages and written to the server log with any error, so a reported problem can be traced to one request.</p>
+            </CardBody>
+          </Card>
+        ) : null}
         <Card>
           <CardHeader title="Hosting and security" description="Proposed: hosted outside Council owned servers in Azure Government, with controls mapped to NIST 800-53." actions={<Ids ids={["US-053", "US-054", "BR-026"]} />} />
           <CardBody className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-md border border-line p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-navy-700" aria-hidden="true" /> Current environment</p>
-                <p className="mt-1 text-sm text-muted">Runs on Vercel with a Neon Postgres database and Vercel Blob file storage. Traffic is encrypted in transit and the database enforces row level security.</p>
+                <p className="mt-1 text-sm text-muted">
+                  Hosting provider <span className="font-semibold text-ink">{hosting.provider}</span>, region <span className="font-semibold text-ink">{hosting.region}</span>. Not hosted on Council servers. These values come from the deployment settings and are reported by the running system at <span className="font-mono text-xs">/api/health</span>. They are declared, not independently audited. Traffic is encrypted in transit and the database enforces row level security.
+                </p>
               </div>
               <div className="rounded-md border border-navy-200 bg-navy-50/50 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold"><Server className="h-4 w-4 text-navy-700" aria-hidden="true" /> Proposed production path</p>
                 <p className="mt-1 text-sm text-muted">Azure Government, a FedRAMP High authorized cloud. Application on Azure App Service, data in Azure Database for PostgreSQL, files in Azure Blob Storage with customer managed keys. The same database design moves across without change.</p>
               </div>
             </div>
+            <p className="rounded-md border border-warn/30 bg-warn-bg px-4 py-3 text-sm text-ink">
+              <span className="font-semibold">Delivery commitments, not yet met.</span> Hosting in Azure Government and compliance with FedRAMP or NIST 800-53 are proposed commitments. They are confirmed by the production build and the security review in December 2026, and this system cannot prove them today. The control mapping below shows what the application already enforces.
+            </p>
             <div>
               <h3 className="mb-2 text-sm font-semibold">NIST 800-53 control mapping</h3>
               <div className="overflow-hidden rounded-md border border-line">
@@ -158,11 +205,18 @@ export default async function PlatformPage() {
             <CardHeader title="Data ownership and export" description="The Council owns all system data." actions={<Ids ids={["US-055", "BR-020"]} />} />
             <CardBody className="space-y-3 text-sm">
               <p>Every record, answer, attachment and audit event belongs to the Council. None of it is stored in a format only the vendor can read.</p>
-              <p>All data exports in open formats: Excel workbooks (.xlsx) and comma separated files (.csv). Attachments are returned in the files that organizations uploaded.</p>
+              <p>Reports export as Excel workbooks (.xlsx) and comma separated files (.csv). A Finance administrator can also download the whole database as a zip of CSV files with a README that describes every table and column. Attachments stay in the files that organizations uploaded.</p>
               <p>On contract end, the full database and files are handed over and then securely removed from vendor systems on written request.</p>
-              <ButtonLink href="/finance/submissions" variant="secondary" size="sm">
-                <Download className="h-4 w-4" aria-hidden="true" /> Open reports to export
-              </ButtonLink>
+              <div className="flex flex-wrap gap-2">
+                <ButtonLink href="/finance/submissions" variant="secondary" size="sm">
+                  <Download className="h-4 w-4" aria-hidden="true" /> Open reports to export
+                </ButtonLink>
+                {isAdmin ? (
+                  <ButtonLink href="/finance/data" variant="secondary" size="sm">
+                    <Download className="h-4 w-4" aria-hidden="true" /> Export all data
+                  </ButtonLink>
+                ) : null}
+              </div>
             </CardBody>
           </Card>
 
@@ -195,6 +249,15 @@ export default async function PlatformPage() {
                 </li>
               ))}
             </ol>
+            <p className="mt-4 text-sm text-muted">
+              Finance administrators record incidents, notify the Council&apos;s designated contacts and track the remediation report in the app.{" "}
+              {isAdmin && ops ? (
+                <>
+                  <Link href="/finance/incidents" className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">Open security incidents</Link> ({ops.incidents} recorded).
+                </>
+              ) : null}{" "}
+              The time limits above are proposed. The contract sets the final terms.
+            </p>
           </CardBody>
         </Card>
 
@@ -208,7 +271,7 @@ export default async function PlatformPage() {
               <Stat label="Funded organizations" value={facts.organizations.toLocaleString("en-US")} hint="Live count" href="/finance/organizations" />
             </div>
             <p className="text-sm">
-              This system holds <span className="num font-semibold">{financeUsers}</span> Finance accounts across three permission levels, not counting the system scheduler. The design sets no cap on Finance accounts; the stated need is 50 to 100 users with different permissions. Submitting users are not licensed or capped: each funded organization can add as many staff as it needs.
+              This system holds <span className="num font-semibold">{financeUsers}</span> Finance accounts across three permission levels, not counting the system scheduler. The design sets no cap on Finance accounts; the stated need is 50 to 100 users with different permissions. Automated tests create 100 Finance users across the three levels and check what each level can and cannot do, and create 5,000 submitting accounts to show that no cap exists. Submitting users are not licensed or capped: each funded organization can add as many staff as it needs.
             </p>
             {user.role === "finance_admin" ? (
               <div>
@@ -242,6 +305,15 @@ export default async function PlatformPage() {
           </Table>
           <CardBody className="border-t border-line text-sm text-muted">
             Every request gets a first response within 24 hours. After launch, the vendor watches uptime and errors and applies security patches as part of the support service.
+            <span className="mt-2 block">
+              Anyone signed in can send a request from <span className="font-semibold">Get help</span>.
+              {isAdmin && ops ? (
+                <>
+                  {" "}
+                  <Link href="/finance/support" className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">Open the support queue</Link>: {ops.supportOpen} waiting, {ops.supportOverdue} overdue.
+                </>
+              ) : null}
+            </span>
           </CardBody>
         </Card>
 
@@ -250,18 +322,28 @@ export default async function PlatformPage() {
           <CardBody className="space-y-3 text-sm">
             <p>Each spring, before the fiscal year ends, the vendor meets with Finance to review the initiatives, standard questions, forms and permissions. The review covers what to keep, rename, combine or retire, how support and uptime performed, and what to change next year.</p>
             <p>The decisions feed straight into the annual rollover, which copies forms and funded organizations into the new year and keeps every initiative&apos;s history linked.</p>
-            {user.role === "finance_admin" ? (
-              <ButtonLink href="/finance/rollover" variant="secondary" size="sm">
-                <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Open annual rollover
-              </ButtonLink>
+            {isAdmin ? (
+              <div className="flex flex-wrap gap-2">
+                <ButtonLink href="/finance/reviews" variant="secondary" size="sm">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Annual structure review{ops ? ` (${ops.reviewsSigned} signed off)` : ""}
+                </ButtonLink>
+                <ButtonLink href="/finance/rollover" variant="secondary" size="sm">
+                  Open annual rollover
+                </ButtonLink>
+              </div>
             ) : null}
           </CardBody>
         </Card>
 
         <Card>
-          <CardHeader title="Delivery timeline to go live" description="Proposed plan, with formal testing and training before the February 1, 2027 target." actions={<Ids ids={["US-065", "US-066", "BR-027"]} />} />
-          <CardBody>
+          <CardHeader title="Delivery timeline to go live" description="Proposed plan, with formal testing and training before the February 1, 2027 target. The go-live date is a delivery commitment and this system does not confirm it." actions={<Ids ids={["US-065", "US-066", "BR-027"]} />} />
+          <CardBody className="space-y-4">
             <Timeline items={MILESTONES} />
+            {isAdmin && ops ? (
+              <p className="text-sm text-muted">
+                <Link href="/finance/readiness" className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">Go-live readiness</Link>: {ops.training.percent ?? 0}% of Finance users trained, {ops.uat.percent ?? 0}% of test scenarios passing.
+              </p>
+            ) : null}
           </CardBody>
         </Card>
       </div>

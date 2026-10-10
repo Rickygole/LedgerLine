@@ -22,7 +22,7 @@ export async function listOutbox(tx: Tx, filters: { template: string; org: strin
      FROM outbox m
      LEFT JOIN organization o ON o.id = m.org_id
      LEFT JOIN submission s ON s.id = m.submission_id
-     WHERE (m.template NOT IN ('password_reset', 'password_set') OR app.is_admin())
+     WHERE ((m.template NOT IN ('password_reset', 'password_set') AND m.template NOT LIKE 'security\_%') OR app.is_admin())
        AND ($1 = '' OR m.template = $1)
        AND ($2 = '' OR m.org_id::text = $2)
        AND ($3 = '' OR m.created_at >= ($3::date)::timestamp AT TIME ZONE 'America/New_York')
@@ -35,7 +35,7 @@ export async function listOutbox(tx: Tx, filters: { template: string; org: strin
 }
 
 export async function outboxFilterOptions(tx: Tx) {
-  const templates = await tx.query<{ template: string }>(`SELECT DISTINCT template FROM outbox WHERE template NOT IN ('password_reset', 'password_set') OR app.is_admin() ORDER BY template`);
+  const templates = await tx.query<{ template: string }>(`SELECT DISTINCT template FROM outbox WHERE (template NOT IN ('password_reset', 'password_set') AND template NOT LIKE 'security\_%') OR app.is_admin() ORDER BY template`);
   const orgs = await tx.query<{ id: string; legal_name: string }>(
     `SELECT DISTINCT o.id, o.legal_name FROM outbox m JOIN organization o ON o.id = m.org_id ORDER BY o.legal_name`
   );
@@ -50,7 +50,7 @@ export async function loadOutboxMessage(tx: Tx, id: string) {
      LEFT JOIN organization o ON o.id = m.org_id
      LEFT JOIN submission s ON s.id = m.submission_id
      LEFT JOIN app_user u ON u.id = m.created_by
-     WHERE m.id = $1 AND (m.template NOT IN ('password_reset', 'password_set') OR app.is_admin())`,
+     WHERE m.id = $1 AND ((m.template NOT IN ('password_reset', 'password_set') AND m.template NOT LIKE 'security\_%') OR app.is_admin())`,
     [id]
   );
 }

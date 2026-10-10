@@ -35,6 +35,7 @@ import {
   type Borough,
   type Category,
 } from "./seed-data";
+import { seedOperations } from "./seed-ops";
 import { CITYWIDE_INITIATIVES, generateInitiatives, type InitiativeSpec } from "./seed-initiatives";
 
 export const PERSONAS = {
@@ -250,10 +251,12 @@ async function insertRows(client: Client, table: string, rows: Record<string, un
 }
 
 async function reset(client: Client, scene: string) {
-  const guarded = ["audit_event", "submission_revision"];
+  const guarded = ["audit_event", "submission_revision", "support_message", "security_incident", "incident_remediation", "incident_event"];
   for (const table of guarded) await client.query(`ALTER TABLE ${table} DISABLE TRIGGER USER`);
   await client.query(`TRUNCATE auth_attempt, audit_event, submission_revision, ai_action, outbox, flag, attachment, budget_line, answer, submission,
-    form_version, question, assignment_sponsor, assignment, reporting_period, initiative, app_user, contact, organization, council_member, fiscal_year, app_setting RESTART IDENTITY CASCADE`);
+    form_version, question, assignment_sponsor, assignment, reporting_period, initiative, app_user, contact, organization, council_member, fiscal_year, app_setting,
+    support_message, support_request, incident_event, incident_remediation, security_incident, incident_contact, annual_review_decision, annual_review_participant, annual_review,
+    training_record, uat_defect, uat_session RESTART IDENTITY CASCADE`);
   for (const table of guarded) await client.query(`ALTER TABLE ${table} ENABLE TRIGGER USER`);
   await client.query("INSERT INTO demo_reset (scene) VALUES ($1)", [scene]);
 }
@@ -1002,6 +1005,7 @@ export async function runSeed(url: string, scene = "fresh"): Promise<string> {
     await client.query("SELECT app.ensure_scheduler()");
     await client.query("SELECT app.restore_reminder_defaults(id) FROM reporting_period");
     await client.query("SELECT app.backfill_reminder_history($1::date)", [todayInNewYork()]);
+    await seedOperations(client);
     await client.query("SELECT set_config('request.jwt.claims', '', true)");
     await client.query("COMMIT");
     return `seeded ${summary.orgs} organizations, ${summary.initiatives} initiatives, ${summary.assignments} assignments, ${summary.submissions} submissions`;
