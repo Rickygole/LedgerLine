@@ -14,6 +14,7 @@ import { activeFilterCount, filtersToParams, FLAG_LABEL, hrefWith, parseFilters 
 import { applyFilters, countBuckets, paginate, sortByUrgency } from "@/lib/finance/review/derive";
 import type { Filters } from "@/lib/finance/review/types";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
+import { NoPeriods } from "@/components/finance/no-periods";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,15 +29,18 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
 
-  const { periods, filters, rows, options, members } = await withClaims(user.id, async (tx) => {
+  const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const filters = parseFilters(raw, periods);
-    const period = periods.find((p) => p.id === filters.period)!;
+    const period = periods.find((p) => p.id === filters.period);
+    if (!period) return null;
     const rows = await loadReportRows(tx, period);
     const options = await loadFilterOptions(tx);
     const members = await loadCouncilMembers(tx);
     return { periods, filters, rows, options, members };
   });
+  if (!data) return <NoPeriods title="Submissions" />;
+  const { periods, filters, rows, options, members } = data;
 
   const matched = sortByUrgency(applyFilters(rows, filters));
   const bucketCounts = countBuckets(applyFilters(rows, filters, ["bucket"]));

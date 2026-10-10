@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NoPeriods } from "@/components/finance/no-periods";
 import Link from "next/link";
 import { Flag } from "lucide-react";
 import { ActiveChips, type Chip } from "@/components/finance/review/list-controls";
@@ -121,15 +122,18 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
   const raw = await searchParams;
   const reasonParam = (Array.isArray(raw.reason) ? raw.reason[0] : raw.reason) ?? "";
 
-  const { periods, filters, rows, options, members } = await withClaims(user.id, async (tx) => {
+  const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const filters = parseFilters(raw, periods);
-    const period = periods.find((p) => p.id === filters.period)!;
+    const period = periods.find((p) => p.id === filters.period);
+    if (!period) return null;
     const rows = await loadReportRows(tx, period);
     const options = await loadFilterOptions(tx);
     const members = await loadCouncilMembers(tx);
     return { periods, filters, rows, options, members };
   });
+  if (!data) return <NoPeriods title="Flagged items" />;
+  const { periods, filters, rows, options, members } = data;
 
   const base = "/finance/flagged";
   const scoped = applyFilters(rows, { ...filters, flag: "" }, ["bucket", "status"]);

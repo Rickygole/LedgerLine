@@ -16,6 +16,7 @@ import { SortHeader } from "@/components/finance/admin/sort-header";
 import { ORG_SORTS, listOrganizations, type OrgSort } from "@/lib/finance/admin/organizations";
 import { loadPeriods } from "@/lib/finance/review/data";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
+import { NoPeriods } from "@/components/finance/no-periods";
 import { BOROUGHS, ORG_TYPES, orgTypeLabel } from "@/lib/finance/admin/sql";
 import { one, pageNumber, pickOne, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
 
@@ -34,12 +35,15 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
   const dir = one(params, "dir") === "desc" ? "desc" : "asc";
   const page = pageNumber(params);
 
-  const { rows, total, periods, period } = await withClaims(user.id, async (tx) => {
+  const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
-    const period = periods.find((p) => p.id === one(params, "period")) ?? periods.find((p) => p.id === defaultPeriodId(periods))!;
+    const period = periods.find((p) => p.id === one(params, "period")) ?? periods.find((p) => p.id === defaultPeriodId(periods));
+    if (!period) return null;
     const list = await listOrganizations(tx, todayInNewYork(), period.id, { q, borough, type, missing, sort, dir, page });
     return { ...list, periods, period };
   });
+  if (!data) return <NoPeriods title="Organizations" />;
+  const { rows, total, periods, period } = data;
 
   const base = "/finance/organizations";
   const kept = { q, borough, type, missing: missing ? "1" : undefined, sort, dir, period: period.id };

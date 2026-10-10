@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DistrictMapCard, DistrictRanking } from "@/components/finance/map/district-map";
 import { AutoSelect } from "@/components/finance/map/auto-select";
+import { NoPeriods } from "@/components/finance/no-periods";
 import { Stat } from "@/components/ui/stat";
 import { FiscalYearTimeline } from "@/components/ui/fiscal-year-timeline";
 import { StatusStackChart, type StackDatum } from "@/components/charts/status-stack";
@@ -37,17 +38,21 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
   const table = first(raw.table) === "1";
   const sort = first(raw.sort) === "missing" ? "missing" : "district";
 
-  const { periods, period, rows, members } = await withClaims(user.id, async (tx) => {
+  const data = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const filters = parseFilters(raw, periods);
-    const period = periods.find((p) => p.id === filters.period)!;
+    const period = periods.find((p) => p.id === filters.period);
+    if (!period) return null;
     const rows = await loadReportRows(tx, period);
     const members = await loadCouncilMembers(tx);
     return { periods, period, rows, members };
   });
+  if (!data) return <NoPeriods title="Dashboard" />;
+  const { periods, period, rows, members } = data;
 
   const counts = countBuckets(rows);
-  const stats = districtStats(rows, mode, members);
+  const stats = districtStats(rows, mode, members, borough);
+  const canRemind = user.role === "finance_admin";
   const base = { period: period.id };
   const list = (extra: Partial<Filters>) => hrefWith("/finance/submissions", base, extra);
   const headline = dashboardHeadline(period, counts, rows.length);
@@ -83,9 +88,11 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">{headline.lede}</p>
         </div>
         <div className="mt-4 flex flex-col-reverse gap-3 sm:col-span-2 sm:row-start-3 sm:flex-row sm:flex-wrap sm:items-center lg:col-span-1 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:self-end">
-          <Link href={remindersHref} className={buttonClass("secondary", "md", "h-11 w-full px-5 text-base sm:w-auto")}>
-            Send reminders
-          </Link>
+          {canRemind ? (
+            <Link href={remindersHref} className={buttonClass("secondary", "md", "h-11 w-full px-5 text-base sm:w-auto")}>
+              Send reminders
+            </Link>
+          ) : null}
           {next ? (
             <Link href={`/finance/submissions/${next.submissionId}?queue=waiting`} className={buttonClass("primary", "md", "h-11 w-full px-5 text-base sm:w-auto")}>
               Review next submission
@@ -151,7 +158,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
               ))}
             </ol>
           )}
-          {counts.missing > 0 ? (
+          {counts.missing > 0 && canRemind ? (
             <div className="border-t border-line-soft px-5 py-3 text-sm sm:px-6">
               <Link href={remindersHref} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
                 Send reminders to all {counts.missing}

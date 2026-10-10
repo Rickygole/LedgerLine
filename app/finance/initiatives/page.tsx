@@ -14,6 +14,7 @@ import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { ProgressBar } from "@/components/finance/admin/progress-bar";
 import { categorySummary, listAgencies, listCategories, listInitiatives, setupStatus } from "@/lib/finance/admin/initiatives";
+import { NoPeriods } from "@/components/finance/no-periods";
 import { SetupTaskList } from "@/components/finance/setup-tasks";
 import { loadPeriods } from "@/lib/finance/review/data";
 import { defaultPeriodId } from "@/lib/finance/review/filters";
@@ -33,11 +34,12 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
   const admin = user.role === "finance_admin";
   const today = todayInNewYork();
 
-  const data = await withClaims(user.id, async (tx) => {
+  const loaded = await withClaims(user.id, async (tx) => {
     const periods = await loadPeriods(tx);
     const setup = admin ? await setupStatus(tx, today) : null;
     const setupPeriod = setup?.fiscalYear ? periods.find((p) => p.fiscalYearId === setup.fiscalYear!.id) : undefined;
-    const period = periods.find((p) => p.id === one(params, "period")) ?? setupPeriod ?? periods.find((p) => p.id === defaultPeriodId(periods))!;
+    const period = periods.find((p) => p.id === one(params, "period")) ?? setupPeriod ?? periods.find((p) => p.id === defaultPeriodId(periods));
+    if (!period) return null;
     const categories = await listCategories(tx);
     const agencies = await listAgencies(tx);
     const category = categories.includes(one(params, "category")) ? one(params, "category") : "";
@@ -46,6 +48,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     const summary = await categorySummary(tx, today, period.id);
     return { periods, period, categories, agencies, category, agency, summary, setup, ...list };
   });
+  if (!loaded) return <NoPeriods title="Initiatives" />;
+  const data = loaded;
 
   const base = "/finance/initiatives";
   const totals = data.summary.reduce(
