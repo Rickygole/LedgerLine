@@ -1,5 +1,6 @@
 import { formatDate, formatDateTime, formatTime, isToday, todayInNewYork } from "@/lib/dates";
 import { parseAmount } from "@/lib/rules/money";
+import { formatEin } from "@/lib/rules/identity";
 import { formatCount, formatCurrency } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
@@ -21,6 +22,7 @@ export function displayScalar(question: Question, value: AnswerValue | undefined
   }
   if (question.type === "percent") return text.endsWith("%") ? text : `${text}%`;
   if (question.type === "date") return formatDate(text);
+  if (question.type === "ein") return formatEin(text);
   if (question.type === "integer" || question.type === "number") {
     const n = Number(text.replace(/,/g, ""));
     return Number.isFinite(n) ? formatCount(n) : text;

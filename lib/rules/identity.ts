@@ -1,3 +1,5 @@
+import type { Answers, FormDefinition } from "./types";
+
 export const EIN_NOT_ON_LIST = "This EIN is not on the Council master list for this organization.";
 export const NAME_NOT_ON_LIST = "This legal name does not match the Council master list for this organization.";
 
@@ -5,6 +7,21 @@ type MasterOrg = { legalName: string; ein: string };
 
 export function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
+}
+
+export function formatEin(value: string): string {
+  const text = value.trim();
+  const digits = digitsOnly(text);
+  return digits.length === 9 && /^[\d\s-]+$/.test(text) ? `${digits.slice(0, 2)}-${digits.slice(2)}` : text;
+}
+
+export function normalizeEinAnswers(definition: FormDefinition, answers: Answers): Answers {
+  const next: Answers = { ...answers };
+  for (const question of definition.sections.flatMap((section) => section.questions)) {
+    const value = next[question.key];
+    if (question.type === "ein" && typeof value === "string") next[question.key] = formatEin(value);
+  }
+  return next;
 }
 
 function normalizeName(value: string): string {

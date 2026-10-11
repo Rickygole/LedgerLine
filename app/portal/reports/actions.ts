@@ -11,6 +11,7 @@ import { loadAnswers, loadBudget, loadReport } from "@/lib/report/data";
 import { plainTextReport } from "@/lib/report/format";
 import { reportIssues } from "@/lib/report/issues";
 import { touchDraft, writeDraft } from "@/lib/report/write";
+import { normalizeEinAnswers } from "@/lib/rules/identity";
 import { UPLOAD_TICKET_SECONDS, attachmentLimitProblem, cleanFilename, contentLooksValid, insertAttachment, macroProblem, mimeFor, openSubmissionForUpload, pathSignatureValid, removeAttachmentRow, signPath } from "@/lib/report/attachments";
 import type { AttachmentItem, PrepareUploadResult, SaveResult, SubmitResult, UploadActionResult } from "@/lib/report/types";
 import { buildSnapshot } from "@/lib/snapshot";
@@ -84,7 +85,7 @@ export async function saveDraft(raw: unknown): Promise<SaveResult> {
       }
       if (touched.status === "stale") return { status: "stale", by: touched.by, at: touched.at };
       const allowedKeys = new Set([...report.definition.sections.flatMap((section) => section.questions.map((q) => q.key)), VARIANCE_NOTE_KEY]);
-      await writeDraft(tx, { submissionId: input.submissionId, answers: input.answers, budget: input.budget, allowedKeys });
+      await writeDraft(tx, { submissionId: input.submissionId, answers: normalizeEinAnswers(report.definition, input.answers), budget: input.budget, allowedKeys });
       return { status: "saved", lockVersion: touched.lockVersion, savedAt: touched.savedAt };
     });
   } catch (error) {

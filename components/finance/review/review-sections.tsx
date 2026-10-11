@@ -20,6 +20,7 @@ import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
 import { formatCount, formatCurrency } from "@/lib/format";
 import { tableRows } from "@/lib/report/format";
+import { formatEin } from "@/lib/rules/identity";
 import { totalsRow } from "@/lib/report/table-totals";
 import { AnswerTable } from "@/components/report/answer-table";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
@@ -34,6 +35,7 @@ function formatValue(question: Question, value: AnswerValue | undefined, award?:
   if (question.type === "currency")
     return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")), { cents: "auto" })}</span>;
   if (question.type === "percent") return <span className="num">{String(value)}%</span>;
+  if (question.type === "ein") return <span className="num">{formatEin(String(value))}</span>;
   if (question.type === "integer" || question.type === "number")
     return <span className="num">{formatCount(String(value))}</span>;
   if (question.type === "textarea") return <span className="block whitespace-pre-wrap">{String(value)}</span>;
