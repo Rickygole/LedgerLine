@@ -28,6 +28,7 @@ type HeaderRow = {
   updated_by_name: string | null;
   submitted_at: string | null;
   submitted_by_name: string | null;
+  submitted_by_title: string | null;
 };
 
 type LoadedReport = {
@@ -43,7 +44,7 @@ export async function loadReport(tx: Tx, submissionId: string): Promise<LoadedRe
             fv.definition, i.name AS initiative_name, rp.label AS period_label,
             to_char(rp.starts_on, 'YYYY-MM-DD') AS starts_on, to_char(rp.ends_on, 'YYYY-MM-DD') AS ends_on, to_char(rp.due_on, 'YYYY-MM-DD') AS due_on,
             a.award_amount, a.org_id, o.legal_name, o.ein,
-            s.updated_at, uu.full_name AS updated_by_name, s.submitted_at, sb.full_name AS submitted_by_name
+            s.updated_at, uu.full_name AS updated_by_name, s.submitted_at, sb.full_name AS submitted_by_name, sb.title AS submitted_by_title
      FROM submission s
      JOIN assignment a ON a.id = s.assignment_id
      JOIN initiative i ON i.id = a.initiative_id
@@ -78,6 +79,7 @@ export async function loadReport(tx: Tx, submissionId: string): Promise<LoadedRe
       updatedByName: row.updated_by_name,
       submittedAt: row.submitted_at ? new Date(row.submitted_at).toISOString() : null,
       submittedByName: row.submitted_by_name,
+      submittedByTitle: row.submitted_by_title,
     },
   };
 }

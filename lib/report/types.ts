@@ -28,6 +28,7 @@ export type ReportHeader = {
   updatedByName: string | null;
   submittedAt: string | null;
   submittedByName: string | null;
+  submittedByTitle?: string | null;
 };
 
 export type EditorPayload = {

@@ -138,8 +138,7 @@ describe("[US-021] report PDF", () => {
     for (const needle of [
       "I certify that this report is accurate.",
       "Maria Santos",
-      "Executive Director",
-      "Certified on",
+      "Certified at submission by Maria Santos, Executive Director",
     ])
       expect(lines.slice(heading).join("\n")).toContain(needle);
   });
@@ -178,5 +177,57 @@ describe("[US-021] report PDF", () => {
     const all = pages.flat();
     expect(all).toContain("Line");
     expect(all.some((line) => line === "Lin" || line === "e")).toBe(false);
+  });
+
+  it("derives the certification from the submitter when the copy has no certification record", async () => {
+    const definition = buildDefinition("Youth Services", []);
+    const snapshot = buildSnapshot({ formVersionId: "fv", answers: {}, budget: [], attachments: [] });
+    const text = await pdfText(
+      await buildReportPdf({ ...base, submittedByTitle: "Program Director", definition, snapshot }),
+    );
+    expect(text).not.toContain("No certification was recorded");
+    const lines = text.split("\n");
+    const heading = lines.indexOf("Certification");
+    expect(heading).toBeGreaterThan(lines.indexOf("Attachments"));
+    expect(lines.slice(heading).join(" ")).toContain("Certified at submission by Maria Santos, Program Director");
+  });
+
+  it("leaves out the certification when nobody submitted the copy", async () => {
+    const definition = buildDefinition("Youth Services", []);
+    const snapshot = buildSnapshot({ formVersionId: "fv", answers: {}, budget: [], attachments: [] });
+    const text = await pdfText(
+      await buildReportPdf({ ...base, submittedAt: null, submittedByName: null, definition, snapshot }),
+    );
+    expect(text.split("\n")).not.toContain("Certification");
+  });
+
+  it("says when actual spending was not reported and drops the spending columns", async () => {
+    const definition = buildDefinition("Youth Services", []);
+    const budget = [{ rowId: "1", position: 1, category: "PS" as const, description: "Coordinator", amount: 50000 }];
+    const snapshot = buildSnapshot({ formVersionId: "fv", answers: {}, budget, attachments: [] });
+    const text = await pdfText(await buildReportPdf({ ...base, definition, snapshot }));
+    expect(text).toContain("Actual spending was not reported with this revision.");
+    expect(text).not.toContain("Actual spent");
+  });
+
+  it("never leaves a question label alone at the bottom of a page", async () => {
+    const questions: Question[] = Array.from({ length: 160 }, (_, index) => ({
+      key: `q${index}`,
+      label: `Question label ${index}`,
+      type: "textarea",
+      required: false,
+      scope: "initiative",
+    }));
+    const definition = buildDefinition("Youth Services", questions);
+    const answers = Object.fromEntries(
+      questions.map((q, index) => [q.key, "answer ".repeat(1 + ((index * 7) % 23) * 3)]),
+    );
+    const snapshot = buildSnapshot({ formVersionId: "fv", answers, budget: [], attachments: [] });
+    const pages = await pdfPages(await buildReportPdf({ ...base, definition, snapshot }));
+    expect(pages.length).toBeGreaterThan(1);
+    for (const lines of pages) {
+      const body = lines.filter((line) => !line.includes("Page "));
+      expect(body[body.length - 1] ?? "").not.toMatch(/^Question label \d+$/);
+    }
   });
 });

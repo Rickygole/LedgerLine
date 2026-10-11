@@ -8,6 +8,7 @@ import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import { lineVariance, spendSummary, VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import type { FormDefinition, Answers } from "@/lib/rules/types";
 import type { Snapshot } from "@/lib/snapshot";
+import { CERTIFICATION_STATEMENT, type Certification } from "@/lib/rules/certify";
 import { displayScalar, questionLabel, tableRows } from "./format";
 import { formatBytes } from "./upload-rules";
 
@@ -22,6 +23,7 @@ export type ReportPdfInput = {
   revisionActor: string | null;
   submittedAt: string | null;
   submittedByName: string | null;
+  submittedByTitle?: string | null;
   orgName: string;
   ein: string;
   awardAmount: number;
@@ -133,7 +135,7 @@ class Writer {
   }
 
   heading(text: string) {
-    this.ensure(64);
+    this.ensure(100);
     this.y -= 10;
     this.page.drawLine({
       start: { x: MARGIN, y: this.y + 4 },
@@ -254,6 +256,7 @@ function budgetSection(w: Writer, input: ReportPdfInput) {
     ]),
     pad("Award", formatCurrency(input.awardAmount, { cents: true })),
   ]);
+  if (!spend.entered) w.paragraph("Actual spending was not reported with this revision.", { size: 9, color: MUTED });
   w.paragraph(balanceMessage(totals.total, input.awardAmount).message, { bold: true });
   if (spend.entered) {
     w.paragraph(
@@ -269,10 +272,18 @@ function answersSection(w: Writer, input: ReportPdfInput, questions: FormDefinit
   for (const question of questions) {
     if (!isVisible(question, answers)) continue;
     const value = answers[question.key];
-    w.paragraph(questionLabel(question.label), { bold: true, size: 9, color: MUTED, gap: 1 });
+    const columns = question.columns ?? [];
+    const rows = question.type === "table" ? tableRows(question, value) : [];
+    const shown = question.type === "table" ? "" : displayScalar(question, value);
+    const label = questionLabel(question.label);
+    const labelHeight = w.wrap(label, w.bold, 9, PAGE.width - MARGIN * 2).length * 9 * 1.35 + 1;
+    const nextHeight =
+      question.type === "table" && rows.length > 0
+        ? 64
+        : Math.min(2, w.wrap(shown || "Not answered", w.regular, BODY, PAGE.width - MARGIN * 2).length) * BODY * 1.35;
+    w.ensure(labelHeight + nextHeight);
+    w.paragraph(label, { bold: true, size: 9, color: MUTED, gap: 1 });
     if (question.type === "table") {
-      const columns = question.columns ?? [];
-      const rows = tableRows(question, value);
       if (rows.length === 0) {
         w.paragraph("No rows entered.");
         continue;
@@ -285,9 +296,21 @@ function answersSection(w: Writer, input: ReportPdfInput, questions: FormDefinit
       );
       continue;
     }
-    const shown = displayScalar(question, value);
     w.paragraph(shown === "" ? "Not answered" : shown, { gap: 8 });
   }
+}
+
+export function certificationFor(
+  input: Pick<ReportPdfInput, "snapshot" | "submittedByName" | "submittedByTitle" | "submittedAt">,
+): Certification | null {
+  if (input.snapshot.certification) return input.snapshot.certification;
+  const name = input.submittedByName?.trim() ?? "";
+  if (!name || !input.submittedAt) return null;
+  const answers = input.snapshot.answers;
+  const contactName = typeof answers.contact_name === "string" ? answers.contact_name.trim() : "";
+  const contactTitle = typeof answers.contact_title === "string" ? answers.contact_title.trim() : "";
+  const title = input.submittedByTitle?.trim() || (contactName === name ? contactTitle : "");
+  return { statement: CERTIFICATION_STATEMENT, name, title, certifiedAt: input.submittedAt };
 }
 
 export async function buildReportPdf(input: ReportPdfInput): Promise<Uint8Array> {
@@ -327,15 +350,13 @@ export async function buildReportPdf(input: ReportPdfInput): Promise<Uint8Array>
   for (const file of input.snapshot.attachments)
     w.paragraph(`${file.filename} (${formatBytes(file.bytes)})`, { gap: 2 });
 
-  const certification = input.snapshot.certification;
-  w.heading("Certification");
+  const certification = certificationFor(input);
   if (certification) {
+    w.heading("Certification");
     w.paragraph(certification.statement, { bold: true });
-    w.pair("Certified by", certification.name);
-    w.pair("Title", certification.title);
-    w.pair("Certified on", `${formatDateTime(certification.certifiedAt)} ET`);
-  } else {
-    w.paragraph("No certification was recorded for this copy.");
+    w.paragraph(
+      `Certified at submission by ${[certification.name, certification.title].filter(Boolean).join(", ")}, ${formatDateTime(certification.certifiedAt)} ET`,
+    );
   }
 
   const pages = doc.getPages();
