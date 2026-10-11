@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Upload } from "lucide-react";
+import { Download, Upload } from "lucide-react";
+import { cn } from "@/lib/cn";
 import {
   importMasterList,
   previewMasterList,
@@ -10,7 +11,7 @@ import {
 } from "@/app/finance/organizations/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Hint, Label, Textarea } from "@/components/ui/field";
+import { Label, Textarea } from "@/components/ui/field";
 import { Badge, type Tone } from "@/components/ui/status-badge";
 import { Table, THead, TH, TR, TD } from "@/components/ui/table";
 import { ErrorSummary } from "@/components/finance/admin/error-summary";
@@ -32,6 +33,7 @@ export function ImportMasterList() {
   const [result, setResult] = useState<Extract<ImportResult, { ok: true }> | null>(null);
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
 
   async function choose(file: File | undefined) {
     if (!file) return;
@@ -92,23 +94,71 @@ export function ImportMasterList() {
         <CardBody className="space-y-4">
           <ErrorSummary errors={error ? [{ id: "", message: error }] : []} />
           <div>
-            <Label htmlFor="master-file">CSV file</Label>
-            <input
-              id="master-file"
-              ref={fileRef}
-              type="file"
-              accept=".csv,text/csv"
-              className="block text-sm text-ink file:mr-3 file:rounded file:border file:border-line file:bg-white file:px-3 file:py-2 file:text-sm file:font-semibold"
-              onChange={(e) => void choose(e.target.files?.[0])}
-            />
+            <p className="mb-1 block text-sm font-semibold text-ink">Columns</p>
+            <p id="master-hint" className="mb-2 text-sm text-muted">
+              A header row with these columns, in any order. Type is Nonprofit or City agency. Council district can be
+              blank or Citywide for citywide organizations. Contact phone is optional.
+            </p>
+            <ul className="mb-3 flex flex-wrap gap-1.5" aria-label="Columns">
+              {MASTER_FIELDS.map((field) => (
+                <li key={field} className="rounded-sm bg-surface px-1.5 py-0.5 font-mono text-[13px] text-ink">
+                  {field}
+                </li>
+              ))}
+            </ul>
+            <a
+              href="/finance/organizations/import/template"
+              download
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Download CSV template
+            </a>
+          </div>
+          <div
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              void choose(event.dataTransfer.files?.[0]);
+            }}
+            className={cn(
+              "flex min-h-[140px] flex-col items-center justify-center rounded border-2 border-dashed px-5 py-6 text-center",
+              dragging ? "border-action bg-harbor-100" : "border-line-strong bg-harbor-50/50",
+            )}
+          >
+            <Upload className="h-6 w-6 text-muted" aria-hidden="true" />
+            <p className="mt-2 text-[17px] font-bold leading-6 text-ink">
+              Drag a CSV file here or{" "}
+              <label className="cursor-pointer text-link underline underline-offset-2 hover:text-link-hover has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus">
+                choose a file
+                <input
+                  id="master-file"
+                  ref={fileRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  aria-label="CSV file"
+                  className="sr-only"
+                  onChange={(e) => void choose(e.target.files?.[0])}
+                />
+              </label>
+            </p>
+            <p className="mt-1 text-[15px] text-ink-2">
+              {fileName !== "pasted list" && text !== "" ? (
+                <>
+                  Chosen: <span className="font-semibold text-ink">{fileName}</span>
+                </>
+              ) : (
+                "One CSV file, up to 1 MB."
+              )}
+            </p>
           </div>
           <div>
             <Label htmlFor="master-text">Or paste the list</Label>
-            <Hint id="master-hint">
-              Header row with these columns: <span className="font-mono text-[13px]">{MASTER_FIELDS.join(", ")}</span>.
-              Type is Nonprofit or City agency. Council district can be blank for Citywide organizations. Contact phone
-              is optional.
-            </Hint>
             <Textarea
               id="master-text"
               aria-describedby="master-hint"
@@ -123,7 +173,6 @@ export function ImportMasterList() {
             />
           </div>
           <Button onClick={check} disabled={pending || text.trim() === ""}>
-            <Upload className="h-4 w-4" aria-hidden="true" />
             {pending && !preview ? "Checking" : "Preview import"}
           </Button>
         </CardBody>
