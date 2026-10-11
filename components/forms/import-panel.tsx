@@ -9,9 +9,8 @@ import { Badge } from "@/components/ui/status-badge";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { cn } from "@/lib/cn";
 import { DRAFTABLE_TYPES, TYPE_LABEL } from "@/lib/forms/editor/definition";
-import { LIBRARY_KEYS, SECTION_KEYS, checkField, type ProposedField } from "@/lib/forms/editor/draft-core";
+import { SECTION_KEYS, checkField, type LibraryRef, type ProposedField } from "@/lib/forms/editor/draft-core";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
-import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
 import type { FieldType } from "@/lib/rules/types";
 import { formatDate, nowIso } from "@/lib/dates";
 import { plural } from "@/lib/format";
@@ -27,6 +26,7 @@ type Analysis = {
   notices: string[];
   aiActionId: string;
   fields: { id: number; field: ProposedField }[];
+  library: LibraryRef[];
 };
 
 type Decision = "pending" | "accepted" | "discarded";
@@ -84,6 +84,7 @@ export function ImportPanel({
       const saved = window.sessionStorage.getItem(storageKey);
       if (!saved) return;
       const restored = JSON.parse(saved) as { analysis: Analysis; rows: Row[]; fileName: string };
+      if (!Array.isArray(restored.analysis.library)) throw new Error("outdated review");
       setAnalysis(restored.analysis);
       setRows(restored.rows);
       setFileName(restored.fileName);
@@ -124,9 +125,12 @@ export function ImportPanel({
     setRows((current) => current.map((row) => (row.id === id ? { ...row, field: { ...row.field, ...patch } } : row)));
   }
 
+  const libraryKeys = analysis ? analysis.library.map((item) => item.key) : [];
   const kept = rows.filter((row) => row.decision === "accepted");
   const reviewed = rows.filter((row) => row.decision !== "pending").length;
-  const checks = analysis ? kept.map((row) => ({ row, check: checkField(analysis.paragraphs, row.field) })) : [];
+  const checks = analysis
+    ? kept.map((row) => ({ row, check: checkField(analysis.paragraphs, row.field, libraryKeys) }))
+    : [];
   const blocked = checks.filter(({ check }) => !check.ok).length;
   const left = rows.length - reviewed;
 
@@ -281,9 +285,9 @@ export function ImportPanel({
                 </span>
                 <ul className="mt-4 space-y-3">
                   {rows.map((row) => {
-                    const check = checkField(analysis.paragraphs, row.field);
+                    const check = checkField(analysis.paragraphs, row.field, libraryKeys);
                     const library = row.field.library_key
-                      ? STANDARD_QUESTIONS.find((q) => q.key === row.field.library_key)
+                      ? analysis.library.find((item) => item.key === row.field.library_key)
                       : undefined;
                     const discarded = row.decision === "discarded";
                     const accepted = row.decision === "accepted";
@@ -416,7 +420,13 @@ export function ImportPanel({
                             </Button>
                           </div>
                         </div>
-                        {row.editing ? <FieldEditor row={row} onChange={(patch) => patchField(row.id, patch)} /> : null}
+                        {row.editing ? (
+                          <FieldEditor
+                            row={row}
+                            library={analysis.library}
+                            onChange={(patch) => patchField(row.id, patch)}
+                          />
+                        ) : null}
                       </li>
                     );
                   })}
@@ -453,7 +463,15 @@ export function ImportPanel({
   );
 }
 
-function FieldEditor({ row, onChange }: { row: Row; onChange: (patch: Partial<ProposedField>) => void }) {
+function FieldEditor({
+  row,
+  library,
+  onChange,
+}: {
+  row: Row;
+  library: LibraryRef[];
+  onChange: (patch: Partial<ProposedField>) => void;
+}) {
   const id = useId();
   const { field } = row;
   return (
@@ -523,9 +541,9 @@ function FieldEditor({ row, onChange }: { row: Row; onChange: (patch: Partial<Pr
           onChange={(e) => onChange({ library_key: e.target.value || undefined })}
         >
           <option value="">None, create a new question</option>
-          {LIBRARY_KEYS.map((key) => (
-            <option key={key} value={key}>
-              {STANDARD_QUESTIONS.find((q) => q.key === key)?.label}
+          {library.map((item) => (
+            <option key={item.key} value={item.key}>
+              {item.label}
             </option>
           ))}
         </Select>
