@@ -90,6 +90,8 @@ export function auditEntityHref(row: Pick<AuditRow, "entity" | "entity_id">): st
   if (row.entity === "initiative") return `/finance/initiatives/${row.entity_id}`;
   if (row.entity === "form_version") return `/finance/forms/${row.entity_id}`;
   if (row.entity === "organization") return `/finance/organizations/${row.entity_id}`;
+  if (row.entity === "question") return `/finance/question-library/${row.entity_id}`;
+  if (row.entity === "master_list") return "/finance/organizations";
   if (row.entity === "app_user") return "/finance/users";
   if (row.entity === "support_request") return `/finance/support/${row.entity_id}`;
   if (row.entity === "security_incident") return `/finance/incidents/${row.entity_id}`;
@@ -144,6 +146,10 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
       const which = offset === null ? "a reminder rule" : `the reminder rule ${describeOffset(offset).toLowerCase()}`;
       return { actor, verb, subject: period ? `${which} for ${period}` : which };
     }
+    case "question":
+      return { actor, verb, subject: row.note ?? row.entity_id };
+    case "master_list":
+      return { actor, verb, subject: row.note ?? "the master list" };
     case "reporting_period":
       return { actor, verb, subject: row.entity_id };
     case "fiscal_year":

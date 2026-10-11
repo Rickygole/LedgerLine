@@ -4,13 +4,13 @@ import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime } from "@/lib/dates";
 import { formatCurrency, plural } from "@/lib/format";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
 import { lineageMeta } from "@/components/finance/lifecycle/lineage-note";
-import { lineageFor } from "@/lib/lifecycle/rollover";
-import { Card, CardHeader } from "@/components/ui/card";
+import { changeHistory, lineageFor } from "@/lib/lifecycle/rollover";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { AwardPeriods, ContractCell, SponsorsCell } from "@/components/finance/admin/award-cells";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
@@ -19,7 +19,17 @@ import { FormStartChoice } from "@/components/finance/admin/form-start-choice";
 import { MiniDistrictMap } from "@/components/finance/map/mini-district-map";
 import { buttonClass } from "@/components/ui/button";
 import { FileText } from "lucide-react";
-import { loadInitiative } from "@/lib/finance/admin/initiatives";
+import { loadInitiative, requiredReports } from "@/lib/finance/admin/initiatives";
+import {
+  AddCustomReportForm,
+  CustomReportRemove,
+  RequiredReportToggle,
+} from "@/components/finance/admin/required-report-controls";
+import {
+  CombineLink,
+  RenameInitiativeForm,
+  RetireInitiativeForm,
+} from "@/components/finance/admin/initiative-lifecycle";
 import { isUuid } from "@/lib/ids";
 
 export const runtime = "nodejs";
@@ -41,10 +51,15 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
   const data = await withClaims(user.id, async (tx) => {
     const loaded = await loadInitiative(tx, id);
     if (!loaded) return null;
-    return { ...loaded, lineage: await lineageFor(tx, id) };
+    return {
+      ...loaded,
+      lineage: await lineageFor(tx, id),
+      reports: await requiredReports(tx, id, loaded.initiative.fiscal_year_id),
+      changes: await changeHistory(tx, id),
+    };
   });
   if (!data) notFound();
-  const { initiative, funded, forms, lineage } = data;
+  const { initiative, funded, forms, lineage, reports, changes } = data;
   const hasDraft = forms.some((f) => f.status === "draft");
   const hasSource = forms.some((f) => f.status !== "draft");
   const published = forms.some((f) => f.status === "published");
@@ -182,6 +197,116 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           </tbody>
         </Table>
       </Card>
+
+      <Card className="mb-6">
+        <CardHeader
+          title="Required reports"
+          description={`Funded organizations report on each of these for ${initiative.fiscal_year_id}. An organization sees only the reports listed as required.`}
+        />
+        <Table density="compact">
+          <THead>
+            <tr>
+              <TH>Report</TH>
+              <TH>Period covered</TH>
+              <TH>Due</TH>
+              <TH>Status</TH>
+              <TH align="right">Started</TH>
+              {admin ? (
+                <TH>
+                  <span className="sr-only">Change</span>
+                </TH>
+              ) : null}
+            </tr>
+          </THead>
+          <tbody>
+            {reports.map((r) => (
+              <TR key={r.id}>
+                <TD className="min-w-[12rem]">
+                  <span className="font-semibold">{r.label}</span>
+                  {r.custom ? <span className="ml-2 text-[13px] text-muted">Custom report</span> : null}
+                </TD>
+                <TD className="whitespace-nowrap">
+                  {formatDate(r.starts_on)} to {formatDate(r.ends_on)}
+                </TD>
+                <TD className="whitespace-nowrap">{formatDate(r.due_on)}</TD>
+                <TD>
+                  <Badge tone={r.required ? "ok" : "neutral"}>{r.required ? "Required" : "Not required"}</Badge>
+                </TD>
+                <TD align="right">{r.started}</TD>
+                {admin ? (
+                  <TD>
+                    {initiative.status !== "active" ? (
+                      <span className="text-muted">Retired</span>
+                    ) : r.custom ? (
+                      <CustomReportRemove
+                        initiativeId={initiative.id}
+                        periodId={r.id}
+                        label={r.label}
+                        disabled={r.started > 0}
+                        disabledReason={r.started > 0 ? "Reports have already been started" : undefined}
+                      />
+                    ) : (
+                      <RequiredReportToggle
+                        initiativeId={initiative.id}
+                        periodId={r.id}
+                        label={r.label}
+                        required={r.required}
+                        disabled={r.required && r.started > 0}
+                        disabledReason={r.required && r.started > 0 ? "Reports have already been started" : undefined}
+                      />
+                    )}
+                  </TD>
+                ) : null}
+              </TR>
+            ))}
+          </tbody>
+        </Table>
+        {admin && initiative.status === "active" ? <AddCustomReportForm initiativeId={initiative.id} /> : null}
+      </Card>
+
+      {admin || changes.length > 0 || initiative.status !== "active" ? (
+        <Card className="mb-6">
+          <CardHeader
+            title="Name and status"
+            description="Rename or retire this initiative, or combine it with others at the annual rollover. Each change is recorded in the audit log and the lineage."
+          />
+          <CardBody className="space-y-6">
+            {initiative.status !== "active" ? (
+              <p className="rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink" role="note">
+                This initiative is retired
+                {initiative.retired_on ? ` as of ${formatDate(initiative.retired_on)}` : ""}
+                {initiative.retired_reason ? `. Reason: ${initiative.retired_reason}` : ""}. It accepts no new reports,
+                and its earlier reports stay on record.
+              </p>
+            ) : admin ? (
+              <div className="grid gap-8 lg:grid-cols-3">
+                <RenameInitiativeForm initiativeId={initiative.id} currentName={initiative.name} />
+                <RetireInitiativeForm initiativeId={initiative.id} />
+                <CombineLink />
+              </div>
+            ) : null}
+            {changes.length > 0 ? (
+              <div>
+                <h3 className="text-base font-bold text-ink">History</h3>
+                <ul className="mt-2 divide-y divide-line-soft rounded border border-line">
+                  {changes.map((c) => (
+                    <li key={c.id} className="px-4 py-2 text-sm text-ink">
+                      <Badge tone={c.kind === "renamed" ? "info" : "neutral"}>
+                        {c.kind === "renamed" ? "Renamed" : "Retired"}
+                      </Badge>
+                      {c.note ? <span className="ml-2">{c.note}</span> : null}
+                      <span className="block text-[13px] text-muted">
+                        {formatDateTime(c.created_at)}
+                        {c.by_name ? ` by ${c.by_name}` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </CardBody>
+        </Card>
+      ) : null}
 
       {!published ? (
         <section aria-labelledby="no-form-title" className="mb-6 rounded border border-line bg-white px-5 py-6 sm:px-6">

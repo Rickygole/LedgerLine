@@ -10,6 +10,7 @@ import { FormPreview } from "@/components/forms/form-preview";
 import { ImportPanel } from "@/components/forms/import-panel";
 import { QuestionEditor } from "@/components/forms/question-editor";
 import { QuestionOutline } from "@/components/forms/question-outline";
+import { SumRules } from "@/components/forms/sum-rules";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -26,7 +27,6 @@ import {
   updateQuestion,
   validateDefinition,
 } from "@/lib/forms/editor/definition";
-import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
 import type { FieldType, FormDefinition, Question } from "@/lib/rules/types";
 
 type Props = {
@@ -36,6 +36,7 @@ type Props = {
   initiativeId: string;
   initiativeName: string;
   initialDefinition: FormDefinition;
+  library: Question[];
   canEdit: boolean;
   openImport: boolean;
   publishedVersion: number | null;
@@ -68,6 +69,7 @@ export function FormWorkbench({
   initiativeId,
   initiativeName,
   initialDefinition,
+  library,
   canEdit,
   openImport,
   publishedVersion,
@@ -102,7 +104,7 @@ export function FormWorkbench({
   );
   const section = definition.sections.find((s) => s.key === sectionKey);
   const used = new Set(definition.sections.flatMap((s) => s.questions.map((q) => q.key)));
-  const available = STANDARD_QUESTIONS.filter((q) => !used.has(q.key));
+  const available = library.filter((q) => !used.has(q.key));
 
   useEffect(() => {
     setSaved(initialDefinition);
@@ -167,7 +169,12 @@ export function FormWorkbench({
 
   function addNew() {
     if (!newLabel.trim() || !section || section.kind !== "questions") return;
-    const question = newQuestion(definition, newLabel, newType);
+    const question = newQuestion(
+      definition,
+      newLabel,
+      newType,
+      library.map((q) => q.key),
+    );
     setDefinition(addQuestion(definition, section.key, question));
     setNewLabel("");
     setNewType("text");
@@ -175,7 +182,7 @@ export function FormWorkbench({
   }
 
   function addLibrary() {
-    const standard = STANDARD_QUESTIONS.find((q) => q.key === libraryKey);
+    const standard = library.find((q) => q.key === libraryKey);
     if (!standard || !section || section.kind !== "questions") return;
     setDefinition(addQuestion(definition, section.key, JSON.parse(JSON.stringify(standard)) as Question));
     setLibraryKey("");
@@ -543,7 +550,7 @@ export function FormWorkbench({
                               value={newType}
                               onChange={(e) => setNewType(e.target.value as FieldType)}
                             >
-                              {FIELD_TYPES.filter((type) => type !== "table").map((type) => (
+                              {FIELD_TYPES.map((type) => (
                                 <option key={type} value={type}>
                                   {TYPE_LABEL[type]}
                                 </option>
@@ -576,6 +583,15 @@ export function FormWorkbench({
                     ) : null}
                   </CardBody>
                 </Card>
+                {section.kind === "questions" ? (
+                  <SumRules
+                    definition={definition}
+                    editable={editable}
+                    onChange={(rules) =>
+                      setDefinition({ ...definition, sumRules: rules.length > 0 ? rules : undefined })
+                    }
+                  />
+                ) : null}
               </>
             ) : null}
           </div>

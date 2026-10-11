@@ -4,10 +4,16 @@ import { finishRow } from "./derive";
 import type { OpenFlag, PeriodInfo, ReportRow, Sponsor } from "./types";
 
 export async function loadPeriods(tx: Tx): Promise<PeriodInfo[]> {
-  const rows = await tx.query<{ id: string; label: string; due_on: string; fiscal_year_id: string }>(
-    "SELECT id, label, due_on::text, fiscal_year_id FROM reporting_period ORDER BY due_on",
+  const rows = await tx.query<{ id: string; label: string; due_on: string; fiscal_year_id: string; custom: boolean }>(
+    "SELECT id, label, due_on::text, fiscal_year_id, initiative_id IS NOT NULL AS custom FROM reporting_period ORDER BY due_on",
   );
-  return rows.map((r) => ({ id: r.id, label: r.label, dueOn: r.due_on, fiscalYearId: r.fiscal_year_id }));
+  return rows.map((r) => ({
+    id: r.id,
+    label: r.label,
+    dueOn: r.due_on,
+    fiscalYearId: r.fiscal_year_id,
+    custom: r.custom,
+  }));
 }
 
 type BaseRow = {

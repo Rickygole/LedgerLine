@@ -30,8 +30,8 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
       `SELECT i.name AS initiative, rp.label AS period, to_char(rp.due_on, 'YYYY-MM-DD') AS due_on,
               to_char(rp.starts_on, 'YYYY-MM-DD') AS starts_on, to_char(rp.ends_on, 'YYYY-MM-DD') AS ends_on,
               EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published') AS published
-       FROM assignment a JOIN initiative i ON i.id = a.initiative_id JOIN reporting_period rp ON rp.fiscal_year_id = i.fiscal_year_id
-       WHERE a.id = $1 AND rp.id = $2`,
+       FROM assignment a JOIN initiative i ON i.id = a.initiative_id JOIN reporting_period rp ON rp.id = $2
+       WHERE a.id = $1 AND app.requires_period(i.id, rp.id)`,
       [assignment, period]
     )
   );

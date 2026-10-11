@@ -113,46 +113,78 @@ export const STANDARD_QUESTIONS: Question[] = [
   },
 ];
 
-const byKey = (key: string) => {
-  const question = STANDARD_QUESTIONS.find((q) => q.key === key);
-  if (!question) throw new Error(`Unknown standard question ${key}`);
-  return question;
+export type TemplateSection = "organization" | "performance" | "narrative";
+
+export const TEMPLATE_SECTIONS: { key: TemplateSection; title: string; description: string }[] = [
+  {
+    key: "organization",
+    title: "Organization and contact",
+    description: "Who is reporting and how Council Finance can reach you about this report.",
+  },
+  { key: "performance", title: "Program performance", description: "Counts for this reporting period only." },
+  {
+    key: "narrative",
+    title: "Narrative",
+    description: "Plain language is best. Council Finance reads every response.",
+  },
+];
+
+export type LibraryEntry = {
+  question: Question;
+  templateSection: TemplateSection | null;
+  position: number;
 };
 
-export function buildDefinition(title: string, initiativeQuestions: Question[]): FormDefinition {
+const PLACEMENT: Record<string, TemplateSection> = {
+  org_legal_name: "organization",
+  org_ein: "organization",
+  contact_name: "organization",
+  contact_title: "organization",
+  contact_email: "organization",
+  contact_phone: "organization",
+  participants_target: "performance",
+  participants_actual: "performance",
+  sites_count: "performance",
+  delivery_model: "performance",
+  served_youth: "performance",
+  youth_breakdown: "performance",
+  accomplishments: "narrative",
+  challenges: "narrative",
+  success_story: "narrative",
+};
+
+export function standardEntries(): LibraryEntry[] {
+  return STANDARD_QUESTIONS.map((question, index) => ({
+    question,
+    templateSection: PLACEMENT[question.key] ?? null,
+    position: index + 1,
+  }));
+}
+
+export function buildDefinitionFrom(
+  title: string,
+  initiativeQuestions: Question[],
+  library: LibraryEntry[],
+): FormDefinition {
+  const placed = (section: TemplateSection) =>
+    library
+      .filter((entry) => entry.templateSection === section)
+      .sort((a, b) => a.position - b.position)
+      .map((entry) => JSON.parse(JSON.stringify(entry.question)) as Question);
   const sections: Section[] = [
-    {
-      key: "organization",
-      title: "Organization and contact",
-      description: "Who is reporting and how Council Finance can reach you about this report.",
+    ...TEMPLATE_SECTIONS.slice(0, 2).map((section): Section => ({
+      key: section.key,
+      title: section.title,
+      description: section.description,
       kind: "questions",
-      questions: ["org_legal_name", "org_ein", "contact_name", "contact_title", "contact_email", "contact_phone"].map(
-        byKey,
-      ),
-    },
-    {
-      key: "performance",
-      title: "Program performance",
-      description: "Counts for this reporting period only.",
-      kind: "questions",
-      questions: [
-        ...[
-          "participants_target",
-          "participants_actual",
-          "sites_count",
-          "delivery_model",
-          "served_youth",
-          "youth_breakdown",
-        ].map(byKey),
-        ...initiativeQuestions,
-      ],
-    },
+      questions: section.key === "performance" ? [...placed(section.key), ...initiativeQuestions] : placed(section.key),
+    })),
     {
       key: "narrative",
-      title: "Narrative",
-      description: "Plain language is best. Council Finance reads every response.",
+      title: TEMPLATE_SECTIONS[2].title,
+      description: TEMPLATE_SECTIONS[2].description,
       kind: "questions",
-      questions: ["accomplishments", "challenges", "success_story"].map(byKey),
+      questions: placed("narrative"),
     },
     {
       key: "budget",
@@ -163,6 +195,10 @@ export function buildDefinition(title: string, initiativeQuestions: Question[]):
     },
   ];
   return { title, sections, budget: { enabled: true, mustEqualAward: true, maxLines: 100 } };
+}
+
+export function buildDefinition(title: string, initiativeQuestions: Question[]): FormDefinition {
+  return buildDefinitionFrom(title, initiativeQuestions, standardEntries());
 }
 
 export const CATEGORY_METRICS: Record<string, Question[]> = {

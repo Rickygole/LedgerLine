@@ -7,9 +7,8 @@ type StartResult =
   { status: "ok"; submissionId: string; created: boolean } | { status: "not_found" } | { status: "no_form" };
 
 const OWED_PERIOD = `SELECT p.id FROM assignment a
-  JOIN initiative i ON i.id = a.initiative_id
-  JOIN reporting_period p ON p.fiscal_year_id = i.fiscal_year_id
-  WHERE a.id = $1 AND p.id = $2`;
+  JOIN reporting_period p ON p.id = $2
+  WHERE a.id = $1 AND app.requires_period(a.initiative_id, p.id)`;
 
 export async function startReport(userId: string, assignmentId: string, periodId: string): Promise<StartResult> {
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -17,8 +16,8 @@ export async function startReport(userId: string, assignmentId: string, periodId
       const result = await withClaims(userId, async (tx): Promise<StartResult> => {
         const assignment = await tx.one<{ id: string; initiative_id: string; legal_name: string; ein: string }>(
           `SELECT a.id, a.initiative_id, o.legal_name, o.ein
-           FROM assignment a JOIN organization o ON o.id = a.org_id
-           WHERE a.id = $1 AND a.org_id = app.org_id()`,
+           FROM assignment a JOIN organization o ON o.id = a.org_id JOIN initiative i ON i.id = a.initiative_id
+           WHERE a.id = $1 AND a.org_id = app.org_id() AND i.retired_on IS NULL`,
           [assignmentId],
         );
         if (!assignment) return { status: "not_found" };

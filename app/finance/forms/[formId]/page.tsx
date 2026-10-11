@@ -10,6 +10,7 @@ import type { FormDefinition } from "@/lib/rules/types";
 import { CheckCircle2, CircleDashed, History } from "lucide-react";
 import { CreateDraftForm } from "@/components/finance/admin/create-draft-form";
 import { isUuid } from "@/lib/ids";
+import { loadLibrary } from "@/lib/forms/library";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,7 @@ export default async function FormPage({
       await tx.one("SELECT 1 FROM form_version WHERE initiative_id = $1 AND status = 'draft'", [form.initiative_id]),
     ),
   );
+  const library = await withClaims(user.id, (tx) => loadLibrary(tx));
   const tone = form.status === "published" ? "ok" : "neutral";
   const icon = form.status === "published" ? CheckCircle2 : form.status === "draft" ? CircleDashed : History;
   const statusLabel = { draft: "Draft", published: "Published", superseded: "Superseded" }[form.status];
@@ -105,6 +107,7 @@ export default async function FormPage({
         initiativeId={form.initiative_id}
         initiativeName={form.initiative_name}
         initialDefinition={form.definition}
+        library={library.map((item) => item.question)}
         canEdit={editable}
         openImport={query.import === "1"}
         publishedVersion={form.published_version}

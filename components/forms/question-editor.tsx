@@ -4,7 +4,8 @@ import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Trash2 } from "lucide-react
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
-import { FIELD_TYPES, TYPE_LABEL, earlierYesNo } from "@/lib/forms/editor/definition";
+import { FIELD_TYPES, TYPE_LABEL, defaultTable, earlierYesNo } from "@/lib/forms/editor/definition";
+import { TableSettings } from "@/components/forms/table-settings";
 import type { FieldType, FormDefinition, Question } from "@/lib/rules/types";
 
 type Props = {
@@ -53,6 +54,15 @@ export function QuestionEditor({
     if (type !== "textarea") patch.maxWords = undefined;
     else patch.maxWords = question.maxWords ?? 300;
     if (type !== "text") patch.maxLength = undefined;
+    if (type === "table") {
+      const table = defaultTable();
+      patch.columns = question.columns?.length ? question.columns : table.columns;
+      patch.maxRows = question.maxRows ?? table.maxRows;
+    } else {
+      patch.columns = undefined;
+      patch.maxRows = undefined;
+      patch.sumRule = undefined;
+    }
     onChange(patch);
   }
 
@@ -174,7 +184,7 @@ export function QuestionEditor({
               disabled={!editable}
               onChange={(e) => changeType(e.target.value as FieldType)}
             >
-              {FIELD_TYPES.filter((type) => type !== "table" || question.type === "table").map((type) => (
+              {FIELD_TYPES.map((type) => (
                 <option key={type} value={type}>
                   {TYPE_LABEL[type]}
                 </option>
@@ -205,6 +215,9 @@ export function QuestionEditor({
                 onChange={(e) => onChange({ options: e.target.value.split("\n") })}
               />
             </div>
+          ) : null}
+          {question.type === "table" ? (
+            <TableSettings question={question} disabled={!editable} onChange={onChange} />
           ) : null}
           {question.type === "textarea" ? (
             <div>

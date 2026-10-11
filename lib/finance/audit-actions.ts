@@ -65,6 +65,73 @@ export const AUDIT_ACTIONS: Record<string, ActionWords> = {
     alone: "combined initiatives at rollover",
     verb: "combined initiatives into",
   },
+  library_add: {
+    label: "Library question added",
+    alone: "added a library question",
+    verb: "added the library question",
+  },
+  library_edit: {
+    label: "Library question changed",
+    alone: "changed a library question",
+    verb: "changed the library question",
+  },
+  library_retire: {
+    label: "Library question retired",
+    alone: "retired a library question",
+    verb: "retired the library question",
+  },
+  library_restore: {
+    label: "Library question restored",
+    alone: "restored a library question",
+    verb: "restored the library question",
+  },
+  library_apply: {
+    label: "Library question applied to forms",
+    alone: "applied a library question to forms",
+    verb: "applied the library question",
+  },
+  library_applied: {
+    label: "Library question applied",
+    alone: "applied a library question to a form",
+    verb: "applied a library question to",
+  },
+  rename: { label: "Initiative renamed", alone: "renamed an initiative", verb: "renamed" },
+  retire: { label: "Initiative retired", alone: "retired an initiative", verb: "retired" },
+  required_report_added: {
+    label: "Required report added",
+    alone: "added a required report",
+    verb: "added a required report to",
+  },
+  required_report_removed: {
+    label: "Required report removed",
+    alone: "removed a required report",
+    verb: "removed a required report from",
+  },
+  custom_report_added: {
+    label: "Custom report added",
+    alone: "added a custom report",
+    verb: "added a custom report to",
+  },
+  custom_report_removed: {
+    label: "Custom report removed",
+    alone: "removed a custom report",
+    verb: "removed a custom report from",
+  },
+  org_add: {
+    label: "Organization added",
+    alone: "added an organization to the master list",
+    verb: "added to the master list",
+  },
+  org_update: {
+    label: "Organization updated",
+    alone: "updated an organization on the master list",
+    verb: "updated on the master list",
+  },
+  master_list_import: {
+    label: "Master list imported",
+    alone: "imported the Council Finance master list",
+    verb: "imported",
+  },
   user_create: { label: "Account created", alone: "created an account", verb: "created an account for" },
   role_change: { label: "Role changed", alone: "changed a role", verb: "changed the role of" },
   password_set: { label: "Password set", alone: "set a password", verb: "set a password for" },
@@ -185,6 +252,8 @@ export const ENTITY_LABELS: Record<string, string> = {
   annual_review: "Annual review",
   training_record: "Training record",
   uat_session: "Test session",
+  question: "Library question",
+  master_list: "Master list",
 };
 
 function humanize(text: string): string {

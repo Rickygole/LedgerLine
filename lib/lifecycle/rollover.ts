@@ -80,7 +80,7 @@ export async function rolloverInitiatives(tx: Tx, fiscalYear: string): Promise<R
   }>(
     `SELECT i.id, i.code, i.name, i.category, i.total_funding::text AS funding,
             (SELECT count(*)::int FROM assignment a WHERE a.initiative_id = i.id) AS orgs,
-            EXISTS (SELECT 1 FROM initiative_lineage l WHERE l.predecessor_id = i.id) AS rolled
+            EXISTS (SELECT 1 FROM initiative_lineage l WHERE l.predecessor_id = i.id AND l.successor_id IS DISTINCT FROM l.predecessor_id) AS rolled
      FROM initiative i
      WHERE i.fiscal_year_id = $1 AND i.status = 'active'
      ORDER BY i.code`,
@@ -149,16 +149,34 @@ export async function lineageFor(
   const predecessors = await tx.query<LineageLink>(
     `SELECT l.kind, l.fiscal_year_id, p.id AS other_id, p.code AS other_code, p.name AS other_name, p.fiscal_year_id AS other_year
      FROM initiative_lineage l JOIN initiative p ON p.id = l.predecessor_id
-     WHERE l.successor_id = $1 ORDER BY p.code`,
+     WHERE l.successor_id = $1 AND l.predecessor_id <> l.successor_id ORDER BY p.code`,
     [initiativeId],
   );
   const successors = await tx.query<LineageLink>(
     `SELECT l.kind, l.fiscal_year_id, s.id AS other_id, s.code AS other_code, s.name AS other_name, s.fiscal_year_id AS other_year
      FROM initiative_lineage l LEFT JOIN initiative s ON s.id = l.successor_id
-     WHERE l.predecessor_id = $1 ORDER BY s.code`,
+     WHERE l.predecessor_id = $1 AND l.predecessor_id IS DISTINCT FROM l.successor_id ORDER BY s.code`,
     [initiativeId],
   );
   return { predecessors, successors };
+}
+
+export type ChangeRecord = {
+  id: string;
+  kind: "renamed" | "retired";
+  note: string | null;
+  created_at: string;
+  by_name: string | null;
+};
+
+export async function changeHistory(tx: Tx, initiativeId: string): Promise<ChangeRecord[]> {
+  return tx.query<ChangeRecord>(
+    `SELECT l.id, l.kind, l.note, l.created_at::text, u.full_name AS by_name
+     FROM initiative_lineage l LEFT JOIN app_user u ON u.id = l.created_by
+     WHERE l.predecessor_id = $1 AND (l.kind = 'retired' OR l.successor_id = l.predecessor_id)
+     ORDER BY l.created_at DESC, l.id`,
+    [initiativeId],
+  );
 }
 
 type LineageRow = {

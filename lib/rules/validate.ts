@@ -1,6 +1,7 @@
 import { amountBoundsProblem, numericProblem } from "./bounds";
 import { personNameProblem } from "./person-name";
 import { sumAmounts, toCents } from "./money";
+import { sumIssues } from "./sums";
 import { formatCurrency } from "@/lib/format";
 import type { AnswerValue, Answers, BudgetLine, FormDefinition, Issue, Question, ValidationInput } from "./types";
 
@@ -290,6 +291,7 @@ export function validateSubmission(input: ValidationInput): Issue[] {
       issues.push(...questionIssues(question, input.answers));
     }
   }
+  issues.push(...sumIssues(input.definition, input.answers, input.awardAmount));
   issues.push(...budgetIssues(input.definition, input.budget, input.awardAmount));
   return issues;
 }

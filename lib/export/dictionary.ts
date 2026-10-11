@@ -228,6 +228,15 @@ export const TABLES: Record<string, TableDoc> = {
       description: "What the initiative funds.",
       total_funding: "Total dollars allocated to the initiative.",
       administering_agency: "City agency that administers the initiative.",
+      retired_on: "Date a Finance administrator retired the initiative, which stops new reports.",
+      retired_reason: "Why the initiative was retired.",
+    },
+  },
+  initiative_period_exclusion: {
+    description:
+      "Standard reporting periods an initiative does not require. An initiative requires every standard period of its fiscal year unless it is listed here.",
+    columns: {
+      period_id: "Reporting period the initiative does not require (reporting_period.id).",
     },
   },
   initiative_lineage: {
@@ -297,6 +306,12 @@ export const TABLES: Record<string, TableDoc> = {
       max_words: "Longest allowed answer in words.",
       visible_when: "Condition that makes the question appear.",
       table_columns: "Columns of a table question.",
+      max_rows: "Most rows a table question can have.",
+      sum_rule: "Column of a table question that must add up to a set value, and that value.",
+      template_section: "Section of every new form this question starts in, if it is part of the standard template.",
+      position: "Order of the question in the standard template.",
+      retired_at: "When the question was retired from the library, if it was.",
+      retired_by: "Identifier of the user who retired the question (app_user.id).",
     },
   },
   reminder_rule: {
@@ -316,6 +331,7 @@ export const TABLES: Record<string, TableDoc> = {
       starts_on: "First day covered.",
       ends_on: "Last day covered.",
       due_on: "Date reports are due.",
+      initiative_id: "Initiative that alone requires this report, for a custom report. Empty for standard periods.",
     },
   },
   saved_query: {

@@ -1,6 +1,7 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { buildDefinition, STANDARD_QUESTIONS } from "@/lib/forms/standard";
+import { buildDefinitionFrom, standardEntries } from "@/lib/forms/standard";
+import { nextFiscalYear } from "@/lib/lifecycle/rollover";
 import type { FormDefinition } from "@/lib/rules/types";
 import { appUrl, connect, ownerUrl, userId } from "./helpers";
 
@@ -48,34 +49,43 @@ describe("[US-003] standard questions come from one shared library", () => {
   const standardOf = (definition: FormDefinition) =>
     definition.sections.flatMap((s) => s.questions).filter((q) => q.scope === "standard");
 
-  it("embeds the same library questions in every form version on file, across both fiscal years", async () => {
+  it("embeds only questions from the shared library in every form version on file, in every fiscal year on file", async () => {
     const { rows } = await owner.query<{ definition: FormDefinition; fiscal_year_id: string }>(
       "SELECT fv.definition, i.fiscal_year_id FROM form_version fv JOIN initiative i ON i.id = fv.initiative_id",
     );
     expect(rows.length).toBeGreaterThan(300);
-    expect(new Set(rows.map((r) => r.fiscal_year_id))).toEqual(new Set(["FY26", "FY27"]));
-    const library = STANDARD_QUESTIONS.map((q) => q.key).sort();
+    const years = new Set(rows.map((r) => r.fiscal_year_id));
+    expect(years.has("FY26")).toBe(true);
+    expect(years.has("FY27")).toBe(true);
+    const library = new Set(
+      (
+        await owner.query<{ question_key: string }>("SELECT question_key FROM question WHERE scope = 'standard'")
+      ).rows.map((r) => r.question_key),
+    );
+    expect(library.size).toBeGreaterThanOrEqual(15);
     for (const row of rows) {
       const standard = standardOf(row.definition);
-      expect(standard.map((q) => q.key).sort()).toEqual(library);
-      for (const question of standard) expect(question).toEqual(STANDARD_QUESTIONS.find((q) => q.key === question.key));
+      expect(standard.length).toBeGreaterThan(0);
+      for (const question of standard) expect(library.has(question.key)).toBe(true);
     }
   });
 
   it("applies one change to the library to every form built afterwards without editing any form", () => {
-    const original = STANDARD_QUESTIONS.find((q) => q.key === "contact_name")!;
-    const before = original.label;
-    original.label = "Name of the person completing this report";
-    try {
-      const forms = ["Tutoring", "Meals", "Legal help"].map((name) => buildDefinition(`${name} report`, []));
-      for (const form of forms)
-        expect(standardOf(form).find((q) => q.key === "contact_name")?.label).toBe(
-          "Name of the person completing this report",
-        );
-    } finally {
-      original.label = before;
-    }
-    expect(standardOf(buildDefinition("After", [])).find((q) => q.key === "contact_name")?.label).toBe(before);
+    const entries = standardEntries();
+    const before = entries.find((e) => e.question.key === "contact_name")!.question.label;
+    const changed = entries.map((entry) =>
+      entry.question.key === "contact_name"
+        ? { ...entry, question: { ...entry.question, label: "Name of the person completing this report" } }
+        : entry,
+    );
+    const forms = ["Tutoring", "Meals", "Legal help"].map((name) => buildDefinitionFrom(`${name} report`, [], changed));
+    for (const form of forms)
+      expect(standardOf(form).find((q) => q.key === "contact_name")?.label).toBe(
+        "Name of the person completing this report",
+      );
+    expect(standardOf(buildDefinitionFrom("After", [], entries)).find((q) => q.key === "contact_name")?.label).toBe(
+      before,
+    );
   });
 
   it("keeps initiative questions out of the library", async () => {
@@ -86,10 +96,12 @@ describe("[US-003] standard questions come from one shared library", () => {
       required: false,
       scope: "initiative",
     } as const;
-    const a = buildDefinition("A", [own]);
-    const b = buildDefinition("B", []);
+    const a = buildDefinitionFrom("A", [own], standardEntries());
+    const b = buildDefinitionFrom("B", [], standardEntries());
     expect(standardOf(a).map((q) => q.key)).toEqual(standardOf(b).map((q) => q.key));
     expect(standardOf(a).some((q) => q.key === "only_here")).toBe(false);
+    const stored = (await owner.query("SELECT 1 FROM question WHERE question_key = 'only_here'")).rowCount;
+    expect(stored).toBe(0);
   });
 });
 
@@ -117,21 +129,33 @@ describe("[BR-001] about 175 initiatives each fiscal year, and the set changes b
   it("lets the portfolio shrink or grow at rollover without changing code", async () => {
     await inTx(async () => {
       await claims(priya);
+      const latest = (await app.query("SELECT max(id) AS id FROM fiscal_year")).rows[0].id as string;
+      const to = nextFiscalYear(latest);
       const before = (
-        await app.query("SELECT count(*)::int AS n FROM initiative WHERE fiscal_year_id = 'FY27' AND status = 'active'")
+        await app.query("SELECT count(*)::int AS n FROM initiative WHERE fiscal_year_id = $1 AND status = 'active'", [
+          latest,
+        ])
       ).rows[0].n;
       const picks = (
         await app.query(
-          "SELECT id FROM initiative WHERE fiscal_year_id = 'FY27' AND status = 'active' ORDER BY code LIMIT 3",
+          `SELECT i.id FROM initiative i
+           WHERE i.fiscal_year_id = $1 AND i.status = 'active'
+             AND NOT EXISTS (SELECT 1 FROM initiative_lineage l WHERE l.predecessor_id = i.id AND l.predecessor_id IS DISTINCT FROM l.successor_id)
+           ORDER BY i.code LIMIT 3`,
+          [latest],
         )
       ).rows.map((r) => ({ initiative_id: r.id, action: "retire" }));
-      await app.query("SELECT app.rollover_fiscal_year('FY27', 'FY28', $1::jsonb)", [JSON.stringify(picks)]);
+      expect(picks).toHaveLength(3);
+      await app.query("SELECT app.rollover_fiscal_year($1, $2, $3::jsonb)", [latest, to, JSON.stringify(picks)]);
       await app.query(
         `INSERT INTO initiative (code, name, category, description, fiscal_year_id, total_funding)
-         VALUES ('CI-28-901', 'Neighborhood Tool Library', 'Parks and Environment', 'Shared tools for block associations.', 'FY28', 0)`,
+         VALUES ($1, 'Neighborhood Tool Library', 'Parks and Environment', 'Shared tools for block associations.', $2, 0)`,
+        [`CI-${to.slice(2)}-901`, to],
       );
       const next = (
-        await app.query("SELECT count(*)::int AS n FROM initiative WHERE fiscal_year_id = 'FY28' AND status = 'active'")
+        await app.query("SELECT count(*)::int AS n FROM initiative WHERE fiscal_year_id = $1 AND status = 'active'", [
+          to,
+        ])
       ).rows[0].n;
       expect(next).toBe(before - picks.length + 1);
       expect(next).not.toBe(before);

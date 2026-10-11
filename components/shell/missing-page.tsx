@@ -6,7 +6,15 @@ import type { Role } from "@/lib/auth";
 import { ButtonLink } from "@/components/ui/button";
 import { StatusPanel } from "./status-page";
 
-const ADMIN_ONLY = ["/finance/users", "/finance/rollover/plan", "/finance/rollover/result", "/finance/initiatives/new"];
+const ADMIN_ONLY = [
+  "/finance/users",
+  "/finance/rollover/plan",
+  "/finance/rollover/result",
+  "/finance/initiatives/new",
+  "/finance/question-library/new",
+  "/finance/organizations/new",
+  "/finance/organizations/import",
+];
 
 function deniedFor(path: string, role: Role | null): boolean {
   if (!role) return false;
