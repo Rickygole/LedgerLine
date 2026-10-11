@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { addCustomReport, removeCustomReport, setRequiredReport } from "@/app/finance/initiatives/[id]/actions";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,11 @@ export function RequiredReportToggle({
         <div role="alert">
           <FieldError>{state.error}</FieldError>
         </div>
+      ) : null}
+      {state?.ok ? (
+        <p role="status" className="max-w-[18rem] whitespace-normal text-sm font-semibold text-ok">
+          {state.ok}
+        </p>
       ) : null}
     </form>
   );
@@ -74,11 +79,30 @@ export function CustomReportRemove({
 
 export function AddCustomReportForm({ initiativeId }: { initiativeId: string }) {
   const [state, action, pending] = useActionState(addCustomReport, undefined);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (state?.ok) setOpen(false);
+  }, [state]);
   const fe = state?.fieldErrors ?? {};
   const summary = [
     ...(state?.error && Object.keys(fe).length === 0 ? [{ id: "", message: state.error }] : []),
     ...Object.entries(fe).map(([key, message]) => ({ id: `custom-${key}`, message })),
   ];
+  if (!open) {
+    return (
+      <div className="flex flex-wrap items-center gap-3 border-t border-line-soft px-6 py-4">
+        <Button type="button" variant="secondary" aria-expanded={false} onClick={() => setOpen(true)}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Add a custom report
+        </Button>
+        {state?.ok ? (
+          <p role="status" className="text-sm font-semibold text-ok">
+            {state.ok}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <form
       key={state?.ok ? state.at : "form"}
@@ -92,11 +116,6 @@ export function AddCustomReportForm({ initiativeId }: { initiativeId: string }) 
         same form as the standard reports.
       </p>
       <ErrorSummary errors={summary} />
-      {state?.ok ? (
-        <p role="status" className="text-sm font-semibold text-ok">
-          {state.ok}
-        </p>
-      ) : null}
       <input type="hidden" name="initiativeId" value={initiativeId} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="md:col-span-2">
@@ -141,10 +160,15 @@ export function AddCustomReportForm({ initiativeId }: { initiativeId: string }) 
           </div>
         </div>
       </div>
-      <Button type="submit" disabled={pending}>
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Adding" : "Add report"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" disabled={pending}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {pending ? "Adding" : "Add report"}
+        </Button>
+        <Button type="button" variant="secondary" disabled={pending} onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      </div>
     </form>
   );
 }

@@ -1,7 +1,7 @@
 import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFRef, decodePDFRawStream } from "pdf-lib";
 
 function streamText(doc: PDFDocument, ref: unknown): string {
-  const stream = doc.context.lookup(ref as PDFRef, PDFRawStream);
+  const stream = doc.context.lookup(ref as PDFRef) as PDFRawStream;
   return Buffer.from(decodePDFRawStream(stream).decode()).toString("latin1");
 }
 

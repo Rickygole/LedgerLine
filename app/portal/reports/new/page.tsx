@@ -26,10 +26,11 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
   if (existing.status === "found") redirect(`/portal/reports/${existing.submissionId}`);
 
   const details = await withClaims(user.id, (tx) =>
-    tx.one<{ initiative: string; period: string; due_on: string; starts_on: string; ends_on: string; published: boolean }>(
+    tx.one<{ initiative: string; period: string; due_on: string; starts_on: string; ends_on: string; published: boolean; retired_on: string | null }>(
       `SELECT i.name AS initiative, rp.label AS period, to_char(rp.due_on, 'YYYY-MM-DD') AS due_on,
               to_char(rp.starts_on, 'YYYY-MM-DD') AS starts_on, to_char(rp.ends_on, 'YYYY-MM-DD') AS ends_on,
-              EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published') AS published
+              EXISTS (SELECT 1 FROM form_version fv WHERE fv.initiative_id = i.id AND fv.status = 'published') AS published,
+              to_char(i.retired_on, 'YYYY-MM-DD') AS retired_on
        FROM assignment a JOIN initiative i ON i.id = a.initiative_id JOIN reporting_period rp ON rp.id = $2
        WHERE a.id = $1 AND app.requires_period(i.id, rp.id)`,
       [assignment, period]
@@ -38,6 +39,16 @@ export default async function NewReportPage({ searchParams }: { searchParams: Pr
   if (!details) notFound();
 
   const crumbs = [{ label: "My reports", href: "/portal" }, { label: "Start a report" }];
+
+  if (details.retired_on) {
+    return (
+      <PageHeader
+        title="This initiative is no longer accepting reports"
+        description={`Council Finance retired ${details.initiative} on ${formatDate(details.retired_on)}, so a new report cannot be started. Reports you already submitted stay on record. Contact Council Finance if you have a question.`}
+        crumbs={crumbs}
+      />
+    );
+  }
 
   if (!details.published || closed) {
     return (

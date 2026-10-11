@@ -71,6 +71,7 @@ test.describe("as an administrator", () => {
     await page.goto(`/finance/initiatives/${initiativeId}`);
     await page.getByRole("button", { name: `Remove ${removedLabel}` }).click();
     await expect(requiredRow(page, removedLabel)).toContainText("Not required");
+    await expect(page.getByRole("status").filter({ hasText: `${removedLabel} is no longer required` })).toBeVisible();
     const [excluded] = await ownerQuery<{ n: number }>(
       "SELECT count(*)::int AS n FROM initiative_period_exclusion WHERE initiative_id = $1 AND period_id = $2",
       [initiativeId, removedId],
@@ -94,6 +95,7 @@ test.describe("as an administrator", () => {
 
     await page.getByRole("button", { name: `Add back ${removedLabel}` }).click();
     await expect(requiredRow(page, removedLabel)).toContainText("Required");
+    await expect(page.getByRole("status").filter({ hasText: `${removedLabel} is required again.` })).toBeVisible();
   });
 
   test("[US-002] a custom-named report with its own due date reaches the organization and can be deleted", async ({
@@ -101,6 +103,8 @@ test.describe("as an administrator", () => {
     browser,
   }) => {
     await page.goto(`/finance/initiatives/${initiativeId}`);
+    await expect(page.getByLabel("Report name")).toHaveCount(0);
+    await page.getByRole("button", { name: "Add a custom report" }).click();
     await page.getByLabel("Report name").fill(CUSTOM);
     await page.getByLabel("Due date").fill("2027-03-31");
     await page.getByRole("button", { name: "Add report" }).click();
@@ -113,6 +117,13 @@ test.describe("as an administrator", () => {
       [initiativeId, CUSTOM],
     );
     expect(period.due).toBe("2027-03-31");
+
+    for (const path of ["/finance/initiatives", "/finance", "/finance/submissions", "/finance/trends"]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(page.getByText(CUSTOM)).toHaveCount(0);
+    }
+    await page.goto(`/finance/initiatives/${initiativeId}`);
 
     const org = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
     const portal = await org.newPage();
@@ -131,6 +142,27 @@ test.describe("as an administrator", () => {
       period.id,
     ]);
     expect(gone[0].n).toBe(0);
+  });
+
+  test("[US-002] an organization cannot start a report for a retired initiative", async ({ browser }) => {
+    const [target] = await ownerQuery<{ assignment: string }>(
+      `SELECT a.id AS assignment FROM assignment a JOIN app_user u ON u.org_id = a.org_id AND u.email LIKE 'maria%'
+       WHERE a.initiative_id = $1`,
+      [initiativeId],
+    );
+    await ownerQuery("UPDATE initiative SET retired_on = '2026-10-01', retired_reason = 'Ended' WHERE id = $1", [
+      initiativeId,
+    ]);
+    const org = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: authFile("maria") });
+    try {
+      const portal = await org.newPage();
+      await portal.goto(`/portal/reports/new?assignment=${target.assignment}&period=${removedId}`);
+      await expect(portal.getByRole("heading", { name: "This initiative is no longer accepting reports" })).toBeVisible();
+      await expect(portal.getByRole("button", { name: "Start report" })).toHaveCount(0);
+    } finally {
+      await ownerQuery("UPDATE initiative SET retired_on = NULL, retired_reason = NULL WHERE id = $1", [initiativeId]);
+      await org.close();
+    }
   });
 
   test("[US-002] a report that organizations have already started cannot be removed", async ({ page }) => {
@@ -152,5 +184,6 @@ test.describe("as view-only Finance staff", () => {
     await expect(requiredRow(page, "FY27 Mid-Year")).toContainText("Required");
     await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Add report" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add a custom report" })).toHaveCount(0);
   });
 });

@@ -112,28 +112,30 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             byName: changes.find((c) => c.kind === "retired")?.by_name ?? null,
           }),
         ]}
-        actions={<PrintButton label="Print" />}
+        actions={<PrintButton label="Print" size="md" />}
       >
-        <div className="grid gap-5 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_200px]">
-          <p className="max-w-[72ch] text-[15px] leading-relaxed text-ink">{initiative.description}</p>
-          <dl className="grid grid-cols-2 content-start gap-4 lg:border-l lg:border-line lg:pl-6">
-            <div>
-              <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
-              <dd className="num mt-1 text-lg font-bold text-ink">
-                {formatCurrency(Number(initiative.total_funding), { cents: false })}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[13px] font-semibold text-muted">Organizations</dt>
-              <dd className="num mt-1 text-lg font-bold text-ink">{funded.length}</dd>
-            </div>
-          </dl>
+        <div className="grid gap-6 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="space-y-5">
+            <p className="max-w-[72ch] text-[15px] leading-relaxed text-ink">{initiative.description}</p>
+            <dl className="grid max-w-md grid-cols-2 gap-4 border-t border-line pt-4">
+              <div>
+                <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
+                <dd className="num mt-1 text-lg font-bold text-ink">
+                  {formatCurrency(Number(initiative.total_funding), { cents: false })}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[13px] font-semibold text-muted">Organizations</dt>
+                <dd className="num mt-1 text-lg font-bold text-ink">{funded.length}</dd>
+              </div>
+            </dl>
+          </div>
           <figure>
             <p className="text-[13px] font-semibold text-muted">Where funded organizations are</p>
             <MiniDistrictMap
               fills={fills}
               label={`Map of Council districts. ${mapCaption}`}
-              className="mt-1 block h-auto w-[200px] max-w-full"
+              className="mt-1 block h-auto w-[220px] max-w-full"
             />
             <figcaption className="mt-1 text-[13px] leading-5 text-muted">
               {mapCaption} Darker means more organizations.
@@ -272,7 +274,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
         <Card className="mb-6">
           <CardHeader
             title="Name and status"
-            description="Rename or retire this initiative, or combine it with others at the annual rollover. Each change is recorded in the audit log and the lineage."
+            description="Rename this initiative, or combine it with others at the annual rollover. Each change is recorded in the audit log and the lineage."
           />
           <CardBody className="space-y-6">
             {initiative.status !== "active" ? (
@@ -283,9 +285,8 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
                 and its earlier reports stay on record.
               </p>
             ) : admin ? (
-              <div className="grid gap-8 lg:grid-cols-3">
+              <div className="grid gap-8 lg:grid-cols-2">
                 <RenameInitiativeForm initiativeId={initiative.id} currentName={initiative.name} />
-                <RetireInitiativeForm initiativeId={initiative.id} />
                 <CombineLink />
               </div>
             ) : null}
@@ -312,7 +313,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
         </Card>
       ) : null}
 
-      {!published ? (
+      {!published && initiative.status === "active" ? (
         <section aria-labelledby="no-form-title" className="mb-6 rounded border border-line bg-white px-5 py-6 sm:px-6">
           <FileText className="h-6 w-6 text-ink-2" aria-hidden="true" />
           <h2 id="no-form-title" className="mt-2 text-xl font-bold leading-7 text-ink">
@@ -352,7 +353,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           title="Report form"
           description="Each version is frozen once published. Edit a draft, then publish it to replace the current version."
           actions={
-            user.role === "finance_admin" && !hasDraft && hasSource ? (
+            user.role === "finance_admin" && initiative.status === "active" && !hasDraft && hasSource ? (
               <CreateDraftForm initiativeId={initiative.id} />
             ) : null
           }
@@ -415,6 +416,19 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           </tbody>
         </Table>
       </Card>
+
+      {admin && initiative.status === "active" ? (
+        <section aria-labelledby="danger-zone-title" className="mt-6 rounded border border-bad/40 bg-white">
+          <div className="border-b border-bad/30 px-5 py-4 sm:px-6">
+            <h2 id="danger-zone-title" className="text-lg font-bold text-bad">
+              Danger zone
+            </h2>
+          </div>
+          <div className="px-5 py-5 sm:px-6">
+            <RetireInitiativeForm initiativeId={initiative.id} name={initiative.name} organizations={funded.length} />
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }
