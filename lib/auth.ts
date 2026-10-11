@@ -4,6 +4,7 @@ import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
 import { withClaims } from "@/lib/db";
 import { SESSION_COOKIE, verifySessionClaims } from "@/lib/session";
+import { describeScope } from "@/lib/finance/scope";
 
 export type Role = "cbo_submitter" | "finance_viewer" | "finance_analyst" | "finance_admin";
 
@@ -16,6 +17,7 @@ export type CurrentUser = {
   orgId: string | null;
   orgName: string | null;
   ein: string | null;
+  scopeNote: string | null;
 };
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
@@ -32,8 +34,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       org_id: string | null;
       legal_name: string | null;
       ein: string | null;
+      scope_agencies: string[];
+      scope_initiatives: string[];
     }>(
-      `SELECT u.id, u.email, u.full_name, u.title, u.role, u.org_id, o.legal_name, o.ein
+      `SELECT u.id, u.email, u.full_name, u.title, u.role, u.org_id, o.legal_name, o.ein, u.scope_agencies, u.scope_initiatives
        FROM app_user u LEFT JOIN organization o ON o.id = u.org_id
        WHERE u.id = app.uid() AND u.active AND app.session_valid($1::uuid, $2::int)`,
       [claims.jti, claims.version],
@@ -48,6 +52,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       orgId: row.org_id,
       orgName: row.legal_name,
       ein: row.ein,
+      scopeNote: describeScope({ agencies: row.scope_agencies, initiatives: row.scope_initiatives }),
     };
   });
 });

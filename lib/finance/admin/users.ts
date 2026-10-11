@@ -12,6 +12,9 @@ type UserRow = {
   org_name: string | null;
   can_sign_in: boolean;
   active: boolean;
+  scope_agencies: string[];
+  scope_initiatives: string[];
+  scope_initiative_labels: { id: string; label: string }[];
   full_count: number;
 };
 
@@ -19,7 +22,10 @@ export const STAFF_ROLES = ["finance_viewer", "finance_analyst", "finance_admin"
 
 export async function listUsers(tx: Tx, filters: { q: string; role: string; page: number }) {
   const rows = await tx.query<UserRow>(
-    `SELECT u.id, u.email, u.full_name, u.title, u.role, u.org_id, o.legal_name AS org_name, u.can_sign_in, u.active, count(*) OVER ()::int AS full_count
+    `SELECT u.id, u.email, u.full_name, u.title, u.role, u.org_id, o.legal_name AS org_name, u.can_sign_in, u.active, u.scope_agencies, u.scope_initiatives,
+            (SELECT coalesce(jsonb_agg(jsonb_build_object('id', i.id, 'label', i.name || ' (' || i.fiscal_year_id || ')') ORDER BY i.name), '[]'::jsonb)
+             FROM initiative i WHERE i.id = ANY (u.scope_initiatives)) AS scope_initiative_labels,
+            count(*) OVER ()::int AS full_count
      FROM app_user u LEFT JOIN organization o ON o.id = u.org_id
      WHERE u.email <> 'system.scheduler@ledgerline.example'
        AND ($1 = '' OR u.full_name ILIKE $2 OR u.email ILIKE $2 OR o.legal_name ILIKE $2)
@@ -29,4 +35,11 @@ export async function listUsers(tx: Tx, filters: { q: string; role: string; page
     [filters.q, likePattern(filters.q), filters.role, (filters.page - 1) * PAGE_SIZE],
   );
   return { rows, total: rows[0]?.full_count ?? 0 };
+}
+
+export async function listAgencies(tx: Tx): Promise<string[]> {
+  const rows = await tx.query<{ agency: string }>(
+    `SELECT DISTINCT administering_agency AS agency FROM initiative WHERE administering_agency IS NOT NULL ORDER BY 1`,
+  );
+  return rows.map((r) => r.agency);
 }

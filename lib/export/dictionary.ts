@@ -93,6 +93,10 @@ export const TABLES: Record<string, TableDoc> = {
       org_id: "Organization the person reports for. Empty for Finance staff.",
       can_sign_in: "Whether the person has set a password.",
       active: "Whether the account is switched on.",
+      scope_agencies:
+        "Administering agencies a Finance analyst or view-only user is limited to. Empty with no initiatives chosen means every agency.",
+      scope_initiatives:
+        "Initiatives a Finance analyst or view-only user is limited to, in addition to the agencies. Empty with no agencies chosen means every initiative.",
     },
   },
   assignment: {

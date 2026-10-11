@@ -699,6 +699,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
   const takenSurnames = new Set<string>(
     [PERSONAS.priya.name, PERSONAS.daniel.name, PERSONAS.grace.name].map((name) => name.split(" ").slice(1).join(" ")),
   );
+  let scopedAnalyst = true;
   for (const role of staffPlan) {
     const drawn = financeName();
     const [f, ...drawnLast] = drawn.split(" ");
@@ -714,7 +715,7 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     const r = [surname];
     const id = randomUUID();
     if (role !== "finance_viewer") reviewerIds.push(id);
-    financeRows.push({
+    const row: Record<string, unknown> = {
       id,
       email: `${slug(f)}.${slug(r.join(""))}@finance.example.gov`,
       full_name: full,
@@ -723,7 +724,16 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       org_id: null,
       password_hash: role === "finance_viewer" ? hash : null,
       can_sign_in: role === "finance_viewer",
-    });
+    };
+    if (role === "finance_analyst" && scopedAnalyst) {
+      scopedAnalyst = false;
+      Object.assign(row, {
+        email: "marisol.vandenberg@finance.example.gov",
+        full_name: "Marisol Vandenberg",
+        title: "Youth Services Analyst",
+      });
+    }
+    financeRows.push(row);
   }
   reviewerIds.push(ids.priya);
   await insertRows(
@@ -731,6 +741,9 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
     "app_user",
     [...userRows, ...financeRows],
     ["id", "email", "full_name", "title", "role", "org_id", "password_hash", "can_sign_in"],
+  );
+  await client.query(
+    `UPDATE app_user SET scope_agencies = ARRAY['DYCD'] WHERE email = 'marisol.vandenberg@finance.example.gov'`,
   );
 
   const initiatives: SeedInitiative[] = [];

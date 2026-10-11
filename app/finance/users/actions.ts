@@ -8,8 +8,10 @@ import { appOrigin } from "@/lib/origin";
 import { pgCode, withClaims } from "@/lib/db";
 import { actionFailure, type ActionState } from "@/lib/actions";
 import { isUuid } from "@/lib/ids";
-import { STAFF_ROLES } from "@/lib/finance/admin/users";
+import { likePattern } from "@/lib/finance/admin/params";
 import { writeAudit } from "@/lib/audit";
+import { describeScope, parseScope, scopeLabel } from "@/lib/finance/scope";
+import { STAFF_ROLES, listAgencies } from "@/lib/finance/admin/users";
 
 type Target = { id: string; full_name: string; role: string; active: boolean };
 
@@ -31,7 +33,13 @@ export async function changeRole(_prev: ActionState, formData: FormData): Promis
       const target = await loadTarget(tx, userId);
       if (target.role === "cbo_submitter") return { error: "Organization accounts keep the organization role." };
       if (target.role === role) return { ok: `${target.full_name} already has that role.` };
-      await tx.query(`UPDATE app_user SET role = $2 WHERE id = $1`, [userId, role]);
+      await tx.query(
+        `UPDATE app_user SET role = $2,
+           scope_agencies = CASE WHEN $2 = 'finance_admin' THEN '{}' ELSE scope_agencies END,
+           scope_initiatives = CASE WHEN $2 = 'finance_admin' THEN '{}' ELSE scope_initiatives END
+         WHERE id = $1`,
+        [userId, role],
+      );
       await writeAudit(tx, {
         entity: "app_user",
         entityId: userId,
@@ -46,6 +54,72 @@ export async function changeRole(_prev: ActionState, formData: FormData): Promis
   } finally {
     revalidatePath("/finance/users");
   }
+}
+
+export async function setAccessScope(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const admin = await requireUser(["finance_admin"]);
+  const userId = String(formData.get("userId") ?? "");
+  if (!isUuid(userId)) return { error: "That user could not be found." };
+  try {
+    return await withClaims(admin.id, async (tx) => {
+      const parsed = parseScope(formData.getAll("agency"), formData.getAll("initiative"), await listAgencies(tx));
+      if (!parsed.ok) return { error: parsed.error };
+      const scope = parsed.scope;
+      const target = await tx.one<Target & { scope_agencies: string[]; scope_initiatives: string[] }>(
+        `SELECT id, full_name, role, active, scope_agencies, scope_initiatives FROM app_user WHERE id = $1`,
+        [userId],
+      );
+      if (!target) return { error: "That user could not be found." };
+      if (target.role !== "finance_analyst" && target.role !== "finance_viewer")
+        return { error: "An access scope applies to Finance analysts and view-only staff." };
+      const found = await tx.one<{ n: number }>(
+        `SELECT count(*)::int AS n FROM initiative WHERE id = ANY ($1::uuid[])`,
+        [scope.initiatives],
+      );
+      if ((found?.n ?? 0) !== scope.initiatives.length)
+        return { error: "One of the chosen initiatives could not be found." };
+      const before = { agencies: target.scope_agencies, initiatives: target.scope_initiatives };
+      if (
+        before.agencies.length === scope.agencies.length &&
+        before.agencies.every((a) => scope.agencies.includes(a)) &&
+        before.initiatives.length === scope.initiatives.length &&
+        before.initiatives.every((i) => scope.initiatives.includes(i))
+      )
+        return { ok: `${target.full_name} already has that access scope.` };
+      await tx.query(`UPDATE app_user SET scope_agencies = $2::text[], scope_initiatives = $3::uuid[] WHERE id = $1`, [
+        userId,
+        scope.agencies,
+        scope.initiatives,
+      ]);
+      await writeAudit(tx, {
+        entity: "app_user",
+        entityId: userId,
+        action: "scope_change",
+        note: describeScope(scope) ?? "All agencies",
+        before,
+        after: scope,
+      });
+      return { ok: `Access scope for ${target.full_name} is now ${scopeLabel(scope)}.` };
+    });
+  } catch (error) {
+    return actionFailure("set_access_scope_failed", error);
+  } finally {
+    revalidatePath("/finance/users");
+  }
+}
+
+export async function findInitiatives(query: string): Promise<{ id: string; label: string }[]> {
+  const admin = await requireUser(["finance_admin"]);
+  const text = query.trim().slice(0, 80);
+  if (text.length < 2) return [];
+  return withClaims(admin.id, (tx) =>
+    tx.query<{ id: string; label: string }>(
+      `SELECT id, name || ' (' || fiscal_year_id || ')' AS label FROM initiative
+       WHERE name ILIKE $1 OR code ILIKE $1
+       ORDER BY name, fiscal_year_id DESC LIMIT 8`,
+      [likePattern(text)],
+    ),
+  );
 }
 
 export async function setActive(_prev: ActionState, formData: FormData): Promise<ActionState> {
