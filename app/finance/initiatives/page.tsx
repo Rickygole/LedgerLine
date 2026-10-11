@@ -166,7 +166,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
               <TH>Initiative</TH>
               <TH>Category and agency</TH>
               <TH align="right">Organizations</TH>
-              <TH align="right">Total funding</TH>
+              <TH align="right">Funding</TH>
               <TH>Form</TH>
               <TH>{periodHeading}</TH>
               {notOpen ? null : <TH align="right">Missing</TH>}
@@ -180,7 +180,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
             ) : (
               data.rows.map((row) => (
                 <TR key={row.id}>
-                  <TD className="min-w-[14rem]" primary>
+                  <TD className="min-w-[12rem]" primary>
                     <Link
                       href={`${base}/${row.id}`}
                       className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
@@ -203,7 +203,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                   <TD align="right" label="Organizations">
                     <span>{row.orgs}</span>
                   </TD>
-                  <TD align="right" label="Total funding">
+                  <TD align="right" label="Funding">
                     <span>{formatCurrency(Number(row.funding), { cents: false })}</span>
                   </TD>
                   <TD className="whitespace-nowrap" label="Form">
