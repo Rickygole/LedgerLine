@@ -2,9 +2,31 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { pgCode, withClaims } from "@/lib/db";
 import { writeAudit } from "@/lib/audit";
+import type { FormDefinition } from "@/lib/rules/types";
 
 type StartResult =
   { status: "ok"; submissionId: string; created: boolean } | { status: "not_found" } | { status: "no_form" };
+
+type ContactDefaults = {
+  name: string | null;
+  title: string | null;
+  email: string | null;
+  phone: string | null;
+  user_name: string | null;
+  user_title: string | null;
+  user_email: string | null;
+};
+
+export function contactAnswers(contact: ContactDefaults | null): Record<string, string> {
+  const pick = (primary: string | null | undefined, fallback: string | null | undefined) =>
+    primary?.trim() || fallback?.trim() || "";
+  return {
+    contact_name: pick(contact?.name, contact?.user_name),
+    contact_title: pick(contact?.title, contact?.user_title),
+    contact_email: pick(contact?.email, contact?.user_email),
+    contact_phone: pick(contact?.phone, null),
+  };
+}
 
 const OWED_PERIOD = `SELECT p.id FROM assignment a
   JOIN reporting_period p ON p.id = $2
@@ -30,8 +52,8 @@ export async function startReport(userId: string, assignmentId: string, periodId
         );
         if (existing) return { status: "ok", submissionId: existing.id, created: false };
 
-        const form = await tx.one<{ id: string }>(
-          "SELECT id FROM form_version WHERE initiative_id = $1 AND status = 'published'",
+        const form = await tx.one<{ id: string; definition: FormDefinition }>(
+          "SELECT id, definition FROM form_version WHERE initiative_id = $1 AND status = 'published'",
           [assignment.initiative_id],
         );
         if (!form) return { status: "no_form" };
@@ -45,10 +67,29 @@ export async function startReport(userId: string, assignmentId: string, periodId
            VALUES ($1, $2, $3, $4, $5, 'draft', app.uid(), app.uid())`,
           [created.id, reference!.reference_no, assignmentId, periodId, form.id],
         );
+        const contact = await tx.one<ContactDefaults>(
+          `SELECT c.full_name AS name, c.title, c.email, c.phone, u.full_name AS user_name, u.title AS user_title,
+                  u.email AS user_email
+           FROM app_user u
+           LEFT JOIN LATERAL (
+             SELECT full_name, title, email, phone FROM contact
+             WHERE org_id = u.org_id ORDER BY is_primary DESC, full_name LIMIT 1
+           ) c ON true
+           WHERE u.id = app.uid()`,
+        );
+        const prefilled = {
+          org_legal_name: assignment.legal_name,
+          org_ein: assignment.ein,
+          ...contactAnswers(contact),
+        };
+        const onForm = new Set(form.definition.sections.flatMap((section) => section.questions.map((q) => q.key)));
+        const entries = Object.entries(prefilled).filter(
+          ([key, value]) => value !== "" && (onForm.has(key) || key === "org_legal_name" || key === "org_ein"),
+        );
         await tx.query(
           `INSERT INTO answer (submission_id, question_key, value, updated_by)
-           VALUES ($1, 'org_legal_name', to_jsonb($2::text), app.uid()), ($1, 'org_ein', to_jsonb($3::text), app.uid())`,
-          [created.id, assignment.legal_name, assignment.ein],
+           SELECT $1, k, to_jsonb(v), app.uid() FROM unnest($2::text[], $3::text[]) AS t(k, v)`,
+          [created.id, entries.map(([key]) => key), entries.map(([, value]) => value)],
         );
         await writeAudit(tx, {
           entity: "submission",
