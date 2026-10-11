@@ -41,7 +41,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
     <>
       <PageHeader
         title="Outbox"
-        description="Every message LedgerLine has generated, including confirmations, update requests, reminders and password resets."
+        description="Every message LedgerLine has generated, including confirmations, requests for changes, reminders and password resets."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]}
       />
       {emailDeliveryOn() ? null : (
@@ -50,12 +50,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
         </p>
       )}
       <Card>
-        <FilterBar
-          action={base}
-          clearHref={base}
-          keep={0}
-          applied={[data.template, data.org, from, to].filter(Boolean).length}
-        >
+        <FilterBar action={base} clearHref={base} active={[data.template, data.org, from, to].some(Boolean)}>
           <FilterField label="Template" htmlFor="template">
             <Select id="template" name="template" defaultValue={data.template}>
               <option value="">All templates</option>
@@ -103,7 +98,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                   <TD className="min-w-[18rem]" primary>
                     <Link
                       href={`${base}/${m.id}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {m.subject}
                     </Link>
@@ -120,7 +115,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                     {m.org_id ? (
                       <Link
                         href={`/finance/organizations/${m.org_id}`}
-                        className="text-link underline underline-offset-2 hover:text-link-hover"
+                        className="text-link underline-offset-2 hover:text-link-hover hover:underline"
                       >
                         {m.org_name}
                       </Link>

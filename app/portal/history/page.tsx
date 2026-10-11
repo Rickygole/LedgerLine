@@ -134,7 +134,7 @@ export default async function HistoryPage({
                   <TD>
                     <Link
                       href={`/portal/reports/${r.id}`}
-                      className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {r.reference_no}
                     </Link>
@@ -154,7 +154,7 @@ export default async function HistoryPage({
                   <TD className="text-right" action>
                     <Link
                       href={`/portal/reports/${r.id}`}
-                      className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="whitespace-nowrap text-[15px] font-bold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       View<span className="sr-only"> {r.reference_no}</span>
                     </Link>

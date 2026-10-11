@@ -79,7 +79,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
         <FilterBar
           action={base}
           clearHref={`${base}?period=${period.id}`}
-          applied={[borough, type, missing ? "1" : ""].filter(Boolean).length}
+          active={[q, borough, type, missing ? "1" : ""].some(Boolean)}
         >
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Name or 12-3456789" />
@@ -161,7 +161,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
                   <TD className="min-w-[16rem]" primary>
                     <Link
                       href={`${base}/${row.id}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {row.legal_name}
                     </Link>

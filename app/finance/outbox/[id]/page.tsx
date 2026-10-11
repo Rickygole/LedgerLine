@@ -69,7 +69,7 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
                   value: message.submission_id ? (
                     <Link
                       href={`/finance/submissions/${message.submission_id}`}
-                      className="font-mono text-xs font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="whitespace-nowrap font-mono text-xs font-semibold text-link underline underline-offset-2 hover:text-link-hover"
                     >
                       {message.reference_no}
                     </Link>

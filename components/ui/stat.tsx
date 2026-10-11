@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
+import { ArrowLink } from "./arrow-link";
 import { formatCount } from "@/lib/format";
 
 type Tone = "neutral" | "bad" | "warn" | "ok" | "info";
@@ -55,12 +56,7 @@ export function Stat({
       {caption ? <p className="mt-1.5 text-sm leading-5 text-muted">{caption}</p> : null}
       {action ? (
         <p className="mt-auto pt-3">
-          <Link
-            href={action.href}
-            className="text-sm font-bold text-link underline underline-offset-2 hover:text-link-hover"
-          >
-            {action.label}
-          </Link>
+          <ArrowLink href={action.href}>{action.label}</ArrowLink>
         </p>
       ) : null}
     </div>
