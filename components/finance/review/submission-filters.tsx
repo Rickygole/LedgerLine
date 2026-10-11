@@ -86,7 +86,7 @@ export function SubmissionFilters({
         ))}
       {filters.by && filters.district ? <input type="hidden" name="by" value={filters.by} /> : null}
       <div
-        className={`grid grid-cols-1 gap-3 ${wrap ? "sm:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]" : `sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1.2fr)_minmax(13.75rem,1.2fr)]" : top === 4 ? "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)]"}`}`}
+        className={`grid grid-cols-1 gap-3 ${wrap ? "sm:flex sm:flex-wrap sm:[&>*:first-child]:flex-[1.6_1_14rem] sm:[&>*]:flex-[1_1_11rem]" : `sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1.2fr)_minmax(13.75rem,1.2fr)]" : top === 4 ? "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)]"}`}`}
       >
         {has("q") ? (
           <div className={wrap ? "min-w-0" : "min-w-0 sm:col-span-2 lg:col-span-1"}>
