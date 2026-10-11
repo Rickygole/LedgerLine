@@ -230,7 +230,13 @@ export default async function OrganizationProfile({
                 </li>
                 <li className="flex gap-2.5">
                   <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                  <span className="break-all">{org.website ?? "No website on file"}</span>
+                  {org.website ? (
+                    <span className="min-w-0 truncate" title={org.website}>
+                      {org.website}
+                    </span>
+                  ) : (
+                    <span>No website on file</span>
+                  )}
                 </li>
               </ul>
               <div className="border-t border-line px-5 py-4">
@@ -242,7 +248,8 @@ export default async function OrganizationProfile({
                       <p className="text-muted">{primary.title}</p>
                       <a
                         href={`mailto:${primary.email}`}
-                        className="mt-1 block break-all font-medium text-link underline underline-offset-2 hover:text-link-hover"
+                        className="mt-1 block truncate font-medium text-link underline underline-offset-2 hover:text-link-hover"
+                        title={primary.email}
                       >
                         {primary.email}
                       </a>
@@ -350,10 +357,14 @@ export default async function OrganizationProfile({
                     {c.is_primary ? <Badge tone="info">Primary</Badge> : null}
                   </div>
                   <p className="text-sm text-muted">{c.title}</p>
-                  <p className="mt-1 flex items-center gap-2 text-sm">
-                    <Mail className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
-                    {c.email}
-                    {c.phone ? <span className="num ml-3 text-muted">{c.phone}</span> : null}
+                  <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 text-sm">
+                    <span className="flex min-w-0 max-w-full items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
+                      <span className="truncate" title={c.email}>
+                        {c.email}
+                      </span>
+                    </span>
+                    {c.phone ? <span className="num ml-1 text-muted">{c.phone}</span> : null}
                   </p>
                 </li>
               ))}
@@ -369,9 +380,9 @@ export default async function OrganizationProfile({
               ) : null}
               {team.map((t) => (
                 <li key={t.id} className="flex items-center justify-between gap-3 px-5 py-4">
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-semibold">{t.full_name}</p>
-                    <p className="text-sm text-muted">
+                    <p className="truncate text-sm text-muted" title={t.email}>
                       {t.title ?? roleLabel(t.role as Role)} <span aria-hidden="true">&middot;</span> {t.email}
                     </p>
                   </div>
