@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, Clock, Download, FileLock2, Headset, Server, ShieldAlert, Users2 } from "lucide-react";
@@ -14,7 +15,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { ButtonLink } from "@/components/ui/button";
-import { formatCount } from "@/lib/format";
+import { formatCount, plural } from "@/lib/format";
 import { Stat } from "@/components/ui/stat";
 import { Table, THead, TH, TR, TD } from "@/components/ui/table";
 import { Timeline, type Milestone } from "@/components/finance/lifecycle/timeline";
@@ -203,10 +204,35 @@ export default async function PlatformPage() {
                   hint={health.database.latencyMs === null ? "No response" : `${health.database.latencyMs} ms`}
                 />
                 <Stat
-                  label="Database version"
-                  value={health.migrations.applied}
+                  label="Database schema"
+                  value={
+                    <>
+                      {formatCount(health.migrations.applied)}{" "}
+                      <span className="text-lg font-semibold tracking-normal text-ink-2">
+                        {plural(health.migrations.applied, "migration", "migrations")} applied
+                      </span>
+                    </>
+                  }
                   tone={health.migrations.ok ? "ok" : "bad"}
-                  hint={health.migrations.latest ?? "None applied"}
+                  hint={
+                    health.migrations.latest ? (
+                      <span className="break-normal">
+                        Latest:{" "}
+                        {health.migrations.latest.split("_").map((part, i) => (
+                          <Fragment key={i}>
+                            {i > 0 ? (
+                              <>
+                                _<wbr />
+                              </>
+                            ) : null}
+                            {part}
+                          </Fragment>
+                        ))}
+                      </span>
+                    ) : (
+                      "None applied"
+                    )
+                  }
                 />
                 <Stat
                   label="Build"

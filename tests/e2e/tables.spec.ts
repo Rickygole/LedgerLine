@@ -84,3 +84,12 @@ test("the submissions table keeps every flag visible at 1280", async ({ page }) 
   await settle(page);
   expect(await overflowing(page)).toEqual([]);
 });
+
+test("the users and security controls tables fit at 1280", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  for (const path of ["/finance/users", "/finance/platform/controls"]) {
+    await page.goto(path);
+    await settle(page);
+    expect(await overflowing(page), path).toEqual([]);
+  }
+});

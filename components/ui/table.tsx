@@ -11,17 +11,24 @@ const compact =
 export function Table({
   children,
   className,
+  tableClassName,
   stack = false,
   density = "default",
 }: {
   children: React.ReactNode;
   className?: string;
+  tableClassName?: string;
   stack?: boolean;
   density?: "default" | "compact";
 }) {
   return (
     <ScrollArea className={cn(stack ? "table-stack" : pin, density === "compact" && compact, className)}>
-      <table className="w-full border-collapse text-[15px] leading-[22px] max-lg:has-[thead_th:nth-child(4)]:min-w-[48rem]">
+      <table
+        className={cn(
+          "w-full border-collapse text-[15px] leading-[22px] max-lg:has-[thead_th:nth-child(4)]:min-w-[48rem]",
+          tableClassName,
+        )}
+      >
         {children}
       </table>
     </ScrollArea>

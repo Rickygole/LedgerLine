@@ -70,7 +70,6 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           <THead>
             <tr>
               <TH>Name</TH>
-              <TH>Email</TH>
               <TH>Role</TH>
               <TH>Organization</TH>
               <TH>Access scope</TH>
@@ -82,7 +81,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           </THead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={7}>No users match these filters.</EmptyRow>
+              <EmptyRow colSpan={6}>No users match these filters.</EmptyRow>
             ) : (
               rows.map((u) => (
                 <TR key={u.id}>
@@ -93,12 +92,10 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                         You
                       </span>
                     ) : null}
-                    {u.title ? <div className="text-xs font-normal text-muted">{u.title}</div> : null}
-                  </TD>
-                  <TD className="text-muted md:max-w-[17rem]" label="Email">
-                    <span className="block min-w-0 truncate" title={u.email}>
+                    <span className="block max-w-[240px] truncate text-sm font-normal text-muted" title={u.email}>
                       {u.email}
                     </span>
+                    {u.title ? <div className="text-xs font-normal text-muted">{u.title}</div> : null}
                   </TD>
                   <TD className="whitespace-nowrap" label="Role">
                     <span>{roleLabel(u.role)}</span>

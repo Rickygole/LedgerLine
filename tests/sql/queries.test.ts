@@ -1,7 +1,14 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Tx } from "@/lib/db";
-import { cleanParams, exportSummary, resultsHref, summarizeMatches, toSearch } from "@/lib/lifecycle/queries";
+import {
+  cleanParams,
+  exportSummary,
+  resultsHref,
+  showingSummary,
+  summarizeMatches,
+  toSearch,
+} from "@/lib/lifecycle/queries";
 import { appUrl, connect, ownerUrl, userId } from "./helpers";
 
 let owner: Client;
@@ -111,5 +118,8 @@ describe("[US-048][US-046] a query says how many of its matches the export inclu
       "15 matches, 13 submitted reports included in the export",
     );
     expect(exportSummary({ matches: 1, exportable: 1 })).toBe("1 match, 1 submitted report included in the export");
+    expect(showingSummary({ exportable: 378 })).toBe("The export includes the 378 submitted reports.");
+    expect(showingSummary({ exportable: 1 })).toBe("The export includes the 1 submitted report.");
+    expect(showingSummary({ exportable: 0 })).toBe("No reports have been submitted, so the export is empty.");
   });
 });

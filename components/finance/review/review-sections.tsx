@@ -215,7 +215,7 @@ export function BudgetTab({ detail }: { detail: SubmissionDetail }) {
         {row.budget.length === 0 ? (
           <p className="text-sm text-muted">No budget has been entered yet.</p>
         ) : (
-          <BudgetTable lines={row.budget} award={row.award} answers={row.answers} totalLabel="Total reported" />
+          <BudgetTable lines={row.budget} award={row.award} answers={row.answers} />
         )}
       </CardBody>
     </Card>
