@@ -6,8 +6,9 @@ For the presentation to Estrada Consulting on Wednesday, October 14, 2026. Every
 
 | Item | Value |
 | --- | --- |
-| App on the presentation laptop | `pnpm build`, then `pnpm start -p 3000` (any free port works) |
-| Passcode on the gate page | The passcode in your access file (`GATE_PASSCODE` in `.env.local` for the laptop) |
+| Primary: the hosted site | https://ledgerline-eosin.vercel.app. Email is on there and goes to the review inbox |
+| Backup: the app on the presentation laptop | `pnpm build`, then `pnpm start -p 3000` (any free port works). Without the `RESEND_API_KEY`, `EMAIL_FROM` and `EMAIL_REDIRECT_TO` variables in `.env.local`, email is off on the laptop and Messages shows each message as recorded |
+| Passcode on the gate page | The passcode in your access file (`GATE_PASSCODE` in `.env.local` for the laptop copy) |
 | Password for every persona | The persona password in your access file (`PERSONA_PASSWORD` when the database was seeded) |
 | Maria Santos, funded organization | `maria.santos@motthavenyouth.example.org` |
 | James Okafor, her colleague | `james.okafor@motthavenyouth.example.org` |
@@ -55,7 +56,7 @@ If the award on the database is different, run `pnpm demo-desk --award <dollars>
 | Model is not running at all | Same as above: the form import falls back to the saved draft when the template is known, otherwise to the rule-based draft (0.26 s) | Instant |
 | A scene is broken or a rehearsal left clutter | `pnpm preset fresh` for everything (`pnpm db:seed` does the same), 1.3 s. `pnpm preset maria` puts her overdue draft back with 9 answers and an empty budget (paste `budget-balanced.xlsx`, not `budget-remaining.xlsx`). `pnpm preset daniel` puts Afterschool Studio Program under review with one open flag. `pnpm preset priya` removes initiatives created since the last reseed. Add `--live` to target the hosted database; it asks you to type the host name first | Under 2 s |
 | Sign-in or the gate says "Too many attempts. Wait 15 minutes" | Clear the counter: `psql "$DB_OWNER_URL" -c "delete from auth_attempt"` | 1 s |
-| Deployed site down | Use localhost on the laptop | |
+| Hosted site down | Switch to localhost on the laptop. Say so, and use the recorded wording at 3:45 | |
 | Laptop app down too | Backup video | |
 
 Second server for the replay path: in another terminal, `AI_PROVIDER= AI_MODEL_FORM= pnpm start -p 3002`. With no model configured the form import uses the saved draft for any of the three known templates. Sessions are cookies on a different port, so sign in again as Priya there. The import panel then says it is showing saved suggestions built from the rules and a reviewed earlier result, and that no model was used.
@@ -65,8 +66,8 @@ Turning the AI switch off in the database (`update app_setting set value='false'
 ## 4. T-60 checklist (one hour before)
 
 1. `ollama list` shows qwen3:8b and qwen3:4b. Quit anything large (no 14b model loaded).
-2. `pnpm build`, `pnpm start -p 3000`. Open `/gate` and confirm the page loads.
-3. `pnpm preset fresh`, then `psql "$DB_OWNER_URL" -c "delete from auth_attempt"`.
+2. Open https://ledgerline-eosin.vercel.app/gate and confirm the page loads. Then start the backup: `pnpm build`, `pnpm start -p 3000`, and open `/gate` on it.
+3. `pnpm preset fresh --live` for the hosted database (it asks you to type the host name), then `pnpm preset fresh` for the laptop database. Clear the sign-in attempts on the laptop with `psql "$DB_OWNER_URL" -c "delete from auth_attempt"`.
 4. Warm the models once: as Priya, import `legacy-template.docx` and wait for the draft (about 50 s the first time, about 40 s after), then discard it. As Daniel, open a report that is under review, choose "Request changes", choose "Suggest a different note", tick every item and choose "Suggest a note" (about 6 s with the model), then close the dialog with Cancel. The first call after the model loads is the slow one.
 5. `pnpm demo-desk`, copy `fixtures/demo-desk` to the Desktop.
 6. Chrome profiles signed in as Maria, Daniel and Priya. Display 1920 by 1080 at 125 percent. Notifications off.
@@ -75,7 +76,7 @@ Turning the AI switch off in the database (`update app_setting set value='false'
 
 ## 5. T-10 checklist
 
-1. `pnpm preset fresh`. Clear sign-in attempts as above.
+1. `pnpm preset fresh --live` and `pnpm preset fresh`. Clear sign-in attempts on the laptop as above.
 2. Open `/finance` as Daniel. After a fresh seed the headline reads "67 reports are missing" for FY26 Year-End, with 42 waiting for review, 31 in review, 9 changes requested and 290 of 439 accepted. District 8 is first in "Districts with the most missing reports" with 14 of 34. Under the list: Citywide initiatives, 12 missing of 161, and Speaker's allocations, 3 missing of 38.
 3. Confirm Maria's overdue report opens from My reports ("Continue report"): Mentor Match Network, $85,000, reference LL-26YE-00002, "14 days past due". Review and submit lists exactly 2 problems.
 4. Ollama answers: `curl -s localhost:11434/api/tags`.
@@ -98,7 +99,7 @@ Wording that may differ after the latest dashboard changes: the review queue car
 | 1:15 | Maria, report page | In the step list choose "Review and submit", then "Submit report to Council Finance". The summary reads "There are 2 problems to fix before you submit": "Total $71,401.00 must equal award $85,000.00 (under by $13,599.00)." and "Check the box to certify that this report is accurate and complete." Below it, "Worth checking before you submit. These do not stop you from submitting." lists that actual spent has not been entered | "The system refuses and tells her exactly what is wrong." | `pnpm preset fresh` |
 | 2:00 | Maria | Choose the budget problem in the summary. Budget opens with "11 of 100 lines" and the amber meter "Under by $13,599.00". Choose Paste from Excel, paste the two rows copied from `budget-remaining.xlsx` (select the three columns in Excel and press Cmd+C) into "Paste your rows here", choose Add pasted rows. The page says "2 rows added" and the meter turns green: "Balanced" | "Paste straight from Excel, and the meter says when it adds up." | Add the two lines by hand: OTPS, Program evaluation consultant, 7349; OTPS, Summer career exposure trips, 6250 |
 | 3:00 | Maria | On Attachments choose `scan-31MB.pdf`: "Not uploaded. This file is 31.0 MB, which is over the 25.0 MB limit for one file." Choose `scan-24MB.pdf`: the count reads "1 attached". Wait for the Saved label in the page header | "Large files refused clearly, and her work is saved as she goes." | Skip the reload |
-| 3:45 | Maria | On Review and submit check the certification box, confirm the Certifier name and Certifier title, choose "Submit report to Council Finance". The page reads "Report submitted" with the reference number LL-26YE-00002. Open Messages: "Report received: Mentor Match Network, FY26 Year-End" is first in the list. The badge reads "Emailed to the review inbox" and the page notes that messages go to a review inbox in this environment, not to the addresses shown. The same confirmation arrives in the review inbox with "Intended for: maria.santos@motthavenyouth.example.org" on its first line. Say "it was emailed to the review inbox", never that Maria received an email | "She gets a copy of exactly what was submitted, in her messages." | If submit refuses, read the message aloud and fix it, that is the point |
+| 3:45 | Maria | On Review and submit check the certification box, confirm the Certifier name and Certifier title, choose "Submit report to Council Finance". The page reads "Report submitted" with the reference number LL-26YE-00002. Open Messages: "Report received: Mentor Match Network, FY26 Year-End" is first in the list. On the hosted site the badge reads "Emailed to the review inbox", the page notes that messages go to a review inbox in this environment, not to the addresses shown, and the same confirmation arrives in the review inbox with "Intended for: maria.santos@motthavenyouth.example.org" on its first line. Say "it was emailed to the review inbox", never that Maria received an email. On localhost the badge reads "Recorded" and the page says email delivery is not turned on; say "here it is recorded, on the hosted site it goes to the review inbox" || "She gets a copy of exactly what was submitted, in her messages." | If submit refuses, read the message aloud and fix it, that is the point |
 
 ### Use case 2. An analyst reviews it and sends a drafted note (Daniel)
 
@@ -143,7 +144,7 @@ Held-out template (use only if asked "can it be tricked"): as Priya import `lega
 
 ## 8. The five "break it" rules (BR-010 is in the 10 minute path, the rest are in reserve)
 
-Run from the repository root with the app running. The default port is 3105, so set `E2E_PORT` to the port the app is on, for example `E2E_PORT=3000 pnpm break BR-022`. Each command signs Maria in once, takes about 11 s for the ones that use a browser (BR-022, BR-021, BR-012) and 1 to 2 s for the database ones (BR-010, BR-019), and removes any scratch report it made. The lines below are the refusals the script prints; amounts and counts in them come from the seed.
+Run from the repository root with the laptop copy running, even when the hosted site is the one on screen: the script checks the database in `.env.local`, so pointing it at the hosted site would test a different system from the one it reads. Say "this is the same build on my laptop". The default port is 3105, so set `E2E_PORT` to the port the app is on, for example `E2E_PORT=3000 pnpm break BR-022`. Each command signs Maria in once, takes about 11 s for the ones that use a browser (BR-022, BR-021, BR-012) and 1 to 2 s for the database ones (BR-010, BR-019), and removes any scratch report it made. The lines below are the refusals the script prints; amounts and counts in them come from the seed.
 
 | Rule | Command | What the screen prints |
 | --- | --- | --- |
@@ -214,5 +215,5 @@ On the hosted site the first sign-in after it has been idle can take about 3 s, 
 6. **`pnpm test:rule` and `pnpm e2e` reseed the database.** The browser part of `test:rule` runs the global setup, which reseeds. Anything staged for the presentation is lost. Run `pnpm preset fresh` after.
 7. **The local model adds or mis-types a field now and then.** qwen3:4b proposed one extra question on two of three templates and qwen3:8b chose one wrong field type on the held-out template (`docs/ai-eval.md`). The reviewer fixes both at accept time, which is the point of the review step, but expect to see it.
 8. **Rehearsing before October 14.** The hosted site uses the real date, so before October 14 Maria's report reads fewer than 14 days past due and every count of days in this runbook is lower by the same amount. If you pin the date locally with `DEMO_TODAY`, submission times still use the real clock, so a submitted report can read "Submitted N days late" with a different N. On October 14 everything agrees.
-9. **Messages go to a review inbox.** Email is on, but every message is delivered to the review inbox instead of the address shown, with "Intended for: <address>" at the top, because the addresses in the data are made up. Only the first 3 reminders per run are delivered; the rest are held with the reason shown. If email delivery were off, Messages would say each message is recorded instead.
-10. **Not run for this revision.** The live local model path, the PDF export, a real upload over a network and the hosted site. Run the 10 minute path once against the hosted site, and once with the model, before the presentation.
+9. **Messages go to a review inbox, or are recorded.** On the hosted site email is on (the `RESEND_API_KEY`, `EMAIL_FROM` and `EMAIL_REDIRECT_TO` variables are set in the host environment), and every message is delivered to the review inbox instead of the address shown, with "Intended for: <address>" at the top, because the addresses in the data are made up. Only the first 3 reminders per run are delivered; the rest are held with the reason shown. On the laptop, without those variables, Messages says email delivery is not turned on and each message is recorded, so the 3:45 beat reads differently there. Rehearse the submit on the hosted site before the final reset and confirm the badge and the review inbox.
+10. **Not run for this revision.** The live local model path, the PDF export, a real upload over a network and the hosted site. Run the 10 minute path once against the hosted site (email included), and once on the laptop with the model, before the presentation.
