@@ -19,41 +19,16 @@ import { FLAG_LABEL } from "@/lib/finance/review/filters";
 import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
 import { formatCount, formatCurrency } from "@/lib/format";
-import { cellText } from "@/lib/report/format";
+import { tableRows } from "@/lib/report/format";
+import { AnswerTable } from "@/components/report/answer-table";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
 
 function formatValue(question: Question, value: AnswerValue | undefined): React.ReactNode {
   if (value === null || value === undefined || value === "") return <span className="text-muted">Not answered</span>;
   if (question.type === "table" && Array.isArray(value)) {
-    const columns = question.columns ?? [];
-    const filled = value.filter((row) => columns.some((c) => String(row[c.key] ?? "").trim() !== ""));
-    if (filled.length === 0) return <span className="text-muted">No rows entered</span>;
-    return (
-      <div className="overflow-x-auto rounded-md border border-line">
-        <table className="w-full text-sm">
-          <thead className="bg-surface/70 text-left text-[13px] font-semibold text-muted">
-            <tr>
-              {columns.map((c) => (
-                <th key={c.key} scope="col" className={`px-3 py-2 ${c.type === "text" ? "" : "text-right"}`}>
-                  {c.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filled.map((row, index) => (
-              <tr key={index} className="border-t border-line">
-                {columns.map((c) => (
-                  <td key={c.key} className={`px-3 py-2 ${c.type === "text" ? "" : "num text-right"}`}>
-                    {cellText(c.type, row[c.key])}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
+    const rows = tableRows(question, value);
+    if (rows.length === 0) return <span className="text-muted">No rows entered</span>;
+    return <AnswerTable columns={question.columns ?? []} rows={rows} />;
   }
   if (question.type === "currency")
     return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")), { cents: "auto" })}</span>;

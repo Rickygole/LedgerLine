@@ -21,7 +21,9 @@ export function Table({
 }) {
   return (
     <ScrollArea className={cn(stack ? "table-stack" : pin, density === "compact" && compact, className)}>
-      <table className="w-full min-w-[48rem] border-collapse text-[15px] leading-[22px] lg:min-w-0">{children}</table>
+      <table className="w-full border-collapse text-[15px] leading-[22px] max-lg:has-[thead_th:nth-child(4)]:min-w-[48rem]">
+        {children}
+      </table>
     </ScrollArea>
   );
 }

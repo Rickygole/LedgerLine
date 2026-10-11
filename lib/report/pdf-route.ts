@@ -35,6 +35,7 @@ export async function serveReportPdf(id: string, roles: Role[]): Promise<Respons
     revisionActor: revision.actorName,
     submittedAt: header.submittedAt,
     submittedByName: header.submittedByName,
+    submittedByTitle: header.submittedByTitle ?? null,
     orgName: subject?.organizationName ?? header.orgName,
     ein: subject?.ein ?? header.ein,
     awardAmount: subject?.awardAmount ?? header.awardAmount,

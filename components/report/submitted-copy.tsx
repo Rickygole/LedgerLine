@@ -1,9 +1,9 @@
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
-import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/dates";
 import { displayScalar, questionLabel, tableRows } from "@/lib/report/format";
 import { formatBytes } from "@/lib/report/upload-rules";
 import { isVisible } from "@/lib/rules/validate";
+import { AnswerTable } from "./answer-table";
 import { BudgetTable } from "./budget-table";
 import type { FormDefinition } from "@/lib/rules/types";
 import type { Snapshot } from "@/lib/snapshot";
@@ -92,26 +92,7 @@ export function SubmittedCopy({
                             rows.length === 0 ? (
                               <span className="text-muted">No rows</span>
                             ) : (
-                              <div className="overflow-hidden rounded-md border border-line">
-                                <Table>
-                                  <THead>
-                                    <tr>
-                                      {(question.columns ?? []).map((column) => (
-                                        <TH key={column.key}>{column.label}</TH>
-                                      ))}
-                                    </tr>
-                                  </THead>
-                                  <tbody>
-                                    {rows.map((row, index) => (
-                                      <TR key={index}>
-                                        {row.map((cell, cellIndex) => (
-                                          <TD key={cellIndex}>{cell}</TD>
-                                        ))}
-                                      </TR>
-                                    ))}
-                                  </tbody>
-                                </Table>
-                              </div>
+                              <AnswerTable columns={question.columns ?? []} rows={rows} />
                             )
                           ) : displayScalar(question, value) === "" ? (
                             <span className="text-muted">Not answered</span>
