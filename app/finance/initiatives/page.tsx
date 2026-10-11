@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { todayInNewYork } from "@/lib/dates";
+import { shortDate, todayInNewYork } from "@/lib/dates";
 import { formatCompactCurrency, formatCount, formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -55,7 +55,12 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     const agency = agencies.includes(one(params, "agency")) ? one(params, "agency") : "";
     const list = await listInitiatives(tx, today, period.id, { q, category, status, agency, page, form });
     const summary = await categorySummary(tx, today, period.id);
-    return { periods, period, categories, agencies, category, agency, summary, setup, ...list };
+    const opens = await tx.one<{ opens_on: string }>(
+      "SELECT (ends_on + 1)::text AS opens_on FROM reporting_period WHERE id = $1",
+      [period.id],
+    );
+    const opensOn = opens?.opens_on ?? "";
+    return { periods, period, categories, agencies, category, agency, summary, setup, opensOn, ...list };
   });
   if (!loaded) return <NoPeriods title="Initiatives" />;
   const data = loaded;
@@ -72,6 +77,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     { funding: 0, initiatives: 0, accepted: 0, assignments: 0, missing: 0 },
   );
   const notDue = data.period.dueOn > today;
+  const notOpen = data.opensOn !== "" && data.opensOn > today;
+  const opensLabel = notOpen ? `Opens ${shortDate(data.opensOn)}` : "";
   const kept = { q, category: data.category, status, agency: data.agency, period: data.period.id, form };
 
   return (
@@ -100,7 +107,9 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
         <FilterBar
           action={base}
           clearHref={buildHref(base, { period: data.period.id })}
-          applied={[data.category, data.agency, status, form].filter(Boolean).length}
+          active={[q, data.category, data.agency, status, form].some(Boolean)}
+          keep={3}
+          moreApplied={[data.agency, status, form].filter(Boolean).length}
         >
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Code or name" />
@@ -177,7 +186,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                   <TD className="min-w-[14rem]" primary>
                     <Link
                       href={`${base}/${row.id}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {row.name}
                     </Link>
@@ -207,7 +216,9 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                     )}
                   </TD>
                   <TD label={data.period.label}>
-                    {row.orgs > 0 && notDue ? (
+                    {row.orgs > 0 && notOpen ? (
+                      <span className="whitespace-nowrap text-muted">{opensLabel}</span>
+                    ) : row.orgs > 0 && notDue ? (
                       <span className="num text-muted">
                         {row.accepted} of {row.orgs} accepted
                       </span>
@@ -218,7 +229,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                     )}
                   </TD>
                   <TD align="right" label="Missing">
-                    {row.missing > 0 ? (
+                    {notOpen ? null : row.missing > 0 ? (
                       <Badge tone="bad">{row.missing} missing</Badge>
                     ) : (
                       <span className="text-muted">None</span>
