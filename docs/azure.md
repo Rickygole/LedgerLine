@@ -1,12 +1,12 @@
 # LedgerLine on Azure: service mapping, portability and delivery
 
-Prepared October 2026 for Estrada Consulting. This describes how the LedgerLine proof of concept would be hosted in Azure for the NYC Council Initiative Reporting System (PIN 102202709162026), what carries over unchanged, what must change, and a delivery plan to a February 1, 2027 go-live. ECI's high-level architecture is cloud neutral, Azure Government or AWS GovCloud, selected with the Council. Azure is mapped here because it is the example in that document; every service below has an equivalent on AWS GovCloud, and section 2 says which parts are provider specific.
+Prepared October 2026 for Estrada Consulting. This describes how LedgerLine would be hosted in Azure for the NYC Council Initiative Reporting System (PIN 102202709162026), what carries over unchanged, what must change, and a delivery plan to a February 1, 2027 go-live. ECI's high-level architecture is cloud neutral, Azure Government or AWS GovCloud, selected with the Council. Azure is mapped here because it is the example in that document; every service below has an equivalent on AWS GovCloud, and section 2 says which parts are provider specific.
 
 Every Azure Government availability statement below is marked "verify". Service availability, feature parity and authorization levels in Azure Government change over time and differ by region. Each one must be confirmed against Microsoft's current Azure Government documentation and the City's cloud policy before it is relied on in a proposal.
 
-## 1. Where the proof of concept runs today
+## 1. Where LedgerLine runs today
 
-| Concern | Proof of concept today |
+| Concern | Today |
 | --- | --- |
 | Web application | Next.js 15 on Vercel (server components and server actions) |
 | Database | Postgres 16 (Neon in the hosted copy, a local container in development) |
@@ -40,7 +40,7 @@ These are the parts that carry the business rules, and none of them depends on V
 - **State machine and audit.** Submission status changes, corrections and form publishing happen in SQL functions that check the action, the role and a lock version, and write the audit row in the same transaction.
 - **Append-only history.** Triggers on the audit and revision tables reject UPDATE, DELETE and TRUNCATE.
 - **Validation rules.** The budget balance, required answers, upload limits and format checks live in `lib/rules` and are also enforced where the data is written.
-- **Tests.** The unit tests, the SQL and row level security tests, the AI evaluation set and the end to end tests run against any Postgres 16 URL. They are the acceptance evidence that the Azure copy behaves the same as the proof of concept.
+- **Tests.** The unit tests, the SQL and row level security tests, the AI evaluation set and the end to end tests run against any Postgres 16 URL. They are the acceptance evidence that the Azure copy behaves the same as the current build.
 
 ## 4. What changes
 
@@ -74,7 +74,7 @@ Either way the same SQL and database tests run against the Azure database, so be
 
 ## 6. NIST SP 800-53 mapping of controls that exist in the code
 
-This lists only controls implemented in the proof of concept, with the place where each lives. It is not an authorization package. Controls that depend on the hosting platform are listed in section 7 as inherited or open.
+This lists only controls implemented in the current build, with the place where each lives. It is not an authorization package. Controls that depend on the hosting platform are listed in section 7 as inherited or open.
 
 The running application shows the same mapping at `/finance/platform/controls`, with the test that proves each control and whether it is provided by the application, shared, or inherited from the hosting provider.
 
@@ -96,10 +96,10 @@ The running application shows the same mapping at `/finance/platform/controls`, 
 | SI-10 applied to AI output | Model output is validated against a schema, every citation must be a substring of the source paragraph, rule ids and dollar figures not in the input are dropped, and a named person approves before anything is saved | `lib/ai`, `lib/forms/editor/draft-core.ts`, `lib/finance/review/return-note-core.ts` |
 | CM-5 Access restrictions for change | Form versions are immutable once published, and publishing goes through a function | `0004_audit.sql`, `0006_workflow.sql` |
 
-## 7. Controls not implemented in the proof of concept
+## 7. Controls not implemented in the current build
 
 - **SC-28 Protection at rest** and **SC-13 Cryptography**: inherited from Flexible Server and Blob Storage encryption. Customer managed keys are a configuration decision for the City.
-- **IA-2 Multi-factor authentication**: provided by Entra ID once sign-in moves to it. The proof of concept has none.
+- **IA-2 Multi-factor authentication**: provided by Entra ID once sign-in moves to it. The current build has none.
 - **SC-7 Boundary protection**: private networking, WAF and egress rules are Azure work in section 4.
 - **AU-6, SI-4 Monitoring and alerting**: logs go to Azure Monitor, with alert rules to be defined with the City.
 - **CP-9, CP-10 Backup and recovery**: provided by Flexible Server backup, not tested here.
