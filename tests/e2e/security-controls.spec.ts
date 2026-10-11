@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { authFile } from "./support/app";
 
 const STATEMENT =
-  "These are application controls. FedRAMP authorization and a NIST assessment are performed on the production environment before go-live.";
+  "These are application controls. The application does not hold a FedRAMP authorization itself. It inherits one from the authorized government cloud it runs on, Azure Government, and the agency issues the authority to operate after its own security assessment before go-live.";
 
 for (const [who, label] of [
   ["priya", "an administrator"],
@@ -34,6 +34,9 @@ for (const [who, label] of [
       await expect(ac3).toContainText("Application");
       await expect(table.getByRole("row").filter({ hasText: "SC-28" })).toContainText(
         "Inherited from hosting provider",
+      );
+      await expect(table.getByRole("row").filter({ hasText: "SC-28" })).toContainText(
+        "Provided by the hosting platform",
       );
       await expect(table.getByRole("row").filter({ hasText: "CP-9" })).toContainText("Inherited from hosting provider");
       await expect(table.getByRole("row").filter({ hasText: "SC-8" })).toContainText("Shared");

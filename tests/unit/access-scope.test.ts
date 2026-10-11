@@ -6,6 +6,13 @@ const id = "0f8fad5b-d9cb-469f-a165-70867728950e";
 const other = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
 
 describe("[US-060][BR-017] access scope parsing", () => {
+  it("matches known agencies stored in any case or with stray spaces", () => {
+    expect(parseScope(["dycd", "Hra"], [], ["dycd", " Hra ", "DFTA"])).toEqual({
+      ok: true,
+      scope: { agencies: ["DYCD", "HRA"], initiatives: [] },
+    });
+  });
+
   it("accepts no choices as an empty scope, which means every agency", () => {
     expect(parseScope([], [], known)).toEqual({ ok: true, scope: { agencies: [], initiatives: [] } });
     expect(parseScope(["", "  "], [""], known)).toEqual({ ok: true, scope: { agencies: [], initiatives: [] } });

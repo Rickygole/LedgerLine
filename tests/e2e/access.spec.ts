@@ -68,7 +68,6 @@ test("[BR-011] after the passcode the start page shows the fiscal year calendar 
   await page.getByLabel("Passcode").fill(PASSCODE);
   await page.getByRole("button", { name: "Continue" }).click();
   await page.waitForURL((url) => url.pathname === "/");
-  await ownerQuery("DELETE FROM auth_attempt WHERE id = (SELECT max(id) FROM auth_attempt WHERE key LIKE 'gate:%')");
   await expect(
     page.getByRole("heading", { name: "Report on your City Council initiative funding", level: 1 }),
   ).toBeVisible();

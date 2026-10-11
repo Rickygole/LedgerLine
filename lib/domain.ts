@@ -42,6 +42,12 @@ export function orgTypeLabel(value: string): string {
   return ORG_TYPES.find((t) => t.value === value)?.label ?? value;
 }
 
+export function normalizeAgency(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .toUpperCase();
+}
+
 export const AGENCIES = [
   "ACS",
   "DCLA",

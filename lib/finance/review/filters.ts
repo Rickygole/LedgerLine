@@ -1,4 +1,5 @@
 import { todayInNewYork } from "@/lib/dates";
+import { normalizeAgency } from "@/lib/domain";
 import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
 import { BUCKET_LABEL } from "@/lib/reporting";
 import type { Filters, PeriodInfo } from "./types";
@@ -63,7 +64,7 @@ export function parseFilters(raw: Raw, periods: PeriodInfo[]): Filters {
     member: /^\d{1,2}$/.test(one(raw, "member")) && member >= 1 && member <= 51 ? String(member) : "",
     funding: FUNDING_SOURCES.some((f) => f.value === one(raw, "funding")) ? one(raw, "funding") : "",
     contract: CONTRACT_STATUSES.some((c) => c.value === one(raw, "contract")) ? one(raw, "contract") : "",
-    agency: /^[A-Z]{2,6}$/.test(one(raw, "agency")) ? one(raw, "agency") : "",
+    agency: /^[A-Z]{2,6}$/.test(normalizeAgency(one(raw, "agency"))) ? normalizeAgency(one(raw, "agency")) : "",
     period: periods.some((p) => p.id === period) ? period : defaultPeriodId(periods),
     bucket: Object.hasOwn(BUCKET_LABEL, one(raw, "bucket")) ? one(raw, "bucket") : "",
     status: one(raw, "status").slice(0, 30),

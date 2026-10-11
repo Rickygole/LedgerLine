@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-10-11T06:14:27.426Z",
-  "commit": "f700755efda1aa3d16b400ff8ca41a3a1514eae1",
+  "generatedAt": "2026-10-11T14:10:48.709Z",
+  "commit": "33cc2791b4712f38713005a41ae3a4ad92b230c5",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 851,
-    "passed": 851,
+    "tests": 868,
+    "passed": 868,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 430,
-    "sql": 278,
+    "unit": 434,
+    "sql": 291,
     "eval": 32,
     "e2e": 111
   },
   "summary": {
     "verified": {
-      "stories": 58,
-      "rules": 24
+      "stories": 56,
+      "rules": 23
     },
     "supporting": {
-      "stories": 8,
-      "rules": 4
+      "stories": 10,
+      "rules": 5
     },
     "failing": {
       "stories": 0,
@@ -410,6 +410,12 @@
         {
           "title": "library usage is counted for the current fiscal year leads with the current year and lists earlier years after it",
           "file": "tests/unit/forms-definition.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "Publish all drafts when privilege is lost mid-batch rethrows insufficient privilege after rolling back its savepoint and writes no summary",
+          "file": "tests/unit/library-publish-privilege.test.ts",
           "status": "passed",
           "suite": "unit"
         },
@@ -1416,12 +1422,6 @@
       "note": null,
       "tests": [
         {
-          "title": "Maria's pasted budget lines bring her draft to the award codes the evaluation consultant as other than personal services and balances to $85,000",
-          "file": "tests/sql/seed-state.test.ts",
-          "status": "passed",
-          "suite": "sql"
-        },
-        {
           "title": "report PDF contains the answers, tables, budget subtotals, attachments and identifiers",
           "file": "tests/unit/report-pdf.test.ts",
           "status": "passed",
@@ -1435,6 +1435,12 @@
         },
         {
           "title": "report PDF paginates long answers without throwing on characters outside the font",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF wraps a 2,000 character unbroken token quickly and keeps every character",
           "file": "tests/unit/report-pdf.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1796,6 +1802,12 @@
       "note": null,
       "tests": [
         {
+          "title": "Maria's pasted budget lines bring her draft to the award codes the evaluation consultant as other than personal services and balances to $85,000",
+          "file": "tests/sql/seed-state.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "amount parsing reads plain, dollar and comma formatted values",
           "file": "tests/unit/money.test.ts",
           "status": "passed",
@@ -1886,6 +1898,12 @@
         },
         {
           "title": "table totals calculate automatically adds decimals without floating point drift",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically counts negative, parenthesized and signed entries instead of dropping them",
           "file": "tests/unit/table-totals.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -3779,7 +3797,7 @@
       "area": "Hosting",
       "summary": "Hosted outside Council-owned servers",
       "route": "/finance/platform",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
       "note": "This system runs on vendor infrastructure, not Council servers; production hosting is set in the contract. The health check reports the declared hosting provider and region and that the system is not on Council servers. That is a deployment setting and is not independently audited.",
       "tests": [
@@ -3804,7 +3822,7 @@
       "route": "/finance/platform",
       "state": "supporting",
       "reason": null,
-      "note": "Delivery commitment, not claimed as met. FedRAMP authorization and a NIST assessment are performed on the production environment before go-live. The application controls it implements, with the file and test for each, are listed on the Security controls page.",
+      "note": "Delivery commitment, not claimed as met. The application does not hold a FedRAMP authorization itself. It inherits one from the authorized government cloud it runs on, Azure Government, and the agency issues the authority to operate after its own security assessment before go-live. The application controls it implements, with the file and test for each, are listed on the Security controls page.",
       "tests": [
         {
           "title": "the security control mapping points at real files and tests names a file that exists for every place and every test it cites",
@@ -3825,7 +3843,7 @@
           "suite": "unit"
         },
         {
-          "title": "the security control mapping points at real files and tests states that these are application controls and that authorization happens before go-live",
+          "title": "the security control mapping points at real files and tests states that these are application controls and that the agency issues the authority to operate",
           "file": "tests/unit/security-controls.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -3861,7 +3879,7 @@
       "area": "Data ownership",
       "summary": "The Council owns all system data",
       "route": "/finance/data",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
       "note": "Full Excel and CSV export is available to Finance staff, and administrators can download a complete data package with a README for every table and column. Contractual ownership terms are agreed in the contract.",
       "tests": [
@@ -4167,6 +4185,12 @@
           "suite": "sql"
         },
         {
+          "title": "Finance access scope matches the agency scope whatever the case of the stored agency",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "Finance access scope keeps in-scope reads working for the scoped analyst",
           "file": "tests/sql/access-scope.test.ts",
           "status": "passed",
@@ -4209,6 +4233,30 @@
           "suite": "sql"
         },
         {
+          "title": "Audit log visibility follows the access scope shows an unscoped analyst every planted event",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Audit log visibility follows the access scope limits a scoped analyst to events about in-scope records",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Audit log visibility follows the access scope scopes by initiative the same way",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Audit log visibility follows the access scope keeps flag events away from organization users",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "50 to 100 Finance users with different permissions holds 100 Finance users across the three roles and enforces each role's permissions",
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
@@ -4219,6 +4267,42 @@
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope lists reminder targets only for organizations with an in-scope assignment",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope shows contacts only for organizations with an in-scope assignment",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope lets a scoped analyst claim and finish only in-scope outbox messages",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope refuses to finish a message the caller could not claim",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope keeps the audit log closed to a scoped analyst for assignment and administrator-only events",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "access scope parsing matches known agencies stored in any case or with stray spaces",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
         },
         {
           "title": "access scope parsing accepts no choices as an empty scope, which means every agency",
@@ -5152,6 +5236,24 @@
       "note": null,
       "tests": [
         {
+          "title": "the passcode gate counts only wrong passcodes lets 25 correct unlocks in a row through from one address",
+          "file": "tests/sql/gate-throttle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the passcode gate counts only wrong passcodes locks an address after repeated wrong passcodes, then refuses even the right one",
+          "file": "tests/sql/gate-throttle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the passcode gate counts only wrong passcodes clears earlier wrong passcodes when the right one is entered",
+          "file": "tests/sql/gate-throttle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "only failed attempts count toward the lockout checks a key without recording an attempt",
           "file": "tests/sql/throttle.test.ts",
           "status": "passed",
@@ -5596,6 +5698,12 @@
           "suite": "sql"
         },
         {
+          "title": "Finance access scope matches the agency scope whatever the case of the stored agency",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "Finance access scope keeps in-scope reads working for the scoped analyst",
           "file": "tests/sql/access-scope.test.ts",
           "status": "passed",
@@ -5638,6 +5746,30 @@
           "suite": "sql"
         },
         {
+          "title": "Audit log visibility follows the access scope shows an unscoped analyst every planted event",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Audit log visibility follows the access scope limits a scoped analyst to events about in-scope records",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Audit log visibility follows the access scope scopes by initiative the same way",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Audit log visibility follows the access scope keeps flag events away from organization users",
+          "file": "tests/sql/audit-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "50 to 100 Finance users with different permissions holds 100 Finance users across the three roles and enforces each role's permissions",
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
@@ -5648,6 +5780,42 @@
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope lists reminder targets only for organizations with an in-scope assignment",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope shows contacts only for organizations with an in-scope assignment",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope lets a scoped analyst claim and finish only in-scope outbox messages",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope refuses to finish a message the caller could not claim",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "reads that bypass table policies follow the access scope keeps the audit log closed to a scoped analyst for assignment and administrator-only events",
+          "file": "tests/sql/scope-closed-reads.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "access scope parsing matches known agencies stored in any case or with stray spaces",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
         },
         {
           "title": "access scope parsing accepts no choices as an empty scope, which means every agency",
@@ -5792,9 +5960,9 @@
       "area": "Rules",
       "summary": "The Council owns the data",
       "route": "/finance/data",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "Ownership is a contract term. The tool it relies on is built here: Finance staff can export all system data.",
       "tests": [
         {
           "title": "the Council can take a complete, documented copy of its data covers every business table in the database, and names the ones it leaves out",
@@ -6451,7 +6619,7 @@
           "suite": "unit"
         },
         {
-          "title": "the security control mapping points at real files and tests states that these are application controls and that authorization happens before go-live",
+          "title": "the security control mapping points at real files and tests states that these are application controls and that the agency issues the authority to operate",
           "file": "tests/unit/security-controls.test.ts",
           "status": "passed",
           "suite": "unit"

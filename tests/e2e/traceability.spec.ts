@@ -43,7 +43,7 @@ test.describe("requirements traceability page", () => {
       await expect(page.getByText("Build", { exact: true })).toBeVisible();
       await expect(page.getByText("Generated", { exact: true })).toBeVisible();
       await expect(
-        page.getByText(/\d+ verified by test, \d+ supporting tools built, \d+ delivery commitments/),
+        page.getByText(/\d+ verified by test, \d+ supporting tools? built, \d+ delivery commitments?/),
       ).toBeVisible();
       await expect(page.locator("tbody tr")).toHaveCount(95);
     });

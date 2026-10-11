@@ -46,6 +46,27 @@ describe("[US-026] table totals calculate automatically", () => {
     expect(columnTotals(question, value).find((t) => t.key === "cost")?.text).toBe("$0.60");
   });
 
+  it("counts negative, parenthesized and signed entries instead of dropping them", () => {
+    const question: Question = { ...grants, sumRule: undefined };
+    const value: Record<string, string>[] = [
+      { cost: "100" },
+      { cost: "-20" },
+      { cost: "(30)" },
+      { cost: "$-5.50" },
+      { visits: "-3" },
+      { visits: "10" },
+    ];
+    const totals = columnTotals(question, value);
+    const cost = totals.find((t) => t.key === "cost")!;
+    expect(cost.entries).toBe(4);
+    expect(cost.total).toBe(44.5);
+    expect(cost.text).toBe("$44.50");
+    expect(totals.find((t) => t.key === "visits")?.text).toBe("7");
+    const negative = columnTotals(question, [{ cost: "10" }, { cost: "-25" }]).find((t) => t.key === "cost")!;
+    expect(negative.total).toBe(-15);
+    expect(negative.text).toBe("($15)");
+  });
+
   it("shows the sum rule target next to the percent total and says whether it is met", () => {
     const short = columnTotals(grants, rows).find((t) => t.key === "share")!;
     expect(short.goal).toBe("100%");

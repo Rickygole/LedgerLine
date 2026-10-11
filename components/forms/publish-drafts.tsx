@@ -84,6 +84,11 @@ export function PublishDrafts({ questionKey, formIds, count }: Props) {
             {counted(count, "form")} will get a new version. New reports use it right away. Reports already started keep
             their version.
           </p>
+          <p className="mt-2 text-[15px] leading-[22px]">
+            {formIds === null
+              ? "This publishes every open draft that contains this question, including drafts other people started and any other changes in them."
+              : "This publishes only the drafts just created or updated from this question, including any other changes already in them."}
+          </p>
           <p className="mt-2 text-sm text-muted">
             Each form is published on its own, so a form that fails does not hold back the others. Published versions
             cannot be changed. The change is recorded in the audit log under your name.

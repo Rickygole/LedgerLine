@@ -1,4 +1,4 @@
-import { CITYWIDE } from "@/lib/domain";
+import { CITYWIDE, normalizeAgency } from "@/lib/domain";
 import { bucketFor, type Bucket } from "@/lib/reporting";
 import { daysPastDue } from "@/lib/dates";
 import { formatCurrency, plural } from "@/lib/format";
@@ -198,7 +198,7 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
     if (use("member") && !row.sponsors.some((s) => String(s.district) === filters.member)) return false;
     if (use("funding") && row.fundingSource !== filters.funding) return false;
     if (use("contract") && row.contractStatus !== filters.contract) return false;
-    if (use("agency") && row.agency !== filters.agency) return false;
+    if (use("agency") && normalizeAgency(row.agency) !== normalizeAgency(filters.agency)) return false;
     if (use("orgType") && row.orgType !== filters.orgType) return false;
     if (use("awardMin") && row.award < Number(filters.awardMin)) return false;
     if (use("awardMax") && row.award > Number(filters.awardMax)) return false;

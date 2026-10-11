@@ -119,6 +119,13 @@ describe("[US-060][BR-017] Finance access scope", () => {
     );
   });
 
+  it("matches the agency scope whatever the case of the stored agency", async () => {
+    await as(marisol, async () => {
+      expect(await rows("SELECT id FROM submission WHERE id = $1", [inScope])).toBe(1);
+      expect(await rows("SELECT id FROM submission")).toBe(dycdSubmissions);
+    }, [["UPDATE initiative SET administering_agency = ' dycd ' WHERE administering_agency = 'DYCD'"]]);
+  });
+
   it("keeps in-scope reads working for the scoped analyst", async () => {
     await as(marisol, async () => {
       expect(await rows("SELECT 1 FROM answer WHERE submission_id = $1", [inScope])).toBe(

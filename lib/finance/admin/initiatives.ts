@@ -40,7 +40,7 @@ export async function listInitiatives(tx: Tx, today: string, periodId: string, f
      WHERE ($3 = '' OR i.name ILIKE $4 OR i.code ILIKE $4)
        AND ($5 = '' OR i.category = $5)
        AND ($6 = '' OR i.status = $6)
-       AND ($7 = '' OR i.administering_agency = $7)
+       AND ($7 = '' OR upper(btrim(i.administering_agency)) = upper(btrim($7)))
        AND ($9 = '' OR ($9 = 'none' AND NOT EXISTS (SELECT 1 FROM form_version p WHERE p.initiative_id = i.id AND p.status = 'published'))
                     OR ($9 = 'draft' AND EXISTS (SELECT 1 FROM form_version d WHERE d.initiative_id = i.id AND d.status = 'draft'))
                     OR ($9 = 'published' AND EXISTS (SELECT 1 FROM form_version p WHERE p.initiative_id = i.id AND p.status = 'published')))
@@ -93,7 +93,7 @@ export async function categorySummary(tx: Tx, today: string, periodId: string) {
 
 export async function listAgencies(tx: Tx) {
   const rows = await tx.query<{ agency: string }>(
-    `SELECT DISTINCT administering_agency AS agency FROM initiative WHERE administering_agency IS NOT NULL ORDER BY 1`,
+    `SELECT DISTINCT upper(btrim(administering_agency)) AS agency FROM initiative WHERE btrim(coalesce(administering_agency, '')) <> '' ORDER BY 1`,
   );
   return rows.map((r) => r.agency);
 }

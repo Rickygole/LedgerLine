@@ -30,6 +30,7 @@ const loginSchema = z.object({
 });
 
 const IP_FAILURE_LIMIT = 30;
+const GATE_FAILURE_LIMIT = 20;
 const EMAIL_FAILURE_LIMIT = 8;
 
 const DUMMY_HASH = "$2b$10$ub.I6pzHcfPjvdwuphNjf.D0PorzRHkVo7g34JoMBQE4O5FnPI8TO";
@@ -98,10 +99,15 @@ export async function signOut() {
 
 export async function unlockGate(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const ip = await clientKey();
-  if (!(await allowed(`gate:${ip}`, 20))) return { error: TOO_MANY };
+  const gateKey = `gate:${ip}`;
+  if (await blocked(gateKey, GATE_FAILURE_LIMIT)) return { error: TOO_MANY };
   const passcode = String(formData.get("passcode") ?? "").trim();
   const expected = (process.env.GATE_PASSCODE ?? "").trim();
-  if (!expected || !sameSecret(passcode, expected)) return { error: "That passcode is not correct." };
+  if (!expected || !sameSecret(passcode, expected)) {
+    if (!(await allowed(gateKey, GATE_FAILURE_LIMIT))) return { error: TOO_MANY };
+    return { error: "That passcode is not correct." };
+  }
+  await clearAttempts(gateKey);
   const store = await cookies();
   store.set(GATE_COOKIE, await signGate(), { ...sessionCookieOptions, maxAge: 60 * 60 * 24 * 7 });
   const requested = safeNext(formData.get("next"), "/");

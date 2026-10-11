@@ -210,10 +210,6 @@ export async function summarizeMatches(tx: Tx, params: QueryParams): Promise<Mat
   return { matches: rows.length, exportable: rows.filter((row) => isExportable(row.status)).length };
 }
 
-export async function countMatches(tx: Tx, params: QueryParams): Promise<number> {
-  return (await summarizeMatches(tx, params)).matches;
-}
-
 export function exportSummary({ matches, exportable }: MatchSummary): string {
   return `${formatCount(matches)} ${plural(matches, "match", "matches")}, ${formatCount(exportable)} submitted ${plural(exportable, "report", "reports")} included in the export`;
 }

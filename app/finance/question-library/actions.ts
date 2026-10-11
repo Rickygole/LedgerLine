@@ -34,6 +34,15 @@ async function failFrom(event: string, error: unknown): Promise<Failure> {
   return { ok: false, errors: [dbErrorMessage(error, LIBRARY_ERRORS)] };
 }
 
+const PUBLISH_ERRORS: ErrorOverrides = {
+  ...LIBRARY_ERRORS,
+  codes: {
+    ...LIBRARY_ERRORS.codes,
+    "42501": "Only finance administrators can publish forms. Nothing was published.",
+  },
+  fallback: "Something went wrong and nothing was published. Try again.",
+};
+
 const inputSchema = z.object({
   question: questionSchema,
   templateSection: z.enum(["organization", "performance", "narrative"]).nullable(),
@@ -122,6 +131,7 @@ export async function publishLibraryDrafts(
     revalidatePath(`/finance/question-library/${key}`);
     return { ok: true, ...result };
   } catch (error) {
-    return failFrom("publish_library_drafts_failed", error);
+    await logError("publish_library_drafts_failed", error);
+    return { ok: false, errors: [dbErrorMessage(error, PUBLISH_ERRORS)] };
   }
 }

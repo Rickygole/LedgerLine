@@ -55,7 +55,7 @@ export function SubmittedCopy({
               { label: "Revision", value: <span className="num">{revision.revision}</span> },
               {
                 label: revision.kind === "correction" ? "Corrected by" : "Submitted by",
-                value: revision.actorName ?? "Not recorded",
+                value: revision.actorName ?? (revision.kind === "correction" ? "Council Finance" : "Not recorded"),
               },
               { label: "Submitted on", value: `${formatDateTime(revision.createdAt)} ET` },
               {
