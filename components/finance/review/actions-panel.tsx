@@ -7,6 +7,7 @@ import { RequestUpdate } from "@/components/finance/review/request-update";
 import { StaleNotice, isStale } from "@/components/finance/review/stale-notice";
 import type { ActionResult, ActionState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/status-badge";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
 import type { Concern } from "@/lib/finance/review/return-note-core";
 import {
@@ -27,7 +28,7 @@ function draftFor(question: CorrectableQuestion | undefined): string {
 }
 
 function Message({ state }: { state: ActionState }) {
-  if (!state) return <div aria-live="polite" />;
+  if (!state) return <div aria-live="polite" className="sr-only" />;
   if (state.error && isStale(state.error)) return <StaleNotice />;
   return (
     <p
@@ -262,12 +263,18 @@ export function ActionsPanel({
     <section aria-labelledby="decision-title" className="rounded border border-line bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 pb-4 pt-5">
         <h2 id="decision-title" className="text-xl font-bold leading-7 text-ink">
-          Your decision
+          {status === "draft" ? "Decision" : "Your decision"}
         </h2>
-        {badge}
+        {status === "draft" ? (
+          <Badge tone="neutral" className="ring-line">
+            Not submitted
+          </Badge>
+        ) : (
+          badge
+        )}
       </div>
       <div className="space-y-4 px-5 py-5">
-        <div aria-live="polite">
+        <div aria-live="polite" className="empty:sr-only">
           {notice ? (
             <p
               role="status"
@@ -305,7 +312,7 @@ export function ActionsPanel({
               ? `This report is accepted${since ? `. ${since}` : ""}. You can still correct an answer or add a flag.`
               : status === "returned"
                 ? `Waiting on ${orgName}${since ? ` since ${since}` : ""} to update and resubmit.`
-                : "This report has not been submitted yet."}
+                : `Nothing to decide yet. You can review this report once ${orgName} submits it.`}
           </p>
         )}
         {status !== "draft" ? (
