@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-10-11T03:51:58.417Z",
-  "commit": "826366a2216b1a1d93a0fe7ce8fbb3ea7d799647",
+  "generatedAt": "2026-10-11T05:03:03.952Z",
+  "commit": "2f766eb559de8d9f1018edf327a8db3973c580db",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 786,
-    "passed": 786,
+    "tests": 826,
+    "passed": 826,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 399,
-    "sql": 253,
+    "unit": 416,
+    "sql": 271,
     "eval": 32,
-    "e2e": 102
+    "e2e": 107
   },
   "summary": {
     "verified": {
-      "stories": 57,
+      "stories": 58,
       "rules": 24
     },
     "supporting": {
-      "stories": 7,
-      "rules": 3
+      "stories": 8,
+      "rules": 4
     },
     "failing": {
       "stories": 0,
@@ -35,8 +35,8 @@
       "rules": 0
     },
     "planned": {
-      "stories": 2,
-      "rules": 2
+      "stories": 0,
+      "rules": 1
     }
   },
   "requirements": [
@@ -270,6 +270,18 @@
           "suite": "sql"
         },
         {
+          "title": "the Word import reads the database question library links a template question to a library question added on the question library page",
+          "file": "tests/sql/import-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the Word import reads the database question library stops offering a library question once it is retired",
+          "file": "tests/sql/import-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "the standard questions live in a database library seeds the library from the standard questions so every form reads exactly as before",
           "file": "tests/sql/question-library.test.ts",
           "status": "passed",
@@ -334,6 +346,36 @@
           "file": "tests/sql/question-library.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "the import reads the question library it is given accepts a library key that was added after the standard questions and rejects one that is gone",
+          "file": "tests/unit/form-draft-core.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the import reads the question library it is given links a template question to a library question by its label",
+          "file": "tests/unit/form-draft-core.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the import reads the question library it is given does not link to a question that is no longer in the library",
+          "file": "tests/unit/form-draft-core.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the import reads the question library it is given offers the model exactly the keys in the library",
+          "file": "tests/unit/form-draft-core.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the import reads the question library it is given copies the library question into the form when an imported field links to it",
+          "file": "tests/unit/form-draft-core.test.ts",
+          "status": "passed",
+          "suite": "unit"
         },
         {
           "title": "a form cannot have two questions with the same label refuses a repeated label ignoring case and spacing",
@@ -673,6 +715,36 @@
         {
           "title": "rollover copies forms and assignments creates the new year with a mid-year and a year-end period and carries forms and awards",
           "file": "tests/sql/lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year maps removed standard reports to the matching period in the new year",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year recreates custom reports a year later with the standard reminder rules and a clean reference",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year leaves the old year's setup untouched",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year keeps a combined initiative's report required unless every predecessor dropped it, and gathers their custom reports",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year records the carry in the audit trail",
+          "file": "tests/sql/rollover-reports.test.ts",
           "status": "passed",
           "suite": "sql"
         }
@@ -3557,20 +3629,82 @@
       "area": "Hosting",
       "summary": "Hosted outside Council-owned servers",
       "route": "/finance/platform",
-      "state": "planned",
+      "state": "verified",
       "reason": null,
-      "note": "Delivery commitment, not claimed as met. The health check reports the declared hosting provider and region and that the system is not on Council servers, but that is a deployment setting and is not independently audited. The proposed target is Azure Government.",
-      "tests": []
+      "note": "This system runs on vendor infrastructure, not Council servers; production hosting is set in the contract. The health check reports the declared hosting provider and region and that the system is not on Council servers. That is a deployment setting and is not independently audited.",
+      "tests": [
+        {
+          "title": "the system reports that it is hosted outside Council servers declares the hosting provider and reports onCouncilServers false in the health payload",
+          "file": "tests/sql/health.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the system reports that it is hosted outside Council servers reports Council servers only when the deployment says so",
+          "file": "tests/sql/health.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        }
+      ]
     },
     {
       "id": "US-054",
       "area": "Hosting",
       "summary": "Cloud hosting meets FedRAMP or NIST 800-53",
       "route": "/finance/platform",
-      "state": "planned",
+      "state": "supporting",
       "reason": null,
-      "note": "Delivery commitment, not claimed as met. FedRAMP or NIST 800-53 compliance is confirmed in the security review before go-live. Application controls in place: row-level security, append-only audit tables, server-side validation.",
-      "tests": []
+      "note": "Delivery commitment, not claimed as met. FedRAMP authorization and a NIST assessment are performed on the production environment before go-live. The application controls it implements, with the file and test for each, are listed on the Security controls page.",
+      "tests": [
+        {
+          "title": "the security control mapping points at real files and tests names a file that exists for every place and every test it cites",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests cites a test for every control the application provides itself",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests explains what is shared or inherited instead of claiming it",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests states that these are application controls and that authorization happens before go-live",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests covers the controls in the hosting document that the application implements",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the Security controls page is not available to an organization",
+          "file": "tests/e2e/security-controls.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator the Security controls page maps each NIST control to its code and test",
+          "file": "tests/e2e/security-controls.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as a finance analyst the Security controls page maps each NIST control to its code and test",
+          "file": "tests/e2e/security-controls.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "US-055",
@@ -3871,6 +4005,60 @@
       "note": null,
       "tests": [
         {
+          "title": "Finance access scope leaves an unscoped analyst and an administrator with every report",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope limits a DYCD analyst to DYCD reports and hides every other report and its records",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope keeps in-scope reads working for the scoped analyst",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope refuses review actions outside the scope and allows them inside it",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope does not let a scoped analyst update an out-of-scope report or resolve its flags",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope scopes by initiative, and combines agencies with initiatives",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope scopes a view-only analyst too, and an inactive scope holder sees nothing",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope does not allow a scope on an administrator or an organization account",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope lets only an administrator change a scope",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "50 to 100 Finance users with different permissions holds 100 Finance users across the three roles and enforces each role's permissions",
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
@@ -3881,6 +4069,60 @@
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "access scope parsing accepts no choices as an empty scope, which means every agency",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing normalises agency case, trims and removes duplicates",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing refuses an agency that no initiative belongs to",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing keeps valid initiative ids once each and refuses anything that is not an id",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing limits how many agencies and initiatives one scope can hold",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope wording names agencies and counts initiatives",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope wording calls an empty scope all agencies",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "an administrator sets a Finance analyst's access scope and sees it listed",
+          "file": "tests/e2e/access-scope.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a scoped Finance user sees only their scope and a note saying so",
+          "file": "tests/e2e/access-scope.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -5132,6 +5374,36 @@
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year maps removed standard reports to the matching period in the new year",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year recreates custom reports a year later with the standard reminder rules and a clean reference",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year leaves the old year's setup untouched",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year keeps a combined initiative's report required unless every predecessor dropped it, and gathers their custom reports",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a rollover carries an initiative's report setup into the new year records the carry in the audit trail",
+          "file": "tests/sql/rollover-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
         }
       ]
     },
@@ -5162,6 +5434,60 @@
       "note": null,
       "tests": [
         {
+          "title": "Finance access scope leaves an unscoped analyst and an administrator with every report",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope limits a DYCD analyst to DYCD reports and hides every other report and its records",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope keeps in-scope reads working for the scoped analyst",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope refuses review actions outside the scope and allows them inside it",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope does not let a scoped analyst update an out-of-scope report or resolve its flags",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope scopes by initiative, and combines agencies with initiatives",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope scopes a view-only analyst too, and an inactive scope holder sees nothing",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope does not allow a scope on an administrator or an organization account",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Finance access scope lets only an administrator change a scope",
+          "file": "tests/sql/access-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "50 to 100 Finance users with different permissions holds 100 Finance users across the three roles and enforces each role's permissions",
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
@@ -5172,6 +5498,60 @@
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "access scope parsing accepts no choices as an empty scope, which means every agency",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing normalises agency case, trims and removes duplicates",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing refuses an agency that no initiative belongs to",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing keeps valid initiative ids once each and refuses anything that is not an id",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope parsing limits how many agencies and initiatives one scope can hold",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope wording names agencies and counts initiatives",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "access scope wording calls an empty scope all agencies",
+          "file": "tests/unit/access-scope.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "an administrator sets a Finance analyst's access scope and sees it listed",
+          "file": "tests/e2e/access-scope.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a scoped Finance user sees only their scope and a note saying so",
+          "file": "tests/e2e/access-scope.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -5850,10 +6230,59 @@
       "area": "Rules",
       "summary": "Hosted in a compliant cloud, not on Council servers",
       "route": "/finance/platform",
-      "state": "planned",
+      "state": "supporting",
       "reason": null,
-      "note": "Delivery commitment, not claimed as met. Confirmed when the production environment is built and reviewed.",
-      "tests": []
+      "note": "Delivery commitment, not claimed as met. Confirmed when the production environment is built and reviewed. The Security controls page lists what the application provides and what comes from the hosting provider.",
+      "tests": [
+        {
+          "title": "the security control mapping points at real files and tests names a file that exists for every place and every test it cites",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests cites a test for every control the application provides itself",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests explains what is shared or inherited instead of claiming it",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests states that these are application controls and that authorization happens before go-live",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the security control mapping points at real files and tests covers the controls in the hosting document that the application implements",
+          "file": "tests/unit/security-controls.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the Security controls page is not available to an organization",
+          "file": "tests/e2e/security-controls.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator the Security controls page maps each NIST control to its code and test",
+          "file": "tests/e2e/security-controls.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as a finance analyst the Security controls page maps each NIST control to its code and test",
+          "file": "tests/e2e/security-controls.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        }
+      ]
     },
     {
       "id": "BR-027",
@@ -5862,7 +6291,7 @@
       "route": "/finance/platform",
       "state": "planned",
       "reason": null,
-      "note": "Target date of February 1, 2027 in the delivery timeline on the Platform page. A delivery commitment this system cannot confirm.",
+      "note": "Target date of February 1, 2027 in the delivery timeline on the Platform page, which sets out kickoff, testing, security review, training and the go or no go decision. A delivery commitment this system cannot confirm.",
       "tests": []
     },
     {
