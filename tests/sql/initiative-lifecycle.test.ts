@@ -25,6 +25,21 @@ beforeAll(async () => {
   priya = await userId(owner, "priya.raman");
   daniel = await userId(owner, "daniel.cho");
   grace = await userId(owner, "grace.chen");
+  await owner.query(
+    `INSERT INTO submission (id, reference_no, assignment_id, period_id, form_version_id, status, started_by, updated_by)
+     SELECT gen_random_uuid(), app.next_reference_no('FY27-YE'), a.id, 'FY27-YE', fv.id, 'draft', u.id, u.id
+     FROM initiative i
+     JOIN assignment a ON a.initiative_id = i.id
+     JOIN app_user u ON u.org_id = a.org_id AND u.role = 'cbo_submitter' AND u.active
+     JOIN form_version fv ON fv.initiative_id = i.id AND fv.status = 'published'
+     WHERE i.fiscal_year_id = 'FY27' AND i.status = 'active'
+       AND NOT EXISTS (SELECT 1 FROM initiative_lineage l WHERE l.predecessor_id = i.id)
+       AND NOT EXISTS (SELECT 1 FROM submission s JOIN assignment a2 ON a2.id = s.assignment_id WHERE a2.initiative_id = i.id)
+       AND NOT EXISTS (SELECT 1 FROM submission s JOIN assignment a2 ON a2.id = s.assignment_id
+                       JOIN initiative i2 ON i2.id = a2.initiative_id WHERE i2.fiscal_year_id = 'FY27')
+     ORDER BY i.code, a.id
+     LIMIT 1`,
+  );
   target = (
     await owner.query(
       `SELECT i.id, i.name, i.code, u.id AS submitter, a.id AS assignment,

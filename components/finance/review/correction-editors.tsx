@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { NumericInput } from "@/components/report/numeric-input";
 import { Input, Select } from "@/components/ui/field";
 
-export type TableColumnInfo = { key: string; label: string; type: "text" | "integer" | "currency" | "percent" };
+export type TableColumnInfo = {
+  key: string;
+  label: string;
+  type: "text" | "integer" | "number" | "currency" | "percent";
+};
 export type TableRowDraft = Record<string, string>;
 export type BudgetLineDraft = { rowId: string; category: "PS" | "OTPS"; description: string; amount: string };
 

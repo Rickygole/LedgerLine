@@ -136,10 +136,10 @@ test.describe("as an administrator", () => {
   test("[US-002] a report that organizations have already started cannot be removed", async ({ page }) => {
     const [started] = await ownerQuery<{ initiative_id: string; code: string }>(
       `SELECT i.id AS initiative_id, i.code FROM submission s JOIN assignment a ON a.id = s.assignment_id
-       JOIN initiative i ON i.id = a.initiative_id WHERE s.period_id = 'FY27-MY' LIMIT 1`,
+       JOIN initiative i ON i.id = a.initiative_id WHERE s.period_id = 'FY26-YE' ORDER BY i.code LIMIT 1`,
     );
     await page.goto(`/finance/initiatives/${started.initiative_id}`);
-    await expect(page.getByRole("button", { name: "Remove FY27 Mid-Year" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Remove FY26 Year-End" })).toBeDisabled();
   });
 });
 

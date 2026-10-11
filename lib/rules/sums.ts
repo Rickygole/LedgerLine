@@ -23,7 +23,7 @@ function numberOf(raw: unknown): number | null {
 }
 
 function show(type: string, value: number): string {
-  if (type === "currency") return formatCurrency(value);
+  if (type === "currency") return formatCurrency(value, { cents: true });
   if (type === "percent") return `${formatCount(value)}%`;
   return formatCount(value);
 }

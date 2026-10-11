@@ -121,7 +121,7 @@ describe("[US-007] a question can embed a table", () => {
   it("formats stored table values for the submitted copy and exports", () => {
     const question = table();
     const rows = [{ site: "North", visits: "1200", hours: "7.5", cost: "1200", rate: "50" }];
-    expect(tableRows(question, rows)).toEqual([["North", "1,200", "7.5", "$1,200.00", "50%"]]);
+    expect(tableRows(question, rows)).toEqual([["North", "1,200", "7.5", "$1,200", "50%"]]);
     expect(cellText("number", "3000")).toBe("3,000");
   });
 });
