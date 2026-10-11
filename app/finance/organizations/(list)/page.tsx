@@ -124,8 +124,15 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
           <THead>
             <tr>
               <SortHeader base={base} params={kept} field="name" label="Organization" sort={sort} dir={dir} />
-              <SortHeader base={base} params={kept} field="ein" label="EIN" sort={sort} dir={dir} />
-              <SortHeader base={base} params={kept} field="type" label="Type" sort={sort} dir={dir} />
+              <SortHeader
+                base={base}
+                params={kept}
+                field="type"
+                label="Type"
+                sort={sort}
+                dir={dir}
+                className="max-2xl:hidden"
+              />
               <SortHeader base={base} params={kept} field="borough" label="Borough" sort={sort} dir={dir} />
               <SortHeader
                 base={base}
@@ -152,7 +159,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
           </THead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={9}>
+              <EmptyRow colSpan={8}>
                 No organizations match these filters. Clear the filters to see every organization.
               </EmptyRow>
             ) : (
@@ -165,11 +172,9 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
                     >
                       {row.legal_name}
                     </Link>
+                    <span className="num block whitespace-nowrap text-[13px] font-normal text-muted">{row.ein}</span>
                   </TD>
-                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted" label="EIN">
-                    <span>{row.ein}</span>
-                  </TD>
-                  <TD className="whitespace-nowrap" stackHidden>
+                  <TD className="whitespace-nowrap max-2xl:hidden" stackHidden>
                     {orgTypeLabel(row.org_type)}
                   </TD>
                   <TD className="whitespace-nowrap" label="Borough">

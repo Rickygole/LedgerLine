@@ -11,6 +11,7 @@ export function SortHeader({
   sort,
   dir,
   align = "left",
+  className,
 }: {
   base: string;
   params: Record<string, string | undefined>;
@@ -19,6 +20,7 @@ export function SortHeader({
   sort: string;
   dir: "asc" | "desc";
   align?: "left" | "right";
+  className?: string;
 }) {
   const active = sort === field;
   const nextDir = active && dir === "asc" ? "desc" : "asc";
@@ -27,7 +29,7 @@ export function SortHeader({
     <th
       scope="col"
       aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined}
-      className={cn("whitespace-nowrap px-4 py-2.5 font-semibold", align === "right" && "text-right")}
+      className={cn("whitespace-nowrap px-4 py-2.5 font-semibold", align === "right" && "text-right", className)}
     >
       <Link
         href={buildHref(base, { ...params, sort: field, dir: nextDir, page: undefined })}
