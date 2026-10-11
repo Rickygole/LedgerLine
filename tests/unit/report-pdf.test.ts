@@ -98,6 +98,38 @@ describe("[US-021] report PDF", () => {
     expect(bytes.length).toBeGreaterThan(1000);
   });
 
+  it("wraps a 2,000 character unbroken token quickly and keeps every character", async () => {
+    const token = "Abcdefghij".repeat(200);
+    const definition = buildDefinition("Youth Services", [tableQuestion]);
+    const input = (answers: Record<string, unknown>) => ({
+      initiativeName: "Youth Services",
+      periodLabel: "FY27 Year-End",
+      referenceNo: "LL-26YE-00002",
+      revision: 1,
+      revisionKind: "submit" as const,
+      revisionReason: null,
+      revisionActor: null,
+      submittedAt: null,
+      submittedByName: null,
+      orgName: "Org",
+      ein: "12-3456789",
+      awardAmount: 1,
+      definition,
+      snapshot: buildSnapshot({
+        formVersionId: "fv",
+        answers: answers as never,
+        budget: [],
+        attachments: [],
+      }),
+    });
+    await buildReportPdf(input({ org_legal_name: "warm up" }));
+    const started = performance.now();
+    const bytes = await buildReportPdf(input({ org_legal_name: token, activities: [{ name: token, count: "1" }] }));
+    expect(performance.now() - started).toBeLessThan(1000);
+    const text = (await pdfText(bytes)).replace(/\s+/g, "");
+    expect(text.split(token).length - 1).toBeGreaterThanOrEqual(2);
+  });
+
   const base = {
     initiativeName: "Youth Services",
     periodLabel: "FY27 Year-End",

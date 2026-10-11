@@ -100,15 +100,24 @@ class Writer {
       const words = paragraph.split(" ");
       let line = "";
       for (let word of words) {
-        while (font.widthOfTextAtSize(word, size) > width) {
-          let cut = word.length - 1;
-          while (cut > 1 && font.widthOfTextAtSize(word.slice(0, cut), size) > width) cut -= 1;
+        if (font.widthOfTextAtSize(word, size) > width) {
           if (line) {
             lines.push(line);
             line = "";
           }
-          lines.push(word.slice(0, cut));
-          word = word.slice(cut);
+          let piece = "";
+          let used = 0;
+          for (const char of word) {
+            const advance = font.widthOfTextAtSize(char, size);
+            if (piece && used + advance > width) {
+              lines.push(piece);
+              piece = "";
+              used = 0;
+            }
+            piece += char;
+            used += advance;
+          }
+          word = piece;
         }
         const next = line ? `${line} ${word}` : word;
         if (line && font.widthOfTextAtSize(next, size) > width) {
