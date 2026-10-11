@@ -8,6 +8,7 @@ import { Pagination } from "@/components/finance/review/pagination";
 import { SubmissionFilters } from "@/components/finance/review/submission-filters";
 import { orgMeta } from "@/components/finance/review/submissions-table";
 import { Breadcrumbs } from "@/components/ui/page-header";
+import { StateBadge } from "@/components/ui/status-badge";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { cn } from "@/lib/cn";
@@ -27,7 +28,7 @@ export const metadata: Metadata = { title: "Flagged items" };
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const EXPLAIN: Record<FlagReason, string> = {
-  unbalanced: "Draft or returned reports whose budget total does not equal the award.",
+  unbalanced: "Draft reports, or reports with changes requested, whose budget total does not equal the award.",
   incomplete:
     "Past due drafts or returned reports that still fail required rules. These reports are also counted as Missing or Changes requested.",
   missing: "Past the due date with nothing submitted, or only a draft saved.",
@@ -107,6 +108,20 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
       </div>
     );
   }
+  if (reason === "missing") {
+    return (
+      <div className="space-y-1">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <StateBadge state="missing" />
+          <span className="num">
+            {row.status === null ? "Not started" : "Draft saved"}, {row.daysPastDue}{" "}
+            {plural(row.daysPastDue, "day", "days")} past due
+          </span>
+        </p>
+        {note ? <p className="text-[13px] text-muted">{note}</p> : null}
+      </div>
+    );
+  }
   if (reason === "low_outcomes" || reason === "zero_outcomes") {
     const answers = row.definition ? visibleAnswers(row.definition, row.answers) : row.answers;
     const actual = numberAnswer(answers, "participants_actual") ?? 0;
@@ -162,6 +177,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
   const items = sortRows(scoped.filter((r) => r.flags.some((f) => f.reason === reason)));
   const paged = paginate(items, filters.page, PAGE);
   const total = new Set(scoped.filter((r) => r.flags.length > 0).map((r) => r.assignmentId)).size;
+  const overlap = FLAG_ORDER.reduce((sum, r) => sum + counts[r], 0) !== total;
   const keepFilters = { ...filters, flag: reason, bucket: "", status: "" };
   const clearHref = hrefWith(base, {}, { period: filters.period, flag: reason });
 
@@ -205,12 +221,16 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
         <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">
           <span className="num">{total}</span> {plural(total, "report is", "reports are")} flagged for{" "}
           {periods.find((p) => p.id === filters.period)?.label ?? "this period"}.
+          {overlap ? " A report can carry more than one flag." : null}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
-        <nav aria-label="Flag reasons" className="rounded border border-line bg-white lg:sticky lg:top-6">
-          <ul className="divide-y divide-line-soft">
+      <div className="grid grid-cols-1 gap-6 min-[1440px]:grid-cols-[240px_minmax(0,1fr)] min-[1440px]:items-start">
+        <nav
+          aria-label="Flag reasons"
+          className="min-[1440px]:sticky min-[1440px]:top-6 min-[1440px]:rounded min-[1440px]:border min-[1440px]:border-line min-[1440px]:bg-white"
+        >
+          <ul className="flex flex-wrap gap-2 min-[1440px]:block min-[1440px]:divide-y min-[1440px]:divide-line-soft">
             {FLAG_ORDER.map((r) => {
               const active = r === reason;
               return (
@@ -219,15 +239,20 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                     href={hrefWith(base, keepFilters, { flag: r, page: 1 })}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex min-h-11 items-center justify-between gap-3 px-4 py-2.5 text-[15px]",
+                      "relative flex min-h-11 items-center justify-between gap-3 rounded border border-line bg-white px-4 py-2.5 text-[15px] min-[1440px]:rounded-none min-[1440px]:border-0",
                       active
-                        ? "bg-harbor-50 font-bold text-harbor-900"
+                        ? "border-action bg-harbor-50 font-bold text-harbor-900 shadow-[inset_0_0_0_1px_var(--color-action)] min-[1440px]:shadow-none"
                         : counts[r] === 0
                           ? "text-muted hover:bg-surface"
                           : "text-ink hover:bg-harbor-50 hover:text-link hover:underline",
                     )}
                   >
-                    {active ? <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-action" /> : null}
+                    {active ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-y-0 left-0 hidden w-1 bg-action min-[1440px]:block"
+                      />
+                    ) : null}
                     <span>{FLAG_LABEL[r]}</span>
                     <span className={cn("num", counts[r] === 0 ? "text-muted" : "font-semibold")}>{counts[r]}</span>
                   </Link>
@@ -253,6 +278,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
               members={[...members.entries()].map(([district, name]) => ({ district, name }))}
               agencies={options.agencies}
               fields={["q", "period", "borough", "district", "initiative", "category"]}
+              wrap
               keep={{ flag: reason }}
               clearHref={clearHref}
               active={chips.length > 0}
@@ -266,7 +292,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
               <p className="max-w-md text-[15px] text-muted">
                 {chips.length > 0
                   ? "Nothing matches these filters. Clear a filter or choose another reason."
-                  : "Choose another reason on the left, or another reporting period."}
+                  : "Choose another reason, or another reporting period."}
               </p>
             </div>
           ) : (
@@ -277,10 +303,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                     <TH className="w-[28%]">Organization</TH>
                     <TH>Initiative</TH>
                     <TH align="right">Award</TH>
-                    <TH className="w-[30%]">Evidence</TH>
-                    <TH>
-                      <span className="sr-only">Action</span>
-                    </TH>
+                    <TH className="w-[34%]">Evidence</TH>
                   </tr>
                 </THead>
                 <tbody>
@@ -288,10 +311,19 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                     <TR key={`${reason}-${row.assignmentId}`}>
                       <TD primary>
                         <Link
-                          href={`/finance/organizations/${row.orgId}`}
+                          href={
+                            row.submissionId
+                              ? `/finance/submissions/${row.submissionId}`
+                              : `/finance/organizations/${row.orgId}`
+                          }
                           className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                         >
                           {row.orgName}
+                          {row.submissionId ? (
+                            <span className="sr-only">, open report {row.referenceNo}</span>
+                          ) : (
+                            <span className="sr-only">, not started, open organization</span>
+                          )}
                         </Link>
                         <span className="num block whitespace-nowrap text-[13px] font-normal text-muted">
                           {orgMeta(row)}
@@ -309,23 +341,6 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                       </TD>
                       <TD className="min-w-64 max-md:pt-2">
                         <Evidence row={row} reason={reason} />
-                      </TD>
-                      <TD className="whitespace-nowrap text-right max-md:pt-2">
-                        {row.submissionId ? (
-                          <Link
-                            href={`/finance/submissions/${row.submissionId}`}
-                            className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
-                          >
-                            Open<span className="sr-only"> {row.referenceNo}</span>
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/finance/organizations/${row.orgId}`}
-                            className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
-                          >
-                            View organization
-                          </Link>
-                        )}
                       </TD>
                     </TR>
                   ))}
