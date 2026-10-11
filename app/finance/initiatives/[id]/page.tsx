@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime, todayInNewYork } from "@/lib/dates";
 import { formatCurrency, plural } from "@/lib/format";
 import { ProfileHeader } from "@/components/ui/profile-header";
 import { PrintButton } from "@/components/ui/print-button";
@@ -72,6 +72,10 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
     [...perDistrict.entries()].map(([d, n]) => [d, n >= 3 ? "#173962" : n === 2 ? "#2b64a8" : "#9db8dc"]),
   );
   const districtList = [...perDistrict.keys()].sort((a, b) => a - b);
+  const today = todayInNewYork();
+  const due = reports.filter((r) => r.required);
+  const nextDue = due.find((r) => r.due_on >= today);
+  const registered = funded.filter((f) => f.contract_status === "registered").length;
   const mapCaption =
     districtList.length === 0
       ? "No funded organizations have a Council district on file."
@@ -117,7 +121,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
         <div className="grid gap-6 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_220px]">
           <div className="space-y-5">
             <p className="max-w-[72ch] text-[15px] leading-relaxed text-ink">{initiative.description}</p>
-            <dl className="grid max-w-md grid-cols-2 gap-4 border-t border-line pt-4">
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-line pt-4 xl:grid-cols-4">
               <div>
                 <dt className="text-[13px] font-semibold text-muted">Total funding</dt>
                 <dd className="num mt-1 text-lg font-bold text-ink">
@@ -127,6 +131,30 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
               <div>
                 <dt className="text-[13px] font-semibold text-muted">Organizations</dt>
                 <dd className="num mt-1 text-lg font-bold text-ink">{funded.length}</dd>
+              </div>
+              <div>
+                <dt className="text-[13px] font-semibold text-muted">Reports due</dt>
+                <dd className="mt-1">
+                  <span className="num block text-lg font-bold text-ink">{due.length}</span>
+                  <span className="block text-[13px] text-muted">
+                    {nextDue
+                      ? `Next due ${formatDate(nextDue.due_on)}`
+                      : `None still due in ${initiative.fiscal_year_id}`}
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[13px] font-semibold text-muted">Contracts registered</dt>
+                <dd className="mt-1">
+                  <span className="num block text-lg font-bold text-ink">
+                    {registered} of {funded.length}
+                  </span>
+                  <span className="block text-[13px] text-muted">
+                    {funded.length - registered === 0
+                      ? "All contracts registered"
+                      : `${funded.length - registered} still pending or awaiting`}
+                  </span>
+                </dd>
               </div>
             </dl>
           </div>
@@ -149,7 +177,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           title="Funded organizations"
           description={`${funded.length} ${plural(funded.length, "organization receives", "organizations receive")} funding through this initiative.`}
         />
-        <Table density="compact">
+        <Table density="compact" stack>
           <THead>
             <tr>
               <TH>Organization</TH>
@@ -167,34 +195,40 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             ) : (
               funded.map((f) => (
                 <TR key={f.assignment_id}>
-                  <TD className="min-w-[12rem]">
+                  <TD className="min-w-[12rem]" primary>
                     <Link
                       href={`/finance/organizations/${f.org_id}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {f.legal_name}
                     </Link>
-                    <span className="block font-mono text-[13px] text-muted">{f.ein}</span>
+                    <span className="block font-mono text-[13px] font-normal text-muted">{f.ein}</span>
                   </TD>
-                  <TD>
-                    {f.borough}
-                    {f.council_district ? (
-                      <span className="block text-[13px] text-muted">District {f.council_district}</span>
-                    ) : null}
+                  <TD label="Borough">
+                    <span>
+                      {f.borough}
+                      {f.council_district ? (
+                        <span className="block text-[13px] text-muted">District {f.council_district}</span>
+                      ) : null}
+                    </span>
                   </TD>
-                  <TD align="right">{formatCurrency(Number(f.award_amount))}</TD>
-                  <TD>
+                  <TD align="right" label="Award">
+                    <span>{formatCurrency(Number(f.award_amount))}</span>
+                  </TD>
+                  <TD label="Funding and sponsor">
                     <SponsorsCell sponsors={f.sponsors} source={f.funding_source} />
                   </TD>
-                  <TD>{f.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>
-                  <TD>
+                  <TD label="Agency">
+                    <span>{f.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</span>
+                  </TD>
+                  <TD label="Contract">
                     <ContractCell
                       status={f.contract_status}
                       number={f.contract_number}
                       registeredOn={f.contract_registered_on}
                     />
                   </TD>
-                  <TD>
+                  <TD label="Reports">
                     <AwardPeriods periods={f.periods} />
                   </TD>
                 </TR>
@@ -209,7 +243,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           title="Required reports"
           description={`Funded organizations report on each of these for ${initiative.fiscal_year_id}. An organization sees only the reports listed as required.`}
         />
-        <Table density="compact">
+        <Table density="compact" stack>
           <THead>
             <tr>
               <TH>Report</TH>
@@ -227,20 +261,26 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
           <tbody>
             {reports.map((r) => (
               <TR key={r.id}>
-                <TD className="min-w-[12rem]">
+                <TD className="min-w-[12rem]" primary>
                   <span className="font-semibold">{r.label}</span>
-                  {r.custom ? <span className="ml-2 text-[13px] text-muted">Custom report</span> : null}
+                  {r.custom ? <span className="ml-2 text-[13px] font-normal text-muted">Custom report</span> : null}
                 </TD>
-                <TD className="whitespace-nowrap">
-                  {formatDate(r.starts_on)} to {formatDate(r.ends_on)}
+                <TD className="whitespace-nowrap" label="Period covered">
+                  <span>
+                    {formatDate(r.starts_on)} to {formatDate(r.ends_on)}
+                  </span>
                 </TD>
-                <TD className="whitespace-nowrap">{formatDate(r.due_on)}</TD>
-                <TD>
-                  <Badge tone={r.required ? "ok" : "neutral"}>{r.required ? "Required" : "Not required"}</Badge>
+                <TD className="whitespace-nowrap" label="Due">
+                  <span>{formatDate(r.due_on)}</span>
                 </TD>
-                <TD align="right">{r.started}</TD>
+                <TD label="Status">
+                  {r.required ? <Badge>Required</Badge> : <span className="text-muted">Not required</span>}
+                </TD>
+                <TD align="right" label="Started">
+                  <span>{r.started}</span>
+                </TD>
                 {admin ? (
-                  <TD>
+                  <TD action>
                     {initiative.status !== "active" ? (
                       <span className="text-muted">Retired</span>
                     ) : r.custom ? (
@@ -358,7 +398,7 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             ) : null
           }
         />
-        <Table>
+        <Table stack>
           <THead>
             <tr>
               <TH align="right">Version</TH>
@@ -378,30 +418,41 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
             ) : (
               forms.map((f) => (
                 <TR key={f.id}>
-                  <TD align="right">v{f.version}</TD>
-                  <TD>
+                  <TD align="right" primary>
+                    <span className="max-md:hidden">v{f.version}</span>
+                    <span className="md:hidden">Version {f.version}</span>
+                  </TD>
+                  <TD label="Status">
                     <Badge tone={FORM_TONE[f.status]}>
                       {f.status === "published" ? "Published" : f.status === "draft" ? "Draft" : "Superseded"}
                     </Badge>
                   </TD>
-                  <TD>{SOURCE_LABEL[f.source] ?? f.source}</TD>
-                  <TD>
-                    {formatDateTime(
-                      f.published_at && new Date(f.published_at) < new Date(f.created_at)
-                        ? f.published_at
-                        : f.created_at,
-                    )}
-                    {f.created_by_name ? <div className="text-xs text-muted">{f.created_by_name}</div> : null}
+                  <TD label="Source">
+                    <span>{SOURCE_LABEL[f.source] ?? f.source}</span>
                   </TD>
-                  <TD>{f.published_by_name ?? <span className="text-muted">Not published</span>}</TD>
-                  <TD>
-                    {f.published_at ? (
-                      formatDateTime(f.published_at)
-                    ) : (
-                      <span className="text-muted">Not published</span>
-                    )}
+                  <TD label="Created">
+                    <span>
+                      {formatDateTime(
+                        f.published_at && new Date(f.published_at) < new Date(f.created_at)
+                          ? f.published_at
+                          : f.created_at,
+                      )}
+                      {f.created_by_name ? <span className="block text-xs text-muted">{f.created_by_name}</span> : null}
+                    </span>
                   </TD>
-                  <TD>
+                  <TD label="Published by">
+                    <span>{f.published_by_name ?? <span className="text-muted">Not published</span>}</span>
+                  </TD>
+                  <TD label="Published at">
+                    <span>
+                      {f.published_at ? (
+                        formatDateTime(f.published_at)
+                      ) : (
+                        <span className="text-muted">Not published</span>
+                      )}
+                    </span>
+                  </TD>
+                  <TD action>
                     <Link
                       href={`/finance/forms/${f.id}`}
                       className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"

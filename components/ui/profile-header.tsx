@@ -28,14 +28,16 @@ export function ProfileHeader({
               <h1 className="text-xl font-bold text-ink">{title}</h1>
               {subtitle ? <p className="mt-0.5 text-sm text-muted">{subtitle}</p> : null}
               {items.length > 0 ? (
-                <ul className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-muted">
-                  {items.map((item, index) => (
-                    <li key={index} className="flex items-center gap-2.5">
-                      {index > 0 ? <span className="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true" /> : null}
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-2 overflow-hidden">
+                  <ul className="-ml-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 py-0.5 text-sm text-muted">
+                    {items.map((item, index) => (
+                      <li key={index} className="flex items-center gap-2.5">
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-line-strong" aria-hidden="true" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
             </div>
           </div>
