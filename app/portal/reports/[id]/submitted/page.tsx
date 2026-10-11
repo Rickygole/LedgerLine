@@ -35,7 +35,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
           {header.initiativeName}, {header.periodLabel}
         </p>
         <p className="mt-6 text-lg">Your reference number</p>
-        <p className="num mt-1 break-all font-mono text-[24px] font-bold tracking-wide sm:text-[28px]">{header.referenceNo}</p>
+        <p className="num mt-1 whitespace-nowrap font-mono text-[24px] font-bold tracking-wide sm:text-[28px]">{header.referenceNo}</p>
       </div>
 
       <div className="space-y-4 text-base leading-7 text-ink">

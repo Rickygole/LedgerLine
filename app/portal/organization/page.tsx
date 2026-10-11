@@ -311,7 +311,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                   <TR key={f.assignment_id}>
                     <TD>
                       <p className="font-medium text-ink">{f.name}</p>
-                      <p className="font-mono text-[13px] text-muted">{f.code}</p>
+                      <p className="whitespace-nowrap font-mono text-[13px] text-muted">{f.code}</p>
                     </TD>
                     <TD className="whitespace-nowrap">{f.fiscal_year_id}</TD>
                     <TD>{f.sponsoring_agency ?? <span className="text-muted">Not provided</span>}</TD>

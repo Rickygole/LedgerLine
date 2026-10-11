@@ -247,7 +247,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
       <header className="mb-6 rounded border border-line bg-white">
         <div className="px-5 pb-4 pt-5 sm:px-6">
           <p className="text-sm font-semibold leading-5 text-muted">
-            {detail.periodLabel} report · <span className="font-mono">{row.referenceNo}</span>
+            {detail.periodLabel} report · <span className="whitespace-nowrap font-mono">{row.referenceNo}</span>
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">

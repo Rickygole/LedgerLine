@@ -252,7 +252,7 @@ export function RolloverWizard({
                       <TR key={i.id}>
                         <TD>
                           <span className="font-semibold">{i.name}</span>
-                          <div className="font-mono text-xs text-muted">{i.code}</div>
+                          <div className="whitespace-nowrap font-mono text-xs text-muted">{i.code}</div>
                         </TD>
                         <TD>{ACTION_LABEL[c.action]}</TD>
                         <TD>
@@ -353,7 +353,7 @@ export function RolloverWizard({
                     <TR key={i.id}>
                       <TD>
                         <span className="font-semibold">{i.name}</span>
-                        <div className="font-mono text-xs text-muted">{i.code}</div>
+                        <div className="whitespace-nowrap font-mono text-xs text-muted">{i.code}</div>
                       </TD>
                       <TD className="whitespace-nowrap">{i.category}</TD>
                       <TD align="right">{i.orgs}</TD>
@@ -517,7 +517,7 @@ function FormTable({
               {choice.action === "combine"
                 ? `Group ${choice.group}, ${grouped.get(choice.group)?.length ?? 0} initiatives`
                 : initiative.name}
-              <span className="block font-mono text-xs">{initiative.code}</span>
+              <span className="block whitespace-nowrap font-mono text-xs">{initiative.code}</span>
             </TD>
             <TD className="whitespace-nowrap">
               {form ? (
