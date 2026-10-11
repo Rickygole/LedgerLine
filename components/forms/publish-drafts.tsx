@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { publishLibraryDrafts } from "@/app/finance/question-library/actions";
 import { Button } from "@/components/ui/button";
@@ -12,9 +13,10 @@ type Props = {
   questionKey: string;
   formIds: string[] | null;
   count: number;
+  onPublished?: (published: number) => void;
 };
 
-export function PublishDrafts({ questionKey, formIds, count }: Props) {
+export function PublishDrafts({ questionKey, formIds, count, onPublished }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -22,16 +24,26 @@ export function PublishDrafts({ questionKey, formIds, count }: Props) {
   const [errors, setErrors] = useState<string[]>([]);
   const [result, setResult] = useState<PublishAllResult | null>(null);
 
+  useEffect(() => {
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") router.refresh();
+    }
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => document.removeEventListener("visibilitychange", refreshWhenVisible);
+  }, [router]);
+
   function publish() {
     startTransition(async () => {
       const response = await publishLibraryDrafts(questionKey, formIds);
       dialog.current?.close();
       if (!response.ok) {
         setErrors(response.errors);
+        router.refresh();
         return;
       }
       setErrors([]);
       setResult({ published: response.published, failed: response.failed });
+      onPublished?.(response.published);
       router.refresh();
     });
   }
@@ -50,8 +62,14 @@ export function PublishDrafts({ questionKey, formIds, count }: Props) {
             </p>
             <ul className="mt-1 max-h-40 list-disc space-y-0.5 overflow-y-auto pl-5">
               {result.failed.map((failure) => (
-                <li key={failure.initiativeId}>
-                  {failure.name}: {failure.reason}
+                <li key={failure.formId}>
+                  <Link
+                    href={`/finance/forms/${failure.formId}`}
+                    className="font-semibold underline underline-offset-2 hover:text-link-hover"
+                  >
+                    {failure.name}
+                  </Link>
+                  : {failure.reason}
                 </li>
               ))}
             </ul>
@@ -61,13 +79,19 @@ export function PublishDrafts({ questionKey, formIds, count }: Props) {
     );
   }
 
+  const summary = (
+    <ErrorSummary
+      title={problemsTitle(errors.length, "you publish")}
+      items={errors.map((message) => ({ message }))}
+      className="mb-0"
+    />
+  );
+
+  if (count === 0) return errors.length > 0 ? summary : null;
+
   return (
     <div className="space-y-3">
-      <ErrorSummary
-        title={problemsTitle(errors.length, "you publish")}
-        items={errors.map((message) => ({ message }))}
-        className="mb-0"
-      />
+      {summary}
       <Button aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
         Publish all {count.toLocaleString("en-US")} {count === 1 ? "draft" : "drafts"}
       </Button>

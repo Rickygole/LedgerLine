@@ -149,6 +149,7 @@ test.describe("as an administrator", () => {
     await expect(dialog).toContainText("only the drafts just created or updated from this question");
     await dialog.getByRole("button", { name: "Yes, publish 2 drafts" }).click();
     await expect(page.getByText("2 forms published as a new version.")).toBeVisible();
+    await expect(page.getByText(/to review and publish/)).toHaveCount(0);
     for (const row of picked) {
       const versions = await ownerQuery<{ version: number; status: string }>(
         "SELECT version, status FROM form_version WHERE initiative_id = $1 AND status IN ('published', 'draft') ORDER BY version",
@@ -165,6 +166,38 @@ test.describe("as an administrator", () => {
       [key],
     );
     expect(audit.n).toBe(1);
+  });
+
+  test("[US-003] the page-level Publish all keeps its confirmation after the refresh and a stale tab drops the button", async ({
+    page,
+    context,
+  }) => {
+    await page.goto(`/finance/question-library/${key}`);
+    await expect(page.getByText(/1 draft with this question is waiting to be published/)).toBeVisible();
+    const stale = await context.newPage();
+    await stale.goto(`/finance/question-library/${key}`);
+    await expect(stale.getByRole("button", { name: "Publish all 1 draft" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Publish all 1 draft" }).click();
+    await page
+      .getByRole("dialog", { name: "Publish 1 draft?" })
+      .getByRole("button", { name: /^Yes, publish/ })
+      .click();
+    const done = page.getByRole("status").filter({ hasText: "1 form published as a new version." });
+    await expect(done).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(done).toBeVisible();
+    await expect(page.getByText(/waiting to be published/)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Publish all/ })).toHaveCount(0);
+
+    await stale.getByRole("button", { name: "Publish all 1 draft" }).click();
+    await stale
+      .getByRole("dialog", { name: "Publish 1 draft?" })
+      .getByRole("button", { name: /^Yes, publish/ })
+      .click();
+    await expect(stale.getByText("There are no drafts with this question to publish.")).toBeVisible();
+    await expect(stale.getByRole("button", { name: /^Publish all/ })).toHaveCount(0);
+    await stale.close();
   });
 
   test("[US-003] the form editor's Add from library reads the database library and honors a retired question", async ({

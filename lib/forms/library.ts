@@ -437,7 +437,7 @@ export async function countDraftsWithQuestion(tx: Tx, key: string): Promise<numb
 
 class PublishProblem extends Error {}
 
-export type PublishFailure = { initiativeId: string; name: string; reason: string };
+export type PublishFailure = { formId: string; initiativeId: string; name: string; reason: string };
 
 export type PublishAllResult = {
   published: number;
@@ -474,6 +474,7 @@ export async function publishDraftsWithQuestion(
       await tx.query("RELEASE SAVEPOINT publish_one");
       if (!(error instanceof PublishProblem) && (error as { code?: string }).code === "42501") throw error;
       failed.push({
+        formId: draft.id,
         initiativeId: draft.initiative_id,
         name: draft.name,
         reason: error instanceof PublishProblem ? error.message : "It could not be published.",

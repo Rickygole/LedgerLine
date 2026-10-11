@@ -45,6 +45,8 @@ export function ApplyToForms({ questionKey, questionLabel, targets, openDrafts }
   const [addIfMissing, setAddIfMissing] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [outcomes, setOutcomes] = useState<ApplyOutcome[] | null>(null);
+  const [pagePublished, setPagePublished] = useState(false);
+  const [applyPublished, setApplyPublished] = useState(0);
   const [pending, startTransition] = useTransition();
 
   const shown = useMemo(() => {
@@ -73,12 +75,14 @@ export function ApplyToForms({ questionKey, questionLabel, targets, openDrafts }
       }
       setErrors([]);
       setOutcomes(result.outcomes);
+      setApplyPublished(0);
       setPicked(new Set());
     });
   }
 
   const count = (result: ApplyOutcome["result"]) => outcomes?.filter((o) => o.result === result).length ?? 0;
   const drafts = count("created") + count("updated") + count("added");
+  const toReview = drafts - applyPublished;
   const draftIds = (outcomes ?? []).flatMap((o) =>
     o.formId && (o.result === "created" || o.result === "updated" || o.result === "added") ? [o.formId] : [],
   );
@@ -175,21 +179,28 @@ export function ApplyToForms({ questionKey, questionLabel, targets, openDrafts }
             {counted(picked.size, "initiative")} selected
           </span>
         </div>
-        {!outcomes && openDrafts > 0 ? (
-          <div className="space-y-2 border-t border-line-soft pt-4">
-            <p className="text-sm text-ink">
-              {counted(openDrafts, "draft")} with this question {openDrafts === 1 ? "is" : "are"} waiting to be
-              published, including any started by other people.
-            </p>
-            <PublishDrafts questionKey={questionKey} formIds={null} count={openDrafts} />
+        {!outcomes ? (
+          <div className="space-y-2 border-t border-line-soft pt-4 empty:hidden">
+            {openDrafts > 0 && !pagePublished ? (
+              <p className="text-sm text-ink">
+                {counted(openDrafts, "draft")} with this question {openDrafts === 1 ? "is" : "are"} waiting to be
+                published, including any started by other people.
+              </p>
+            ) : null}
+            <PublishDrafts
+              questionKey={questionKey}
+              formIds={null}
+              count={openDrafts}
+              onPublished={() => setPagePublished(true)}
+            />
           </div>
         ) : null}
         {outcomes ? (
           <div role="status" className="space-y-3 rounded border border-ok/30 bg-ok-bg px-4 py-3 text-sm text-ink">
             <p className="font-semibold text-ok">
               {counted(count("created"), "new draft")} created,{" "}
-              {counted(count("updated") + count("added"), "open draft")} updated. {counted(drafts, "draft")} to review
-              and publish.
+              {counted(count("updated") + count("added"), "open draft")} updated.
+              {toReview > 0 ? ` ${counted(toReview, "draft")} to review and publish.` : ""}
             </p>
             {count("unchanged") + count("missing") + count("no_form") + count("invalid") > 0 ? (
               <p>
@@ -203,6 +214,7 @@ export function ApplyToForms({ questionKey, questionLabel, targets, openDrafts }
                 questionKey={questionKey}
                 formIds={draftIds}
                 count={draftIds.length}
+                onPublished={setApplyPublished}
               />
             ) : null}
             <ul className="max-h-60 divide-y divide-line-soft overflow-y-auto rounded border border-line bg-white">
