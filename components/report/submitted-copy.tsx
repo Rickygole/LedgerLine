@@ -1,6 +1,7 @@
 import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/dates";
 import { displayScalar, questionLabel, tableRows } from "@/lib/report/format";
+import { totalsRow } from "@/lib/report/table-totals";
 import { formatBytes } from "@/lib/report/upload-rules";
 import { isVisible } from "@/lib/rules/validate";
 import { AnswerTable } from "./answer-table";
@@ -92,7 +93,11 @@ export function SubmittedCopy({
                             rows.length === 0 ? (
                               <span className="text-muted">No rows</span>
                             ) : (
-                              <AnswerTable columns={question.columns ?? []} rows={rows} />
+                              <AnswerTable
+                                columns={question.columns ?? []}
+                                rows={rows}
+                                totals={totalsRow(question, value, awardAmount)}
+                              />
                             )
                           ) : displayScalar(question, value) === "" ? (
                             <span className="text-muted">Not answered</span>

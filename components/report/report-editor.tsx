@@ -427,6 +427,7 @@ export function ReportEditor({
                           onChange={(value) => changeAnswer(question.key, value)}
                           onBlur={() => touch(question.key)}
                           error={errorFor(question.key)}
+                          award={header.awardAmount}
                         />
                       ))}
                   </div>

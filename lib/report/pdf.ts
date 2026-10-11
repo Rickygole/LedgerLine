@@ -10,6 +10,7 @@ import type { FormDefinition, Answers } from "@/lib/rules/types";
 import type { Snapshot } from "@/lib/snapshot";
 import { CERTIFICATION_STATEMENT, type Certification } from "@/lib/rules/certify";
 import { displayScalar, questionLabel, tableRows } from "./format";
+import { totalsRow } from "./table-totals";
 import { formatBytes } from "./upload-rules";
 
 export type ReportPdfInput = {
@@ -299,6 +300,7 @@ function answersSection(w: Writer, input: ReportPdfInput, questions: FormDefinit
         rows,
         columns.map((c) => (c.type === "text" ? 2 : 1)),
         columns.map((c) => c.type !== "text"),
+        [totalsRow(question, value, input.awardAmount)].filter((row): row is string[] => row !== null),
       );
       continue;
     }

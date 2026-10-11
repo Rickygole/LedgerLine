@@ -13,7 +13,7 @@ export function isSummable(type: string): type is Summable {
   return (SUMMABLE_TYPES as readonly string[]).includes(type);
 }
 
-function numberOf(raw: unknown): number | null {
+export function numberOf(raw: unknown): number | null {
   if (raw === null || raw === undefined) return null;
   const text = String(raw)
     .trim()

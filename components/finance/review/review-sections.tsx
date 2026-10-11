@@ -20,15 +20,16 @@ import { isVisible } from "@/lib/rules/validate";
 import { BudgetTable } from "@/components/report/budget-table";
 import { formatCount, formatCurrency } from "@/lib/format";
 import { tableRows } from "@/lib/report/format";
+import { totalsRow } from "@/lib/report/table-totals";
 import { AnswerTable } from "@/components/report/answer-table";
 import type { AnswerValue, FormDefinition, Question } from "@/lib/rules/types";
 
-function formatValue(question: Question, value: AnswerValue | undefined): React.ReactNode {
+function formatValue(question: Question, value: AnswerValue | undefined, award?: number): React.ReactNode {
   if (value === null || value === undefined || value === "") return <span className="text-muted">Not answered</span>;
   if (question.type === "table" && Array.isArray(value)) {
     const rows = tableRows(question, value);
     if (rows.length === 0) return <span className="text-muted">No rows entered</span>;
-    return <AnswerTable columns={question.columns ?? []} rows={rows} />;
+    return <AnswerTable columns={question.columns ?? []} rows={rows} totals={totalsRow(question, value, award)} />;
   }
   if (question.type === "currency")
     return <span className="num">{formatCurrency(Number(String(value).replace(/[$,]/g, "")), { cents: "auto" })}</span>;
@@ -171,7 +172,7 @@ export function ReportTab({ detail }: { detail: SubmissionDetail }) {
                         {merged && q.key === "participants_actual" ? (
                           <Served detail={detail} />
                         ) : (
-                          formatValue(q, row.answers[q.key])
+                          formatValue(q, row.answers[q.key], row.award)
                         )}
                         <CorrectionNote fix={corrections[q.key]} />
                       </dd>

@@ -48,6 +48,7 @@ export function QuestionField({
   onBlur,
   error,
   disabled,
+  award,
 }: {
   question: Question;
   value: AnswerValue | undefined;
@@ -55,6 +56,7 @@ export function QuestionField({
   onBlur: () => void;
   error?: string;
   disabled?: boolean;
+  award?: number;
 }) {
   const id = `q-${question.key}`;
   const hintId = `${id}-hint`;
@@ -159,6 +161,7 @@ export function QuestionField({
         onBlur={onBlur}
         describedBy={describedBy}
         invalid={Boolean(error)}
+        award={award}
       />
     );
   } else {
