@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-10-11T02:41:04.256Z",
-  "commit": "19e89ce572ae5d73bc2e48cff079c6ed2b7374f7",
+  "generatedAt": "2026-10-11T03:51:58.417Z",
+  "commit": "826366a2216b1a1d93a0fe7ce8fbb3ea7d799647",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 772,
-    "passed": 772,
+    "tests": 786,
+    "passed": 786,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 388,
-    "sql": 250,
+    "unit": 399,
+    "sql": 253,
     "eval": 32,
     "e2e": 102
   },
@@ -1165,6 +1165,24 @@
           "suite": "sql"
         },
         {
+          "title": "the review inbox records where a message went records the recipient as the delivery address when there is no redirect",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the review inbox records where a message went records the review inbox, sends the intended address in the body and holds reminders over the limit",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the review inbox records where a message went keeps the four argument call working and defaults the delivery address to the recipient",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "submitting queues an email with the submitted content writes the outbox message in the same step as the status change",
           "file": "tests/sql/workflow.test.ts",
           "status": "passed",
@@ -1237,6 +1255,48 @@
           "suite": "unit"
         },
         {
+          "title": "the review inbox reads the redirect address and the reminder limit",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox turns delivery off when the redirect address is not an address",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox sends to the review inbox with the intended address in the first line and the subject unchanged",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox applies the allowlist to the original recipient and delivers by default",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox delivers only the reminder limit per run and holds the rest with a reason",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox shares one reminder budget across rounds and never caps transactional mail",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox does not cap reminders when there is no review inbox",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "confirmation email body the email copy leaves out blank table rows and formats counts",
           "file": "tests/unit/report-format.test.ts",
           "status": "passed",
@@ -1297,6 +1357,30 @@
         },
         {
           "title": "report PDF keeps a budget table header with its first row and never splits the Line heading",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF derives the certification from the submitter when the copy has no certification record",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF leaves out the certification when nobody submitted the copy",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF says when actual spending was not reported and drops the spending columns",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF never leaves a question label alone at the bottom of a page",
           "file": "tests/unit/report-pdf.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -4877,6 +4961,24 @@
           "suite": "sql"
         },
         {
+          "title": "the review inbox records where a message went records the recipient as the delivery address when there is no redirect",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the review inbox records where a message went records the review inbox, sends the intended address in the body and holds reminders over the limit",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the review inbox records where a message went keeps the four argument call working and defaults the delivery address to the recipient",
+          "file": "tests/sql/email-delivery.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "submitting queues an email with the submitted content writes the outbox message in the same step as the status change",
           "file": "tests/sql/workflow.test.ts",
           "status": "passed",
@@ -4944,6 +5046,48 @@
         },
         {
           "title": "the outbox dispatcher never emails a password link template",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox reads the redirect address and the reminder limit",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox turns delivery off when the redirect address is not an address",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox sends to the review inbox with the intended address in the first line and the subject unchanged",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox applies the allowlist to the original recipient and delivers by default",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox delivers only the reminder limit per run and holds the rest with a reason",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox shares one reminder budget across rounds and never caps transactional mail",
+          "file": "tests/unit/email-transport.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the review inbox does not cap reminders when there is no review inbox",
           "file": "tests/unit/email-transport.test.ts",
           "status": "passed",
           "suite": "unit"
