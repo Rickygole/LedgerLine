@@ -65,6 +65,11 @@ export const AUDIT_ACTIONS: Record<string, ActionWords> = {
     alone: "combined initiatives at rollover",
     verb: "combined initiatives into",
   },
+  rollover_reports_carried: {
+    label: "Report setup carried at rollover",
+    alone: "carried an initiative's report setup forward",
+    verb: "carried the report setup into",
+  },
   library_add: {
     label: "Library question added",
     alone: "added a library question",
