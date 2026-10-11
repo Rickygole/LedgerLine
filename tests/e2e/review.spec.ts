@@ -183,3 +183,26 @@ test("[US-049][US-051] the dashboard draws its charts from the current reports",
   await expect(map.locator("path").first()).toBeVisible();
   await expect(map.getByRole("link")).toHaveCount(51);
 });
+
+test("[US-039] view-only staff see neutral wording on the dashboard actions and reviewers see the review actions", async ({
+  page,
+  browser,
+}) => {
+  await page.goto("/finance");
+  await expect(page.getByRole("link", { name: "Review next submission" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Chase missing reports" })).toBeVisible();
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("grace"),
+  });
+  try {
+    const viewer = await context.newPage();
+    await viewer.goto("/finance");
+    await expect(viewer.getByRole("link", { name: "Open next submission" })).toBeVisible();
+    await expect(viewer.getByRole("link", { name: "View missing reports" })).toBeVisible();
+    await expect(viewer.getByRole("link", { name: "Review next submission" })).toHaveCount(0);
+    await expect(viewer.getByRole("link", { name: "Chase missing reports" })).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
