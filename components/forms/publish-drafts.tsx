@@ -19,6 +19,7 @@ type Props = {
 export function PublishDrafts({ questionKey, formIds, count, onPublished }: Props) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
+  const cancel = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<string[]>([]);
@@ -92,7 +93,13 @@ export function PublishDrafts({ questionKey, formIds, count, onPublished }: Prop
   return (
     <div className="space-y-3">
       {summary}
-      <Button aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
+      <Button
+        aria-haspopup="dialog"
+        onClick={() => {
+          dialog.current?.showModal();
+          cancel.current?.focus();
+        }}
+      >
         Publish all {count.toLocaleString("en-US")} {count === 1 ? "draft" : "drafts"}
       </Button>
       <dialog
@@ -122,7 +129,13 @@ export function PublishDrafts({ questionKey, formIds, count, onPublished }: Prop
           <Button onClick={publish} disabled={pending} className="h-11 px-5 text-base">
             {pending ? "Publishing" : `Yes, publish ${counted(count, "draft")}`}
           </Button>
-          <Button variant="ghost" className="px-0" onClick={() => dialog.current?.close()} disabled={pending}>
+          <Button
+            ref={cancel}
+            variant="ghost"
+            className="px-0"
+            onClick={() => dialog.current?.close()}
+            disabled={pending}
+          >
             Cancel
           </Button>
         </div>

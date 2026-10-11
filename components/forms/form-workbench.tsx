@@ -96,6 +96,7 @@ export function FormWorkbench({
   const [showBuilder, setShowBuilder] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
   const confirmRef = useRef<HTMLDialogElement>(null);
+  const cancelPublishRef = useRef<HTMLButtonElement>(null);
 
   const editable = canEdit && status === "draft";
   const dirty = useMemo(
@@ -144,6 +145,7 @@ export function FormWorkbench({
     setErrors([]);
     setConfirming(true);
     confirmRef.current?.showModal();
+    cancelPublishRef.current?.focus();
   }
 
   function reorder(key: string, from: number, to: number) {
@@ -343,7 +345,13 @@ export function FormWorkbench({
           <Button onClick={confirmPublish} disabled={pending} className="h-11 px-5 text-base">
             {pending ? "Publishing" : `Yes, publish version ${version}`}
           </Button>
-          <Button variant="ghost" className="px-0" onClick={() => confirmRef.current?.close()} disabled={pending}>
+          <Button
+            ref={cancelPublishRef}
+            variant="ghost"
+            className="px-0"
+            onClick={() => confirmRef.current?.close()}
+            disabled={pending}
+          >
             Cancel
           </Button>
         </div>

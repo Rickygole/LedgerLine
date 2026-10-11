@@ -145,6 +145,7 @@ test.describe("as an administrator", () => {
     await page.getByRole("button", { name: "Publish all 2 drafts" }).click();
     const dialog = page.getByRole("dialog", { name: "Publish 2 drafts?" });
     await expect(dialog).toContainText("2 forms will get a new version.");
+    await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
     await expect(dialog).toContainText("Reports already started keep their version.");
     await expect(dialog).toContainText("only the drafts just created or updated from this question");
     await dialog.getByRole("button", { name: "Yes, publish 2 drafts" }).click();
