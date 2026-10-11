@@ -1,14 +1,7 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Tx } from "@/lib/db";
-import {
-  cleanParams,
-  countMatches,
-  exportSummary,
-  resultsHref,
-  summarizeMatches,
-  toSearch,
-} from "@/lib/lifecycle/queries";
+import { cleanParams, exportSummary, resultsHref, summarizeMatches, toSearch } from "@/lib/lifecycle/queries";
 import { appUrl, connect, ownerUrl, userId } from "./helpers";
 
 let owner: Client;
@@ -46,7 +39,7 @@ async function count(params: Record<string, string>): Promise<number> {
   await app.query("BEGIN");
   try {
     await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
-    return await countMatches(asTx(app), cleanParams({ period: PERIOD, ...params }, periods));
+    return (await summarizeMatches(asTx(app), cleanParams({ period: PERIOD, ...params }, periods))).matches;
   } finally {
     await app.query("ROLLBACK");
   }
