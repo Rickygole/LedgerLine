@@ -244,7 +244,7 @@ test("[US-065][US-066] readiness shows the share of Finance users trained and th
   const { context, page } = await as(browser, "priya");
   await page.goto("/finance/readiness");
   await expect(page.getByText(/Finance users trained: \d+%/)).toBeVisible();
-  await expect(page.getByText(/Test scenarios passing: None yet/)).toBeVisible();
+  await expect(page.getByText(/Test scenarios passing: No test sessions held yet/)).toBeVisible();
   const before = Number((await page.getByText(/Finance users trained: \d+%/).textContent())!.match(/(\d+)%/)![1]);
   await page.getByLabel("Scenario").fill("Analyst prints the dashboard");
   await page.locator("#tester").fill("Grace Chen");
