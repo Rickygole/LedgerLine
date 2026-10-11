@@ -68,6 +68,18 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
   await expect(page.getByText(note).first()).toBeVisible();
 });
 
+test("[US-044] an internal flag note is never prefilled into the note to the organization after a reload", async ({
+  page,
+}) => {
+  await page.goto(`/finance/submissions/${submissionId}`);
+  await page.reload();
+  await page.getByRole("button", { name: "Request an update" }).click();
+  const note = page.getByLabel("Note to the organization");
+  await expect(note).toHaveValue(/Council Finance has a question about this report\./);
+  await expect(note).not.toHaveValue(/vendor breakdown/);
+  await expect(note).not.toHaveValue(/Council Finance noted/);
+});
+
 test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({
   page,
   browser,

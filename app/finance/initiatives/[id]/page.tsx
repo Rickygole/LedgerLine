@@ -106,7 +106,11 @@ export default async function InitiativeDetail({ params }: { params: Promise<{ i
               ? `Administered by ${initiative.administering_agency}`
               : "No administering agency"}
           </span>,
-          ...lineageMeta(lineage),
+          ...lineageMeta(lineage, {
+            on: initiative.retired_on,
+            reason: initiative.retired_reason,
+            byName: changes.find((c) => c.kind === "retired")?.by_name ?? null,
+          }),
         ]}
         actions={<PrintButton label="Print" />}
       >

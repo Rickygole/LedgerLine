@@ -36,3 +36,16 @@ describe("[US-044] internal flag notes stay internal", () => {
     expect(sent).not.toContain("555");
   });
 });
+
+describe("[US-044] the prefilled note never carries a flag note", () => {
+  it("uses the neutral sentence for any number of open flags and nothing from the note", async () => {
+    const { prefillNote, FLAG_PREFILL } = await import("@/lib/finance/review/return-note-core");
+    const text = prefillNote({ budgetSentence: null, issueSentence: null, openFlagCount: 2 });
+    expect(text).toBe("Council Finance has a question about this report.");
+    expect(FLAG_PREFILL).not.toContain("investigation");
+    expect(prefillNote({ budgetSentence: "Please review the budget.", issueSentence: null, openFlagCount: 1 })).toBe(
+      "Please review the budget.\n\nCouncil Finance has a question about this report.",
+    );
+    expect(prefillNote({ budgetSentence: null, issueSentence: null, openFlagCount: 0 })).toBe("");
+  });
+});

@@ -22,7 +22,7 @@ import { FINANCE_ROLES, REVIEW_ROLES, requireUser } from "@/lib/auth";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
 import { loadSubmissionDetail } from "@/lib/finance/review/detail";
-import { buildConcerns, PRESET_CONCERNS } from "@/lib/finance/review/return-note-core";
+import { buildConcerns, PRESET_CONCERNS, prefillNote } from "@/lib/finance/review/return-note-core";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency, plural } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
@@ -137,21 +137,19 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         ? "No budget lines entered"
         : `Budget ${diff < 0 ? "under" : "over"} by ${formatCurrency(Math.abs(diff), { cents: true })}`;
   const issueText = row.issues.slice(0, 4).map((issue) => issue.message.replace(/\.$/, ""));
-  const prefill = [
-    budgetOn && !balance.balanced
-      ? row.budget.length > 0
-        ? `Please review the budget. The total is ${formatCurrency(Math.abs(diff), { cents: true })} ${diff < 0 ? "under" : "over"} the award of ${formatCurrency(row.award, { cents: true })}.`
-        : `Please add your budget lines. The total must equal the award of ${formatCurrency(row.award, { cents: true })}.`
-      : null,
-    issueText.length > 0
-      ? `Please fix ${row.issues.length === 1 ? "this answer" : `these ${row.issues.length > issueText.length ? `${row.issues.length} answers, starting with` : "answers"}`}: ${issueText.join("; ")}.`
-      : null,
-    ...row.openFlags.map((flag) =>
-      flag.note?.trim() ? `Council Finance noted: ${flag.note.trim().replace(/\.$/, "")}.` : null,
-    ),
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const prefill = prefillNote({
+    budgetSentence:
+      budgetOn && !balance.balanced
+        ? row.budget.length > 0
+          ? `Please review the budget. The total is ${formatCurrency(Math.abs(diff), { cents: true })} ${diff < 0 ? "under" : "over"} the award of ${formatCurrency(row.award, { cents: true })}.`
+          : `Please add your budget lines. The total must equal the award of ${formatCurrency(row.award, { cents: true })}.`
+        : null,
+    issueSentence:
+      issueText.length > 0
+        ? `Please fix ${row.issues.length === 1 ? "this answer" : `these ${row.issues.length > issueText.length ? `${row.issues.length} answers, starting with` : "answers"}`}: ${issueText.join("; ")}.`
+        : null,
+    openFlagCount: row.openFlags.length,
+  });
   const checks = [
     ...(budgetText ? [{ ok: balance.balanced, text: budgetText, tab: "budget" }] : []),
     {
