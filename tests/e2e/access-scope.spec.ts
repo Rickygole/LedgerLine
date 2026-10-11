@@ -72,3 +72,68 @@ test("[US-060][BR-017] a scoped Finance user sees only their scope and a note sa
     await ownerQuery("UPDATE app_user SET scope_agencies = '{}' WHERE id = $1", [id]);
   }
 });
+
+test("[US-060][BR-017] a scoped Finance user cannot see out-of-scope initiatives or organizations", async ({
+  browser,
+}) => {
+  const [{ id }] = await ownerQuery<{ id: string }>(
+    "SELECT id FROM app_user WHERE email = 'grace.chen@finance.example.gov'",
+  );
+  const [outside] = await ownerQuery<{ id: string; code: string }>(
+    `SELECT i.id, i.code FROM initiative i
+     WHERE i.administering_agency = 'DFTA' AND EXISTS (SELECT 1 FROM assignment a WHERE a.initiative_id = i.id)
+     ORDER BY i.code LIMIT 1`,
+  );
+  const [inside] = await ownerQuery<{ id: string; code: string }>(
+    `SELECT i.id, i.code FROM initiative i
+     WHERE i.administering_agency = 'DYCD' AND EXISTS (SELECT 1 FROM assignment a WHERE a.initiative_id = i.id)
+     ORDER BY i.code LIMIT 1`,
+  );
+  const [foreignOrg] = await ownerQuery<{ id: string; legal_name: string }>(
+    `SELECT o.id, o.legal_name FROM organization o
+     WHERE EXISTS (SELECT 1 FROM assignment a WHERE a.org_id = o.id)
+       AND NOT EXISTS (SELECT 1 FROM assignment a JOIN initiative i ON i.id = a.initiative_id
+                       WHERE a.org_id = o.id AND i.administering_agency = 'DYCD')
+     ORDER BY o.legal_name LIMIT 1`,
+  );
+  const [localOrg] = await ownerQuery<{ id: string; legal_name: string }>(
+    `SELECT o.id, o.legal_name FROM organization o
+     WHERE EXISTS (SELECT 1 FROM assignment a JOIN initiative i ON i.id = a.initiative_id
+                   WHERE a.org_id = o.id AND i.administering_agency = 'DYCD')
+     ORDER BY o.legal_name LIMIT 1`,
+  );
+  await ownerQuery("UPDATE app_user SET scope_agencies = ARRAY['DYCD'] WHERE id = $1", [id]);
+  const context = await browser.newContext({ storageState: authFile("grace") });
+  try {
+    const page = await context.newPage();
+    await page.goto(`/finance/initiatives?q=${outside.code}`);
+    await expect(page.getByText("No initiatives match these filters.")).toBeVisible();
+    await expect(page.getByText("No organizations", { exact: true })).toHaveCount(0);
+    await page.goto(`/finance/initiatives?q=${inside.code}`);
+    await expect(page.getByRole("row").filter({ hasText: inside.code })).toHaveCount(1);
+
+    await page.goto("/finance/initiatives");
+    const year = (await page.getByRole("heading", { name: /^FY\d+ initiatives/ }).innerText()).slice(0, 4);
+    const [{ total, awards, everything }] = await ownerQuery<{ total: string; awards: number; everything: string }>(
+      `SELECT (SELECT sum(total_funding)::text FROM initiative WHERE administering_agency = 'DYCD' AND fiscal_year_id = $1) AS total,
+              (SELECT count(*)::int FROM assignment a JOIN initiative i ON i.id = a.initiative_id
+                WHERE i.administering_agency = 'DYCD' AND i.fiscal_year_id = $1) AS awards,
+              (SELECT sum(total_funding)::text FROM initiative WHERE fiscal_year_id = $1) AS everything`,
+      [year],
+    );
+    const header = await page.locator("#initiatives p").first().innerText();
+    expect(header).toContain(`across ${awards.toLocaleString("en-US")} awards`);
+    expect(Number(everything)).toBeGreaterThan(Number(total));
+    expect(header).toContain(`$${(Number(total) / 1_000_000).toFixed(1)} million`);
+
+    expect((await page.goto(`/finance/initiatives/${outside.id}`))?.status()).toBe(404);
+    expect((await page.goto(`/finance/initiatives/${inside.id}`))?.status()).toBe(200);
+    expect((await page.goto(`/finance/organizations/${foreignOrg.id}`))?.status()).toBe(404);
+    expect((await page.goto(`/finance/organizations/${localOrg.id}`))?.status()).toBe(200);
+    await page.goto(`/finance/organizations?q=${encodeURIComponent(foreignOrg.legal_name)}`);
+    await expect(page.getByRole("link", { name: foreignOrg.legal_name })).toHaveCount(0);
+  } finally {
+    await context.close();
+    await ownerQuery("UPDATE app_user SET scope_agencies = '{}' WHERE id = $1", [id]);
+  }
+});

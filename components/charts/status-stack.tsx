@@ -140,7 +140,7 @@ export function StatusStackChart({
           <tbody>
             {rows.map((d) => (
               <tr key={d.name} className="border-t border-line">
-                <th scope="row" className="whitespace-nowrap px-3 py-2 font-medium">
+                <th scope="row" className="px-3 py-2 font-medium">
                   <Link
                     href={d.href}
                     className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"

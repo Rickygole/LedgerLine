@@ -106,6 +106,17 @@ test.describe("as an administrator", () => {
     await expect(page.getByLabel("Report name")).toHaveCount(0);
     await page.getByRole("button", { name: "Add a custom report" }).click();
     await page.getByLabel("Report name").fill(CUSTOM);
+    await page.getByLabel("Due date").fill("2031-03-31");
+    await page.getByRole("button", { name: "Add report" }).click();
+    await expect(
+      page.getByText(/Choose a due date between .* 12 months after the fiscal year ends\./).first(),
+    ).toBeVisible();
+    expect(
+      await ownerQuery("SELECT 1 FROM reporting_period WHERE initiative_id = $1 AND label = $2", [
+        initiativeId,
+        CUSTOM,
+      ]),
+    ).toHaveLength(0);
     await page.getByLabel("Due date").fill("2027-03-31");
     await page.getByRole("button", { name: "Add report" }).click();
     await expect(page.getByText(`${CUSTOM} is now a required report for this initiative.`)).toBeVisible();

@@ -73,7 +73,8 @@ export async function startReport(userId: string, assignmentId: string, periodId
            FROM app_user u
            LEFT JOIN LATERAL (
              SELECT full_name, title, email, phone FROM contact
-             WHERE org_id = u.org_id ORDER BY is_primary DESC, full_name LIMIT 1
+             WHERE org_id = u.org_id AND (is_primary OR lower(email) = lower(u.email))
+             ORDER BY is_primary DESC, full_name LIMIT 1
            ) c ON true
            WHERE u.id = app.uid()`,
         );

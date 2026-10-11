@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { actionFailure, failure, firstIssue, isoDay, success, trimmed, type ActionState } from "@/lib/actions";
-import { todayInNewYork } from "@/lib/dates";
+import { formatDate, todayInNewYork } from "@/lib/dates";
 import { ruleViolation } from "@/lib/finance/admin/rule-message";
 import { isUuid } from "@/lib/ids";
 import { writeAudit } from "@/lib/audit";
@@ -114,6 +114,15 @@ export async function addCustomReport(_prev: ActionState, formData: FormData): P
   const data = parsed.data;
   return runRule("add_custom_report_failed", initiativeId, () =>
     withClaims(user.id, async (tx) => {
+      const year = await tx.one<{ starts_on: string; latest: string }>(
+        `SELECT f.starts_on::text, (f.ends_on + interval '12 months')::date::text AS latest
+         FROM initiative i JOIN fiscal_year f ON f.id = i.fiscal_year_id WHERE i.id = $1`,
+        [initiativeId],
+      );
+      if (year && (data.due < year.starts_on || data.due > year.latest)) {
+        const message = `Choose a due date between ${formatDate(year.starts_on)} and ${formatDate(year.latest)}, which is 12 months after the fiscal year ends.`;
+        return failure(message, { fieldErrors: { due: message }, values });
+      }
       await tx.query("SELECT app.add_custom_report($1, $2, $3::date, $4::date, $5::date)", [
         initiativeId,
         data.label,

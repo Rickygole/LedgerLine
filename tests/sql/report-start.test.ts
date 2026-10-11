@@ -128,6 +128,43 @@ describe("[US-034][BR-024] a new report fills in the organization details that a
   });
 });
 
+describe("[US-034][BR-024] without a primary contact the signed-in user's own details are used", () => {
+  it("never prefills a stranger from the contact list", async () => {
+    const { startReport } = await import("@/lib/report/create");
+    const org = (await owner.query("SELECT org_id, email FROM app_user WHERE id = $1", [maria])).rows[0];
+    const before = (await owner.query("SELECT id, is_primary FROM contact WHERE org_id = $1 ORDER BY id", [org.org_id]))
+      .rows;
+    await owner.query("DELETE FROM answer WHERE submission_id = $1", [created]);
+    await owner.query("DELETE FROM submission WHERE id = $1", [created]);
+    created = null;
+    await owner.query("UPDATE contact SET is_primary = false WHERE org_id = $1", [org.org_id]);
+    const stranger = (
+      await owner.query(
+        `INSERT INTO contact (org_id, full_name, title, email, is_primary)
+         VALUES ($1, 'Aaron Aardvark', 'Board Chair', 'aaron.aardvark@example.org', false) RETURNING id`,
+        [org.org_id],
+      )
+    ).rows[0];
+    try {
+      const started = await startReport(maria, target!.assignment, target!.period);
+      expect(started.status).toBe("ok");
+      if (started.status !== "ok") return;
+      created = started.submissionId;
+      const answers = Object.fromEntries(
+        (await owner.query("SELECT question_key, value FROM answer WHERE submission_id = $1", [created])).rows.map(
+          (row) => [row.question_key, row.value],
+        ),
+      );
+      expect(answers.contact_name).not.toBe("Aaron Aardvark");
+      expect(answers.contact_email).toBe(org.email);
+    } finally {
+      await owner.query("DELETE FROM contact WHERE id = $1", [stranger.id]);
+      for (const row of before)
+        await owner.query("UPDATE contact SET is_primary = $2 WHERE id = $1", [row.id, row.is_primary]);
+    }
+  });
+});
+
 describe("[BR-009][US-016] a report is only started for a period the initiative owes", () => {
   let crossAssignment: string | null = null;
   let crossPeriod: string | null = null;

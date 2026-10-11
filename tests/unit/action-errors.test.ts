@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dbErrorMessage, failure, success } from "@/lib/actions";
-import { REVIEW_ERRORS, STALE_MESSAGE } from "@/lib/finance/review/errors";
+import { OUT_OF_SCOPE_MESSAGE, REVIEW_ERRORS, reviewErrorsFor, STALE_MESSAGE } from "@/lib/finance/review/errors";
 import { formatActionErrorLog } from "@/lib/ops/log";
 
 const pg = (code: string, message = "", extra: Record<string, unknown> = {}) =>
@@ -27,6 +27,15 @@ describe("[US-062] one error mapper for every server action", () => {
       /^Resolve the open budget/,
     );
     expect(dbErrorMessage(pg("40001"), REVIEW_ERRORS)).toBe(STALE_MESSAGE);
+    expect(dbErrorMessage(pg("42501", "this report is outside your access scope"), REVIEW_ERRORS)).toBe(
+      OUT_OF_SCOPE_MESSAGE,
+    );
+    expect(dbErrorMessage(pg("42501", "permission denied"), reviewErrorsFor({ scopeNote: "DYCD" }))).toBe(
+      OUT_OF_SCOPE_MESSAGE,
+    );
+    expect(dbErrorMessage(pg("42501", "permission denied"), reviewErrorsFor({ scopeNote: null }))).toMatch(
+      /^Your role cannot do this/,
+    );
     expect(dbErrorMessage(pg("23514", "something else"), REVIEW_ERRORS)).toBe(
       "That change is not allowed for this report right now.",
     );

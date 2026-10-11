@@ -10,7 +10,7 @@ import { appOrigin } from "@/lib/origin";
 import { dispatchFor } from "@/lib/outbox-dispatch";
 import { draftReturnNote } from "@/lib/ai/return-note";
 import { loadSubmissionDetail } from "@/lib/finance/review/detail";
-import { REVIEW_ERRORS, STALE_MESSAGE } from "@/lib/finance/review/errors";
+import { reviewErrorsFor, STALE_MESSAGE } from "@/lib/finance/review/errors";
 import {
   buildConcerns,
   containsRuleId,
@@ -103,7 +103,7 @@ export async function transitionAction(_prev: ActionState, formData: FormData): 
     });
     if (problem) return failure(problem);
   } catch (error) {
-    return actionFailure("transition_action_failed", error, REVIEW_ERRORS);
+    return actionFailure("transition_action_failed", error, reviewErrorsFor(user));
   }
   refresh(id);
   return success(action === "accept" ? "Report accepted." : "Review started. The report is now in review.");
@@ -130,7 +130,7 @@ export async function draftNoteAction(submissionId: string, concernIds: string[]
     });
   } catch (error) {
     await logError("draft_note_failed", error);
-    return { ok: false, message: dbErrorMessage(error, REVIEW_ERRORS) };
+    return { ok: false, message: dbErrorMessage(error, reviewErrorsFor(user)) };
   }
 }
 
@@ -197,7 +197,7 @@ export async function sendUpdateAction(raw: {
     });
     if (sent) return failure(sent);
   } catch (error) {
-    return actionFailure("send_update_action_failed", error, REVIEW_ERRORS);
+    return actionFailure("send_update_action_failed", error, reviewErrorsFor(user));
   }
   await dispatchFor(user.id, { submissionId: input.submissionId });
   refresh(input.submissionId);
@@ -230,7 +230,7 @@ export async function addFlagAction(_prev: ActionState, formData: FormData): Pro
     });
     if (refused) return failure(refused);
   } catch (error) {
-    return actionFailure("add_flag_action_failed", error, REVIEW_ERRORS);
+    return actionFailure("add_flag_action_failed", error, reviewErrorsFor(user));
   }
   refresh(id);
   return success("Flag added.");
@@ -261,7 +261,7 @@ export async function resolveFlagAction(_prev: ActionState, formData: FormData):
     });
     if (!changed) return failure("That flag is already closed. Reload the page to see its current state.");
   } catch (error) {
-    return actionFailure("resolve_flag_action_failed", error, REVIEW_ERRORS);
+    return actionFailure("resolve_flag_action_failed", error, reviewErrorsFor(user));
   }
   refresh(id);
   return success(outcome === "resolved" ? "Flag resolved." : "Flag dismissed.");
@@ -404,7 +404,7 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
   } catch (error) {
     if (pgCode(error) === "42501")
       return failure("Only Finance analysts and administrators can correct a submitted answer.");
-    return actionFailure("correction_action_failed", error, REVIEW_ERRORS);
+    return actionFailure("correction_action_failed", error, reviewErrorsFor(user));
   }
   refresh(id);
   return success("Correction saved as a new revision.");

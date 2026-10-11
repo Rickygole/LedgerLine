@@ -169,7 +169,7 @@ export function applyFilters(rows: ReportRow[], filters: Partial<Filters>, skip:
   const use = (key: keyof Filters) => !skip.includes(key) && Boolean(filters[key]);
   const q = (filters.q ?? "").toLowerCase();
   const einQuery = q.replace(/[^0-9]/g, "");
-  const einLike = /^[0-9-]+$/.test(q);
+  const einLike = /^[0-9\s-]+$/.test(q);
   const initiative = (filters.initiative ?? "").toLowerCase();
   return rows.filter((row) => {
     if (use("q")) {

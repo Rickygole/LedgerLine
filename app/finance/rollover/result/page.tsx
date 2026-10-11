@@ -105,6 +105,35 @@ export default async function RolloverResultPage({ searchParams }: { searchParam
           </tbody>
         </Table>
       </Card>
+      {result.customReports.length > 0 ? (
+        <Card className="mt-6">
+          <CardHeader
+            title={`Custom reports carried into ${to}`}
+            description="Reports that only one initiative requires, moved forward one year with their due dates."
+          />
+          <Table>
+            <THead>
+              <tr>
+                <TH>Initiative</TH>
+                <TH>Report</TH>
+                <TH>Due</TH>
+              </tr>
+            </THead>
+            <tbody>
+              {result.customReports.map((r) => (
+                <TR key={r.id}>
+                  <TD>
+                    {r.initiative_name}{" "}
+                    <span className="whitespace-nowrap font-mono text-[13px] text-muted">{r.initiative_code}</span>
+                  </TD>
+                  <TD>{r.label}</TD>
+                  <TD className="whitespace-nowrap">{formatDate(r.due_on)}</TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+        </Card>
+      ) : null}
     </>
   );
 }

@@ -2,10 +2,13 @@ import type { ErrorOverrides } from "@/lib/actions";
 
 export const STALE_MESSAGE = "Someone else changed this report. Reload to see their changes.";
 
+export const OUT_OF_SCOPE_MESSAGE = "This report is outside your access scope.";
+
 const NOT_ALLOWED = "That change is not allowed for this report right now.";
 
 export const REVIEW_ERRORS: ErrorOverrides = {
   messages: [
+    [/outside your access scope/i, OUT_OF_SCOPE_MESSAGE],
     [
       /resolve blocking flags/i,
       "Resolve the open budget, completeness and validation flags before accepting this report.",
@@ -32,3 +35,8 @@ export const REVIEW_ERRORS: ErrorOverrides = {
   },
   fallback: "Something went wrong and nothing was saved. Try again, and tell an administrator if it keeps happening.",
 };
+
+export function reviewErrorsFor(user: { scopeNote: string | null }): ErrorOverrides {
+  if (!user.scopeNote) return REVIEW_ERRORS;
+  return { ...REVIEW_ERRORS, codes: { ...REVIEW_ERRORS.codes, "42501": OUT_OF_SCOPE_MESSAGE } };
+}
