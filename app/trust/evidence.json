@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-10-11T05:03:03.952Z",
-  "commit": "2f766eb559de8d9f1018edf327a8db3973c580db",
+  "generatedAt": "2026-10-11T06:14:27.426Z",
+  "commit": "f700755efda1aa3d16b400ff8ca41a3a1514eae1",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 826,
-    "passed": 826,
+    "tests": 851,
+    "passed": 851,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 416,
-    "sql": 271,
+    "unit": 430,
+    "sql": 278,
     "eval": 32,
-    "e2e": 107
+    "e2e": 111
   },
   "summary": {
     "verified": {
@@ -249,7 +249,7 @@
       "route": "/finance/question-library",
       "state": "verified",
       "reason": null,
-      "note": "Standard questions live in one library in the database that Council Finance edits on the Question library page. Apply to forms puts a change into new draft versions of the forms that use the question. Each published version keeps its own copy, so a published form never changes underneath a report.",
+      "note": "Standard questions live in one library in the database that Council Finance edits on the Question library page. Apply to forms puts a change into new draft versions of the forms that use the question, and Publish all drafts makes them live in one confirmed step. Each published version keeps its own copy, so a published form never changes underneath a report.",
       "tests": [
         {
           "title": "standard questions come from one shared library embeds only questions from the shared library in every form version on file, in every fiscal year on file",
@@ -348,6 +348,24 @@
           "suite": "sql"
         },
         {
+          "title": "Publish all drafts made by Apply to forms publishes every draft in one step, keeps pinned reports on their version and audits it",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Publish all drafts made by Apply to forms publishes only the listed drafts and reports a form that fails while the others still publish",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Publish all drafts made by Apply to forms is limited to administrators in the database",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "the import reads the question library it is given accepts a library key that was added after the standard questions and rejects one that is gone",
           "file": "tests/unit/form-draft-core.test.ts",
           "status": "passed",
@@ -415,6 +433,12 @@
         },
         {
           "title": "as an administrator Apply to forms creates a new draft for the chosen initiative and leaves its published form alone",
+          "file": "tests/e2e/question-library.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator Publish all drafts publishes what Apply to forms created in one confirmed step",
           "file": "tests/e2e/question-library.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -1853,6 +1877,66 @@
           "file": "tests/unit/money.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically totals every numeric column and formats each like the column",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically adds decimals without floating point drift",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically shows the sum rule target next to the percent total and says whether it is met",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically resolves an award target from the award amount",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically leaves a column with no entries out of the printed total row and skips tables with no numbers",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically labels the total in the first numeric column when the table has no text column",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically carries the totals into the email copy text",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table totals calculate automatically carries the totals into the PDF",
+          "file": "tests/unit/table-totals.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a table question shows a running total that updates as the submitter types",
+          "file": "tests/e2e/table-totals.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as Finance staff the Finance review of a submitted report shows the table total row",
+          "file": "tests/e2e/table-totals.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -2506,6 +2590,36 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "a new report fills in the organization details that are on file prefills the contact from the organization's primary contact and leaves nothing for the submitter to retype",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a new report fills in the organization details that are on file leaves the seeded draft alone",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organization details fill in where possible uses the organization's primary contact first",
+          "file": "tests/unit/report-contact-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "organization details fill in where possible falls back to the signed-in user for anything the contact record lacks",
+          "file": "tests/unit/report-contact-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "organization details fill in where possible uses the signed-in user when the organization has no contact on file",
+          "file": "tests/unit/report-contact-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "organization details fill in where possible fills the legal name and EIN from the master list when the report has none",
           "file": "tests/unit/report-defaults.test.ts",
@@ -3287,6 +3401,18 @@
       "note": null,
       "tests": [
         {
+          "title": "a query says how many of its matches the export includes counts only submitted, in review, returned and accepted reports as exportable",
+          "file": "tests/sql/queries.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a query says how many of its matches the export includes matches the exportable count for a single status and says so in words",
+          "file": "tests/sql/queries.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "export scope includes every submitted report, including those with changes requested",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
@@ -3309,6 +3435,12 @@
           "file": "tests/unit/finance-export.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "a query says how many of its matches the Excel export includes, and the export has exactly that many rows",
+          "file": "tests/e2e/query-export-count.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         },
         {
           "title": "submitted data downloads as Excel and as CSV for the filtered list, for finance staff only",
@@ -3397,6 +3529,24 @@
           "file": "tests/sql/queries.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "a query says how many of its matches the export includes counts only submitted, in review, returned and accepted reports as exportable",
+          "file": "tests/sql/queries.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a query says how many of its matches the export includes matches the exportable count for a single status and says so in words",
+          "file": "tests/sql/queries.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a query says how many of its matches the Excel export includes, and the export has exactly that many rows",
+          "file": "tests/e2e/query-export-count.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -5986,6 +6136,24 @@
           "suite": "sql"
         },
         {
+          "title": "EIN answers are stored and shown as NN-NNNNNNN adds the dash to nine digits and leaves everything else as typed",
+          "file": "tests/unit/ein-format.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "EIN answers are stored and shown as NN-NNNNNNN normalizes only EIN-type answers before they are saved or exported",
+          "file": "tests/unit/ein-format.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "EIN answers are stored and shown as NN-NNNNNNN shows the dash in every rendering, even for an answer stored without it",
+          "file": "tests/unit/ein-format.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "master list rows are validated before they reach the list accepts a complete row and normalizes the EIN, phone and email",
           "file": "tests/unit/master-list.test.ts",
           "status": "passed",
@@ -6110,6 +6278,36 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "a new report fills in the organization details that are on file prefills the contact from the organization's primary contact and leaves nothing for the submitter to retype",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a new report fills in the organization details that are on file leaves the seeded draft alone",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "organization details fill in where possible uses the organization's primary contact first",
+          "file": "tests/unit/report-contact-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "organization details fill in where possible falls back to the signed-in user for anything the contact record lacks",
+          "file": "tests/unit/report-contact-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "organization details fill in where possible uses the signed-in user when the organization has no contact on file",
+          "file": "tests/unit/report-contact-defaults.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
         {
           "title": "organization details fill in where possible fills the legal name and EIN from the master list when the report has none",
           "file": "tests/unit/report-defaults.test.ts",
