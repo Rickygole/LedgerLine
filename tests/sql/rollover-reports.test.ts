@@ -1,5 +1,7 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Tx } from "@/lib/db";
+import { rolloverResult } from "@/lib/lifecycle/rollover";
 import { appUrl, asUser, connect, ownerUrl, userId } from "./helpers";
 
 let owner: Client;
@@ -84,6 +86,12 @@ describe("[US-010][BR-015] a rollover carries an initiative's report setup into 
         fiscal_year_id: "FY28",
       });
       expect(created[0].id).not.toBe(old);
+      const tx: Tx = {
+        query: async (sql, params) => (await app.query(sql, params)).rows,
+        one: async (sql, params) => (await app.query(sql, params)).rows[0] ?? null,
+      };
+      const result = await rolloverResult(tx, "FY27", "FY28");
+      expect(result?.customReports.map((r) => [r.label, r.due_on])).toEqual([["Quarterly check", "2028-01-15"]]);
       const rules = async (period: string) =>
         (await app.query("SELECT count(*)::int AS n FROM reminder_rule WHERE period_id = $1", [period])).rows[0].n;
       expect(await rules(created[0].id)).toBeGreaterThan(0);

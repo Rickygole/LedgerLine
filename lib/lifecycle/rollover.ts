@@ -32,6 +32,7 @@ type RolloverResult = {
   assignments: number;
   forms: number;
   periods: { id: string; label: string; due_on: string }[];
+  customReports: { id: string; label: string; due_on: string; initiative_code: string; initiative_name: string }[];
 };
 
 export function nextFiscalYear(id: string): string {
@@ -118,6 +119,15 @@ export async function rolloverResult(tx: Tx, from: string, to: string): Promise<
     "SELECT id, label, due_on::text FROM reporting_period WHERE fiscal_year_id = $1 AND initiative_id IS NULL ORDER BY due_on",
     [to],
   );
+  const customReports = await tx.query<RolloverResult["customReports"][number]>(
+    `SELECT p.id, p.label, p.due_on::text, i.code AS initiative_code, i.name AS initiative_name
+     FROM reporting_period p JOIN initiative i ON i.id = p.initiative_id
+     WHERE p.fiscal_year_id = $1
+       AND EXISTS (SELECT 1 FROM initiative_lineage l JOIN initiative pr ON pr.id = l.predecessor_id
+                   WHERE l.successor_id = i.id AND pr.fiscal_year_id = $2)
+     ORDER BY p.due_on, i.code, p.label`,
+    [to, from],
+  );
   return {
     from,
     to,
@@ -130,6 +140,7 @@ export async function rolloverResult(tx: Tx, from: string, to: string): Promise<
     assignments: totals?.assignments ?? 0,
     forms: totals?.forms ?? 0,
     periods,
+    customReports,
   };
 }
 
