@@ -160,8 +160,8 @@ export function DistrictMapCard({
 
         <details id="district-table" open={table} className="group border-t border-line-soft pt-3">
           <summary className="cursor-pointer list-none text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover [&::-webkit-details-marker]:hidden">
-            <span className="group-open:hidden">View as a table</span>
-            <span className="hidden group-open:inline">Hide the table</span>
+            <span className="group-open:hidden">View as table</span>
+            <span className="hidden group-open:inline">Hide table</span>
           </summary>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full table-fixed border-collapse break-words text-[15px] leading-[22px]">
