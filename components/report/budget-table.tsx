@@ -27,94 +27,116 @@ export function BudgetTable({
   const note = answers[VARIANCE_NOTE_KEY];
   const span = 3;
 
+  const columns = spend.entered ? 6 : 4;
+  const money = (value: number) => formatCurrency(value, { cents: true });
+  const balanceText =
+    balance.tone === "ok"
+      ? `Budget balanced: total equals the ${formatCurrency(award, { cents: "auto" })} award.`
+      : balance.text;
+  const footRow = "text-[15px] leading-[22px]";
+
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-md border border-line">
-        <Table>
-          <THead>
-            <tr>
-              <TH align="right">Line</TH>
-              <TH>Category</TH>
-              <TH>Description</TH>
-              <TH align="right">Approved budget</TH>
-              <TH align="right">Actual spent</TH>
-              <TH align="right">Variance</TH>
-            </tr>
-          </THead>
-          <tbody>
-            {lines.length === 0 ? <EmptyRow colSpan={6}>No budget lines.</EmptyRow> : null}
-            {withIds.map((line) => {
-              const variance = lineVariance(line);
-              return (
-                <TR key={line.position}>
-                  <TD align="right" className="num">
-                    {line.position}
-                  </TD>
-                  <TD className="whitespace-nowrap">{line.category}</TD>
-                  <TD>{line.description || <span className="text-muted">No description</span>}</TD>
-                  <TD align="right">{formatCurrency(line.amount, { cents: true })}</TD>
-                  <TD align="right">
-                    {line.actual === null || line.actual === undefined ? (
-                      <NoValue />
-                    ) : (
-                      formatCurrency(line.actual, { cents: true })
-                    )}
-                  </TD>
-                  <TD align="right" className={cn(variance !== null && variance < 0 && "font-semibold text-warn")}>
-                    {variance === null ? <NoValue /> : formatCurrency(variance, { cents: true })}
-                  </TD>
-                </TR>
-              );
-            })}
-          </tbody>
-          <tfoot className="border-t border-line bg-surface/60 text-sm">
-            <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
-                Personal services (PS) subtotal
-              </td>
-              <td className="num px-4 py-2 text-right">{formatCurrency(totals.ps, { cents: true })}</td>
-              <td colSpan={2} />
-            </tr>
-            <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
-                Other than personal services (OTPS) subtotal
-              </td>
-              <td className="num px-4 py-2 text-right">{formatCurrency(totals.otps, { cents: true })}</td>
-              <td colSpan={2} />
-            </tr>
-            <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
-                {totalLabel}
-              </td>
-              <td className="num px-4 py-2 text-right font-bold">{formatCurrency(totals.total, { cents: true })}</td>
-              <td className="num px-4 py-2 text-right font-bold">
-                {spend.entered ? formatCurrency(spend.actual, { cents: true }) : ""}
-              </td>
-              <td className="num px-4 py-2 text-right font-bold">
-                {spend.entered ? formatCurrency(spend.variance, { cents: true }) : ""}
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={span} className="px-4 py-2 text-right font-semibold">
-                Award
-              </td>
-              <td className="num px-4 py-2 text-right">{formatCurrency(award, { cents: true })}</td>
-              <td colSpan={2} />
-            </tr>
-            {spend.entered ? (
+      <div className="space-y-2">
+        <div className="overflow-hidden rounded-md border border-line">
+          <Table stack>
+            <THead>
               <tr>
-                <td colSpan={span} className="px-4 py-2 text-right font-semibold">
-                  Unspent balance (award minus actual spent)
-                </td>
-                <td colSpan={3} className="num px-4 py-2 text-right">
-                  {formatCurrency(spend.unspent, { cents: true })} ({spend.unspentPercent.toFixed(1)}% of the award)
-                </td>
+                <TH align="right">Line</TH>
+                <TH>Category</TH>
+                <TH>Description</TH>
+                <TH align="right">Approved budget</TH>
+                {spend.entered ? <TH align="right">Actual spent</TH> : null}
+                {spend.entered ? <TH align="right">Variance</TH> : null}
               </tr>
-            ) : null}
-          </tfoot>
-        </Table>
+            </THead>
+            <tbody>
+              {lines.length === 0 ? <EmptyRow colSpan={columns}>No budget lines.</EmptyRow> : null}
+              {withIds.map((line) => {
+                const variance = lineVariance(line);
+                return (
+                  <TR key={line.position}>
+                    <TD align="right" className="num" stackHidden>
+                      {line.position}
+                    </TD>
+                    <TD className="whitespace-nowrap" primary>
+                      <span className="md:hidden">Line {line.position}: </span>
+                      {line.category}
+                    </TD>
+                    <TD>{line.description || <span className="text-muted">No description</span>}</TD>
+                    <TD align="right" label="Approved budget">
+                      <span>{money(line.amount)}</span>
+                    </TD>
+                    {spend.entered ? (
+                      <TD align="right" label="Actual spent">
+                        {line.actual === null || line.actual === undefined ? (
+                          <NoValue />
+                        ) : (
+                          <span>{money(line.actual)}</span>
+                        )}
+                      </TD>
+                    ) : null}
+                    {spend.entered ? (
+                      <TD
+                        align="right"
+                        label="Variance"
+                        className={cn(variance !== null && variance < 0 && "font-semibold text-warn")}
+                      >
+                        {variance === null ? <NoValue /> : <span>{money(variance)}</span>}
+                      </TD>
+                    ) : null}
+                  </TR>
+                );
+              })}
+            </tbody>
+            <tfoot className="border-t border-line bg-surface/60">
+              <tr className={footRow}>
+                <td colSpan={span} className="px-4 py-2 text-right text-ink-2">
+                  Personal services (PS) subtotal
+                </td>
+                <td className="num px-4 py-2 text-right text-ink">{money(totals.ps)}</td>
+                {spend.entered ? <td colSpan={2} /> : null}
+              </tr>
+              <tr className={footRow}>
+                <td colSpan={span} className="px-4 py-2 text-right text-ink-2">
+                  Other than personal services (OTPS) subtotal
+                </td>
+                <td className="num px-4 py-2 text-right text-ink">{money(totals.otps)}</td>
+                {spend.entered ? <td colSpan={2} /> : null}
+              </tr>
+              <tr className={cn(footRow, "font-semibold text-ink")}>
+                <td colSpan={span} className="px-4 py-2 text-right">
+                  {totalLabel}
+                </td>
+                <td className="num px-4 py-2 text-right">{money(totals.total)}</td>
+                {spend.entered ? <td className="num px-4 py-2 text-right">{money(spend.actual)}</td> : null}
+                {spend.entered ? <td className="num px-4 py-2 text-right">{money(spend.variance)}</td> : null}
+              </tr>
+              <tr className={footRow}>
+                <td colSpan={span} className="px-4 py-2 text-right text-ink-2">
+                  Award
+                </td>
+                <td className="num px-4 py-2 text-right text-ink">{money(award)}</td>
+                {spend.entered ? <td colSpan={2} /> : null}
+              </tr>
+              {spend.entered ? (
+                <tr className={footRow}>
+                  <td colSpan={span} className="px-4 py-2 text-right text-ink-2">
+                    Unspent balance (award minus actual spent)
+                  </td>
+                  <td colSpan={3} className="num px-4 py-2 text-right text-ink">
+                    {money(spend.unspent)} ({spend.unspentPercent.toFixed(1)}% of the award)
+                  </td>
+                </tr>
+              ) : null}
+            </tfoot>
+          </Table>
+        </div>
+        {lines.length > 0 && !spend.entered ? (
+          <p className="text-sm text-muted">Actual spending was not reported with this revision.</p>
+        ) : null}
       </div>
-      {lines.length > 0 ? <p className="num text-sm font-semibold text-ink">{balance.text}</p> : null}
+      {lines.length > 0 ? <p className="num text-sm font-semibold text-ink">{balanceText}</p> : null}
       {typeof note === "string" && note.trim() !== "" ? (
         <div className="max-w-3xl">
           <p className="text-[13px] font-semibold text-muted">Variance explanation</p>
