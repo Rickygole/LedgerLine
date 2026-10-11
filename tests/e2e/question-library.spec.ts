@@ -87,7 +87,9 @@ test.describe("as an administrator", () => {
     await page.goto(`/finance/question-library/${key}`);
     await page.getByLabel("Fiscal year").selectOption("FY27");
     await page.getByLabel("Find an initiative").fill(first!.name);
-    await page.getByRole("checkbox", { name: new RegExp(first!.name) }).check();
+    const option = page.getByRole("checkbox", { name: new RegExp(first!.name) });
+    await expect(option).toHaveAccessibleName(/\S CI-\d{2}-\d+/);
+    await option.check();
     await page.getByLabel("Also add the question to forms that do not have it").check();
     await page.getByRole("button", { name: "Apply to 1 form" }).click();
     await expect(page.getByText(/1 new draft created/)).toBeVisible();
@@ -137,6 +139,7 @@ test.describe("as an administrator", () => {
     await page.goto(`/finance/question-library/${key}`);
     await page.getByLabel("Reason").fill("Replaced by the annual volunteer survey");
     await page.getByRole("button", { name: "Retire question" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Question retired." })).toBeVisible();
     await expect(page.getByText("Retired", { exact: true }).first()).toBeVisible();
     const [row] = await ownerQuery<{ retired_at: string | null }>(
       "SELECT retired_at FROM question WHERE question_key = $1",
