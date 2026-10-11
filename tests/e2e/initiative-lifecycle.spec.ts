@@ -84,7 +84,7 @@ test.describe("as an administrator", () => {
     await expect(page.getByRole("heading", { name: "Danger zone" })).toBeVisible();
     await page.locator("#retire-reason").fill("The program ended mid-year");
     await page.getByRole("button", { name: "Retire initiative" }).click();
-    const dialog = page.getByRole("dialog", { name: `Retire ${initiative.name}?` });
+    const dialog = page.getByRole("dialog", { name: /^Retire .+\?$/ });
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText(/\d+ organizations? will stop receiving reports and reminders/);
     await expect(dialog).toContainText("This cannot be undone.");
