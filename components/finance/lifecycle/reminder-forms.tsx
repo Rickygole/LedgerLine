@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Mail, Plus, Save, Send } from "lucide-react";
 import { deleteRule, restoreDefaults, saveRule, sendNow, toggleRule } from "@/app/finance/reminders/actions";
 import { PLACEHOLDERS, sendNowSummary, type RuleRow } from "@/lib/lifecycle/reminders";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClass } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 import { FieldError, Hint, Input, Label, Select, Textarea } from "@/components/ui/field";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { plural } from "@/lib/format";
@@ -129,36 +130,40 @@ export function RuleActions({ rule, editHref }: { rule: RuleRow; editHref: strin
   const [toggleState, toggle, toggling] = useActionState<ActionState, FormData>(toggleRule, undefined);
   const [deleteState, remove, deleting] = useActionState<ActionState, FormData>(deleteRule, undefined);
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Link
-        href={editHref}
-        className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
-      >
-        Edit
-      </Link>
-      <form action={toggle}>
-        <input type="hidden" name="id" value={rule.id} />
-        <input type="hidden" name="active" value={rule.active ? "false" : "true"} />
-        <Button type="submit" variant="ghost" size="sm" disabled={toggling}>
-          {rule.active ? "Turn off" : "Turn on"}
-        </Button>
-      </form>
-      <form action={remove}>
-        <input type="hidden" name="id" value={rule.id} />
-        <Button
-          type="submit"
-          variant="ghost"
-          size="sm"
-          disabled={deleting}
-          aria-label={`Delete the rule for ${rule.offset_days} days`}
-        >
-          Delete
-        </Button>
-      </form>
+    <div>
+      <div className="flex flex-nowrap items-center gap-1.5">
+        <Link href={editHref} className={compact}>
+          Edit
+        </Link>
+        <form action={toggle}>
+          <input type="hidden" name="id" value={rule.id} />
+          <input type="hidden" name="active" value={rule.active ? "false" : "true"} />
+          <button type="submit" disabled={toggling} className={compact}>
+            {rule.active ? "Turn off" : "Turn on"}
+          </button>
+        </form>
+        <form action={remove}>
+          <input type="hidden" name="id" value={rule.id} />
+          <button
+            type="submit"
+            disabled={deleting}
+            aria-label={`Delete the rule for ${rule.offset_days} days`}
+            className={cn(compact, "text-bad shadow-[inset_0_0_0_1px_var(--color-line-strong)] hover:text-bad")}
+          >
+            Delete
+          </button>
+        </form>
+      </div>
       <Status state={toggleState ?? deleteState} />
     </div>
   );
 }
+
+const compact = buttonClass(
+  "secondary",
+  "sm",
+  "h-8 px-2.5 text-[13px] font-semibold shadow-[inset_0_0_0_1px_var(--color-line-strong)] text-ink hover:text-link hover:shadow-[inset_0_0_0_1px_var(--color-action)]",
+);
 
 export function SendNowForm({
   period,
