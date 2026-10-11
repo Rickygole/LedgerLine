@@ -221,6 +221,16 @@ dialog.nav-drawer::backdrop {
   .table-stack td[data-label] > * {
     text-align: right;
   }
+  .table-stack td[data-label].stack-start {
+    display: block;
+  }
+  .table-stack td[data-label].stack-start::before {
+    display: block;
+    margin-bottom: 0.125rem;
+  }
+  .table-stack td[data-label].stack-start > * {
+    text-align: left;
+  }
   .table-stack td[data-primary] {
     padding-bottom: 0.375rem;
     font-size: 15px;

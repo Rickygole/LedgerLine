@@ -66,10 +66,10 @@ export default async function SecurityControlsPage() {
                       <span className="block font-normal text-muted">{control.name}</span>
                     </TD>
                     <TD className="align-top text-muted">{control.how}</TD>
-                    <TD className="align-top text-xs" label="Where it lives">
+                    <TD className="stack-start align-top text-xs" label="Where it lives">
                       <PathList paths={control.where} />
                     </TD>
-                    <TD className="align-top text-xs" label="Test that proves it">
+                    <TD className="stack-start align-top text-xs" label="Test that proves it">
                       {control.tests.length > 0 ? (
                         <PathList paths={control.tests} />
                       ) : (
