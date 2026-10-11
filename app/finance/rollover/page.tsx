@@ -3,7 +3,7 @@ import { ArrowRight, CalendarRange, Landmark, Layers, Users } from "lucide-react
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate } from "@/lib/dates";
-import { formatCompactCurrency, plural } from "@/lib/format";
+import { formatCurrency, plural } from "@/lib/format";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import { fiscalYears, nextFiscalYear, validFiscalYear, yearSummary } from "@/lib/lifecycle/rollover";
 import { PageHeader } from "@/components/ui/page-header";
@@ -152,9 +152,13 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
                 />
                 <Stat
                   label="Funding"
-                  value={formatCompactCurrency(summary.totalFunding)}
+                  value={
+                    summary.totalFunding >= 1_000_000
+                      ? `$${(summary.totalFunding / 1_000_000).toFixed(1)}M`
+                      : formatCurrency(summary.totalFunding)
+                  }
                   icon={Landmark}
-                  hint={`Total awarded in ${from}`}
+                  hint={`${formatCurrency(summary.totalFunding)} awarded in ${from}`}
                 />
               </div>
               {targetSummary && targetSummary.initiatives > 0 ? (
