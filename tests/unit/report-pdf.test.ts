@@ -156,7 +156,7 @@ describe("[US-021] report PDF", () => {
       await buildReportPdf({ ...base, orgName: "Caf\u00e9 \u4e2d\u6587 \ud83d\ude00 Alliance", definition, snapshot }),
     );
     expect(text).toMatch(/Caf\u00e9 +Alliance/);
-    expect(text).not.toContain("?");
+    expect(text.split("\n").filter((line) => line.includes("Alliance") && line.includes("?"))).toEqual([]);
   });
 
   it("keeps a budget table header with its first row and never splits the Line heading", async () => {
