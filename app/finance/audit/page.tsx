@@ -59,8 +59,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         <FilterBar
           action={base}
           clearHref={base}
-          keep={0}
-          applied={[data.actor, data.entity, data.action, from, to].filter(Boolean).length}
+          active={[data.actor, data.entity, data.action, from, to].some(Boolean)}
         >
           <FilterField label="Actor" htmlFor="actor" className="min-w-48">
             <Select id="actor" name="actor" defaultValue={data.actor}>

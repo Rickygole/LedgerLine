@@ -54,8 +54,12 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
         title="Trends and comparisons"
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Trends and comparisons" }]}
       />
-      <div className="mb-6 overflow-hidden rounded border border-line bg-white">
-        <FilterBar action="/finance/trends" clearHref="/finance/trends">
+      <div className="mb-6 overflow-hidden rounded border border-line bg-white [&>form]:border-b-0">
+        <FilterBar
+          action="/finance/trends"
+          clearHref="/finance/trends"
+          active={["category", "borough", "compare", "period"].some((k) => one(params, k) !== "")}
+        >
           <FilterField label="Category" htmlFor="category">
             <Select id="category" name="category" defaultValue={filters.category}>
               <option value="">All categories</option>
