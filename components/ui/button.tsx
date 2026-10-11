@@ -6,14 +6,17 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded font-bold disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 rounded font-bold disabled:pointer-events-none aria-disabled:pointer-events-none whitespace-nowrap";
+
+const solidDisabled =
+  "disabled:bg-line-soft disabled:text-muted disabled:shadow-none aria-disabled:bg-line-soft aria-disabled:text-muted aria-disabled:shadow-none";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-action text-white hover:bg-action-hover active:bg-action-active",
-  secondary:
-    "bg-white text-action shadow-[inset_0_0_0_2px_var(--color-action)] hover:text-action-hover hover:shadow-[inset_0_0_0_2px_var(--color-action-hover)] active:text-action-active",
-  ghost: "font-semibold text-link underline underline-offset-2 hover:text-link-hover hover:decoration-2",
-  danger: "bg-bad text-white hover:bg-[#912018] active:bg-[#6f1811]",
+  primary: `bg-action text-white hover:bg-action-hover active:bg-action-active ${solidDisabled}`,
+  secondary: `bg-white text-action shadow-[inset_0_0_0_2px_var(--color-action)] hover:text-action-hover hover:shadow-[inset_0_0_0_2px_var(--color-action-hover)] active:text-action-active ${solidDisabled}`,
+  ghost:
+    "font-semibold text-link underline underline-offset-2 hover:text-link-hover hover:decoration-2 disabled:opacity-50 aria-disabled:opacity-50",
+  danger: `bg-bad text-white hover:bg-[#912018] active:bg-[#6f1811] ${solidDisabled}`,
 };
 
 const sizes: Record<Size, string> = {
