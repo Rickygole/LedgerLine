@@ -68,7 +68,7 @@ const MARIA_DRAFT_BUDGET = [
 ] as const;
 
 export const MARIA_REMAINING_BUDGET = [
-  ["PS", "Program evaluation consultant", 7349],
+  ["OTPS", "Program evaluation consultant", 7349],
   ["OTPS", "Summer career exposure trips", 6250],
 ] as const;
 

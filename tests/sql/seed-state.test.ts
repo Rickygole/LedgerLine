@@ -1,5 +1,6 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { MARIA_REMAINING_BUDGET } from "../../scripts/seed";
 import { connect, ownerUrl } from "./helpers";
 
 let owner: Client;
@@ -106,5 +107,24 @@ describe("the starting reports follow the reporting calendar", () => {
       )
     ).rows[0];
     expect(row.reference_no).toBe("LL-26YE-00002");
+  });
+});
+
+describe("[US-021] Maria's pasted budget lines bring her draft to the award", () => {
+  it("codes the evaluation consultant as other than personal services and balances to $85,000", async () => {
+    const draft = (
+      await owner.query(
+        `SELECT coalesce(sum(b.amount), 0)::float8 AS total, count(*)::int AS lines
+         FROM budget_line b JOIN submission s ON s.id = b.submission_id
+         JOIN assignment a ON a.id = s.assignment_id
+         WHERE s.reference_no = 'LL-26YE-00002'`,
+      )
+    ).rows[0];
+    expect(draft.lines).toBe(11);
+    expect(draft.total).toBe(71401);
+    const consultant = MARIA_REMAINING_BUDGET.find(([, description]) => description === "Program evaluation consultant");
+    expect(consultant?.[0]).toBe("OTPS");
+    const pasted = MARIA_REMAINING_BUDGET.reduce((sum, [, , amount]) => sum + amount, 0);
+    expect(draft.total + pasted).toBe(85000);
   });
 });
