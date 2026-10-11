@@ -55,6 +55,7 @@ export type SubmissionDetail = {
   row: ReportRow;
   periodLabel: string;
   submittedBy: string | null;
+  savedBy: string | null;
   primaryContact: { name: string; email: string } | null;
   attachments: AttachmentRow[];
   flags: FlagRecord[];
@@ -99,6 +100,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     updated_at: string;
     form_version_id: string;
     submitted_by_name: string | null;
+    saved_by_name: string | null;
     definition: FormDefinition;
   }>(
     `SELECT a.id AS assignment_id, o.id AS org_id, o.legal_name, o.ein, o.borough, o.council_district, o.org_type, i.id AS initiative_id, i.name AS initiative_name, i.code, i.category,
@@ -107,7 +109,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
                FROM assignment_sponsor sp JOIN council_member cm ON cm.district = sp.district WHERE sp.assignment_id = a.id) AS sponsors,
             p.id AS period_id, p.label AS period_label, p.due_on::text AS due_on,
             s.reference_no, s.status, s.revision, s.lock_version, ${ISO("s.submitted_at")} AS submitted_at, ${ISO("s.updated_at")} AS updated_at,
-            s.form_version_id, u.full_name AS submitted_by_name, f.definition
+            s.form_version_id, u.full_name AS submitted_by_name, ub.full_name AS saved_by_name, f.definition
      FROM submission s
      JOIN assignment a ON a.id = s.assignment_id
      JOIN organization o ON o.id = a.org_id
@@ -115,6 +117,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
      JOIN reporting_period p ON p.id = s.period_id
      JOIN form_version f ON f.id = s.form_version_id
      LEFT JOIN app_user u ON u.id = s.submitted_by
+     LEFT JOIN app_user ub ON ub.id = s.updated_by
      WHERE s.id = $1`,
     [id],
   );
@@ -270,6 +273,7 @@ export async function loadSubmissionDetail(tx: Tx, id: string): Promise<Submissi
     row,
     periodLabel: base.period_label,
     submittedBy: base.submitted_by_name,
+    savedBy: base.saved_by_name,
     primaryContact: contact ? { name: contact.full_name, email: contact.email } : null,
     attachments: attachmentRows.map((a) => ({
       id: a.id,
