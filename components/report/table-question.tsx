@@ -118,16 +118,21 @@ export function TableQuestion({
                 {index === firstText ? (
                   <span className="block text-sm font-bold text-ink">Total</span>
                 ) : total ? (
-                  <span
-                    data-testid={`total-${question.key}-${column.key}`}
-                    className={cn(
-                      "num block text-right text-sm font-bold",
-                      total.met === true ? "text-ok" : "text-ink",
-                    )}
-                  >
-                    <span className="sr-only">Total {column.label}: </span>
-                    {totalWithGoal(total)}
-                  </span>
+                  <>
+                    <span aria-hidden="true" className="mb-1 block text-xs font-semibold text-muted sm:hidden">
+                      {column.label}
+                    </span>
+                    <span
+                      data-testid={`total-${question.key}-${column.key}`}
+                      className={cn(
+                        "num block text-right text-sm font-bold",
+                        total.met === true ? "text-ok" : "text-ink",
+                      )}
+                    >
+                      <span className="sr-only">Total {column.label}: </span>
+                      {totalWithGoal(total)}
+                    </span>
+                  </>
                 ) : null}
               </div>
             );

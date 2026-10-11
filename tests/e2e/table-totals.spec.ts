@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authFile, gotoStep, PEOPLE, savedNow } from "./support/app";
+import { authFile, gotoStep, PEOPLE, savedNow, stepLink } from "./support/app";
 import { ownerQuery } from "./support/db";
 
 test.describe.configure({ mode: "serial" });
@@ -47,6 +47,43 @@ test("[US-026] a table question shows a running total that updates as the submit
   await page.getByRole("button", { name: `Remove row ${rowCount} from Participants under 18 by age group` }).click();
   await page
     .getByRole("button", { name: `Remove row ${rowCount - 1} from Participants under 18 by age group` })
+    .click();
+  await context.close();
+});
+
+test("[US-026] on a phone the table totals carry visible column labels and line up with the inputs", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  const [draft] = await ownerQuery<{ id: string }>(
+    `SELECT s.id FROM submission s JOIN assignment a ON a.id = s.assignment_id
+     WHERE s.status = 'draft' AND a.org_id = (SELECT org_id FROM app_user WHERE email = $1) ORDER BY s.reference_no LIMIT 1`,
+    [PEOPLE.maria],
+  );
+  await page.goto(`/portal/reports/${draft.id}`);
+  if ((await page.locator("#step-heading").textContent()) !== "Program performance") {
+    await page.getByRole("navigation", { name: "Report sections" }).locator("summary").click();
+    await stepLink(page, "Program performance").click();
+  }
+  await expect(page.locator("#step-heading")).toHaveText("Program performance");
+  await page.getByRole("radio", { name: "Yes", exact: true }).first().check();
+  await page.getByRole("button", { name: "Add row" }).first().click();
+  const total = page.getByTestId("total-youth_breakdown-count");
+  await expect(total).toBeVisible();
+  const label = total.locator("xpath=preceding-sibling::span[1]");
+  await expect(label).toBeVisible();
+  await expect(label).toHaveText("Participants");
+  const input = page.locator("[id^='q-youth_breakdown-'][id$='-count']").first();
+  const [inputBox, totalBox] = [await input.boundingBox(), await total.boundingBox()];
+  expect(Math.abs(inputBox!.x + inputBox!.width - (totalBox!.x + totalBox!.width))).toBeLessThan(2);
+  await page
+    .getByRole("button", { name: /^Remove row \d+ from Participants under 18 by age group$/ })
+    .last()
     .click();
   await context.close();
 });
