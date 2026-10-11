@@ -207,6 +207,7 @@ describe("[US-021] report PDF", () => {
     const snapshot = buildSnapshot({ formVersionId: "fv", answers: {}, budget, attachments: [] });
     const text = await pdfText(await buildReportPdf({ ...base, definition, snapshot }));
     expect(text).toContain("Actual spending was not reported with this revision.");
+    expect(text).toContain("Budget balanced: total equals the $50,000 award.");
     expect(text).not.toContain("Actual spent");
   });
 

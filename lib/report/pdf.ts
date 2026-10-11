@@ -257,7 +257,13 @@ function budgetSection(w: Writer, input: ReportPdfInput) {
     pad("Award", formatCurrency(input.awardAmount, { cents: true })),
   ]);
   if (!spend.entered) w.paragraph("Actual spending was not reported with this revision.", { size: 9, color: MUTED });
-  w.paragraph(balanceMessage(totals.total, input.awardAmount).message, { bold: true });
+  const balance = balanceMessage(totals.total, input.awardAmount);
+  w.paragraph(
+    balance.balanced
+      ? `Budget balanced: total equals the ${formatCurrency(input.awardAmount, { cents: "auto" })} award.`
+      : balance.message,
+    { bold: true },
+  );
   if (spend.entered) {
     w.paragraph(
       `Unspent balance: ${formatCurrency(spend.unspent, { cents: true })} (${spend.unspentPercent.toFixed(1)}% of the award)`,
