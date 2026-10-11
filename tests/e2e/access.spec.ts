@@ -26,13 +26,22 @@ test("[BR-011] finance staff see the sidebar in labelled groups and submitters s
   const staff = await finance.newPage();
   await staff.goto("/finance");
   const nav = staff.getByRole("navigation", { name: "Main" });
-  for (const group of ["Review", "Programs", "Communications"])
+  for (const group of ["Review", "Programs", "Communications", "Records", "Setup"])
     await expect(nav.getByText(group, { exact: true })).toBeVisible();
-  for (const link of ["Dashboard", "Submissions", "Flagged items", "Initiatives", "Organizations", "Reminders"])
-    await expect(nav.getByRole("link", { name: link })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Outbox" })).toBeHidden();
-  await nav.getByText(/^More/).click();
-  for (const link of ["Saved queries", "Trends", "Outbox", "Audit log", "Lineage", "Platform"])
+  for (const link of [
+    "Dashboard",
+    "Submissions",
+    "Flagged items",
+    "Initiatives",
+    "Organizations",
+    "Reminders",
+    "Saved queries",
+    "Trends",
+    "Outbox",
+    "Audit log",
+    "Lineage",
+    "Platform",
+  ])
     await expect(nav.getByRole("link", { name: link })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Users" })).toHaveCount(0);
   await finance.close();

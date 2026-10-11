@@ -68,7 +68,7 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
   await expect(page.getByText(note).first()).toBeVisible();
 });
 
-test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({
+test("[US-044] an analyst requests changes with a note, the organization resubmits, and the analyst accepts", async ({
   page,
   browser,
 }) => {
