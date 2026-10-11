@@ -302,8 +302,7 @@ export default async function PlatformPage() {
                 </Table>
               </div>
               <p className="mt-2 text-xs text-muted">
-                A complete control mapping and a System Security Plan would be delivered with the production
-                environment.
+                A System Security Plan would be delivered with the production environment.
               </p>
               <div className="mt-3">
                 <ButtonLink href="/finance/platform/controls" variant="secondary" size="sm">

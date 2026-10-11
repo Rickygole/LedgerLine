@@ -77,7 +77,7 @@ export default async function SecurityControlsPage() {
                           ))}
                         </ul>
                       ) : (
-                        <span className="text-muted">None in this application</span>
+                        <span className="text-muted">Provided by the hosting platform</span>
                       )}
                     </TD>
                     <TD>
