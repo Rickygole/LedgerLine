@@ -8,6 +8,7 @@ import { Stat } from "@/components/ui/stat";
 import { FiscalYearTimeline } from "@/components/ui/fiscal-year-timeline";
 import { StatusStackChart, type StackDatum } from "@/components/charts/status-stack";
 import { buttonClass } from "@/components/ui/button";
+import { ArrowLink } from "@/components/ui/arrow-link";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { todayInNewYork } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
@@ -91,7 +92,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           value={period.id}
           keep={{ map: mode === "sponsor" ? "" : mode, borough }}
           options={periods.map((p) => ({ value: p.id, label: p.label }))}
-          className="order-last mt-4 flex items-center gap-2 sm:order-none sm:col-start-2 sm:row-start-1 sm:mt-0 sm:justify-self-end"
+          className="order-last mt-4 flex items-center gap-2 sm:order-none sm:col-start-2 sm:row-start-1 sm:mt-0 sm:justify-self-end sm:justify-end"
         />
         <div className="min-w-0 sm:col-span-2 sm:row-start-2 lg:col-span-1">
           <h1 className="text-[26px] font-extrabold leading-8 tracking-[-0.015em] text-ink sm:text-[32px] sm:leading-10">
@@ -99,7 +100,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           </h1>
           <p className="mt-2 max-w-[70ch] text-lg leading-7 text-ink-2">{headline.lede}</p>
         </div>
-        <div className="mt-4 flex flex-col-reverse gap-3 sm:col-span-2 sm:row-start-3 sm:flex-row sm:flex-wrap sm:items-center lg:col-span-1 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:self-end">
+        <div className="mt-4 flex flex-col-reverse gap-3 sm:col-span-2 sm:row-start-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end lg:col-span-1 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:self-end lg:justify-self-end">
           {canRemind ? (
             <Link
               href={remindersHref}
@@ -152,7 +153,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
         />
         <Stat
           className="rounded-none border-0"
-          label="Update requested"
+          label="Changes requested"
           value={counts.returned}
           sub="Waiting on the organization"
           action={{ href: list({ bucket: "returned" }), label: "See requests" }}
@@ -199,7 +200,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
                   <div className="min-w-0">
                     <Link
                       href={`/finance/organizations/${row.orgId}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {row.orgName}
                     </Link>
@@ -217,12 +218,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           )}
           {counts.missing > 0 && canRemind ? (
             <div className="border-t border-line-soft px-5 py-3 text-sm sm:px-6">
-              <Link
-                href={remindersHref}
-                className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
-              >
-                Send reminders to all {counts.missing}
-              </Link>
+              <ArrowLink href={remindersHref}>Send reminders to all {counts.missing}</ArrowLink>
             </div>
           ) : null}
         </section>
