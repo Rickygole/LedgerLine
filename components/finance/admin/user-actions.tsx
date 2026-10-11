@@ -138,7 +138,11 @@ export function UserActions({
                 ? "Deactivating stops this person from signing in. Their history stays in the audit log."
                 : "Activating lets this person sign in again."}
             </p>
-            <Button type="submit" variant="secondary" disabled={(isSelf && active) || activePending}>
+            <Button
+              type="submit"
+              variant={active ? "danger" : "secondary"}
+              disabled={(isSelf && active) || activePending}
+            >
               {active ? (
                 <UserX className="h-4 w-4" aria-hidden="true" />
               ) : (
