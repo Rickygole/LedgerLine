@@ -140,7 +140,7 @@ export default async function StartPage() {
                     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-[22px] text-muted">
                       <span>{passed ? `Was due ${formatDate(period.dueOn)}` : `Due ${formatDate(period.dueOn)}`}</span>
                       {passed ? (
-                        <Badge tone="bad">Past due</Badge>
+                        <Badge>Deadline passed</Badge>
                       ) : open ? (
                         <Badge tone="ok">Open now</Badge>
                       ) : next ? (
