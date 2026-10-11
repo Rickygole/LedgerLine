@@ -57,6 +57,7 @@ export function SubmissionFilters({
   keep = {},
   clearHref,
   active,
+  wrap = false,
 }: {
   action: string;
   filters: Filters;
@@ -68,6 +69,7 @@ export function SubmissionFilters({
   keep?: Record<string, string>;
   clearHref: string;
   active: boolean;
+  wrap?: boolean;
 }) {
   const has = (f: Field) => fields.includes(f);
   const more: Field[] = ["initiative", "category", "funding", "contract", "agency", "flag"];
@@ -84,10 +86,10 @@ export function SubmissionFilters({
         ))}
       {filters.by && filters.district ? <input type="hidden" name="by" value={filters.by} /> : null}
       <div
-        className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1.2fr)_minmax(13.75rem,1.2fr)]" : top === 4 ? "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)]"}`}
+        className={`grid grid-cols-1 gap-3 ${wrap ? "sm:flex sm:flex-wrap sm:[&>*:first-child]:flex-[1.6_1_14rem] sm:[&>*]:flex-[1_1_11rem]" : `sm:grid-cols-2 ${top === 5 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1.2fr)_minmax(13.75rem,1.2fr)]" : top === 4 ? "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)_minmax(13.75rem,1fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(11.5rem,1fr)_minmax(10rem,1fr)]"}`}`}
       >
         {has("q") ? (
-          <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+          <div className={wrap ? "min-w-0" : "min-w-0 sm:col-span-2 lg:col-span-1"}>
             <label htmlFor="f-q" className="mb-1 block text-sm font-semibold text-ink">
               Search
             </label>
@@ -96,7 +98,7 @@ export function SubmissionFilters({
               name="q"
               type="search"
               defaultValue={filters.q}
-              placeholder="Organization, EIN, reference, contract"
+              placeholder="Organization, EIN or reference"
               className={control}
             />
           </div>

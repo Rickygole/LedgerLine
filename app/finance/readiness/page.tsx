@@ -47,8 +47,14 @@ export default async function ReadinessPage() {
           {data.training.trained} of {data.training.users} have finished every module for their role).
         </li>
         <li>
-          Test scenarios passing: <span className="font-bold">{pct(data.uat.percent)}</span> ({data.uat.passed} of{" "}
-          {data.uat.scenarios}, using the latest session of each).
+          {data.uat.percent === null ? (
+            <>Test scenarios passing: No test sessions held yet.</>
+          ) : (
+            <>
+              Test scenarios passing: <span className="font-bold">{pct(data.uat.percent)}</span> ({data.uat.passed} of{" "}
+              {data.uat.scenarios}, using the latest session of each).
+            </>
+          )}
         </li>
         <li>
           Open defects: <span className="font-bold">{data.openDefects}</span>. Test sessions held:{" "}

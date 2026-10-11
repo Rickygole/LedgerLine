@@ -285,9 +285,9 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                           </div>
                         </details>
                       </TD>
-                      <TD>
+                      <TD className="max-w-[15rem]">
                         {t.contact_name}
-                        <div className="text-xs text-muted">{t.to_email}</div>
+                        <div className="break-all text-xs text-muted">{t.to_email}</div>
                       </TD>
                       <TD className="max-w-xs">{t.initiatives}</TD>
                       <TD className="whitespace-nowrap">{describeOffset(t.offset_days)}</TD>

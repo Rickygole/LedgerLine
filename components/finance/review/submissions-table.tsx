@@ -78,7 +78,7 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
         <tr>
           <TH>Organization</TH>
           <TH>Initiative</TH>
-          <TH className="@max-[64rem]:hidden">Sponsor</TH>
+          <TH className="@max-[72rem]:hidden">Sponsor</TH>
           <TH align="right">Award</TH>
           <TH>Status</TH>
           <TH>Flags</TH>
@@ -121,10 +121,10 @@ export function SubmissionsTable({ rows, emptyHref }: { rows: ReportRow[]; empty
                   <span className="block text-[13px] text-muted">
                     <span className="whitespace-nowrap font-mono text-xs">{row.initiativeCode}</span> · {row.category}
                   </span>
-                  <span className="hidden text-[13px] text-muted @max-[64rem]:block">{sponsorLabel(row)}</span>
+                  <span className="hidden text-[13px] text-muted @max-[72rem]:block">{sponsorLabel(row)}</span>
                 </div>
               </TD>
-              <TD className="whitespace-nowrap @max-[64rem]:hidden" stackHidden>
+              <TD className="whitespace-nowrap @max-[72rem]:hidden" stackHidden>
                 <span title={row.sponsors.length > 0 ? sponsorNames(row.sponsors) : undefined}>
                   {sponsorLabel(row)}
                 </span>

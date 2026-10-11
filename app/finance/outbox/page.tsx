@@ -82,7 +82,6 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
           <THead>
             <tr>
               <TH>Subject</TH>
-              <TH>Template</TH>
               <TH>To</TH>
               <TH>Organization</TH>
               <TH>Status</TH>
@@ -91,7 +90,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
           </THead>
           <tbody>
             {data.rows.length === 0 ? (
-              <EmptyRow colSpan={6}>No messages match these filters.</EmptyRow>
+              <EmptyRow colSpan={5}>No messages match these filters.</EmptyRow>
             ) : (
               data.rows.map((m) => (
                 <TR key={m.id}>
@@ -102,9 +101,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                     >
                       {m.subject}
                     </Link>
-                  </TD>
-                  <TD className="min-w-28" label="Template">
-                    <span>{templateLabel(m.template)}</span>
+                    <span className="block text-[13px] font-normal text-muted">{templateLabel(m.template)}</span>
                   </TD>
                   <TD className="max-w-[14rem] text-muted" label="To">
                     <span className="block min-w-0 truncate" title={m.to_email}>

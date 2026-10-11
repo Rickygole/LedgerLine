@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, Flag, Info } from "lucide-react";
 import { ActionsPanel, type CorrectableQuestion } from "@/components/finance/review/actions-panel";
 import {
   AttachmentsTab,
@@ -21,7 +21,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { FINANCE_ROLES, REVIEW_ROLES, requireUser } from "@/lib/auth";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
-import { loadSubmissionDetail } from "@/lib/finance/review/detail";
+import { loadSubmissionDetail, type AuditRecord } from "@/lib/finance/review/detail";
 import { buildConcerns, PRESET_CONCERNS, prefillNote } from "@/lib/finance/review/return-note-core";
 import { reportState } from "@/lib/reporting";
 import { formatCurrency, plural } from "@/lib/format";
@@ -135,7 +135,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
       ? "Budget balanced"
       : row.budget.length === 0
         ? "No budget lines entered"
-        : `Budget ${diff < 0 ? "under" : "over"} by ${formatCurrency(Math.abs(diff), { cents: true })}`;
+        : `Budget ${diff < 0 ? "under" : "over"} by ${formatCurrency(Math.abs(diff), { cents: Math.round(Math.abs(diff)) === 0 })}`;
   const issueText = row.issues.slice(0, 4).map((issue) => issue.message.replace(/\.$/, ""));
   const prefill = prefillNote({
     budgetSentence:
@@ -150,7 +150,8 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         : null,
     openFlagCount: row.openFlags.length,
   });
-  const checks = [
+  const reviewerFlags = row.openFlags.length;
+  const checks: { ok: boolean; neutral?: boolean; text: string; tab: string }[] = [
     ...(budgetText ? [{ ok: balance.balanced, text: budgetText, tab: "budget" }] : []),
     {
       ok: row.issues.length === 0,
@@ -161,11 +162,14 @@ export default async function ReviewPage({ params, searchParams }: Props) {
       tab: "report",
     },
     {
-      ok: row.openFlags.length === 0,
-      text: `${row.openFlags.length} open ${plural(row.openFlags.length, "flag", "flags")}`,
+      ok: reviewerFlags === 0,
+      neutral: reviewerFlags === 0 && flagCount > 0,
+      text:
+        reviewerFlags === 0 ? "No reviewer flags" : `${reviewerFlags} open ${plural(reviewerFlags, "flag", "flags")}`,
       tab: "flags",
     },
   ];
+  const draft = row.status === "draft";
 
   const lastOf = (action: string) => [...detail.audit].reverse().find((a) => a.action === action);
   const since =
@@ -201,32 +205,34 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           ]}
         />
         <div className="flex flex-wrap items-center gap-4">
-          {row.status !== "draft" ? <DownloadPdfLink href={`/finance/submissions/${id}/pdf`} /> : null}
-        </div>
-        {queued ? (
-          <nav aria-label="Review queue" className="flex flex-wrap items-center gap-4">
-            <p className="text-[15px] text-ink-2">
-              {at >= 0 ? (
-                <>
-                  <span className="num font-semibold text-ink">{at + 1}</span> of{" "}
-                  <span className="num">{waiting.length}</span> waiting for review
-                </>
-              ) : (
-                <>
-                  <span className="num font-semibold text-ink">{waiting.length}</span> waiting for review
-                </>
-              )}
-            </p>
-            {prevId ? (
-              <Link
-                href={`/finance/submissions/${prevId}?queue=waiting`}
-                className="inline-flex items-center gap-1 text-[15px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Previous
-              </Link>
-            ) : null}
-            {nextId ? (
+          {queued ? (
+            <nav aria-label="Review queue" className="flex flex-wrap items-center gap-4">
+              <p className="text-[15px] text-ink-2">
+                {at >= 0 ? (
+                  <>
+                    <span className="num font-semibold text-ink">{at + 1}</span> of{" "}
+                    <span className="num">{waiting.length}</span> waiting for review
+                  </>
+                ) : (
+                  <>
+                    <span className="num font-semibold text-ink">{waiting.length}</span> waiting for review
+                  </>
+                )}
+              </p>
+              {prevId ? (
+                <Link
+                  href={`/finance/submissions/${prevId}?queue=waiting`}
+                  className="inline-flex items-center gap-1 text-[15px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  Previous
+                </Link>
+              ) : null}
+            </nav>
+          ) : null}
+          {draft ? null : <DownloadPdfLink href={`/finance/submissions/${id}/pdf`} />}
+          {queued ? (
+            nextId ? (
               <Link
                 id="queue-next"
                 href={`/finance/submissions/${nextId}?queue=waiting`}
@@ -237,9 +243,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
               </Link>
             ) : (
               <span className="text-[15px] text-muted">No more waiting</span>
-            )}
-          </nav>
-        ) : null}
+            )
+          ) : null}
+        </div>
       </div>
 
       <header className="mb-6 rounded border border-line bg-white">
@@ -275,8 +281,15 @@ export default async function ReviewPage({ params, searchParams }: Props) {
                 </span>,
               ],
               ["Due", formatDate(row.dueOn)],
-              ["Submitted by", detail.submittedBy ?? "Not submitted"],
-              ["Submitted at", row.submittedAt ? formatDateTime(row.submittedAt) : "Not submitted"],
+              ...(row.submittedAt
+                ? [
+                    ["Submitted by", detail.submittedBy ?? "Not recorded"],
+                    ["Submitted at", formatDateTime(row.submittedAt)],
+                  ]
+                : [
+                    ["Last saved by", detail.savedBy ?? "Not recorded"],
+                    ["Last saved", row.updatedAt ? formatDateTime(row.updatedAt) : "Not saved yet"],
+                  ]),
             ].map(([label, value]) => (
               <div key={String(label)} className="min-w-0">
                 <dt className="text-sm font-semibold text-ink-2">{label}</dt>
@@ -292,16 +305,29 @@ export default async function ReviewPage({ params, searchParams }: Props) {
               <li
                 key={check.text}
                 className={
-                  check.ok ? "flex items-center gap-1.5 text-ok" : "flex items-center gap-1.5 font-semibold text-bad"
+                  check.neutral
+                    ? "flex items-center gap-1.5 text-ink-2"
+                    : check.ok
+                      ? "flex items-center gap-1.5 text-ok"
+                      : "flex items-center gap-1.5 font-semibold text-bad"
                 }
               >
-                {check.ok ? (
+                {check.neutral ? (
+                  <Flag className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                ) : check.ok ? (
                   <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                 ) : (
                   <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
                 )}
-                {check.ok ? (
+                {check.ok && !check.neutral ? (
                   <span>{check.text}</span>
+                ) : check.neutral ? (
+                  <Link
+                    href={`/finance/submissions/${id}?tab=${check.tab}${queryTail}`}
+                    className="underline underline-offset-2 hover:text-ink"
+                  >
+                    {check.text}
+                  </Link>
                 ) : (
                   <Link
                     href={`/finance/submissions/${id}?tab=${check.tab}${queryTail}`}
@@ -314,7 +340,8 @@ export default async function ReviewPage({ params, searchParams }: Props) {
             ))}
           </ul>
         </div>
-        <div className="border-t border-line px-3 sm:px-4">
+        {draft ? <DraftNotice className="mx-5 mb-4 mt-1 sm:mx-6" /> : null}
+        <div className="border-t border-line px-3 max-lg:hidden sm:px-4">
           <TabNav
             id={id}
             current={tab}
@@ -331,6 +358,19 @@ export default async function ReviewPage({ params, searchParams }: Props) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
         <div className="order-2 min-w-0 lg:order-1 lg:col-span-8">
+          <div className="mb-4 rounded border border-line bg-white px-3 lg:hidden">
+            <TabNav
+              id={id}
+              current={tab}
+              query={queryTail}
+              counts={{
+                attachments: detail.attachments.length,
+                flags: flagCount,
+                audit: detail.audit.length,
+                revisions: detail.revisions.length,
+              }}
+            />
+          </div>
           {tab === "report" ? <ReportTab detail={detail} /> : null}
           {tab === "budget" ? <BudgetTab detail={detail} /> : null}
           {tab === "attachments" ? <AttachmentsTab submissionId={id} attachments={detail.attachments} /> : null}
@@ -339,6 +379,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           {tab === "revisions" ? (
             <RevisionsTab revisions={detail.revisions} submissionId={id} fileIds={detail.fileIds} />
           ) : null}
+          <div className="mt-6 lg:hidden">
+            <RecentAudit id={id} audit={detail.audit} recent={recent} labels={labels} queryTail={queryTail} />
+          </div>
         </div>
         <aside
           className="order-1 space-y-4 lg:sticky lg:top-6 lg:order-2 lg:col-span-4 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:pb-1"
@@ -367,28 +410,62 @@ export default async function ReviewPage({ params, searchParams }: Props) {
               </CardBody>
             </Card>
           )}
-          <Card>
-            <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
-              <h2 className="text-[17px] font-bold text-ink">Audit timeline</h2>
-              {detail.audit.length > recent.length ? (
-                <Link
-                  href={`/finance/submissions/${id}?tab=audit${queryTail}`}
-                  className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
-                >
-                  All {detail.audit.length}
-                </Link>
-              ) : null}
-            </div>
-            <CardBody>
-              {recent.length === 0 ? (
-                <p className="text-sm text-muted">No actions have been recorded.</p>
-              ) : (
-                <AuditTimeline events={recent} labels={labels} compact />
-              )}
-            </CardBody>
-          </Card>
+          <div className="max-lg:hidden">
+            <RecentAudit id={id} audit={detail.audit} recent={recent} labels={labels} queryTail={queryTail} />
+          </div>
         </aside>
       </div>
     </>
+  );
+}
+
+function DraftNotice({ className }: { className?: string }) {
+  return (
+    <p
+      role="note"
+      className={`flex items-start gap-2 rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink-2 ${className ?? ""}`}
+    >
+      <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+      <span>
+        Draft, not submitted. These are the organization&apos;s latest saved answers and may change before submission.
+      </span>
+    </p>
+  );
+}
+
+function RecentAudit({
+  id,
+  audit,
+  recent,
+  labels,
+  queryTail,
+}: {
+  id: string;
+  audit: AuditRecord[];
+  recent: AuditRecord[];
+  labels: Record<string, string>;
+  queryTail: string;
+}) {
+  return (
+    <Card>
+      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <h2 className="text-[17px] font-bold text-ink">Audit timeline</h2>
+        {audit.length > recent.length ? (
+          <Link
+            href={`/finance/submissions/${id}?tab=audit${queryTail}`}
+            className="text-sm font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+          >
+            All {audit.length}
+          </Link>
+        ) : null}
+      </div>
+      <CardBody>
+        {recent.length === 0 ? (
+          <p className="text-sm text-muted">No actions have been recorded.</p>
+        ) : (
+          <AuditTimeline events={recent} labels={labels} compact />
+        )}
+      </CardBody>
+    </Card>
   );
 }

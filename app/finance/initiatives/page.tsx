@@ -78,7 +78,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
   );
   const notDue = data.period.dueOn > today;
   const notOpen = data.opensOn !== "" && data.opensOn > today;
-  const opensLabel = notOpen ? `Opens ${shortDate(data.opensOn)}` : "";
+  const periodHeading = notOpen ? `${data.period.label}, opens ${shortDate(data.opensOn)}` : data.period.label;
+  const columns = notOpen ? 6 : 7;
   const kept = { q, category: data.category, status, agency: data.agency, period: data.period.id, form };
 
   return (
@@ -162,28 +163,24 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
         <Table density="compact" stack>
           <THead>
             <tr>
-              <TH>Code</TH>
               <TH>Initiative</TH>
               <TH>Category and agency</TH>
               <TH align="right">Organizations</TH>
-              <TH align="right">Total funding</TH>
+              <TH align="right">Funding</TH>
               <TH>Form</TH>
-              <TH>{data.period.label}</TH>
-              <TH align="right">Missing</TH>
+              <TH>{periodHeading}</TH>
+              {notOpen ? null : <TH align="right">Missing</TH>}
             </tr>
           </THead>
           <tbody>
             {data.rows.length === 0 ? (
-              <EmptyRow colSpan={8}>
+              <EmptyRow colSpan={columns}>
                 No initiatives match these filters. Clear the filters to see every initiative.
               </EmptyRow>
             ) : (
               data.rows.map((row) => (
                 <TR key={row.id}>
-                  <TD className="whitespace-nowrap font-mono text-[13px] text-muted" label="Code">
-                    <span>{row.code}</span>
-                  </TD>
-                  <TD className="min-w-[14rem]" primary>
+                  <TD className="min-w-[12rem]" primary>
                     <Link
                       href={`${base}/${row.id}`}
                       className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
@@ -195,6 +192,9 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                         <Badge>Retired</Badge>
                       </span>
                     ) : null}
+                    <span className="block whitespace-nowrap font-mono text-[13px] font-normal text-muted">
+                      {row.code}
+                    </span>
                   </TD>
                   <TD label="Category">
                     <span>{row.category}</span>
@@ -203,7 +203,7 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                   <TD align="right" label="Organizations">
                     <span>{row.orgs}</span>
                   </TD>
-                  <TD align="right" label="Total funding">
+                  <TD align="right" label="Funding">
                     <span>{formatCurrency(Number(row.funding), { cents: false })}</span>
                   </TD>
                   <TD className="whitespace-nowrap" label="Form">
@@ -215,10 +215,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                       <Badge tone="warn">No form</Badge>
                     )}
                   </TD>
-                  <TD label={data.period.label}>
-                    {row.orgs > 0 && notOpen ? (
-                      <span className="whitespace-nowrap text-muted">{opensLabel}</span>
-                    ) : row.orgs > 0 && notDue ? (
+                  <TD label={periodHeading}>
+                    {row.orgs > 0 && notOpen ? null : row.orgs > 0 && notDue ? (
                       <span className="num text-muted">
                         {row.accepted} of {row.orgs} accepted
                       </span>
@@ -228,13 +226,15 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
                       <span className="text-muted">No organizations</span>
                     )}
                   </TD>
-                  <TD align="right" label="Missing">
-                    {notOpen ? null : row.missing > 0 ? (
-                      <Badge tone="bad">{row.missing} missing</Badge>
-                    ) : (
-                      <span className="text-muted">None</span>
-                    )}
-                  </TD>
+                  {notOpen ? null : (
+                    <TD align="right" label="Missing">
+                      {row.missing > 0 ? (
+                        <Badge tone="bad">{row.missing} missing</Badge>
+                      ) : (
+                        <span className="text-muted">None</span>
+                      )}
+                    </TD>
+                  )}
                 </TR>
               ))
             )}
