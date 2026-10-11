@@ -251,7 +251,7 @@ function budgetSection(w: Writer, input: ReportPdfInput) {
   w.table(headers, rows, widths, right, [
     pad("Personal services (PS) subtotal", formatCurrency(totals.ps, { cents: true })),
     pad("Other than personal services (OTPS) subtotal", formatCurrency(totals.otps, { cents: true })),
-    pad("Total", formatCurrency(totals.total, { cents: true }), [
+    pad(spend.entered ? "Total reported" : "Approved budget total", formatCurrency(totals.total, { cents: true }), [
       formatCurrency(spend.actual, { cents: true }),
       formatCurrency(spend.variance, { cents: true }),
     ]),

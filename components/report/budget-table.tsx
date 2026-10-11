@@ -9,17 +9,7 @@ import { balanceCopy } from "./balance";
 
 type Line = Omit<BudgetLine, "rowId">;
 
-export function BudgetTable({
-  lines,
-  award,
-  answers,
-  totalLabel = "Approved budget total",
-}: {
-  lines: Line[];
-  award: number;
-  answers: Answers;
-  totalLabel?: string;
-}) {
+export function BudgetTable({ lines, award, answers }: { lines: Line[]; award: number; answers: Answers }) {
   const withIds: BudgetLine[] = lines.map((line) => ({ ...line, rowId: String(line.position) }));
   const totals = budgetTotals(withIds);
   const balance = balanceCopy(totals.total, award);
@@ -28,6 +18,7 @@ export function BudgetTable({
   const span = 3;
 
   const columns = spend.entered ? 6 : 4;
+  const totalLabel = spend.entered ? "Total reported" : "Approved budget total";
   const money = (value: number) => formatCurrency(value, { cents: true });
   const balanceText =
     balance.tone === "ok"
