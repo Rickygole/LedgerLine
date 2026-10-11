@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-10-11T14:10:48.709Z",
-  "commit": "33cc2791b4712f38713005a41ae3a4ad92b230c5",
+  "generatedAt": "2026-10-11T14:41:42.936Z",
+  "commit": "b5dc84cc46141932d76f3a53043c59bf7d6f3503",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 868,
-    "passed": 868,
+    "tests": 875,
+    "passed": 875,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
     "unit": 434,
-    "sql": 291,
+    "sql": 292,
     "eval": 32,
-    "e2e": 111
+    "e2e": 117
   },
   "summary": {
     "verified": {
@@ -445,6 +445,12 @@
         },
         {
           "title": "as an administrator Publish all drafts publishes what Apply to forms created in one confirmed step",
+          "file": "tests/e2e/question-library.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator the page-level Publish all keeps its confirmation after the refresh and a stale tab drops the button",
           "file": "tests/e2e/question-library.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -1951,6 +1957,12 @@
           "suite": "e2e"
         },
         {
+          "title": "on a phone the table totals carry visible column labels and line up with the inputs",
+          "file": "tests/e2e/table-totals.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
           "title": "as Finance staff the Finance review of a submitted report shows the table total row",
           "file": "tests/e2e/table-totals.spec.ts",
           "status": "passed",
@@ -2616,6 +2628,12 @@
         },
         {
           "title": "a new report fills in the organization details that are on file leaves the seeded draft alone",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "without a primary contact the signed-in user's own details are used never prefills a stranger from the contact list",
           "file": "tests/sql/report-start.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -3403,6 +3421,18 @@
         },
         {
           "title": "a correction after acceptance needs a reason and leaves an audit record",
+          "file": "tests/e2e/review.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "the correction value box only takes numbers for a numeric question",
+          "file": "tests/e2e/review.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "the organization sees Council Finance as the author of a correction",
           "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -4354,6 +4384,12 @@
         },
         {
           "title": "a scoped Finance user sees only their scope and a note saying so",
+          "file": "tests/e2e/access-scope.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a scoped Finance user cannot see out-of-scope initiatives or organizations",
           "file": "tests/e2e/access-scope.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -5870,6 +5906,12 @@
           "file": "tests/e2e/access-scope.spec.ts",
           "status": "passed",
           "suite": "e2e"
+        },
+        {
+          "title": "a scoped Finance user cannot see out-of-scope initiatives or organizations",
+          "file": "tests/e2e/access-scope.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -6454,6 +6496,12 @@
         },
         {
           "title": "a new report fills in the organization details that are on file leaves the seeded draft alone",
+          "file": "tests/sql/report-start.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "without a primary contact the signed-in user's own details are used never prefills a stranger from the contact list",
           "file": "tests/sql/report-start.test.ts",
           "status": "passed",
           "suite": "sql"
