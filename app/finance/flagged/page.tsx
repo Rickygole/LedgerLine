@@ -29,7 +29,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const EXPLAIN: Record<FlagReason, string> = {
   unbalanced: "Draft or returned reports whose budget total does not equal the award.",
   incomplete:
-    "Past due drafts or returned reports that still fail required rules. These reports are also counted as Missing or Update requested.",
+    "Past due drafts or returned reports that still fail required rules. These reports are also counted as Missing or Changes requested.",
   missing: "Past the due date with nothing submitted, or only a draft saved.",
   validation: "Submitted reports that fail one or more validation rules.",
   zero_outcomes: "Submitted reports that served no participants.",
@@ -71,11 +71,11 @@ function Evidence({ row, reason }: { row: ReportRow; reason: FlagReason }) {
       <div className="space-y-1">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="num">
-            {formatCurrency(total, { cents: true })} of {formatCurrency(row.award, { cents: true })} award
+            {formatCurrency(total)} of {formatCurrency(row.award)} award
           </span>
-          <Meter ratio={row.award === 0 ? 0 : total / row.award} tone={diff < 0 ? "bad" : "warn"} />
-          <span className={cn("num font-semibold", diff < 0 ? "text-bad" : "text-warn")}>
-            {diff < 0 ? "Under" : "Over"} by {formatCurrency(Math.abs(diff), { cents: true })}
+          <Meter ratio={row.award === 0 ? 0 : total / row.award} tone="bad" />
+          <span className="num font-semibold text-bad">
+            {diff < 0 ? "Under" : "Over"} by {formatCurrency(Math.abs(diff))}
           </span>
         </p>
         {note ? <p className="text-[13px] text-muted">{note}</p> : null}
@@ -271,7 +271,7 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
             </div>
           ) : (
             <>
-              <Table density="compact" className="[&_td]:text-[15px]">
+              <Table density="compact" stack className="[&_td]:text-[15px]">
                 <THead>
                   <tr>
                     <TH className="w-[28%]">Organization</TH>
@@ -286,38 +286,42 @@ export default async function FlaggedPage({ searchParams }: { searchParams: Sear
                 <tbody>
                   {paged.items.map((row) => (
                     <TR key={`${reason}-${row.assignmentId}`}>
-                      <TD>
+                      <TD primary>
                         <Link
                           href={`/finance/organizations/${row.orgId}`}
-                          className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                          className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                         >
                           {row.orgName}
                         </Link>
-                        <span className="num block whitespace-nowrap text-[13px] text-muted">{orgMeta(row)}</span>
+                        <span className="num block whitespace-nowrap text-[13px] font-normal text-muted">
+                          {orgMeta(row)}
+                        </span>
                       </TD>
                       <TD className="min-w-40">
-                        {row.initiativeName}
+                        <span className="max-md:text-sm max-md:text-ink-2">{row.initiativeName}</span>
                         <span className="block whitespace-nowrap text-[13px] text-muted">
                           {row.initiativeCode}
                           {row.referenceNo ? <span className="font-mono"> · {row.referenceNo}</span> : null}
                         </span>
                       </TD>
-                      <TD align="right">{formatCurrency(row.award, { cents: false })}</TD>
-                      <TD className="min-w-64">
+                      <TD align="right" label="Award">
+                        <span>{formatCurrency(row.award)}</span>
+                      </TD>
+                      <TD className="min-w-64 max-md:pt-2">
                         <Evidence row={row} reason={reason} />
                       </TD>
-                      <TD className="whitespace-nowrap text-right">
+                      <TD className="whitespace-nowrap text-right max-md:pt-2">
                         {row.submissionId ? (
                           <Link
                             href={`/finance/submissions/${row.submissionId}`}
-                            className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                            className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                           >
                             Open<span className="sr-only"> {row.referenceNo}</span>
                           </Link>
                         ) : (
                           <Link
                             href={`/finance/organizations/${row.orgId}`}
-                            className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                            className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                           >
                             View organization
                           </Link>
