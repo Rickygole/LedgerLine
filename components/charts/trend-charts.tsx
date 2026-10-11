@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { GroupPoint, MonthPoint } from "@/lib/finance/trends";
+import { plural } from "@/lib/format";
 import { AXIS, ChartFrame, GRID } from "./chart-frame";
 
 const ON_TIME = "#0072B2";
@@ -78,7 +79,7 @@ export function MonthlyTrendChart({
               <span className="text-ink">Late</span>
             </li>
             <li>
-              <span className="num">{total}</span> reports in total
+              <span className="num">{total}</span> {plural(total, "report")} in total
             </li>
           </ul>
           <div
