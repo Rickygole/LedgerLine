@@ -11,7 +11,8 @@ import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
 import { CreateUserForm } from "@/components/finance/admin/create-user-form";
 import { UserActions } from "@/components/finance/admin/user-actions";
-import { listUsers } from "@/lib/finance/admin/users";
+import { listAgencies, listUsers } from "@/lib/finance/admin/users";
+import { scopeLabel } from "@/lib/finance/scope";
 import { one, pageNumber, PAGE_SIZE, type SearchParams } from "@/lib/finance/admin/params";
 
 export const runtime = "nodejs";
@@ -26,8 +27,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const q = one(params, "q");
   const role = (ROLES as readonly string[]).includes(one(params, "role")) ? one(params, "role") : "";
   const page = pageNumber(params);
-  const { list, orgs } = await withClaims(admin.id, async (tx) => ({
+  const { list, orgs, agencies } = await withClaims(admin.id, async (tx) => ({
     list: await listUsers(tx, { q, role, page }),
+    agencies: await listAgencies(tx),
     orgs: await tx.query<{ id: string; name: string; ein: string }>(
       `SELECT id, legal_name AS name, ein FROM organization ORDER BY legal_name`,
     ),
@@ -71,6 +73,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
               <TH>Email</TH>
               <TH>Role</TH>
               <TH>Organization</TH>
+              <TH>Access scope</TH>
               <TH>Status</TH>
               <TH>
                 <span className="sr-only">Actions</span>
@@ -79,7 +82,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           </THead>
           <tbody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={6}>No users match these filters.</EmptyRow>
+              <EmptyRow colSpan={7}>No users match these filters.</EmptyRow>
             ) : (
               rows.map((u) => (
                 <TR key={u.id}>
@@ -107,6 +110,20 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                       <span className="whitespace-nowrap text-muted">Council Finance</span>
                     )}
                   </TD>
+                  <TD className="md:max-w-48" label="Access scope">
+                    {u.role === "cbo_submitter" ? (
+                      <span className="text-muted">Own organization</span>
+                    ) : (
+                      <span data-testid="scope-label">
+                        {u.role === "finance_admin"
+                          ? "All agencies"
+                          : scopeLabel({
+                              agencies: u.scope_agencies,
+                              initiatives: u.scope_initiatives,
+                            })}
+                      </span>
+                    )}
+                  </TD>
                   <TD className="whitespace-nowrap" label="Status">
                     <span>
                       {!u.active ? (
@@ -129,6 +146,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                       active={u.active}
                       isSelf={u.id === admin.id}
                       isCbo={u.role === "cbo_submitter"}
+                      agencies={agencies}
+                      chosenAgencies={u.scope_agencies}
+                      chosenInitiatives={u.scope_initiative_labels}
                     />
                   </TD>
                 </TR>

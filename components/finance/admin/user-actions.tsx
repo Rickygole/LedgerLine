@@ -6,6 +6,7 @@ import { changeRole, sendPasswordReset, setActive } from "@/app/finance/users/ac
 import { Button } from "@/components/ui/button";
 import { Label, Select } from "@/components/ui/field";
 import type { ActionState } from "@/lib/actions";
+import { AccessScopeForm } from "@/components/finance/admin/access-scope-form";
 
 const ROLE_OPTIONS = [
   { value: "finance_viewer", label: "Finance (view only)" },
@@ -38,6 +39,9 @@ export function UserActions({
   active,
   isSelf,
   isCbo,
+  agencies,
+  chosenAgencies,
+  chosenInitiatives,
 }: {
   userId: string;
   name: string;
@@ -46,6 +50,9 @@ export function UserActions({
   active: boolean;
   isSelf: boolean;
   isCbo: boolean;
+  agencies: string[];
+  chosenAgencies: string[];
+  chosenInitiatives: { id: string; label: string }[];
 }) {
   const [roleState, roleAction, rolePending] = useActionState(changeRole, undefined);
   const [activeState, activeAction, activePending] = useActionState(setActive, undefined);
@@ -113,6 +120,15 @@ export function UserActions({
               {isSelf ? <p className="text-sm text-muted">You cannot change your own role.</p> : null}
               <Message state={roleState} />
             </form>
+          ) : null}
+          {role === "finance_analyst" || role === "finance_viewer" ? (
+            <AccessScopeForm
+              userId={userId}
+              name={name}
+              agencies={agencies}
+              chosenAgencies={chosenAgencies}
+              chosenInitiatives={chosenInitiatives}
+            />
           ) : null}
           <form action={activeAction} className="space-y-2 border-t border-line pt-5">
             <input type="hidden" name="userId" value={userId} />

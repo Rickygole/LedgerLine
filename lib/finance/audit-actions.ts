@@ -134,6 +134,11 @@ export const AUDIT_ACTIONS: Record<string, ActionWords> = {
   },
   user_create: { label: "Account created", alone: "created an account", verb: "created an account for" },
   role_change: { label: "Role changed", alone: "changed a role", verb: "changed the role of" },
+  scope_change: {
+    label: "Access scope changed",
+    alone: "changed an access scope",
+    verb: "changed the access scope of",
+  },
   password_set: { label: "Password set", alone: "set a password", verb: "set a password for" },
   password_reset_requested: {
     label: "Password reset queued",
