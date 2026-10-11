@@ -9,9 +9,9 @@ import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/status-badge";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { TYPE_LABEL } from "@/lib/forms/editor/definition";
-import { loadLibrary } from "@/lib/forms/library";
+import { currentFiscalYear, loadLibrary, usageParts } from "@/lib/forms/library";
 import { TEMPLATE_SECTIONS } from "@/lib/forms/standard";
-import { counted } from "@/lib/format";
+import { todayInNewYork } from "@/lib/dates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,10 @@ export const metadata: Metadata = { title: "Question library" };
 export default async function QuestionLibraryPage() {
   const user = await requireUser(FINANCE_ROLES);
   const admin = user.role === "finance_admin";
-  const items = await withClaims(user.id, (tx) => loadLibrary(tx, { includeRetired: true }));
+  const { items, year } = await withClaims(user.id, async (tx) => ({
+    items: await loadLibrary(tx, { includeRetired: true }),
+    year: await currentFiscalYear(tx, todayInNewYork()),
+  }));
   const sectionTitle = (key: string | null) => TEMPLATE_SECTIONS.find((s) => s.key === key)?.title ?? null;
 
   return (
@@ -58,24 +61,40 @@ export default async function QuestionLibraryPage() {
             {items.length === 0 ? (
               <EmptyRow colSpan={6}>The library has no questions yet.</EmptyRow>
             ) : (
-              items.map(({ question, templateSection, formsUsing, retiredAt }) => (
-                <TR key={question.key}>
-                  <TD className="min-w-[16rem]">
-                    <Link
-                      href={`/finance/question-library/${question.key}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
-                    >
-                      {question.label}
-                    </Link>
-                    <span className="block font-mono text-[13px] text-muted">{question.key}</span>
-                  </TD>
-                  <TD className="whitespace-nowrap">{TYPE_LABEL[question.type]}</TD>
-                  <TD>{question.required ? "Required" : "Optional"}</TD>
-                  <TD>{sectionTitle(templateSection) ?? <span className="text-muted">Not included</span>}</TD>
-                  <TD align="right">{counted(formsUsing, "initiative")}</TD>
-                  <TD>{retiredAt ? <Badge>Retired</Badge> : <Badge tone="ok">Active</Badge>}</TD>
-                </TR>
-              ))
+              items.map(({ question, templateSection, usageByYear, retiredAt }) => {
+                const usage = usageParts(usageByYear, year);
+                return (
+                  <TR key={question.key}>
+                    <TD className="min-w-[16rem]">
+                      <Link
+                        href={`/finance/question-library/${question.key}`}
+                        className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      >
+                        {question.label}
+                      </Link>
+                      <span className="block font-mono text-[13px] text-muted">{question.key}</span>
+                    </TD>
+                    <TD className="whitespace-nowrap">{TYPE_LABEL[question.type]}</TD>
+                    <TD>{question.required ? "Required" : "Optional"}</TD>
+                    <TD>{sectionTitle(templateSection) ?? <span className="text-muted">Not included</span>}</TD>
+                    <TD align="right">
+                      {usage.current ? (
+                        <span className="whitespace-nowrap">
+                          {usage.current.count} in {usage.current.year}
+                        </span>
+                      ) : (
+                        <span className="text-muted">None</span>
+                      )}
+                      {usage.prior.map((p) => (
+                        <span key={p.year} className="block whitespace-nowrap text-[13px] text-muted">
+                          {p.count} in {p.year}
+                        </span>
+                      ))}
+                    </TD>
+                    <TD>{retiredAt ? <Badge>Retired</Badge> : <Badge tone="ok">Active</Badge>}</TD>
+                  </TR>
+                );
+              })
             )}
           </tbody>
         </Table>

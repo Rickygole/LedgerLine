@@ -20,9 +20,11 @@ export function LibraryRetire({
   const router = useRouter();
   const [reason, setReason] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [done, setDone] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function run() {
+    setDone(null);
     startTransition(async () => {
       const result = retired
         ? await restoreLibraryQuestion(questionKey)
@@ -33,6 +35,11 @@ export function LibraryRetire({
       }
       setErrors([]);
       setReason("");
+      setDone(
+        retired
+          ? "Question restored. It is available in the form editor again."
+          : "Question retired. It is hidden from the form editor and from new forms.",
+      );
       router.refresh();
     });
   }
@@ -53,6 +60,11 @@ export function LibraryRetire({
           items={errors.map((message) => ({ message }))}
           className="mb-0"
         />
+        {done ? (
+          <p role="status" className="text-sm font-semibold text-ok">
+            {done}
+          </p>
+        ) : null}
         {retired ? null : protectedQuestion ? (
           <p className="text-sm text-muted">
             This question identifies the reporting organization on every report, so it cannot be retired.

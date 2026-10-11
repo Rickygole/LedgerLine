@@ -8,7 +8,7 @@ import { Stat } from "@/components/ui/stat";
 import { FiscalYearTimeline } from "@/components/ui/fiscal-year-timeline";
 import { StatusStackChart, type StackDatum } from "@/components/charts/status-stack";
 import { buttonClass } from "@/components/ui/button";
-import { FINANCE_ROLES, requireUser } from "@/lib/auth";
+import { FINANCE_ROLES, REVIEW_ROLES, requireUser } from "@/lib/auth";
 import { todayInNewYork } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
 import { districtStats, loadCouncilMembers, parseMapMode } from "@/lib/finance/district-stats";
@@ -54,6 +54,7 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
   const counts = countBuckets(rows);
   const stats = districtStats(rows, mode, members, borough);
   const canRemind = user.role === "finance_admin";
+  const canReview = REVIEW_ROLES.includes(user.role);
   const base = { period: period.id };
   const list = (extra: Partial<Filters>) => hrefWith("/finance/submissions", base, extra);
   const headline = dashboardHeadline(period, counts, rows.length);
@@ -111,9 +112,9 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           {next ? (
             <Link
               href={`/finance/submissions/${next.submissionId}?queue=waiting`}
-              className={buttonClass("primary", "md", "h-11 w-full px-5 text-base sm:w-auto")}
+              className={buttonClass(canReview ? "primary" : "secondary", "md", "h-11 w-full px-5 text-base sm:w-auto")}
             >
-              Review next submission
+              {canReview ? "Review next submission" : "Open next submission"}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           ) : null}
@@ -130,7 +131,10 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           value={counts.missing}
           tone={counts.missing > 0 ? "bad" : "neutral"}
           sub="Past due, nothing submitted"
-          action={{ href: list({ bucket: "missing" }), label: "Chase missing reports" }}
+          action={{
+            href: list({ bucket: "missing" }),
+            label: canReview ? "Chase missing reports" : "View missing reports",
+          }}
         />
         <Stat
           className="rounded-none border-0"

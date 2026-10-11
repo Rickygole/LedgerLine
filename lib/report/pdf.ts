@@ -1,4 +1,7 @@
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { formatDateTime } from "@/lib/dates";
 import { formatCurrency } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
@@ -12,6 +15,7 @@ export type ReportPdfInput = {
   initiativeName: string;
   periodLabel: string;
   referenceNo: string;
+  receiptCode?: string;
   revision: number;
   revisionKind: "submit" | "correction";
   revisionReason: string | null;
@@ -38,6 +42,12 @@ export function pdfFilename(referenceNo: string, revision: number): string {
   return `${safe || "report"}-revision-${revision}.pdf`;
 }
 
+const FONT_DIR = path.join(process.cwd(), "lib", "report", "fonts");
+
+function loadFont(name: string): Promise<Buffer> {
+  return readFile(path.join(FONT_DIR, name));
+}
+
 class Writer {
   doc: PDFDocument;
   regular!: PDFFont;
@@ -51,17 +61,23 @@ class Writer {
   }
 
   async init() {
-    this.regular = await this.doc.embedFont(StandardFonts.Helvetica);
-    this.bold = await this.doc.embedFont(StandardFonts.HelveticaBold);
-    this.charset = new Set(this.regular.getCharacterSet());
+    this.doc.registerFontkit(fontkit);
+    const [regular, bold] = await Promise.all([loadFont("PublicSans-Regular.ttf"), loadFont("PublicSans-Bold.ttf")]);
+    this.regular = await this.doc.embedFont(regular, { subset: true });
+    this.bold = await this.doc.embedFont(bold, { subset: true });
+    const boldSet = new Set(this.bold.getCharacterSet());
+    this.charset = new Set(this.regular.getCharacterSet().filter((code) => boldSet.has(code)));
     this.addPage();
   }
 
   clean(text: string): string {
     let out = "";
-    for (const char of text.replace(/\r\n?/g, "\n").replace(/\t/g, " ")) {
+    for (const char of text
+      .replace(/\r\n?/g, "\n")
+      .replace(/\t/g, " ")
+      .replace(/\u00a0/g, " ")) {
       const code = char.codePointAt(0) as number;
-      out += code === 10 || this.charset.has(code) ? char : "?";
+      if (code === 10 || this.charset.has(code)) out += char;
     }
     return out;
   }
@@ -117,7 +133,7 @@ class Writer {
   }
 
   heading(text: string) {
-    this.ensure(40);
+    this.ensure(64);
     this.y -= 10;
     this.page.drawLine({
       start: { x: MARGIN, y: this.y + 4 },
@@ -154,10 +170,12 @@ class Writer {
     const size = 9;
     const lead = size * 1.3;
     const pad = 4;
-    const draw = (cells: string[], font: PDFFont, fill: boolean) => {
+    const measure = (cells: string[], font: PDFFont) =>
+      Math.max(...cells.map((cell, i) => this.wrap(cell, font, size, cols[i] - pad * 2).length)) * lead + pad * 2;
+    const draw = (cells: string[], font: PDFFont, fill: boolean, reserve = 0) => {
       const wrapped = cells.map((cell, i) => this.wrap(cell, font, size, cols[i] - pad * 2));
       const height = Math.max(...wrapped.map((w) => w.length)) * lead + pad * 2;
-      this.ensure(height);
+      this.ensure(height + reserve);
       if (fill) this.page.drawRectangle({ x: MARGIN, y: this.y - height, width: total, height, color: HEAD_FILL });
       let x = MARGIN;
       wrapped.forEach((lines, i) => {
@@ -182,7 +200,8 @@ class Writer {
       });
     };
     this.y -= 2;
-    draw(headers, this.bold, true);
+    const first = rows[0] ?? footer[0];
+    draw(headers, this.bold, true, first ? measure(first, rows.length > 0 ? this.regular : this.bold) : 0);
     for (const row of rows) draw(row, this.regular, false);
     for (const row of footer) draw(row, this.bold, false);
     this.y -= 6;
@@ -199,11 +218,11 @@ function budgetSection(w: Writer, input: ReportPdfInput) {
     return;
   }
   const headers = ["Line", "Category", "Description", "Approved budget"];
-  const widths = [28, 52, 240, 80];
+  const widths = spend.entered ? [36, 54, 188, 76] : [36, 54, 332, 80];
   const right = [true, false, false, true];
   if (spend.entered) {
     headers.push("Actual spent", "Variance");
-    widths.push(80, 70);
+    widths.push(76, 70);
     right.push(true, true);
   }
   const rows = lines.map((line) => {
@@ -280,10 +299,13 @@ export async function buildReportPdf(input: ReportPdfInput): Promise<Uint8Array>
   const w = new Writer(doc);
   await w.init();
 
+  w.paragraph("LedgerLine \u00b7 Submitted copy", { bold: true, size: 11, color: MUTED, gap: 2 });
+  w.paragraph(`Reference ${input.referenceNo} \u00b7 Revision ${input.revision}`, { size: 10, color: MUTED, gap: 12 });
   w.paragraph(input.initiativeName, { bold: true, size: 18, gap: 2 });
   w.paragraph(`${input.periodLabel} report`, { size: 12, color: MUTED, gap: 10 });
   w.pair("Reference number", input.referenceNo);
   w.pair("Revision", String(input.revision));
+  if (input.receiptCode) w.pair("Receipt code", input.receiptCode);
   w.pair("Organization", input.orgName);
   w.pair("EIN", input.ein);
   w.pair("Award", formatCurrency(input.awardAmount));
@@ -300,19 +322,21 @@ export async function buildReportPdf(input: ReportPdfInput): Promise<Uint8Array>
     else answersSection(w, input, section.questions);
   }
 
-  const certification = input.snapshot.certification;
-  if (certification) {
-    w.heading("Certification");
-    w.paragraph(certification.statement, { bold: true });
-    w.pair("Certified by", certification.name);
-    w.pair("Title", certification.title);
-    w.pair("Certified on", `${formatDateTime(certification.certifiedAt)} ET`);
-  }
-
   w.heading("Attachments");
   if (input.snapshot.attachments.length === 0) w.paragraph("No files were attached.");
   for (const file of input.snapshot.attachments)
     w.paragraph(`${file.filename} (${formatBytes(file.bytes)})`, { gap: 2 });
+
+  const certification = input.snapshot.certification;
+  w.heading("Certification");
+  if (certification) {
+    w.paragraph(certification.statement, { bold: true });
+    w.pair("Certified by", certification.name);
+    w.pair("Title", certification.title);
+    w.pair("Certified on", `${formatDateTime(certification.certifiedAt)} ET`);
+  } else {
+    w.paragraph("No certification was recorded for this copy.");
+  }
 
   const pages = doc.getPages();
   pages.forEach((page, index) => {

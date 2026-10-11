@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { retirementText, type Retirement } from "@/lib/lifecycle/retirement";
 import type { LineageLink } from "@/lib/lifecycle/rollover";
 
 function suffix(kind: LineageLink["kind"]): string {
@@ -18,13 +19,16 @@ function Code({ link }: { link: LineageLink }) {
   );
 }
 
-export function lineageMeta({
-  predecessors,
-  successors,
-}: {
-  predecessors: LineageLink[];
-  successors: LineageLink[];
-}): React.ReactNode[] {
+export function lineageMeta(
+  {
+    predecessors,
+    successors,
+  }: {
+    predecessors: LineageLink[];
+    successors: LineageLink[];
+  },
+  retirement?: Retirement | null,
+): React.ReactNode[] {
   const items: React.ReactNode[] = [];
   const earlier = predecessors.filter((p) => p.other_id);
   const continued = successors.filter((s) => s.other_id);
@@ -56,6 +60,6 @@ export function lineageMeta({
       </span>,
     );
   }
-  if (retired) items.push(<span key="retired">Retired at the rollover into {retired.fiscal_year_id}</span>);
+  if (retired) items.push(<span key="retired">{retirementText(retired, retirement)}</span>);
   return items;
 }

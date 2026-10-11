@@ -122,10 +122,19 @@ export function ImportMasterList() {
               }}
             />
           </div>
-          <Button onClick={check} disabled={pending || text.trim() === ""}>
+          <Button
+            onClick={check}
+            disabled={pending || text.trim() === ""}
+            aria-describedby={text.trim() === "" ? "master-empty" : undefined}
+          >
             <Upload className="h-4 w-4" aria-hidden="true" />
             {pending && !preview ? "Checking" : "Preview import"}
           </Button>
+          {text.trim() === "" ? (
+            <p id="master-empty" className="text-sm text-muted">
+              Preview is off until there is a list to check. Choose a CSV file or paste the list above.
+            </p>
+          ) : null}
         </CardBody>
       </Card>
 

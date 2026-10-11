@@ -35,6 +35,34 @@ describe("[US-033][BR-023] master list rows are validated before they reach the 
     }
   });
 
+  it("rejects an EIN whose first two digits the IRS does not issue", () => {
+    for (const prefix of [
+      "00",
+      "07",
+      "08",
+      "09",
+      "17",
+      "18",
+      "19",
+      "28",
+      "29",
+      "49",
+      "69",
+      "70",
+      "78",
+      "79",
+      "89",
+      "96",
+      "97",
+    ])
+      expect(problems({ ein: `${prefix}-3456789` }).ein, prefix).toBe(
+        "That EIN does not start with a prefix the IRS issues. Check the first two digits.",
+      );
+    expect(problems({ ein: "00-0000000" }).ein).toContain("does not start with a prefix");
+    expect(problems({ ein: "13-4027118" }).ein).toBeUndefined();
+    expect(problems({ ein: "98-1234567" }).ein).toBeUndefined();
+  });
+
   it("accepts an EIN written with or without the hyphen and rejects anything that is not nine digits", () => {
     expect(validateRow({ ...good, ein: "123456789" })).toMatchObject({ row: { ein: "12-3456789" } });
     expect(problems({ ein: "12-345678" }).ein).toBe("The EIN must be 9 digits, like 12-3456789.");

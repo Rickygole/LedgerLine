@@ -131,12 +131,38 @@ export type CleanRow = {
   contact_phone: string | null;
 };
 
+const INVALID_EIN_PREFIXES = new Set([
+  "00",
+  "07",
+  "08",
+  "09",
+  "17",
+  "18",
+  "19",
+  "28",
+  "29",
+  "49",
+  "69",
+  "70",
+  "78",
+  "79",
+  "89",
+  "96",
+  "97",
+]);
+
+export function einPrefixProblem(einDigits: string): boolean {
+  return einDigits.length === 9 && (INVALID_EIN_PREFIXES.has(einDigits.slice(0, 2)) || einDigits === "000000000");
+}
+
 export function validateRow(raw: MasterRow): { row: CleanRow } | { problems: Partial<Record<MasterField, string>> } {
   const problems: Partial<Record<MasterField, string>> = {};
   const einDigits = digitsOnly(raw.ein);
   if (!raw.ein.trim()) problems.ein = "Enter the EIN.";
   else if (einDigits.length !== 9 || /[^\d\s-]/.test(raw.ein))
     problems.ein = "The EIN must be 9 digits, like 12-3456789.";
+  else if (einPrefixProblem(einDigits))
+    problems.ein = "That EIN does not start with a prefix the IRS issues. Check the first two digits.";
 
   const legalName = raw.legal_name.trim().replace(/\s+/g, " ");
   if (!legalName) problems.legal_name = "Enter the legal name.";

@@ -191,7 +191,7 @@ describe("[US-033][BR-023] Council Finance maintains the master list", () => {
       `${fresh.ein},${fresh.legal_name},Nonprofit,Brooklyn,35,${fresh.address_line},11201,Dana Whitfield,Executive Director,dana@bridgestreet.example.org,`,
       `12-34,Too Short Org,Nonprofit,Brooklyn,35,1 Main St,11201,Dana Whitfield,ED,d@example.org,`,
       `${fresh.ein},Same EIN Again,Nonprofit,Brooklyn,35,1 Main St,11201,Dana Whitfield,ED,d@example.org,`,
-      `97-1234567,Wrong Borough Org,Nonprofit,Queens,35,1 Main St,11201,Dana Whitfield,ED,d@example.org,`,
+      `93-1234567,Wrong Borough Org,Nonprofit,Queens,35,1 Main St,11201,Dana Whitfield,ED,d@example.org,`,
     ].join("\n");
     const before = (await owner.query("SELECT count(*)::int AS n FROM organization")).rows[0].n;
     const parsed = parseImport(csv);

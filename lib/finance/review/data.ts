@@ -5,7 +5,7 @@ import type { OpenFlag, PeriodInfo, ReportRow, Sponsor } from "./types";
 
 export async function loadPeriods(tx: Tx): Promise<PeriodInfo[]> {
   const rows = await tx.query<{ id: string; label: string; due_on: string; fiscal_year_id: string; custom: boolean }>(
-    "SELECT id, label, due_on::text, fiscal_year_id, initiative_id IS NOT NULL AS custom FROM reporting_period ORDER BY due_on",
+    "SELECT id, label, due_on::text, fiscal_year_id, initiative_id IS NOT NULL AS custom FROM reporting_period WHERE initiative_id IS NULL ORDER BY due_on",
   );
   return rows.map((r) => ({
     id: r.id,

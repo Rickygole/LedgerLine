@@ -63,7 +63,7 @@ export default async function PortalHome() {
         "SELECT id, to_char(starts_on, 'YYYY-MM-DD') AS starts_on, to_char(ends_on, 'YYYY-MM-DD') AS ends_on FROM fiscal_year ORDER BY starts_on DESC LIMIT 1",
       ));
     const periods = await tx.query<Period>(
-      "SELECT id, label, to_char(ends_on, 'YYYY-MM-DD') AS ends_on, to_char(due_on, 'YYYY-MM-DD') AS due_on FROM reporting_period ORDER BY due_on",
+      "SELECT id, label, to_char(ends_on, 'YYYY-MM-DD') AS ends_on, to_char(due_on, 'YYYY-MM-DD') AS due_on FROM reporting_period WHERE initiative_id IS NULL OR initiative_id IN (SELECT initiative_id FROM assignment WHERE org_id = app.org_id()) ORDER BY due_on",
     );
     return {
       org: await loadOrganization(tx, user.orgId!),

@@ -42,6 +42,10 @@ test.describe("as an administrator", () => {
     await page.getByRole("button", { name: "Add organization" }).click();
     await expect(page.getByText("The EIN must be 9 digits, like 12-3456789.").first()).toBeVisible();
 
+    await page.getByLabel("EIN").fill("07-3456789");
+    await page.getByRole("button", { name: "Add organization" }).click();
+    await expect(page.getByText(/does not start with a prefix the IRS issues/).first()).toBeVisible();
+
     await page.getByLabel("EIN").fill(ADDED_EIN);
     await page.getByRole("button", { name: "Add organization" }).click();
     await page.waitForURL(/\/finance\/organizations\/[0-9a-f-]{36}$/);
@@ -108,24 +112,28 @@ test.describe("as an administrator", () => {
       `${existing.ein},"${existing.legal_name}",${existing.org_type},${existing.borough},${existing.council_district ?? ""},"${newAddress}",${existing.postal_code},${existing.full_name},${existing.title},${existing.email},`,
       `${IMPORT_NEW_EIN},${IMPORT_NEW_NAME},Nonprofit,Manhattan,3,88 Canal Street,10002,Priti Shah,Director,priti@canalstreet.example.org,212-555-0198`,
       `99-12,Short EIN Organization,Nonprofit,Queens,25,1 Main Street,11373,Sam Lee,Director,sam@example.org,`,
+      `07-1234567,Unissued Prefix Organization,Nonprofit,Queens,25,2 Main Street,11373,Sam Lee,Director,sam@example.org,`,
     ].join("\n");
     const before = (await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM organization"))[0].n;
 
     await page.goto("/finance/organizations/import");
+    await expect(page.getByRole("button", { name: "Preview import" })).toBeDisabled();
+    await expect(page.getByText(/Preview is off until there is a list to check/)).toBeVisible();
     await page.getByLabel("Or paste the list").fill(csv);
     await page.getByRole("button", { name: "Preview import" }).click();
 
     const summary = page.getByRole("list", { name: "Import summary" });
     await expect(summary).toContainText("1 new");
     await expect(summary).toContainText("1 updated");
-    await expect(summary).toContainText("1 rejected");
+    await expect(summary).toContainText("2 rejected");
+    await expect(page.getByText(/does not start with a prefix the IRS issues/)).toBeVisible();
     await expect(page.getByText("The EIN must be 9 digits, like 12-3456789.")).toBeVisible();
     await expect(page.getByText("Changes Address")).toBeVisible();
     await expect(page.getByText("Will be added to the master list")).toBeVisible();
     expect((await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM organization"))[0].n).toBe(before);
 
     await page.getByRole("button", { name: "Confirm import of 2 organizations" }).click();
-    await expect(page.getByText(/Import finished: 1 added, 1 updated, 0 unchanged, 1 rejected/)).toBeVisible();
+    await expect(page.getByText(/Import finished: 1 added, 1 updated, 0 unchanged, 2 rejected/)).toBeVisible();
 
     expect((await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM organization"))[0].n).toBe(before + 1);
     const [updated] = await ownerQuery<{ address_line: string }>(

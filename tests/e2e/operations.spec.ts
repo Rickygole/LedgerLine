@@ -61,10 +61,12 @@ test("[US-062] the platform page shows the health status to administrators only"
   await expect(admin.page.getByRole("heading", { name: "Platform status" })).toBeVisible();
   await expect(admin.page.getByText("Healthy")).toBeVisible();
   await expect(admin.page.getByText("Connected")).toBeVisible();
+  expect(await admin.page.locator("main").innerText()).not.toMatch(/\b(US|BR)-\d{3}\b/);
   await admin.context.close();
   const analyst = await as(browser, "daniel");
   await analyst.page.goto("/finance/platform");
   await expect(analyst.page.getByRole("heading", { name: "Platform status" })).toHaveCount(0);
+  expect(await analyst.page.locator("main").innerText()).not.toMatch(/\b(US|BR)-\d{3}\b/);
   await analyst.context.close();
 });
 

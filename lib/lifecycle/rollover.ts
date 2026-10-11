@@ -115,7 +115,7 @@ export async function rolloverResult(tx: Tx, from: string, to: string): Promise<
     [to],
   );
   const periods = await tx.query<{ id: string; label: string; due_on: string }>(
-    "SELECT id, label, due_on::text FROM reporting_period WHERE fiscal_year_id = $1 ORDER BY due_on",
+    "SELECT id, label, due_on::text FROM reporting_period WHERE fiscal_year_id = $1 AND initiative_id IS NULL ORDER BY due_on",
     [to],
   );
   return {

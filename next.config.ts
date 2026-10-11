@@ -15,6 +15,10 @@ function commit(): string {
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   env: { BUILD_COMMIT: commit() },
+  outputFileTracingIncludes: {
+    "/finance/submissions/[id]/pdf": ["./lib/report/fonts/**"],
+    "/portal/reports/[id]/pdf": ["./lib/report/fonts/**"],
+  },
   experimental: {
     authInterrupts: true,
     serverActions: {

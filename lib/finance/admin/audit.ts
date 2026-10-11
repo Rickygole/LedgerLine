@@ -22,6 +22,7 @@ export type AuditRow = {
   ai_action_id: string | null;
   label: string | null;
   org_name: string | null;
+  period_label?: string | null;
   full_count: number;
 };
 
@@ -37,6 +38,7 @@ const SELECT_AUDIT = `
            ELSE NULL
          END AS label,
          coalesce(so.legal_name, ao.legal_name) AS org_name,
+         rp.label AS period_label,
          count(*) OVER ()::int AS full_count
   FROM audit_event e
   LEFT JOIN app_user u ON u.id = e.actor_id
@@ -48,7 +50,8 @@ const SELECT_AUDIT = `
   LEFT JOIN initiative fi ON fi.id = fv.initiative_id
   LEFT JOIN app_user au ON e.entity IN ('app_user', 'user') AND au.id::text = e.entity_id
   LEFT JOIN organization o ON e.entity = 'organization' AND o.id::text = e.entity_id
-  LEFT JOIN organization ao ON ao.id::text = coalesce(e.after ->> 'org_id', e.before ->> 'org_id')`;
+  LEFT JOIN organization ao ON ao.id::text = coalesce(e.after ->> 'org_id', e.before ->> 'org_id')
+  LEFT JOIN reporting_period rp ON rp.id = CASE WHEN e.entity IN ('reporting_period', 'export') THEN e.entity_id ELSE coalesce(e.after ->> 'period', e.before ->> 'period') END`;
 
 export async function listAudit(
   tx: Tx,
@@ -142,7 +145,7 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
           : typeof before.offset_days === "number"
             ? before.offset_days
             : null;
-      const period = text(after.period) || text(before.period);
+      const period = row.period_label || text(after.period) || text(before.period);
       const which = offset === null ? "a reminder rule" : `the reminder rule ${describeOffset(offset).toLowerCase()}`;
       return { actor, verb, subject: period ? `${which} for ${period}` : which };
     }
@@ -151,7 +154,7 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
     case "master_list":
       return { actor, verb, subject: row.note ?? "the master list" };
     case "reporting_period":
-      return { actor, verb, subject: row.entity_id };
+      return { actor, verb, subject: row.period_label || row.entity_id };
     case "fiscal_year":
       return { actor, verb, subject: row.entity_id };
     case "export": {
@@ -166,7 +169,7 @@ export function auditPhrase(row: AuditRow): { actor: string; verb: string; subje
       return {
         actor,
         verb,
-        subject: `${row.entity_id} submissions${rows === null ? "" : ` (${formatCount(rows)} ${plural(rows, "row", "rows")})`}`,
+        subject: `${row.period_label || row.entity_id} submissions${rows === null ? "" : ` (${formatCount(rows)} ${plural(rows, "row", "rows")})`}`,
       };
     }
     default:

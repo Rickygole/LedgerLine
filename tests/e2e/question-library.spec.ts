@@ -47,6 +47,15 @@ test.describe("as an administrator", () => {
     const [row] = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM question WHERE scope = 'standard'");
     expect(row.n).toBeGreaterThanOrEqual(15);
     await expect(page.getByRole("link", { name: "Add a question" })).toBeVisible();
+    const legal = page.getByRole("row", { name: /Organization legal name/ });
+    await expect(legal).toContainText(/\d+ in FY27/);
+    await expect(legal).toContainText(/\d+ in FY26/);
+    const [fy27] = await ownerQuery<{ n: number }>(
+      `SELECT count(DISTINCT f.initiative_id)::int AS n FROM form_version f JOIN initiative i ON i.id = f.initiative_id
+       WHERE i.fiscal_year_id = 'FY27' AND f.status IN ('published', 'draft')
+         AND jsonb_path_exists(f.definition, '$.sections[*].questions[*] ? (@.key == "org_legal_name")')`,
+    );
+    await expect(legal).toContainText(`${fy27.n} in FY27`);
   });
 
   test("[US-003] an administrator adds a library question and then changes its wording", async ({ page }) => {
@@ -87,7 +96,9 @@ test.describe("as an administrator", () => {
     await page.goto(`/finance/question-library/${key}`);
     await page.getByLabel("Fiscal year").selectOption("FY27");
     await page.getByLabel("Find an initiative").fill(first!.name);
-    await page.getByRole("checkbox", { name: new RegExp(first!.name) }).check();
+    const option = page.getByRole("checkbox", { name: new RegExp(first!.name) });
+    await expect(option).toHaveAccessibleName(/\S CI-\d{2}-\d+/);
+    await option.check();
     await page.getByLabel("Also add the question to forms that do not have it").check();
     await page.getByRole("button", { name: "Apply to 1 form" }).click();
     await expect(page.getByText(/1 new draft created/)).toBeVisible();
@@ -137,6 +148,7 @@ test.describe("as an administrator", () => {
     await page.goto(`/finance/question-library/${key}`);
     await page.getByLabel("Reason").fill("Replaced by the annual volunteer survey");
     await page.getByRole("button", { name: "Retire question" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Question retired." })).toBeVisible();
     await expect(page.getByText("Retired", { exact: true }).first()).toBeVisible();
     const [row] = await ownerQuery<{ retired_at: string | null }>(
       "SELECT retired_at FROM question WHERE question_key = $1",

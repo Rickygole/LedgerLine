@@ -237,3 +237,15 @@ export function lineDiff(before: string, after: string) {
     .filter(Boolean);
   return { removed: a.filter((l) => !b.includes(l)), added: b.filter((l) => !a.includes(l)) };
 }
+
+export const FLAG_PREFILL = "Council Finance has a question about this report.";
+
+export function prefillNote(input: {
+  budgetSentence: string | null;
+  issueSentence: string | null;
+  openFlagCount: number;
+}): string {
+  return [input.budgetSentence, input.issueSentence, input.openFlagCount > 0 ? FLAG_PREFILL : null]
+    .filter(Boolean)
+    .join("\n\n");
+}

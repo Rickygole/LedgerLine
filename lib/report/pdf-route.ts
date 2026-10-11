@@ -23,8 +23,10 @@ export async function serveReportPdf(id: string, roles: Role[]): Promise<Respons
   if (!loaded) return NextResponse.json({ error: "That report has no submitted copy." }, { status: 404 });
   const { report, revision } = loaded;
   const { header } = report;
+  const subject = revision.snapshot.subject;
   const bytes = await buildReportPdf({
-    initiativeName: header.initiativeName,
+    receiptCode: revision.sha256.slice(0, 12),
+    initiativeName: subject?.initiativeName ?? header.initiativeName,
     periodLabel: header.periodLabel,
     referenceNo: header.referenceNo,
     revision: revision.revision,
@@ -33,9 +35,9 @@ export async function serveReportPdf(id: string, roles: Role[]): Promise<Respons
     revisionActor: revision.actorName,
     submittedAt: header.submittedAt,
     submittedByName: header.submittedByName,
-    orgName: header.orgName,
-    ein: header.ein,
-    awardAmount: header.awardAmount,
+    orgName: subject?.organizationName ?? header.orgName,
+    ein: subject?.ein ?? header.ein,
+    awardAmount: subject?.awardAmount ?? header.awardAmount,
     definition: report.definition,
     snapshot: revision.snapshot,
   });

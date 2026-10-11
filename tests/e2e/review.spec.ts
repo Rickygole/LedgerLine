@@ -68,6 +68,18 @@ test("[US-043][US-042] an analyst flags a submission and it appears in the flagg
   await expect(page.getByText(note).first()).toBeVisible();
 });
 
+test("[US-044] an internal flag note is never prefilled into the note to the organization after a reload", async ({
+  page,
+}) => {
+  await page.goto(`/finance/submissions/${submissionId}`);
+  await page.reload();
+  await page.getByRole("button", { name: "Request an update" }).click();
+  const note = page.getByLabel("Note to the organization");
+  await expect(note).toHaveValue(/Council Finance has a question about this report\./);
+  await expect(note).not.toHaveValue(/vendor breakdown/);
+  await expect(note).not.toHaveValue(/Council Finance noted/);
+});
+
 test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({
   page,
   browser,
@@ -170,4 +182,27 @@ test("[US-049][US-051] the dashboard draws its charts from the current reports",
   const map = page.getByRole("group", { name: /Map of the 51 New York City Council districts/ });
   await expect(map.locator("path").first()).toBeVisible();
   await expect(map.getByRole("link")).toHaveCount(51);
+});
+
+test("[US-039] view-only staff see neutral wording on the dashboard actions and reviewers see the review actions", async ({
+  page,
+  browser,
+}) => {
+  await page.goto("/finance");
+  await expect(page.getByRole("link", { name: "Review next submission" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Chase missing reports" })).toBeVisible();
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("grace"),
+  });
+  try {
+    const viewer = await context.newPage();
+    await viewer.goto("/finance");
+    await expect(viewer.getByRole("link", { name: "Open next submission" })).toBeVisible();
+    await expect(viewer.getByRole("link", { name: "View missing reports" })).toBeVisible();
+    await expect(viewer.getByRole("link", { name: "Review next submission" })).toHaveCount(0);
+    await expect(viewer.getByRole("link", { name: "Chase missing reports" })).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
 });

@@ -81,9 +81,26 @@ test.describe("as an administrator", () => {
     page,
   }) => {
     await page.goto(`/finance/initiatives/${initiative.id}`);
+    await expect(page.getByRole("heading", { name: "Danger zone" })).toBeVisible();
     await page.locator("#retire-reason").fill("The program ended mid-year");
     await page.getByRole("button", { name: "Retire initiative" }).click();
+    const dialog = page.getByRole("dialog", { name: /^Retire .+\?$/ });
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText(/\d+ organizations? will stop receiving reports and reminders/);
+    await expect(dialog).toContainText("This cannot be undone.");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toBeHidden();
+    await page.getByRole("button", { name: "Retire initiative" }).click();
+    await dialog.getByRole("button", { name: "Yes, retire it" }).click();
     await expect(page.getByText(/This initiative is retired as of/)).toBeVisible();
+    await expect(
+      page
+        .locator("main")
+        .getByText(/Retired on .+ by .+\. Reason: The program ended mid-year/)
+        .first(),
+    ).toBeVisible();
+    await expect(page.getByText(/Retired at the rollover/)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Edit form (creates a draft)" })).toHaveCount(0);
     await expect(page.getByRole("note")).toContainText("Reason: The program ended mid-year");
     await expect(page.getByRole("button", { name: "Retire initiative" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Rename initiative" })).toHaveCount(0);

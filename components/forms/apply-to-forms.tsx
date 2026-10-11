@@ -139,9 +139,14 @@ export function ApplyToForms({ questionKey, questionLabel, targets }: Props) {
                     onChange={(e) => toggle(t.id, e.target.checked)}
                   />
                   <span>
-                    <span className="font-semibold">{t.name}</span>
-                    <span className="ml-2 font-mono text-[13px] text-muted">{t.code}</span>
-                    {t.hasForm ? null : <span className="ml-2 text-muted">No form yet</span>}
+                    <span className="font-semibold">{t.name}</span>{" "}
+                    <span className="ml-1 font-mono text-[13px] text-muted">{t.code}</span>
+                    {t.hasForm ? null : (
+                      <>
+                        {" "}
+                        <span className="ml-1 text-muted">No form yet</span>
+                      </>
+                    )}
                   </span>
                 </label>
               </li>

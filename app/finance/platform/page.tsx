@@ -127,16 +127,6 @@ const MILESTONES: Milestone[] = [
   },
 ];
 
-function Ids({ ids }: { ids: string[] }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {ids.map((id) => (
-        <Badge key={id}>{id}</Badge>
-      ))}
-    </div>
-  );
-}
-
 export default async function PlatformPage() {
   const user = await requireUser(FINANCE_ROLES);
   const isAdmin = user.role === "finance_admin";
@@ -189,7 +179,6 @@ export default async function PlatformPage() {
             <CardHeader
               title="Platform status"
               description="Read from the same health check that monitoring tools call at /api/health."
-              actions={<Ids ids={["US-062"]} />}
             />
             <CardBody>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -228,7 +217,6 @@ export default async function PlatformPage() {
           <CardHeader
             title="Hosting and security"
             description="Proposed: hosted outside Council owned servers in Azure Government, with controls mapped to NIST 800-53."
-            actions={<Ids ids={["US-053", "US-054", "BR-026"]} />}
           />
           <CardBody className="space-y-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -304,11 +292,7 @@ export default async function PlatformPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader
-              title="Data ownership and export"
-              description="The Council owns all system data."
-              actions={<Ids ids={["US-055", "BR-020"]} />}
-            />
+            <CardHeader title="Data ownership and export" description="The Council owns all system data." />
             <CardBody className="space-y-3 text-sm">
               <p>
                 Every record, answer, attachment and audit event belongs to the Council. None of it is stored in a
@@ -337,11 +321,7 @@ export default async function PlatformPage() {
           </Card>
 
           <Card>
-            <CardHeader
-              title="Retention"
-              description="Submitted data is kept permanently."
-              actions={<Ids ids={["US-056", "BR-019"]} />}
-            />
+            <CardHeader title="Retention" description="Submitted data is kept permanently." />
             <CardBody className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <Stat
@@ -371,7 +351,6 @@ export default async function PlatformPage() {
           <CardHeader
             title="Breach notification"
             description="The Council is told about any breach, with a remediation plan."
-            actions={<Ids ids={["US-058", "BR-025"]} />}
           />
           <CardBody>
             <ol className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -429,7 +408,6 @@ export default async function PlatformPage() {
           <CardHeader
             title="Scale"
             description="No limit on submitting users, and 50 to 100 Finance users with different permissions."
-            actions={<Ids ids={["US-059", "US-060", "BR-017", "BR-018"]} />}
           />
           <CardBody className="space-y-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -474,7 +452,6 @@ export default async function PlatformPage() {
           <CardHeader
             title="Support model"
             description="Vendor help with accounts, post launch support and fast responses."
-            actions={<Ids ids={["US-061", "US-062", "US-063", "BR-029"]} />}
           />
           <Table density="compact">
             <THead>
@@ -526,7 +503,6 @@ export default async function PlatformPage() {
           <CardHeader
             title="Annual review"
             description="A yearly review of the reporting structure with Council Finance."
-            actions={<Ids ids={["US-064", "BR-028"]} />}
           />
           <CardBody className="space-y-3 text-sm">
             <p>
@@ -556,7 +532,6 @@ export default async function PlatformPage() {
           <CardHeader
             title="Delivery timeline to go live"
             description="Proposed plan, with formal testing and training before the February 1, 2027 target. The go-live date is a delivery commitment and this system does not confirm it."
-            actions={<Ids ids={["US-065", "US-066", "BR-027"]} />}
           />
           <CardBody className="space-y-4">
             <Timeline items={MILESTONES} />

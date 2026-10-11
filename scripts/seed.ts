@@ -68,7 +68,7 @@ const MARIA_DRAFT_BUDGET = [
 ] as const;
 
 export const MARIA_REMAINING_BUDGET = [
-  ["PS", "Program evaluation consultant", 7349],
+  ["OTPS", "Program evaluation consultant", 7349],
   ["OTPS", "Summer career exposure trips", 6250],
 ] as const;
 
@@ -370,7 +370,7 @@ async function reset(client: Client, scene: string) {
   await client.query(`TRUNCATE auth_attempt, audit_event, submission_revision, ai_action, outbox, flag, attachment, budget_line, answer, submission,
     form_version, question, assignment_sponsor, assignment, reporting_period, initiative, app_user, contact, organization, council_member, fiscal_year, app_setting,
     support_message, support_request, incident_event, incident_remediation, security_incident, incident_contact, annual_review_decision, annual_review_participant, annual_review,
-    training_record, uat_defect, uat_session RESTART IDENTITY CASCADE`);
+    training_record, uat_defect, uat_session, readiness_schedule RESTART IDENTITY CASCADE`);
   for (const table of guarded) await client.query(`ALTER TABLE ${table} ENABLE TRIGGER USER`);
   await client.query("INSERT INTO demo_reset (scene) VALUES ($1)", [scene]);
 }
@@ -1337,7 +1337,18 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       opts.submittedOn ??
       (period.kind === "MY" ? rampDate("2026-01-02", "2026-01-31", 2.2) : rampDate("2026-07-01", "2026-09-30", 2));
     const submittedAt = isoAt(submittedDate, between(9, 18), between(0, 59));
-    const snapshot = buildSnapshot({ formVersionId: initiative.formId, answers: full, budget: lines, attachments: [] });
+    const snapshot = buildSnapshot({
+      formVersionId: initiative.formId,
+      answers: full,
+      budget: lines,
+      attachments: [],
+      subject: {
+        organizationName: org.legal_name,
+        ein: org.ein,
+        initiativeName: initiative.name,
+        awardAmount: opts.assignment.award_amount,
+      },
+    });
     revisionRows.push({
       submission_id: id,
       revision: 1,

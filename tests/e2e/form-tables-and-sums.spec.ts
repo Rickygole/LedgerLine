@@ -30,6 +30,7 @@ type Saved = {
   sections: {
     questions: {
       key: string;
+      label: string;
       type: string;
       maxRows?: number;
       columns?: { key: string; label: string; type: string }[];
@@ -95,6 +96,10 @@ test("[US-027] a group of number questions can be required to add up to a fixed 
   await group.getByRole("checkbox", { name: "Served in the north" }).check();
   await expect(page.getByRole("button", { name: "Add sum rule" })).toBeDisabled();
   await group.getByRole("checkbox", { name: "Served in the south" }).check();
+  await page.getByLabel("Number", { exact: true }).fill("-5");
+  await expect(page.getByRole("alert").filter({ hasText: "cannot add up to a negative number" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add sum rule" })).toBeDisabled();
+  await page.getByLabel("Number", { exact: true }).fill("100");
   await page.getByRole("button", { name: "Add sum rule" }).click();
   await expect(page.getByText("Served in the north, Served in the south must add up to 100.")).toBeVisible();
   await page.getByRole("button", { name: "Save draft" }).click();
@@ -103,6 +108,20 @@ test("[US-027] a group of number questions can be required to add up to a fixed 
   expect(row.definition.sumRules).toEqual([
     { key: "sum_rule_1", fields: ["served_in_the_north", "served_in_the_south"], target: 100 },
   ]);
+});
+
+test("[US-003] a form cannot be saved with two questions that have the same label", async ({ page }) => {
+  await page.goto(`/finance/forms/${draftId}`);
+  await page.getByLabel("Question label").fill("Served in the north");
+  await page.getByLabel("Answer type").selectOption("integer");
+  await page.getByRole("button", { name: "Add question" }).click();
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(
+    page.getByText('Two questions are labeled "Served in the north". Give each question its own label.'),
+  ).toBeVisible();
+  const [row] = await ownerQuery<{ definition: Saved }>("SELECT definition FROM form_version WHERE id = $1", [draftId]);
+  const labels = row.definition.sections.flatMap((s) => s.questions).filter((q) => q.label === "Served in the north");
+  expect(labels).toHaveLength(1);
 });
 
 test("[US-027] a sum rule that cannot be checked is refused when the draft is saved", async ({ page }) => {

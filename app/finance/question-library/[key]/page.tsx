@@ -8,9 +8,9 @@ import { Badge } from "@/components/ui/status-badge";
 import { ApplyToForms, type ApplyTarget } from "@/components/forms/apply-to-forms";
 import { LibraryQuestionForm } from "@/components/forms/library-question-form";
 import { LibraryRetire } from "@/components/forms/library-retire";
-import { PROTECTED_KEYS, loadLibraryQuestion } from "@/lib/forms/library";
+import { PROTECTED_KEYS, currentFiscalYear, loadLibraryQuestion, usageParts } from "@/lib/forms/library";
 import { counted } from "@/lib/format";
-import { formatDateTime } from "@/lib/dates";
+import { formatDateTime, todayInNewYork } from "@/lib/dates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,10 +45,13 @@ export default async function LibraryQuestionPage({
            FROM initiative i ORDER BY i.code`,
         )
       : [];
-    return { item, targets };
+    return { item, targets, year: await currentFiscalYear(tx, todayInNewYork()) };
   });
   if (!data) notFound();
-  const { item, targets } = data;
+  const { item, targets, year } = data;
+  const usage = usageParts(item.usageByYear, year);
+  const usageSentence = `Used by ${usage.current ? `${counted(usage.current.count, "initiative")} in ${usage.current.year}` : "no initiatives"}`;
+  const priorUsage = usage.prior.map((p) => `${p.count} in ${p.year}`).join(", ");
   const retired = item.retiredAt !== null;
   const applyTargets: ApplyTarget[] = targets.map((t) => ({
     id: t.id,
@@ -72,7 +75,9 @@ export default async function LibraryQuestionPage({
           <>
             {retired ? <Badge>Retired</Badge> : <Badge tone="ok">Active</Badge>}
             <span className="text-[15px] text-ink-2">
-              Used by {counted(item.formsUsing, "initiative")} · Last changed {formatDateTime(item.updatedAt)}
+              {usageSentence}
+              {priorUsage ? <span className="text-muted"> ({priorUsage})</span> : null} · Last changed{" "}
+              {formatDateTime(item.updatedAt)}
               {item.updatedBy ? ` by ${item.updatedBy}` : ""}
             </span>
           </>
