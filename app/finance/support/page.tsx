@@ -18,8 +18,8 @@ import {
 import { SupportStateBadge } from "@/components/ops/support-parts";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
-import { Select, Label } from "@/components/ui/field";
-import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/field";
+import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 
 export const runtime = "nodejs";
@@ -64,9 +64,8 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
         {summary.medianMinutes === null ? "none yet" : formatDuration(summary.medianMinutes)}.
       </p>
       <Card>
-        <form action="/finance/support" className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-4">
-          <div>
-            <Label htmlFor="state">Show</Label>
+        <FilterBar action="/finance/support" clearHref="/finance/support" active={filter !== "all"}>
+          <FilterField label="Show" htmlFor="state">
             <Select id="state" name="state" defaultValue={filter}>
               <option value="all">All requests</option>
               <option value="open">Open</option>
@@ -74,11 +73,8 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
               <option value="responded">Responded</option>
               <option value="closed">Closed</option>
             </Select>
-          </div>
-          <Button type="submit" variant="secondary">
-            Apply
-          </Button>
-        </form>
+          </FilterField>
+        </FilterBar>
         <Table density="compact">
           <THead>
             <tr>
@@ -106,7 +102,7 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
                     <TD>
                       <Link
                         href={`/finance/support/${row.id}`}
-                        className="text-link underline underline-offset-2 hover:text-link-hover"
+                        className="text-link underline-offset-2 hover:text-link-hover hover:underline"
                       >
                         {row.subject}
                       </Link>

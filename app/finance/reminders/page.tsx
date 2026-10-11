@@ -19,7 +19,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Input, Label, Select } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/field";
+import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { RestoreDefaultsForm, RuleActions, RuleForm, SendNowForm } from "@/components/finance/lifecycle/reminder-forms";
 import { plural } from "@/lib/format";
@@ -106,28 +107,27 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         </p>
       ) : null}
 
-      <form action="/finance/reminders" className="mb-6 flex flex-wrap items-end gap-3">
-        <div>
-          <Label htmlFor="period">Reporting period</Label>
-          <Select id="period" name="period" defaultValue={period.id}>
-            {periods.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label} (due {formatDate(p.due_on)})
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="date">Preview date</Label>
-          <Input id="date" name="date" type="date" defaultValue={date} />
-        </div>
-        <button
-          type="submit"
-          className="h-10 rounded-md border border-line bg-white px-4 text-sm font-semibold shadow-sm hover:bg-navy-50"
+      <div className="mb-6 rounded border border-line bg-white [&>form]:border-b-0">
+        <FilterBar
+          action="/finance/reminders"
+          clearHref="/finance/reminders"
+          active={one(params, "period") !== "" || requestedDate !== ""}
+          label="Choose a period and preview date"
         >
-          Show
-        </button>
-      </form>
+          <FilterField label="Reporting period" htmlFor="period">
+            <Select id="period" name="period" defaultValue={period.id}>
+              {periods.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label} (due {formatDate(p.due_on)})
+                </option>
+              ))}
+            </Select>
+          </FilterField>
+          <FilterField label="Preview date" htmlFor="date">
+            <Input id="date" name="date" type="date" defaultValue={date} />
+          </FilterField>
+        </FilterBar>
+      </div>
 
       <div className="space-y-6">
         <Card>
@@ -174,7 +174,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                       <TD className="whitespace-nowrap">
                         <Link
                           href={`${base}&date=${fires}`}
-                          className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                          className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                         >
                           {formatDate(fires)}
                         </Link>
@@ -271,7 +271,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                       <TD>
                         <Link
                           href={`/finance/organizations/${t.org_id}`}
-                          className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                          className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                         >
                           {t.org_name}
                         </Link>

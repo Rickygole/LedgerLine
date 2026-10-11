@@ -72,7 +72,7 @@ export function RequestUpdate({
       setSent(true);
       dialog.current?.close();
       onDone(
-        `Update requested at ${formatTime(nowIso())}. ${contactName ?? "The organization's primary contact"} will see the note in Messages and above their report.`,
+        `Changes requested at ${formatTime(nowIso())}. ${contactName ?? "The organization's primary contact"} will see the note in Messages and above their report.`,
       );
       requestAnimationFrame(() => document.getElementById("queue-next")?.focus());
     });
@@ -81,7 +81,7 @@ export function RequestUpdate({
   if (sent) return null;
 
   const live = draft?.mode === "live";
-  const title = `Request an update${contactName ? ` from ${contactName}` : ""}`;
+  const title = `Request changes${contactName ? ` from ${contactName}` : ""}`;
 
   return (
     <>
@@ -90,7 +90,7 @@ export function RequestUpdate({
         className={variant === "secondary" ? "h-11 w-full text-base" : "px-0"}
         onClick={() => dialog.current?.showModal()}
       >
-        Request an update
+        Request changes
       </Button>
       <dialog
         ref={dialog}

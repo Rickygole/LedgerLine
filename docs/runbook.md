@@ -31,7 +31,7 @@ The evidence for those choices is in `docs/ai-eval.md`. Ollama must be running (
 
 ## 2. Files on the Desktop
 
-Run `pnpm demo-desk`. It writes `fixtures/demo-desk/` (ignored by git) and sizes the budget files to Maria's overdue award on the seeded database (it prints the initiative and amount: Mentor Match Network, $85,000.00). Copy the folder to the Desktop.
+Run `pnpm demo-desk`. It writes `fixtures/demo-desk/` (ignored by git) and sizes the budget files to Maria's overdue award on the seeded database (it prints the initiative and amount: Mentor Match Network, $85,000). Copy the folder to the Desktop.
 
 | File | Used for |
 | --- | --- |
@@ -67,7 +67,7 @@ Turning the AI switch off in the database (`update app_setting set value='false'
 1. `ollama list` shows qwen3:8b and qwen3:4b. Quit anything large (no 14b model loaded).
 2. `pnpm build`, `pnpm start -p 3000`. Open `/gate` and confirm the page loads.
 3. `pnpm preset fresh`, then `psql "$DB_OWNER_URL" -c "delete from auth_attempt"`.
-4. Warm the models once: as Priya, import `legacy-template.docx` and wait for the draft (about 50 s the first time, about 40 s after), then discard it. As Daniel, open a report that is under review, choose "Request an update", choose "Suggest a different note", tick every item and choose "Suggest a note" (about 6 s with the model), then close the dialog with Cancel. The first call after the model loads is the slow one.
+4. Warm the models once: as Priya, import `legacy-template.docx` and wait for the draft (about 50 s the first time, about 40 s after), then discard it. As Daniel, open a report that is under review, choose "Request changes", choose "Suggest a different note", tick every item and choose "Suggest a note" (about 6 s with the model), then close the dialog with Cancel. The first call after the model loads is the slow one.
 5. `pnpm demo-desk`, copy `fixtures/demo-desk` to the Desktop.
 6. Chrome profiles signed in as Maria, Daniel and Priya. Display 1920 by 1080 at 125 percent. Notifications off.
 7. Hotspot tested. Backup video open offline.
@@ -76,8 +76,8 @@ Turning the AI switch off in the database (`update app_setting set value='false'
 ## 5. T-10 checklist
 
 1. `pnpm preset fresh`. Clear sign-in attempts as above.
-2. Open `/finance` as Daniel. After a fresh seed the headline reads "67 reports are missing" for FY26 Year-End, with 42 waiting for review, 31 in review, 9 update requested and 290 of 439 accepted. District 8 is first in "Districts with the most missing reports" with 14 of 34. Under the list: Citywide initiatives, 12 missing of 161, and Speaker's allocations, 3 missing of 38.
-3. Confirm Maria's overdue report opens from My reports ("Continue report"): Mentor Match Network, $85,000.00, reference LL-26YE-00002, "14 days past due". Review and submit lists exactly 2 problems.
+2. Open `/finance` as Daniel. After a fresh seed the headline reads "67 reports are missing" for FY26 Year-End, with 42 waiting for review, 31 in review, 9 changes requested and 290 of 439 accepted. District 8 is first in "Districts with the most missing reports" with 14 of 34. Under the list: Citywide initiatives, 12 missing of 161, and Speaker's allocations, 3 missing of 38.
+3. Confirm Maria's overdue report opens from My reports ("Continue report"): Mentor Match Network, $85,000, reference LL-26YE-00002, "14 days past due". Review and submit lists exactly 2 problems.
 4. Ollama answers: `curl -s localhost:11434/api/tags`.
 5. Do not run `pnpm test:rule` or the browser tests before the demo. They reseed the database.
 
@@ -87,13 +87,13 @@ Opening line (15 s): "The RFP scores the written proposal. Orals go to the three
 
 Three use cases, one break-it rule. The other four rules stay in reserve (Section 8) and are used only if Rafael asks.
 
-Wording that may differ after the latest dashboard changes: the review queue card may read "Waiting for review" or carry an "In review" reconciliation, and the Missing figure may be shown with a "Missing with draft" split. The beats below point at the Missing number and the review queue, so they stay correct either way. The numbers are the ones a fresh seed produces: Missing 67 in total, 42 in the review queue, 9 update requested, 290 of 439 accepted, District 8 at 14 of 34. Whatever the card is called, quote the total Missing number.
+Wording that may differ after the latest dashboard changes: the review queue card may read "Waiting for review" or carry an "In review" reconciliation, and the Missing figure may be shown with a "Missing with draft" split. The beats below point at the Missing number and the review queue, so they stay correct either way. The numbers are the ones a fresh seed produces: Missing 67 in total, 42 in the review queue, 9 changes requested, 290 of 439 accepted, District 8 at 14 of 34. Whatever the card is called, quote the total Missing number.
 
 ### Use case 1. An organization fixes its report and submits it (Maria)
 
 | Min | Persona and URL | Clicks | One line to say | If it fails |
 | --- | --- | --- | --- | --- |
-| 0:00 | Daniel, `/finance` | Open the site, enter the passcode, and note the start page ("Report on your City Council initiative funding"). Choose Start now, sign in as Daniel. The dashboard headline reads "67 reports are missing". Point at the Missing number and the review queue, then the map "Missing reports by Council district". In "Districts with the most missing reports" choose District 8 (first, 14 of 34): Submissions opens on its 14 missing reports, the largest awards first. Back on the dashboard, "Show by" switches to Organization location (District 8 then reads 15 of 32) | "Council's view: who is missing and who is waiting, by district. Remember 67. In a few minutes it changes." | Reload the page. If a filter does nothing, choose Clear all |
+| 0:00 | Daniel, `/finance` | Open the site, enter the passcode, and note the start page ("Report on your City Council initiative funding"). Choose Start now, sign in as Daniel. The dashboard headline reads "67 reports are missing". Point at the Missing number and the review queue, then the map "Missing reports by Council district". In "Districts with the most missing reports" choose District 8 (first, 14 of 34): Submissions opens on its 14 missing reports, the largest awards first. Back on the dashboard, "Show by" switches to Organization location (District 8 then reads 15 of 32) | "Council's view: who is missing and who is waiting, by district. Remember 67. In a few minutes it changes." | Reload the page. If a filter does nothing, choose Clear filters |
 | 0:45 | Maria, `/portal` | Sign in as Maria. The headline says "1 report is overdue" and the card "Do this next" shows Mentor Match Network, FY26 Year-End, "14 days past due". Open Submission history (James Okafor's Afterschool Studio Program report is listed), then My reports, then Continue report. The report opens on the Narrative step: "3 of 6 sections complete" | "Anyone in her organization sees the organization's reports, including James's." | `pnpm preset fresh` |
 | 1:15 | Maria, report page | In the step list choose "Review and submit", then "Submit report to Council Finance". The summary reads "There are 2 problems to fix before you submit": "Total $71,401.00 must equal award $85,000.00 (under by $13,599.00)." and "Check the box to certify that this report is accurate and complete." Below it, "Worth checking before you submit. These do not stop you from submitting." lists that actual spent has not been entered | "The system refuses and tells her exactly what is wrong." | `pnpm preset fresh` |
 | 2:00 | Maria | Choose the budget problem in the summary. Budget opens with "11 of 100 lines" and the amber meter "Under by $13,599.00". Choose Paste from Excel, paste the two rows copied from `budget-remaining.xlsx` (select the three columns in Excel and press Cmd+C) into "Paste your rows here", choose Add pasted rows. The page says "2 rows added" and the meter turns green: "Balanced" | "Paste straight from Excel, and the meter says when it adds up." | Add the two lines by hand: OTPS, Program evaluation consultant, 7349; OTPS, Summer career exposure trips, 6250 |
@@ -105,7 +105,7 @@ Wording that may differ after the latest dashboard changes: the review queue car
 | Min | Persona and URL | Clicks | One line to say | If it fails |
 | --- | --- | --- | --- | --- |
 | 4:30 | Daniel, `/finance` | Reload the dashboard. The headline reads "66 reports are missing" (was 67), the review queue is one higher (43) and District 8 reads 13 of 34. Open Submissions, search Maria's EIN `13-4027118` (or open `/finance/submissions?q=13-4027118`) and open her new report with the organization name link (Mott Haven Youth Futures, Inc., the Mentor Match Network row marked Submitted). The row also says "Submitted N days late" | "The missing count dropped by one the moment she submitted." | |
-| 5:15 | Daniel, report page | The report opens with the "Your decision" panel. Choose Start review ("Review started. The report is now in review."). Open "Add a manual flag", type "Supplies line needs a vendor breakdown" and choose "Add manual flag" ("Flag added."). Choose "Request an update": the dialog "Request an update from Maria Santos" opens with an empty "Note to the organization". Choose "Suggest a different note", tick every item under "What needs to change" (the flag, attach supporting documentation for personnel lines, confirm participant counts), choose "Suggest a note". Read the suggestion aloud, choose "Use this note", then "Send request". The page says the contact will see the note in Messages and above their report | "The system only proposes, a named person sends it, and every sentence is tied to a rule. The flag's own text stays internal; the organization is only told Council Finance has a question." | The suggestion says "Built from the report rules. No model was used." when there is no model. Say "That is the fail-safe" |
+| 5:15 | Daniel, report page | The report opens with the "Your decision" panel. Choose Start review ("Review started. The report is now in review."). Open "Add a manual flag", type "Supplies line needs a vendor breakdown" and choose "Add manual flag" ("Flag added."). Choose "Request changes": the dialog "Request changes from Maria Santos" opens with an empty "Note to the organization". Choose "Suggest a different note", tick every item under "What needs to change" (the flag, attach supporting documentation for personnel lines, confirm participant counts), choose "Suggest a note". Read the suggestion aloud, choose "Use this note", then "Send request". The page says the contact will see the note in Messages and above their report | "The system only proposes, a named person sends it, and every sentence is tied to a rule. The flag's own text stays internal; the organization is only told Council Finance has a question." | The suggestion says "Built from the report rules. No model was used." when there is no model. Say "That is the fail-safe" |
 
 ### The break-it rule (BR-010, organizations see only their own reports)
 
@@ -191,7 +191,7 @@ Chromium driven by script, local Postgres, idle machine, October 10, 2026. Sign-
 | 24 MB file accepted | 0.2 s (local, no real network) |
 | Submit to "Report submitted" | 0.1 s |
 | Rule-based note suggested | 0.1 s |
-| Start review, add flag, send update request | 0.12 s, 0.05 s, 0.12 s |
+| Start review, add flag, send request for changes | 0.12 s, 0.05 s, 0.12 s |
 | Accept and correction | 0.1 s and 0.12 s |
 | Excel export of all FY26 Year-End (1.2 MB) | 0.2 s |
 | New initiative: create, assign, open import, publish | 0.08 s, 0.11 s, 0.11 s, 0.03 s |
@@ -214,5 +214,5 @@ On the hosted site the first sign-in after it has been idle can take about 3 s, 
 6. **`pnpm test:rule` and `pnpm e2e` reseed the database.** The browser part of `test:rule` runs the global setup, which reseeds. Anything staged for the presentation is lost. Run `pnpm preset fresh` after.
 7. **The local model adds or mis-types a field now and then.** qwen3:4b proposed one extra question on two of three templates and qwen3:8b chose one wrong field type on the held-out template (`docs/ai-eval.md`). The reviewer fixes both at accept time, which is the point of the review step, but expect to see it.
 8. **Rehearsing before October 14.** The hosted site uses the real date, so before October 14 Maria's report reads fewer than 14 days past due and every count of days in this runbook is lower by the same amount. If you pin the date locally with `DEMO_TODAY`, submission times still use the real clock, so a submitted report can read "Submitted N days late" with a different N. On October 14 everything agrees.
-9. **Messages are recorded, not emailed.** Email delivery is off unless it is configured, so every confirmation and update request is shown as recorded in Messages. Say "in her messages", not "by email".
+9. **Messages are recorded, not emailed.** Email delivery is off unless it is configured, so every confirmation and request for changes is shown as recorded in Messages. Say "in her messages", not "by email".
 10. **Not run for this revision.** The live local model path, the PDF export, a real upload over a network and the hosted site. Run the 10 minute path once against the hosted site, and once with the model, before the presentation.

@@ -35,7 +35,7 @@ function ActionLink({ o }: { o: Obligation }) {
   return (
     <Link
       href={actionFor(o).href}
-      className="whitespace-nowrap text-[15px] font-bold text-link underline underline-offset-2 hover:text-link-hover"
+      className="whitespace-nowrap text-[15px] font-bold text-link underline-offset-2 hover:text-link-hover hover:underline"
     >
       {linkLabel(o)}
       <span className="sr-only">
@@ -58,7 +58,8 @@ function Rows({ rows }: { rows: Obligation[] }) {
                 <p className="text-sm text-muted">
                   {o.periodLabel}
                   <span aria-hidden="true"> ·</span>
-                  <span className="sr-only">,</span> <span className="font-mono">{o.initiativeCode}</span>
+                  <span className="sr-only">,</span>{" "}
+                  <span className="whitespace-nowrap font-mono">{o.initiativeCode}</span>
                 </p>
               </div>
               <StateBadge state={o.state} audience="cbo" />
@@ -104,8 +105,12 @@ function Rows({ rows }: { rows: Obligation[] }) {
                 <td className="px-4 py-3">
                   <p className="font-semibold text-ink">{o.initiativeName}</p>
                   <p className="font-mono text-[13px] text-muted">
-                    {o.initiativeCode}
-                    {o.referenceNo ? `, ${o.referenceNo}` : ""}
+                    <span className="whitespace-nowrap">{o.initiativeCode}</span>
+                    {o.referenceNo ? (
+                      <>
+                        , <span className="whitespace-nowrap">{o.referenceNo}</span>
+                      </>
+                    ) : null}
                   </p>
                 </td>
                 <td className="px-4 py-3">

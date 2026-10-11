@@ -1,16 +1,14 @@
 import { cn } from "@/lib/cn";
 
-export function Mark({ className = "h-8 w-8", tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
-  const tile = tone === "light" ? "#ffffff" : "#0f2645";
-  const bar = tone === "light" ? "#0f2645" : "#ffffff";
+export function Mark({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true" focusable="false">
-      <rect width="32" height="32" rx="4" fill={tile} />
-      <rect x="8" y="7" width="4" height="18" fill={bar} />
-      <rect x="8" y="21" width="17" height="4" fill={bar} />
-      <rect x="15" y="9" width="10" height="2" fill="#6cb4ee" />
-      <rect x="15" y="13" width="10" height="2" fill="#6cb4ee" />
-      <rect x="15" y="17" width="10" height="2" fill="#6cb4ee" />
+      <rect width="32" height="32" rx="4" fill="#2b64a8" />
+      <rect x="6" y="8" width="12" height="2" fill="#c7d7ec" />
+      <rect x="6" y="14" width="12" height="2" fill="#c7d7ec" />
+      <path d="M19 11.5l3.5 3.5L28 7.5" fill="none" stroke="#ffffff" strokeWidth="3" />
+      <rect x="6" y="20" width="20" height="2" fill="#ffffff" />
+      <rect x="6" y="24" width="20" height="2" fill="#ffffff" />
     </svg>
   );
 }

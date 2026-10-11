@@ -73,27 +73,27 @@ test("[US-044] an internal flag note is never prefilled into the note to the org
 }) => {
   await page.goto(`/finance/submissions/${submissionId}`);
   await page.reload();
-  await page.getByRole("button", { name: "Request an update" }).click();
+  await page.getByRole("button", { name: "Request changes" }).click();
   const note = page.getByLabel("Note to the organization");
   await expect(note).toHaveValue(/Council Finance has a question about this report\./);
   await expect(note).not.toHaveValue(/vendor breakdown/);
   await expect(note).not.toHaveValue(/Council Finance noted/);
 });
 
-test("[US-044] an analyst requests an update with a note, the organization resubmits, and the analyst accepts", async ({
+test("[US-044] an analyst requests changes with a note, the organization resubmits, and the analyst accepts", async ({
   page,
   browser,
 }) => {
   await page.goto(`/finance/submissions/${submissionId}`);
-  await page.getByRole("button", { name: "Request an update" }).click();
-  await expect(page.getByRole("dialog", { name: /Request an update/ })).toBeVisible();
+  await page.getByRole("button", { name: "Request changes" }).click();
+  await expect(page.getByRole("dialog", { name: /Request changes/ })).toBeVisible();
   await page.getByLabel("Note to the organization").fill("");
   await page.getByRole("button", { name: "Send request" }).click();
   await expect(page.getByText(/Write a note before sending/)).toBeVisible();
   await page.getByLabel("Note to the organization").fill(NOTE);
   await page.getByRole("button", { name: "Send request" }).click();
   await expect(
-    page.getByText(/Update requested at \d{1,2}:\d{2} [AP]M\. .+ will see the note in Messages/),
+    page.getByText(/Changes requested at \d{1,2}:\d{2} [AP]M\. .+ will see the note in Messages/),
   ).toBeVisible();
 
   const [row] = await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]);

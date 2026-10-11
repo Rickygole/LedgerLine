@@ -69,7 +69,7 @@ export default async function LibraryQuestionPage({
         crumbs={[
           { label: "Dashboard", href: "/finance" },
           { label: "Question library", href: "/finance/question-library" },
-          { label: item.question.key },
+          { label: item.question.label },
         ]}
         meta={
           <>

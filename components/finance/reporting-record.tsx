@@ -7,7 +7,7 @@ type Worst = { label: string; color: string; rank: number };
 
 const STATES: Record<string, Worst> = {
   missing: { label: "Missing", color: STATUS_COLOR.missing, rank: 6 },
-  returned: { label: "Update requested", color: STATUS_COLOR.returned, rank: 5 },
+  returned: { label: "Changes requested", color: STATUS_COLOR.returned, rank: 5 },
   submitted: { label: "Submitted", color: STATUS_COLOR.submitted, rank: 4 },
   under_review: { label: "In review", color: STATUS_COLOR.in_review, rank: 3 },
   accepted: { label: "Accepted", color: STATUS_COLOR.accepted, rank: 2 },

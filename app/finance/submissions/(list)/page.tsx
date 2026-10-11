@@ -24,7 +24,7 @@ import type { Filters } from "@/lib/finance/review/types";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { orgTypeLabel, statusLabel } from "@/lib/domain";
 import { NoPeriods } from "@/components/finance/no-periods";
-import { formatCount, plural } from "@/lib/format";
+import { formatCount, formatCurrency, plural } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -110,9 +110,17 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
   if (filters.orgType)
     chips.push({ key: "orgType", label: orgTypeLabel(filters.orgType), href: remove({ orgType: "" }) });
   if (filters.awardMin)
-    chips.push({ key: "awardMin", label: `Award at least $${filters.awardMin}`, href: remove({ awardMin: "" }) });
+    chips.push({
+      key: "awardMin",
+      label: `Award at least ${formatCurrency(Number(filters.awardMin))}`,
+      href: remove({ awardMin: "" }),
+    });
   if (filters.awardMax)
-    chips.push({ key: "awardMax", label: `Award at most $${filters.awardMax}`, href: remove({ awardMax: "" }) });
+    chips.push({
+      key: "awardMax",
+      label: `Award at most ${formatCurrency(Number(filters.awardMax))}`,
+      href: remove({ awardMax: "" }),
+    });
 
   return (
     <>

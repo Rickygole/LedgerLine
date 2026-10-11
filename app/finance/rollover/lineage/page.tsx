@@ -43,7 +43,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
         ]}
       />
       <Card>
-        <FilterBar action={base} clearHref={base} applied={[kind, year].filter(Boolean).length}>
+        <FilterBar action={base} clearHref={base} active={[q, kind, year].some(Boolean)}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Initiative name or code" />
           </FilterField>
@@ -90,7 +90,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
                   <TD>
                     <Link
                       href={`/finance/initiatives/${row.predecessor_id}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {row.predecessor_name}
                     </Link>
@@ -108,7 +108,7 @@ export default async function LineagePage({ searchParams }: { searchParams: Prom
                       <>
                         <Link
                           href={`/finance/initiatives/${row.successor_id}`}
-                          className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                          className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                         >
                           {row.successor_name}
                         </Link>

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { roleLabel, type CurrentUser } from "@/lib/auth";
-import { NAV_COOKIE, NAV_MORE_COOKIE } from "./nav-cookie";
+import { NAV_COOKIE } from "./nav-cookie";
 import { NavDrawer, SideNav, TopTabs } from "./nav-links";
 import { NavProgress } from "./nav-progress";
 import { SiteFooter } from "./site-footer";
@@ -22,7 +22,6 @@ export async function AppShell({ user, children }: { user: CurrentUser; children
   const home = isCbo ? "/portal" : "/finance";
   const store = await cookies();
   const collapsed = !isCbo && store.get(NAV_COOKIE)?.value === "collapsed";
-  const moreOpen = !isCbo && store.get(NAV_MORE_COOKIE)?.value === "open";
 
   const header = (
     <header className="no-print relative z-30">
@@ -77,7 +76,7 @@ export async function AppShell({ user, children }: { user: CurrentUser; children
       {skip}
       {header}
       <div className="flex flex-1">
-        <SideNav role={user.role} initialCollapsed={collapsed} moreOpen={moreOpen} />
+        <SideNav role={user.role} initialCollapsed={collapsed} />
         <div className="flex min-w-0 flex-1 flex-col">
           <main
             id="main"

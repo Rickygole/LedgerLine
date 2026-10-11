@@ -49,7 +49,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         <CreateUserForm orgs={orgs} />
       </Card>
       <Card>
-        <FilterBar action={base} clearHref={base} applied={role ? 1 : 0}>
+        <FilterBar action={base} clearHref={base} active={Boolean(q || role)}>
           <FilterField label="Search" htmlFor="q" className="min-w-64 flex-1">
             <Input id="q" name="q" type="search" defaultValue={q} placeholder="Name, email or organization" />
           </FilterField>
@@ -92,7 +92,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                     ) : null}
                     {u.title ? <div className="text-xs font-normal text-muted">{u.title}</div> : null}
                   </TD>
-                  <TD className="max-w-[17rem] text-muted" label="Email">
+                  <TD className="text-muted md:max-w-[17rem]" label="Email">
                     <span className="block min-w-0 truncate" title={u.email}>
                       {u.email}
                     </span>
@@ -100,7 +100,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                   <TD className="whitespace-nowrap" label="Role">
                     <span>{roleLabel(u.role)}</span>
                   </TD>
-                  <TD className="max-w-56" label="Organization">
+                  <TD className="md:max-w-56" label="Organization">
                     {u.org_name ? (
                       <span>{u.org_name}</span>
                     ) : (

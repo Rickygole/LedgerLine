@@ -302,7 +302,7 @@ export default async function OrganizationProfile({
                     <TD>
                       <Link
                         href={`/finance/submissions/${r.id}`}
-                        className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                        className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                       >
                         {r.reference_no}
                       </Link>
@@ -432,7 +432,7 @@ export default async function OrganizationProfile({
                     <TD>
                       <Link
                         href={`/finance/outbox/${m.id}`}
-                        className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                        className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                       >
                         {m.subject}
                       </Link>
@@ -477,11 +477,11 @@ function AwardsTable({ awards }: { awards: OrgAward[] }) {
               <TD className="min-w-[14rem]">
                 <Link
                   href={`/finance/initiatives/${a.initiative_id}`}
-                  className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                  className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                 >
                   {a.name}
                 </Link>
-                <div className="font-mono text-[13px] text-muted">{a.code}</div>
+                <div className="whitespace-nowrap font-mono text-[13px] text-muted">{a.code}</div>
               </TD>
               <TD className="whitespace-nowrap">{a.fiscal_year_id}</TD>
               <TD>{a.sponsoring_agency ?? <span className="text-muted">Not recorded</span>}</TD>

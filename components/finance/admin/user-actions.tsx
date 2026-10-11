@@ -55,9 +55,14 @@ export function UserActions({
   const close = () => ref.current?.close();
   return (
     <>
-      <Button size="sm" variant="secondary" aria-haspopup="dialog" onClick={() => ref.current?.showModal()}>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={() => ref.current?.showModal()}
+        className="whitespace-nowrap text-[15px] font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
+      >
         Manage<span className="sr-only"> {name}</span>
-      </Button>
+      </button>
       <dialog
         ref={ref}
         aria-labelledby={titleId}

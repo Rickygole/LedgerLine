@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import {
   BellRing,
-  ChevronDown,
   Settings,
   Bookmark,
   Building2,
@@ -33,11 +32,11 @@ import {
 import { cn } from "@/lib/cn";
 import type { Role } from "@/lib/auth";
 import { Logo } from "./logo";
-import { NAV_COOKIE, NAV_MORE_COOKIE } from "./nav-cookie";
+import { NAV_COOKIE } from "./nav-cookie";
 
 type Icon = ComponentType<{ className?: string }>;
 type NavItem = { href: string; label: string; icon: Icon; match: (path: string) => boolean; roles?: Role[] };
-type NavGroup = { label?: string; items: NavItem[]; more?: boolean };
+type NavGroup = { label?: string; items: NavItem[] };
 
 const under =
   (...prefixes: string[]) =>
@@ -82,13 +81,17 @@ const FINANCE: NavGroup[] = [
     items: [{ href: "/finance/reminders", label: "Reminders", icon: BellRing, match: under("/finance/reminders") }],
   },
   {
-    label: "More",
-    more: true,
+    label: "Records",
     items: [
       { href: "/finance/queries", label: "Saved queries", icon: Bookmark, match: under("/finance/queries") },
       { href: "/finance/trends", label: "Trends", icon: LineChart, match: under("/finance/trends") },
       { href: "/finance/outbox", label: "Outbox", icon: Send, match: under("/finance/outbox") },
       { href: "/finance/audit", label: "Audit log", icon: ScrollText, match: under("/finance/audit") },
+    ],
+  },
+  {
+    label: "Setup",
+    items: [
       {
         href: "/finance/rollover",
         label: "Annual rollover",
@@ -166,7 +169,7 @@ function NavLinkItem({
         title={compact ? item.label : undefined}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "group/nav relative flex h-10 items-center gap-3 rounded-sm text-[15px]",
+          "group/nav relative flex h-9 items-center gap-3 rounded-sm text-[15px]",
           compact ? "justify-center px-0" : "px-3",
           active
             ? "bg-harbor-50 font-bold text-harbor-900"
@@ -181,24 +184,14 @@ function NavLinkItem({
   );
 }
 
-function NavList({
-  role,
-  onNavigate,
-  compact = false,
-  moreOpen = false,
-}: {
-  role: Role;
-  onNavigate?: () => void;
-  compact?: boolean;
-  moreOpen?: boolean;
-}) {
+function NavList({ role, onNavigate, compact = false }: { role: Role; onNavigate?: () => void; compact?: boolean }) {
   const pathname = usePathname();
   const groups = groupsFor(role);
   return (
-    <div className={compact ? "space-y-3" : "space-y-5"}>
+    <div className="space-y-3">
       {groups.map((group, index) => {
         const list = (
-          <ul className="space-y-0.5">
+          <ul className="space-y-px">
             {group.items.map((item) => (
               <NavLinkItem
                 key={item.href}
@@ -210,23 +203,10 @@ function NavList({
             ))}
           </ul>
         );
-        if (group.more && !compact) {
-          const holdsCurrent = group.items.some((item) => item.match(pathname));
-          return (
-            <MoreGroup
-              key="more"
-              label={group.label ?? "More"}
-              initialOpen={moreOpen || holdsCurrent}
-              count={group.items.length}
-            >
-              {list}
-            </MoreGroup>
-          );
-        }
         return (
           <div key={group.label ?? index}>
             {group.label && !compact ? (
-              <p className="mb-1 px-3 text-sm font-semibold text-muted">{group.label}</p>
+              <p className="mb-0.5 px-3 text-[13px] font-semibold leading-5 text-muted">{group.label}</p>
             ) : null}
             {group.label && compact && index > 0 ? <hr className="mx-2 mb-3 border-line" /> : null}
             {list}
@@ -237,46 +217,13 @@ function NavList({
   );
 }
 
-function MoreGroup({
-  label,
-  initialOpen,
-  count,
-  children,
-}: {
-  label: string;
-  initialOpen: boolean;
-  count: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <details
-      open={initialOpen}
-      className="group/more border-t border-line-soft pt-4"
-      onToggle={(event) => {
-        document.cookie = `${NAV_MORE_COOKIE}=${event.currentTarget.open ? "open" : "closed"}; path=/; max-age=31536000; samesite=lax`;
-      }}
-    >
-      <summary className="flex h-10 cursor-pointer list-none items-center justify-between rounded-sm px-3 text-sm font-semibold text-muted hover:bg-surface hover:text-link [&::-webkit-details-marker]:hidden">
-        <span>
-          {label} <span className="font-normal">({count})</span>
-        </span>
-        <ChevronDown className="h-4 w-4 group-open/more:rotate-180" aria-hidden="true" />
-      </summary>
-      <div className="mt-1">{children}</div>
-    </details>
-  );
-}
-
-export function SideNav({
-  role,
-  initialCollapsed = false,
-  moreOpen = false,
-}: {
-  role: Role;
-  initialCollapsed?: boolean;
-  moreOpen?: boolean;
-}) {
+export function SideNav({ role, initialCollapsed = false }: { role: Role; initialCollapsed?: boolean }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const navRef = useRef<HTMLElement>(null);
+  const pathname = usePathname();
+  useEffect(() => {
+    navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
+  }, [pathname, collapsed]);
   const toggle = () => {
     const next = !collapsed;
     setCollapsed(next);
@@ -288,7 +235,7 @@ export function SideNav({
       className={cn("no-print hidden shrink-0 border-r border-line bg-white lg:block", collapsed ? "w-16" : "w-56")}
     >
       <div className="sticky top-0 flex max-h-dvh flex-col">
-        <div className={cn("flex items-center pt-5", collapsed ? "justify-center px-2" : "justify-between pl-6 pr-3")}>
+        <div className={cn("flex items-center pt-4", collapsed ? "justify-center px-2" : "justify-between pl-6 pr-3")}>
           {collapsed ? null : <p className="text-sm font-semibold text-ink-2">Finance workspace</p>}
           <button
             type="button"
@@ -301,8 +248,12 @@ export function SideNav({
             <Toggle className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <nav aria-label="Main" className={cn("flex-1 overflow-y-auto pb-6 pt-3", collapsed ? "px-2" : "px-3")}>
-          <NavList role={role} compact={collapsed} moreOpen={moreOpen} />
+        <nav
+          ref={navRef}
+          aria-label="Main"
+          className={cn("flex-1 overflow-y-auto pb-4 pt-2", collapsed ? "px-2" : "px-3")}
+        >
+          <NavList role={role} compact={collapsed} />
         </nav>
       </div>
     </aside>
@@ -383,7 +334,7 @@ export function NavDrawer({ role, subtitle, className }: { role: Role; subtitle:
           </div>
           <p className="px-6 pt-5 text-sm font-semibold text-ink-2">{subtitle}</p>
           <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 pb-5 pt-3">
-            <NavList role={role} onNavigate={close} moreOpen />
+            <NavList role={role} onNavigate={close} />
           </nav>
         </div>
       </dialog>

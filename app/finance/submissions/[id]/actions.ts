@@ -183,7 +183,7 @@ export async function sendUpdateAction(raw: {
       const outbox = {
         to: detail.primaryContact.email,
         template: "update_requested",
-        subject: `Update requested: ${row.initiativeName}, ${detail.periodLabel}`,
+        subject: `Changes requested: ${row.initiativeName}, ${detail.periodLabel}`,
         body,
       };
       await tx.query("SELECT * FROM app.transition_submission($1, 'request_update', $2, NULL, $3, $4::jsonb, $5)", [
@@ -201,7 +201,7 @@ export async function sendUpdateAction(raw: {
   }
   await dispatchFor(user.id, { submissionId: input.submissionId });
   refresh(input.submissionId);
-  return success("Update request sent. The organization will see the note above its report.");
+  return success("Request for changes sent. The organization will see the note above its report.");
 }
 
 export async function addFlagAction(_prev: ActionState, formData: FormData): Promise<ActionResult> {

@@ -76,7 +76,7 @@ export default async function MessagesPage() {
                   <TD primary>
                     <Link
                       href={`/portal/messages/${r.id}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {r.subject}
                     </Link>
@@ -101,7 +101,7 @@ export default async function MessagesPage() {
                     {r.submission_id ? (
                       <Link
                         href={`/portal/reports/${r.submission_id}`}
-                        className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                        className="whitespace-nowrap font-mono text-[13px] font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                       >
                         {r.reference_no}
                       </Link>

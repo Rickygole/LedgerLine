@@ -31,7 +31,7 @@ import {
 import { budgetTotals } from "@/lib/rules/validate";
 
 const COLS =
-  "@min-[720px]:grid @min-[720px]:grid-cols-[2.5rem_5.5rem_minmax(16rem,1fr)_8rem_8rem_7.5rem_2.5rem] @min-[720px]:items-stretch";
+  "@min-[720px]:grid @min-[720px]:grid-cols-[2.5rem_6.75rem_minmax(14rem,1fr)_9rem_10.5rem_7.5rem_2.5rem] @min-[720px]:items-stretch";
 
 const cell =
   "block h-10 @min-[720px]:h-full w-full rounded-md border border-line bg-white px-3 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-harbor-600 @min-[720px]:rounded-none @min-[720px]:border-0 @min-[720px]:bg-transparent @min-[720px]:hover:bg-harbor-50/50 aria-[invalid=true]:border-bad aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-inset aria-[invalid=true]:ring-bad/60";
@@ -293,8 +293,10 @@ export function BudgetGrid({
                   <span className="px-3 text-right">#</span>
                   <span className="px-3">Category</span>
                   <span className="px-3">Description</span>
-                  <span className="px-3 text-right">Approved budget</span>
-                  <span className="px-3 text-right">Actual spent</span>
+                  <span className="whitespace-nowrap px-3 text-right">Approved budget</span>
+                  <span className="whitespace-nowrap px-3 text-right">
+                    Actual spent <span className="font-normal">(optional)</span>
+                  </span>
                   <span className="px-3 text-right">Variance</span>
                   <span className="sr-only">Actions</span>
                 </div>
@@ -415,7 +417,7 @@ export function BudgetGrid({
                             className="mb-1 block text-xs font-semibold text-muted @min-[720px]:sr-only"
                           >
                             <span className="sr-only">Line {n} </span>
-                            Actual spent
+                            Actual spent <span className="font-normal">(optional)</span>
                           </label>
                           <div className="relative @min-[720px]:h-full">
                             <span

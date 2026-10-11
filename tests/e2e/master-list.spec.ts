@@ -33,7 +33,7 @@ test.describe("as an administrator", () => {
     await page.getByLabel("Legal name").fill(ADDED_NAME);
     await page.getByLabel("Type").selectOption("cbo");
     await page.getByLabel("Borough").selectOption("Brooklyn");
-    await page.getByLabel("Council district").fill("35");
+    await page.getByLabel("Council district").selectOption("35");
     await page.getByLabel("Address").fill("410 Bridge Street");
     await page.getByLabel("ZIP code").fill("11201");
     await page.getByLabel("Name", { exact: true }).fill("Dana Whitfield");

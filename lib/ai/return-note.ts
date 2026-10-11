@@ -23,7 +23,7 @@ type ReturnNoteDraft = {
 };
 
 const SYSTEM = [
-  "You write short update requests that Council Finance sends to a nonprofit that filed a funding report.",
+  "You write short requests for changes that Council Finance sends to a nonprofit that filed a funding report.",
   "You receive a list of concerns. Each has a rule_id, the field it concerns and sometimes a value.",
   "Write exactly one plain, courteous sentence per concern. Say which field needs attention and what to do about it.",
   "Cite the rule_id of each sentence in its rule_ids list. Never write a rule id inside the sentence text.",

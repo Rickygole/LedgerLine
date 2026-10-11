@@ -140,7 +140,7 @@ export function ApplyToForms({ questionKey, questionLabel, targets }: Props) {
                   />
                   <span>
                     <span className="font-semibold">{t.name}</span>{" "}
-                    <span className="ml-1 font-mono text-[13px] text-muted">{t.code}</span>
+                    <span className="ml-1 whitespace-nowrap font-mono text-[13px] text-muted">{t.code}</span>
                     {t.hasForm ? null : (
                       <>
                         {" "}

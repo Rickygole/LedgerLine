@@ -1,45 +1,46 @@
 import { Children } from "react";
-import Link from "next/link";
-import { Button, buttonClass } from "@/components/ui/button";
-import { FilterDisclosure } from "@/components/ui/filter-disclosure";
+import { AutoFilterForm, ClearFilters, HiddenSubmit, MoreFilters } from "@/components/ui/auto-filter-form";
 
 export function FilterBar({
   action,
   clearHref,
-  applied = 0,
-  keep = 1,
+  active = false,
+  keep,
+  moreApplied = 0,
+  label,
   children,
 }: {
   action: string;
   clearHref: string;
-  applied?: number;
+  active?: boolean;
   keep?: number;
+  moreApplied?: number;
+  label?: string;
   children: React.ReactNode;
 }) {
   const items = Children.toArray(children);
-  const shown = items.slice(0, keep);
-  const folded = items.slice(keep);
+  const shown = keep === undefined ? items : items.slice(0, keep);
+  const folded = keep === undefined ? [] : items.slice(keep);
   return (
-    <form
-      action={action}
-      method="get"
-      className="flex flex-wrap items-end gap-3 border-b border-line px-4 py-4 max-lg:[&>div]:w-full max-lg:[&>div]:min-w-0 max-lg:[&>div>div]:w-full max-lg:[&>div>div]:min-w-0"
-    >
-      {shown}
-      {folded.length > 0 ? (
-        <FilterDisclosure layout="flex" applied={applied}>
-          {folded}
-        </FilterDisclosure>
-      ) : null}
-      <div className="flex items-center gap-2">
-        <Button type="submit" size="md" variant="secondary">
-          Apply filters
-        </Button>
-        <Link href={clearHref} className={buttonClass("ghost", "md")}>
-          Clear
-        </Link>
+    <AutoFilterForm action={action} label={label} className="border-b border-line px-4 py-4">
+      <div className="flex flex-wrap items-end gap-3 max-sm:[&>div]:w-full max-sm:[&>div]:min-w-0">
+        {shown}
+        {folded.length === 0 && active ? (
+          <div className="flex h-10 items-center max-sm:h-auto">
+            <ClearFilters href={clearHref} />
+          </div>
+        ) : null}
       </div>
-    </form>
+      {folded.length > 0 ? (
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+          <MoreFilters count={folded.length} applied={moreApplied}>
+            {folded}
+          </MoreFilters>
+          {active ? <ClearFilters href={clearHref} /> : null}
+        </div>
+      ) : null}
+      <HiddenSubmit />
+    </AutoFilterForm>
   );
 }
 
@@ -56,7 +57,7 @@ export function FilterField({
 }) {
   return (
     <div className={className}>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-[13px] font-semibold text-muted">
+      <label htmlFor={htmlFor} className="mb-1 block text-sm font-semibold text-ink">
         {label}
       </label>
       {children}

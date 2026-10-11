@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import { Building2 } from "lucide-react";
 import { addOrganization } from "@/app/finance/organizations/actions";
 import { Button } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select } from "@/components/ui/field";
@@ -69,7 +68,7 @@ export function AddOrganizationForm() {
               defaultValue={values.borough ?? ""}
             >
               <option value="" disabled>
-                Choose
+                Choose a borough
               </option>
               {REPORT_BOROUGHS.map((b) => (
                 <option key={b} value={b}>
@@ -81,7 +80,21 @@ export function AddOrganizationForm() {
           </div>
           <div>
             <Label htmlFor="org-council_district">{FIELD_LABEL.council_district}</Label>
-            <Input {...field("council_district")} inputMode="numeric" maxLength={2} className="num" />
+            <Select
+              key={values.council_district ?? ""}
+              {...field("council_district")}
+              defaultValue={values.council_district ?? ""}
+            >
+              <option value="" disabled>
+                Choose a district
+              </option>
+              <option value="citywide">Citywide</option>
+              {Array.from({ length: 51 }, (_, i) => String(i + 1)).map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </Select>
             <FieldError id="org-council_district-error">{fe.council_district}</FieldError>
           </div>
         </div>
@@ -96,9 +109,9 @@ export function AddOrganizationForm() {
           <FieldError id="org-postal_code-error">{fe.postal_code}</FieldError>
         </div>
       </div>
-      <fieldset className="space-y-4 border-t border-line-soft pt-5">
-        <legend className="text-base font-bold text-ink">Primary contact</legend>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <fieldset className="border-t border-line-soft pt-5">
+        <legend className="float-left mb-4 w-full text-base font-bold text-ink">Primary contact</legend>
+        <div className="clear-left grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="org-contact_name">Name</Label>
             <Input {...field("contact_name")} maxLength={120} aria-required="true" />
@@ -123,15 +136,10 @@ export function AddOrganizationForm() {
           </div>
         </div>
       </fieldset>
-      <div className="flex items-center gap-3">
+      <div>
         <Button type="submit" disabled={pending}>
-          <Building2 className="h-4 w-4" aria-hidden="true" />
           {pending ? "Adding" : "Add organization"}
         </Button>
-        <p className="text-sm text-muted">
-          The organization is checked against this list when a report is submitted. Create its sign-in accounts from
-          Users.
-        </p>
       </div>
     </form>
   );

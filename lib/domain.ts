@@ -17,7 +17,7 @@ export const STATE_LABEL: Record<ReportState, Record<Audience, string>> = {
   draft: { finance: "Draft", cbo: "In progress" },
   submitted: { finance: "Submitted", cbo: "Submitted" },
   under_review: { finance: "In review", cbo: "In review" },
-  returned: { finance: "Update requested", cbo: "Changes requested" },
+  returned: { finance: "Changes requested", cbo: "Changes requested" },
   accepted: { finance: "Accepted", cbo: "Accepted" },
   missing: { finance: "Missing", cbo: "Overdue" },
 };

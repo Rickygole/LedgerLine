@@ -12,6 +12,8 @@ import {
 import { BOROUGH_SHAPES, COUNCIL_DISTRICT_SHAPES, GEO_VIEWBOX } from "@/lib/geo";
 import { boroughsForDistrict, districtInBorough, GEO_BOROUGHS } from "@/lib/geo/boroughs";
 import { AutoSelect } from "./auto-select";
+import { ArrowLink } from "@/components/ui/arrow-link";
+import { ClearFilters } from "@/components/ui/auto-filter-form";
 import { DistrictMapView, type MapDistrict } from "./district-map-view";
 import { plural } from "@/lib/format";
 
@@ -108,18 +110,21 @@ export function DistrictMapCard({
               })}
             </ul>
           </nav>
-          <AutoSelect
-            id="map-mode"
-            name="map"
-            label="Show by"
-            value={mode}
-            keep={{ period: periodId, borough }}
-            action="/finance"
-            options={[
-              { value: "sponsor", label: "Sponsoring Council Member" },
-              { value: "location", label: "Organization location" },
-            ]}
-          />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <AutoSelect
+              id="map-mode"
+              name="map"
+              label="Show by"
+              value={mode}
+              keep={{ period: periodId, borough }}
+              action="/finance"
+              options={[
+                { value: "sponsor", label: "Sponsoring Council Member" },
+                { value: "location", label: "Organization location" },
+              ]}
+            />
+            {borough !== "" || mode !== "sponsor" ? <ClearFilters href={dashHref({ period: periodId })} /> : null}
+          </div>
         </div>
 
         <DistrictMapView
@@ -209,7 +214,7 @@ export function DistrictMapCard({
                     <th scope="row" className="h-11 px-2 text-left font-semibold">
                       <Link
                         href={districtHref(periodId, d.district, mode, d.missing)}
-                        className="text-link underline underline-offset-2 hover:text-link-hover"
+                        className="text-link underline-offset-2 hover:text-link-hover hover:underline"
                       >
                         District {d.district}
                       </Link>
@@ -252,7 +257,7 @@ function OffMapLink({ label, tally, href }: { label: string; tally: Tally; href:
 
 export function DistrictRanking({ stats, borough, periodId }: Common) {
   const ranked = rankDistricts(stats.districts, borough, 8);
-  const peak = Math.max(1, ...ranked.map((d) => d.missing));
+  const peak = Math.max(1, ...ranked.map((d) => d.due));
   const mode = stats.mode;
   const shared =
     borough === ""
@@ -275,6 +280,16 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
         <h2 id="rank-title" className="text-xl font-bold leading-7 text-ink">
           Districts with the most missing reports
         </h2>
+        <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] leading-5 text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" className="inline-block h-2 w-4 rounded-sm bg-geo-0" />
+            Reports due
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" className="inline-block h-2 w-4 rounded-sm bg-geo-4" />
+            Missing
+          </span>
+        </p>
         {borough ? (
           <p className="mt-0.5 text-[15px] leading-[22px] text-ink-2">
             {borough} only
@@ -312,9 +327,17 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
               </div>
               <span
                 aria-hidden="true"
-                className="col-span-2 row-start-2 block h-2 overflow-hidden rounded-sm bg-geo-0 sm:col-span-1 sm:col-start-2 sm:row-start-1"
+                className="col-span-2 row-start-2 block h-2 sm:col-span-1 sm:col-start-2 sm:row-start-1"
               >
-                <span className="block h-full bg-geo-4" style={{ width: `${Math.round((d.missing / peak) * 100)}%` }} />
+                <span
+                  className="flex h-full overflow-hidden rounded-sm bg-geo-0"
+                  style={{ width: `${Math.max(4, Math.round((d.due / peak) * 100))}%` }}
+                >
+                  <span
+                    className="block h-full bg-geo-4"
+                    style={{ width: `${d.due === 0 ? 0 : Math.round((d.missing / d.due) * 100)}%` }}
+                  />
+                </span>
               </span>
               <p className="num whitespace-nowrap text-right text-[15px] text-ink sm:col-start-3 sm:row-start-1">
                 <span className="font-bold">{d.missing}</span> of {d.due}
@@ -331,13 +354,9 @@ export function DistrictRanking({ stats, borough, periodId }: Common) {
             <OffMapLink label="Speaker's allocations" tally={stats.speaker} href={missingHref("speaker")} />
           </p>
         ) : null}
-        <Link
-          href={allHref}
-          scroll={false}
-          className="inline-block font-semibold text-link underline underline-offset-2 hover:text-link-hover"
-        >
+        <ArrowLink href={allHref} scroll={false} className="text-[15px]">
           See all 51 districts
-        </Link>
+        </ArrowLink>
       </div>
     </section>
   );

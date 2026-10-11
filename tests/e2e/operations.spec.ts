@@ -82,7 +82,6 @@ test("[US-050] the trend and comparison charts draw from the reports and change 
   expect(all).toBe(372);
 
   await page.getByLabel("Category", { exact: true }).selectOption("Youth Services");
-  await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/category=Youth\+Services/);
   await expect(page.locator("svg.recharts-surface")).toHaveCount(2);
   const youth = await totalOf(page);
@@ -91,7 +90,6 @@ test("[US-050] the trend and comparison charts draw from the reports and change 
   await expect(page.getByLabel("Category", { exact: true })).toHaveValue("Youth Services");
 
   await page.getByLabel("Borough", { exact: true }).selectOption("Bronx");
-  await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/borough=Bronx/);
   expect(await totalOf(page)).toBeLessThan(youth);
   await context.close();

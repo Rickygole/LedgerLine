@@ -8,7 +8,7 @@ export const AUDIT_ACTIONS: Record<string, ActionWords> = {
   start: { label: "Report started", alone: "started the report", verb: "started" },
   submit: { label: "Report submitted", alone: "submitted the report", verb: "submitted" },
   start_review: { label: "Review started", alone: "started review", verb: "started review of" },
-  request_update: { label: "Update requested", alone: "requested an update", verb: "requested an update on" },
+  request_update: { label: "Changes requested", alone: "requested changes", verb: "requested changes on" },
   accept: { label: "Report accepted", alone: "accepted the report", verb: "accepted" },
   reopen: { label: "Report reopened", alone: "reopened the report", verb: "reopened" },
   correction: { label: "Answer corrected", alone: "corrected an answer", verb: "corrected an answer on" },
