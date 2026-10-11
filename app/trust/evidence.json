@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-10-11T00:12:05.076Z",
-  "commit": "eb9f17680c8bba4430ece83a9bc594773ba344be",
+  "generatedAt": "2026-10-11T02:41:04.256Z",
+  "commit": "19e89ce572ae5d73bc2e48cff079c6ed2b7374f7",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 750,
-    "passed": 750,
+    "tests": 772,
+    "passed": 772,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 374,
-    "sql": 246,
+    "unit": 388,
+    "sql": 250,
     "eval": 32,
-    "e2e": 98
+    "e2e": 102
   },
   "summary": {
     "verified": {
@@ -84,6 +84,18 @@
       "reason": null,
       "note": null,
       "tests": [
+        {
+          "title": "a custom report stays on its own initiative keeps per-initiative reports out of every shared period list",
+          "file": "tests/sql/custom-report-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a custom report stays on its own initiative gives a custom report a short reference and keeps standard references unchanged",
+          "file": "tests/sql/custom-report-scope.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "an initiative requires the reports its administrator chooses keeps the seeded behavior as the default: every initiative requires both standard periods of its year",
           "file": "tests/sql/required-reports.test.ts",
@@ -175,6 +187,18 @@
           "suite": "unit"
         },
         {
+          "title": "the retired header tells how the initiative was retired names the date, the person and the reason for a mid-year retirement",
+          "file": "tests/unit/retirement-text.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the retired header tells how the initiative was retired keeps the rollover wording for a rollover retirement",
+          "file": "tests/unit/retirement-text.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "the initiative is funded for an organization and given a report form",
           "file": "tests/e2e/admin-setup.spec.ts",
           "status": "passed",
@@ -194,6 +218,12 @@
         },
         {
           "title": "as an administrator a custom-named report with its own due date reaches the organization and can be deleted",
+          "file": "tests/e2e/required-reports.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator an organization cannot start a report for a retired initiative",
           "file": "tests/e2e/required-reports.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -304,6 +334,30 @@
           "file": "tests/sql/question-library.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "a form cannot have two questions with the same label refuses a repeated label ignoring case and spacing",
+          "file": "tests/unit/forms-definition.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a form cannot have two questions with the same label accepts a form where every label is its own",
+          "file": "tests/unit/forms-definition.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "library usage is counted for the current fiscal year leads with the current year and lists earlier years after it",
+          "file": "tests/unit/forms-definition.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a form cannot be saved with two questions that have the same label",
+          "file": "tests/e2e/form-tables-and-sums.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         },
         {
           "title": "as an administrator the Finance nav links to the question library, which lists the standard questions from the database",
@@ -1206,6 +1260,12 @@
       "note": null,
       "tests": [
         {
+          "title": "Maria's pasted budget lines bring her draft to the award codes the evaluation consultant as other than personal services and balances to $85,000",
+          "file": "tests/sql/seed-state.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "report PDF contains the answers, tables, budget subtotals, attachments and identifiers",
           "file": "tests/unit/report-pdf.test.ts",
           "status": "passed",
@@ -1219,6 +1279,24 @@
         },
         {
           "title": "report PDF paginates long answers without throwing on characters outside the font",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF reads like an official record with the receipt code, and ends with the certification",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF drops characters the font cannot draw instead of printing question marks",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF keeps a budget table header with its first row and never splits the Line heading",
           "file": "tests/unit/report-pdf.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -1900,6 +1978,30 @@
           "suite": "unit"
         },
         {
+          "title": "numeric fields filter what is typed and normalize what is pasted keeps a pasted fraction in a whole-number field so validation can name it",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "numeric fields filter what is typed and normalize what is pasted keeps the sign so validation says the value cannot be negative",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "numeric fields filter what is typed and normalize what is pasted refuses an exponent instead of joining its digits",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "numeric fields filter what is typed and normalize what is pasted reads a European decimal comma as a decimal and never as thousands",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "numeric fields filter what is typed and normalize what is pasted blocks typed letters and, for whole numbers, typed decimal points",
           "file": "tests/unit/numeric-input.test.ts",
           "status": "passed",
@@ -2137,6 +2239,12 @@
         },
         {
           "title": "master list rows are validated before they reach the list accepts a complete row and normalizes the EIN, phone and email",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list rejects an EIN whose first two digits the IRS does not issue",
           "file": "tests/unit/master-list.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -2461,6 +2569,12 @@
         },
         {
           "title": "the dashboard loads and the submissions list filters down to one organization",
+          "file": "tests/e2e/review.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "view-only staff see neutral wording on the dashboard actions and reviewers see the review actions",
           "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -2809,6 +2923,12 @@
           "suite": "unit"
         },
         {
+          "title": "the prefilled note never carries a flag note uses the neutral sentence for any number of open flags and nothing from the note",
+          "file": "tests/unit/return-note-flags.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "what the return note model is sent leaves out the value when a concern has none, so the model cannot write null",
           "file": "tests/unit/return-note-payload.test.ts",
           "status": "passed",
@@ -2839,7 +2959,13 @@
           "suite": "e2e"
         },
         {
-          "title": "an analyst requests an update with a note, the organization resubmits, and the analyst accepts",
+          "title": "an internal flag note is never prefilled into the note to the organization after a reload",
+          "file": "tests/e2e/review.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "an analyst requests changes with a note, the organization resubmits, and the analyst accepts",
           "file": "tests/e2e/review.spec.ts",
           "status": "passed",
           "suite": "e2e"
@@ -3005,7 +3131,7 @@
       "note": null,
       "tests": [
         {
-          "title": "export scope includes every submitted report, including those with an update requested",
+          "title": "export scope includes every submitted report, including those with changes requested",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -3046,7 +3172,7 @@
       "note": null,
       "tests": [
         {
-          "title": "export scope includes every submitted report, including those with an update requested",
+          "title": "export scope includes every submitted report, including those with changes requested",
           "file": "tests/unit/finance-derive.test.ts",
           "status": "passed",
           "suite": "unit"
@@ -4022,6 +4148,12 @@
           "suite": "sql"
         },
         {
+          "title": "the starting data matches a system that has not gone live lists each scheduled session once however many times the data was reseeded",
+          "file": "tests/sql/seed-state.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "the test pass rate uses the latest session of each scenario lets a passing retest replace an earlier failure",
           "file": "tests/unit/readiness-summary.test.ts",
           "status": "passed",
@@ -4076,6 +4208,12 @@
         },
         {
           "title": "the starting data matches a system that has not gone live holds no training or test session yet and lists the scheduled ones",
+          "file": "tests/sql/seed-state.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the starting data matches a system that has not gone live lists each scheduled session once however many times the data was reseeded",
           "file": "tests/sql/seed-state.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -5325,6 +5463,12 @@
         },
         {
           "title": "master list rows are validated before they reach the list accepts a complete row and normalizes the EIN, phone and email",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list rejects an EIN whose first two digits the IRS does not issue",
           "file": "tests/unit/master-list.test.ts",
           "status": "passed",
           "suite": "unit"
