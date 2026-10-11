@@ -284,11 +284,11 @@ export default async function ReviewPage({ params, searchParams }: Props) {
               ...(row.submittedAt
                 ? [
                     ["Submitted by", detail.submittedBy ?? "Not recorded"],
-                    ["Submitted at", formatDateTime(row.submittedAt)],
+                    ["Submitted at", `${formatDateTime(row.submittedAt)} ET`],
                   ]
                 : [
                     ["Last saved by", detail.savedBy ?? "Not recorded"],
-                    ["Last saved", row.updatedAt ? formatDateTime(row.updatedAt) : "Not saved yet"],
+                    ["Last saved", row.updatedAt ? `${formatDateTime(row.updatedAt)} ET` : "Not saved yet"],
                   ]),
             ].map(([label, value]) => (
               <div key={String(label)} className="min-w-0">
