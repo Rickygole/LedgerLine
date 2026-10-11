@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, Clock, Download, FileLock2, Headset, Server, ShieldAlert, Users2 } from "lucide-react";
@@ -215,7 +216,19 @@ export default async function PlatformPage() {
                   tone={health.migrations.ok ? "ok" : "bad"}
                   hint={
                     health.migrations.latest ? (
-                      <span className="break-words">Latest: {health.migrations.latest}</span>
+                      <span className="break-normal">
+                        Latest:{" "}
+                        {health.migrations.latest.split("_").map((part, i) => (
+                          <Fragment key={i}>
+                            {i > 0 ? (
+                              <>
+                                _<wbr />
+                              </>
+                            ) : null}
+                            {part}
+                          </Fragment>
+                        ))}
+                      </span>
                     ) : (
                       "None applied"
                     )
