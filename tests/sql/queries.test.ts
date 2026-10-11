@@ -119,14 +119,8 @@ describe("[US-048][US-046] a query says how many of its matches the export inclu
       "15 matches, 13 submitted reports included in the export",
     );
     expect(exportSummary({ matches: 1, exportable: 1 })).toBe("1 match, 1 submitted report included in the export");
-    expect(showingSummary({ matches: 15, exportable: 13 })).toBe(
-      "Showing 15 reports. Export includes the 13 that have been submitted.",
-    );
-    expect(showingSummary({ matches: 1, exportable: 1 })).toBe(
-      "Showing 1 report. Export includes the 1 that has been submitted.",
-    );
-    expect(showingSummary({ matches: 4, exportable: 0 })).toBe(
-      "Showing 4 reports. None have been submitted, so the export is empty.",
-    );
+    expect(showingSummary({ exportable: 378 })).toBe("The export includes the 378 submitted reports.");
+    expect(showingSummary({ exportable: 1 })).toBe("The export includes the 1 submitted report.");
+    expect(showingSummary({ exportable: 0 })).toBe("No reports have been submitted, so the export is empty.");
   });
 });

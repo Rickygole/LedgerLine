@@ -209,7 +209,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
         />
       </Card>
       <p className="mt-3 text-sm text-muted" data-testid="export-note">
-        {showingSummary({ matches: matched.length, exportable: matched.filter((r) => isExportable(r.status)).length })}
+        {showingSummary({ exportable: matched.filter((r) => isExportable(r.status)).length })}
       </p>
     </>
   );
