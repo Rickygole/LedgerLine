@@ -1,26 +1,30 @@
 {
-  "generatedAt": "2026-10-10T20:52:28.134Z",
-  "commit": "b3c1404613332dabfaf81f0048d76f90cc4e8224",
+  "generatedAt": "2026-10-11T00:12:05.076Z",
+  "commit": "eb9f17680c8bba4430ece83a9bc594773ba344be",
   "origin": "local",
   "uncommittedChanges": false,
   "runUrl": null,
   "repository": "Rickygole/LedgerLine",
   "totals": {
-    "tests": 619,
-    "passed": 619,
+    "tests": 750,
+    "passed": 750,
     "failed": 0,
     "skipped": 0
   },
   "suites": {
-    "unit": 322,
-    "sql": 198,
+    "unit": 374,
+    "sql": 246,
     "eval": 32,
-    "e2e": 67
+    "e2e": 98
   },
   "summary": {
     "verified": {
-      "stories": 64,
-      "rules": 27
+      "stories": 57,
+      "rules": 24
+    },
+    "supporting": {
+      "stories": 7,
+      "rules": 3
     },
     "failing": {
       "stories": 0,
@@ -81,8 +85,128 @@
       "note": null,
       "tests": [
         {
+          "title": "an initiative requires the reports its administrator chooses keeps the seeded behavior as the default: every initiative requires both standard periods of its year",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative requires the reports its administrator chooses lets an administrator remove a standard period, and the organization then sees only the reports still required",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative requires the reports its administrator chooses brings a removed period back and records that too",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative requires the reports its administrator chooses refuses to start a report for a period the initiative does not require",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative requires the reports its administrator chooses keeps a report that was already started: it cannot be removed",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative requires the reports its administrator chooses never leaves an initiative with no required report",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative requires the reports its administrator chooses only changes periods of the initiative's own fiscal year",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative requires the reports its administrator chooses is limited to administrators: analysts, view-only staff and organizations are refused",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a custom-named report with its own due date adds a report for one initiative only, visible to its organizations with the chosen name and due date",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a custom-named report with its own due date lets the organization start the custom report, and keeps it from other initiatives' organizations",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a custom-named report with its own due date validates the name and the dates, refuses a duplicate name and removes a custom report with no reports started",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the portal start flow follows the required reports starts a custom report for an organization, and refuses a period the initiative does not require",
+          "file": "tests/sql/required-reports.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "a report one initiative requires does not take over the shared views does not pick a custom report as the default period of the dashboard and lists",
+          "file": "tests/unit/period-default.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a report one initiative requires does not take over the shared views falls back to a custom period only when there is no shared one",
+          "file": "tests/unit/period-default.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a report one initiative requires does not take over the shared views leaves custom reports off the fiscal year timeline",
+          "file": "tests/unit/period-default.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "the initiative is funded for an organization and given a report form",
           "file": "tests/e2e/admin-setup.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator the initiative page lists the required reports, both standard periods by default",
+          "file": "tests/e2e/required-reports.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator removing a report from an initiative removes it from the organization's list and is recorded",
+          "file": "tests/e2e/required-reports.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator a custom-named report with its own due date reaches the organization and can be deleted",
+          "file": "tests/e2e/required-reports.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator a report that organizations have already started cannot be removed",
+          "file": "tests/e2e/required-reports.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as view-only Finance staff required reports are visible without any controls to change them",
+          "file": "tests/e2e/required-reports.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -92,13 +216,13 @@
       "id": "US-003",
       "area": "Configuration",
       "summary": "Questions are maintained centrally, not rebuilt per form",
-      "route": "/finance/initiatives",
+      "route": "/finance/question-library",
       "state": "verified",
       "reason": null,
-      "note": "Standard questions come from one shared library in the application. Every form version on file embeds those same questions, and a change to the library reaches every form built afterwards. Each published version keeps its own copy, so a published form never changes underneath a report.",
+      "note": "Standard questions live in one library in the database that Council Finance edits on the Question library page. Apply to forms puts a change into new draft versions of the forms that use the question. Each published version keeps its own copy, so a published form never changes underneath a report.",
       "tests": [
         {
-          "title": "standard questions come from one shared library embeds the same library questions in every form version on file, across both fiscal years",
+          "title": "standard questions come from one shared library embeds only questions from the shared library in every form version on file, in every fiscal year on file",
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -114,6 +238,102 @@
           "file": "tests/sql/capacity.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "the standard questions live in a database library seeds the library from the standard questions so every form reads exactly as before",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the standard questions live in a database library lets every signed-in role read the library but only an administrator change it",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the standard questions live in a database library builds forms from the changed library without editing any existing form",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the standard questions live in a database library audits an edit with the before and after values",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the standard questions live in a database library refuses an invalid question: a choice list with one option, a table with no columns, a duplicate key",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the standard questions live in a database library stops the database too: a select question without options and a table without columns cannot be stored",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the standard questions live in a database library retires a question so it leaves new forms and the editor, and protects the identity questions",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Apply to forms creates new drafts and never changes a published form creates a draft for each selected initiative with the updated question and leaves published versions and pinned reports alone",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Apply to forms creates new drafts and never changes a published form updates the open draft instead of stacking another one, and skips a form that is already current",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Apply to forms creates new drafts and never changes a published form adds a brand new library question to the template section of the forms that lack it, only when asked",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Apply to forms creates new drafts and never changes a published form is limited to administrators in the database: an analyst cannot create a draft or edit one",
+          "file": "tests/sql/question-library.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "as an administrator the Finance nav links to the question library, which lists the standard questions from the database",
+          "file": "tests/e2e/question-library.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator an administrator adds a library question and then changes its wording",
+          "file": "tests/e2e/question-library.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator Apply to forms creates a new draft for the chosen initiative and leaves its published form alone",
+          "file": "tests/e2e/question-library.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator the form editor's Add from library reads the database library and honors a retired question",
+          "file": "tests/e2e/question-library.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as view-only Finance staff the library can be read but not changed",
+          "file": "tests/e2e/question-library.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -268,8 +488,56 @@
           "suite": "unit"
         },
         {
+          "title": "a question can embed a table offers Table among the question types and starts a new table with two columns and a row limit",
+          "file": "tests/unit/table-questions.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can embed a table supports text, number, whole number, dollar and percent columns",
+          "file": "tests/unit/table-questions.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can embed a table saves through the same schema the editor sends, including number columns",
+          "file": "tests/unit/table-questions.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can embed a table requires one to eight labelled columns of distinct keys and a row limit",
+          "file": "tests/unit/table-questions.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can embed a table validates each cell by its column type and the row limit, and asks for a missing cell",
+          "file": "tests/unit/table-questions.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can embed a table requires a required table to have a row",
+          "file": "tests/unit/table-questions.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a question can embed a table formats stored table values for the submitted copy and exports",
+          "file": "tests/unit/table-questions.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "a Word file imported without a model keeps its headings, table and choices and is not labelled AI",
           "file": "tests/e2e/form-import.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a table is added from the question types, with its own columns and row limit",
+          "file": "tests/e2e/form-tables-and-sums.spec.ts",
           "status": "passed",
           "suite": "e2e"
         }
@@ -366,6 +634,54 @@
       "note": "Rollover can rename or retire an initiative, and combine several initiatives into one with lineage links.",
       "tests": [
         {
+          "title": "an initiative can be renamed without losing its history renames it in place, keeps its code, awards and reports, and records the old name and the reason",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative can be renamed without losing its history can be renamed again, and the rename does not stop the initiative being carried into the next year",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative can be renamed without losing its history requires a reason and a new name, refuses a name already used that year and a retired initiative",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative can be retired, blocking new reports and keeping history retires it with a reason, records the lineage and audit, and keeps every report already submitted",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative can be retired, blocking new reports and keeping history blocks new reports for the retired initiative in the database",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative can be retired, blocking new reports and keeping history does not carry a retired initiative into the next year and cannot be retired twice",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "an initiative can be retired, blocking new reports and keeping history requires a reason",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "only an administrator can rename or retire refuses analysts, view-only staff and organizations",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "combine merges assignments and records lineage sums awards per organization and takes the form from the first predecessor",
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
@@ -376,6 +692,36 @@
           "file": "tests/sql/lifecycle.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "as an administrator an administrator renames an initiative with a reason and the old name stays in its history",
+          "file": "tests/e2e/initiative-lifecycle.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator a rename needs a reason",
+          "file": "tests/e2e/initiative-lifecycle.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator combining points to the annual rollover",
+          "file": "tests/e2e/initiative-lifecycle.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator retiring an initiative records the reason, keeps its history and stops it accepting new reports",
+          "file": "tests/e2e/initiative-lifecycle.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as view-only Finance staff there is no way to rename or retire an initiative",
+          "file": "tests/e2e/initiative-lifecycle.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -388,6 +734,12 @@
       "reason": null,
       "note": "Lineage links connect predecessor and successor initiatives. Each submission keeps the form version it was created on.",
       "tests": [
+        {
+          "title": "an initiative can be renamed without losing its history can be renamed again, and the rename does not stop the initiative being carried into the next year",
+          "file": "tests/sql/initiative-lifecycle.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "lineage links predecessors lets finance read lineage and keeps writes with the rollover function",
           "file": "tests/sql/lifecycle.test.ts",
@@ -854,6 +1206,48 @@
       "note": null,
       "tests": [
         {
+          "title": "report PDF contains the answers, tables, budget subtotals, attachments and identifiers",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF names the file after the reference and revision",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "report PDF paginates long answers without throwing on characters outside the font",
+          "file": "tests/unit/report-pdf.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the PDF routes need a signed-in user",
+          "file": "tests/e2e/pdf-and-corrections.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "finance Finance downloads the submitted report as a PDF",
+          "file": "tests/e2e/pdf-and-corrections.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "finance the portal PDF route is closed to Finance staff",
+          "file": "tests/e2e/pdf-and-corrections.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "organization the organization downloads its own submitted report as a PDF and cannot fetch another organization's",
+          "file": "tests/e2e/pdf-and-corrections.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
           "title": "the submitted copy prints without the site chrome and saves as a PDF",
           "file": "tests/e2e/reporting.spec.ts",
           "status": "passed",
@@ -1238,6 +1632,84 @@
       "note": null,
       "tests": [
         {
+          "title": "a table column can be required to add up to a fixed number accepts rows that add up to the target",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a table column can be required to add up to a fixed number names the table, the column and the difference when the rows fall short",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a table column can be required to add up to a fixed number reports the overage when the rows add up to more than the target",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a table column can be required to add up to a fixed number leaves an empty optional table alone",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a table column can be required to add up to a fixed number can require a dollar column to add up to the award",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a group of number questions can be required to add up to a value passes when the answers add up and fails with the field names and the gap when they do not",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a group of number questions can be required to add up to a value treats a blank member as zero once any member is answered and ignores a group nobody has answered",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a group of number questions can be required to add up to a value can target the award for dollar questions",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a group of number questions can be required to add up to a value skips members hidden by a follow-up condition",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the form editor only saves sum rules that can be checked accepts a valid group rule and a valid table rule",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the form editor only saves sum rules that can be checked refuses a rule with one question, a text question, mixed types, a missing question or a bad target",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the form editor only saves sum rules that can be checked refuses a table rule on a text column",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the form editor only saves sum rules that can be checked drops a group rule when removing a question leaves it with fewer than two",
+          "file": "tests/unit/sum-rules.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "budget must equal the award blocks when over the award and says by how much",
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
@@ -1260,6 +1732,24 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "a table column can be required to add up to the award",
+          "file": "tests/e2e/form-tables-and-sums.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a group of number questions can be required to add up to a fixed number",
+          "file": "tests/e2e/form-tables-and-sums.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "a sum rule that cannot be checked is refused when the draft is saved",
+          "file": "tests/e2e/form-tables-and-sums.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -1386,6 +1876,36 @@
           "suite": "unit"
         },
         {
+          "title": "numeric fields filter what is typed and normalize what is pasted drops letters from every numeric kind",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "numeric fields filter what is typed and normalize what is pasted normalizes a pasted dollar amount",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "numeric fields filter what is typed and normalize what is pasted keeps one decimal point and a trailing point while typing",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "numeric fields filter what is typed and normalize what is pasted strips a percent sign and keeps whole numbers whole",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "numeric fields filter what is typed and normalize what is pasted blocks typed letters and, for whole numbers, typed decimal points",
+          "file": "tests/unit/numeric-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "actual spent text keeps a blank actual as null and a typed one as a number",
           "file": "tests/unit/report-budget-rows.test.ts",
           "status": "passed",
@@ -1432,6 +1952,12 @@
           "file": "tests/unit/validate.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "number, whole-number and percent fields refuse letters as typed and normalize a pasted amount",
+          "file": "tests/e2e/report-editing.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -1568,6 +2094,96 @@
       "note": null,
       "tests": [
         {
+          "title": "Council Finance maintains the master list lets an administrator add an organization with its primary contact and records it in the audit log",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list keeps each EIN unique",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list leaves the master list unchanged for analysts, view-only staff and organizations",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list previews a file as new, updated, unchanged and rejected rows with the reason for each rejection, without changing anything",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list applies the confirmed import: adds new organizations, updates known ones by EIN, skips rejected rows and audits every change",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the portal's EIN and name checks use the list Finance maintains accepts the organization's name as listed, and rejects the old name once Finance updates the list",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the portal's EIN and name checks use the list Finance maintains has an organization added to the list in the same query the portal reads from",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "master list rows are validated before they reach the list accepts a complete row and normalizes the EIN, phone and email",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list accepts an EIN written with or without the hyphen and rejects anything that is not nine digits",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list requires the name, type, borough, district, address, ZIP code and primary contact",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list checks the district against the borough, and lets a Citywide organization skip the district",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list checks the type, ZIP code, email and phone",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the master list file is read like a spreadsheet export reads quoted commas, doubled quotes, blank lines and Windows line endings",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the master list file is read like a spreadsheet export matches headers by name in any order and by common spellings",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the master list file is read like a spreadsheet export names the missing columns and refuses an empty file or one with no organizations",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "report EIN check accepts the organization's own EIN with or without the dash",
           "file": "tests/unit/report-issues.test.ts",
           "status": "passed",
@@ -1584,6 +2200,36 @@
           "file": "tests/unit/report-issues.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "as an administrator the organizations page offers Add organization and Import master list",
+          "file": "tests/e2e/master-list.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator an administrator adds an organization with its primary contact",
+          "file": "tests/e2e/master-list.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator an EIN that is already on the master list is refused",
+          "file": "tests/e2e/master-list.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as an administrator a CSV import shows what is new, updated and rejected before anything changes, then applies the confirmed list",
+          "file": "tests/e2e/master-list.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
+        },
+        {
+          "title": "as Finance staff who cannot change the master list an analyst and a view-only user see no Add or Import controls and cannot open those pages",
+          "file": "tests/e2e/master-list.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         }
       ]
     },
@@ -2216,10 +2862,100 @@
           "suite": "sql"
         },
         {
+          "title": "authorized staff correct submitted data with an audit record rewrites budget lines and table answers as one correction revision with before and after",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "authorized staff correct submitted data with an audit record rewrites budget lines and table answers as one correction revision with before and after",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "authorized staff correct submitted data with an audit record refuses a budget or table correction without a reason or by a non-reviewer",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "authorized staff correct submitted data with an audit record refuses a budget or table correction without a reason or by a non-reviewer",
+          "file": "tests/sql/workflow.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
           "title": "authorized staff correct submitted data with an audit record is refused for a view-only user and for the reporting organization",
           "file": "tests/sql/workflow.test.ts",
           "status": "passed",
           "suite": "sql"
+        },
+        {
+          "title": "budget correction input edits a line, keeps its actual spent and gives a new line a new id",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget correction input removes a line when it is left out",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "budget correction input rejects a blank description, a bad amount, a bad category and too many lines",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table correction input keeps only the configured columns and drops blank rows",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table correction input enforces the row limit",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a budget correction may not introduce a new blocking problem allows a correction that keeps the budget balanced",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a budget correction may not introduce a new blocking problem refuses a correction that unbalances a balanced budget",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a budget correction may not introduce a new blocking problem refuses a new line with no description",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "a budget correction may not introduce a new blocking problem does not blame the correction for a budget that was already unbalanced",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "audit wording for budget and table corrections summarizes lines and lists what changed",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "table values compare as text treats stored numbers and typed text as the same value and ignores blank rows",
+          "file": "tests/unit/correction-input.test.ts",
+          "status": "passed",
+          "suite": "unit"
         },
         {
           "title": "a correction may not leave the report with a new blocking problem refuses a change that makes a required, empty question visible",
@@ -2244,6 +2980,12 @@
           "file": "tests/unit/correction-validity.test.ts",
           "status": "passed",
           "suite": "unit"
+        },
+        {
+          "title": "finance a correction can change a budget line, add a line and edit a table, each with a reason",
+          "file": "tests/e2e/pdf-and-corrections.spec.ts",
+          "status": "passed",
+          "suite": "e2e"
         },
         {
           "title": "a correction after acceptance needs a reason and leaves an audit record",
@@ -2410,6 +3152,12 @@
         },
         {
           "title": "trend and comparison data follows the selected criteria totals every submitted report across months, and narrows when a category or borough is chosen",
+          "file": "tests/sql/trends.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "trend and comparison data follows the selected criteria limits the monthly series to the selected reporting period and marks a month still in progress",
           "file": "tests/sql/trends.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -2778,9 +3526,9 @@
       "area": "Security",
       "summary": "The Council is told about any breach",
       "route": "/finance/incidents",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tool is built and tested: an administrator records a breach, the Council's contacts are queued a notice and the deadline and remediation are tracked. Notifying the Council of a real breach is a vendor process delivered under contract.",
       "tests": [
         {
           "title": "security incidents notify the Council and track remediation records an incident, queues a notice to every active designated contact, and writes the history",
@@ -2833,6 +3581,12 @@
         {
           "title": "security incidents notify the Council and track remediation adds a designated contact, audits it, and includes that contact in the next notice",
           "file": "tests/sql/incidents.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the starting data has no past security incident records none and keeps the designated contacts",
+          "file": "tests/sql/seed-state.test.ts",
           "status": "passed",
           "suite": "sql"
         },
@@ -2925,10 +3679,16 @@
       "area": "Support",
       "summary": "Vendor help with account issues",
       "route": "/finance/support",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tool is built and tested: help requests, a queue and replies. Vendor help with account issues is delivered under contract.",
       "tests": [
+        {
+          "title": "the starting support queue meets the 24 hour target has no unanswered request older than 24 hours and no late first response",
+          "file": "tests/sql/seed-state.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
         {
           "title": "help requests and the 24 hour response target lets every signed-in role send a request and records an audit event",
           "file": "tests/sql/support.test.ts",
@@ -2984,9 +3744,9 @@
       "area": "Support",
       "summary": "Post-launch support, monitoring and maintenance",
       "route": "/finance/platform",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tools are built and tested: a health check, request IDs in logs and error pages, and hosting facts for monitoring. Monitoring, maintenance and support after launch are delivered under contract.",
       "tests": [
         {
           "title": "health check reads the database and the migration version reports a connected database and the latest applied migration",
@@ -3091,9 +3851,9 @@
       "area": "Support",
       "summary": "Support requests answered quickly, preferably within 24 hours",
       "route": "/finance/support",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tool is built and tested: each request is timed against a 24 hour target. Answering requests quickly is a service commitment delivered under contract.",
       "tests": [
         {
           "title": "help requests and the 24 hour response target lets every signed-in role send a request and records an audit event",
@@ -3186,9 +3946,9 @@
       "area": "Maintenance",
       "summary": "Annual review of reporting structure with Finance",
       "route": "/finance/reviews",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tool is built and tested: the review is recorded per fiscal year and carried into the rollover. Holding the review with Finance is a service commitment delivered under contract.",
       "tests": [
         {
           "title": "annual structure review with Finance allows one review per fiscal year",
@@ -3227,9 +3987,9 @@
       "area": "Delivery",
       "summary": "Formal testing period before go-live",
       "route": "/finance/readiness",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": "Formal testing is scheduled for January 4 to 15, 2027. Test sessions and defects are tracked here.",
+      "note": "The tool is built and tested: test sessions, defects and the pass rate are tracked. The formal testing period is a delivery commitment, scheduled for November to December 2026.",
       "tests": [
         {
           "title": "user acceptance test sessions records a session with its scenario, tester, result and defects, and audits it",
@@ -3252,6 +4012,12 @@
         {
           "title": "user acceptance test sessions is limited to administrators and hidden from other roles",
           "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the starting data matches a system that has not gone live holds no training or test session yet and lists the scheduled ones",
+          "file": "tests/sql/seed-state.test.ts",
           "status": "passed",
           "suite": "sql"
         },
@@ -3286,12 +4052,12 @@
       "area": "Delivery",
       "summary": "Formal training period before go-live",
       "route": "/finance/readiness",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": "Formal training is scheduled for January 11 to 22, 2027. Training records are tracked here.",
+      "note": "The tool is built and tested: training records and the share of Finance users trained are tracked. The formal training period is a delivery commitment, scheduled for December 2026 to January 2027.",
       "tests": [
         {
-          "title": "training records and the readiness summary reports the share of Finance users trained and the scenario pass rate from the records on file",
+          "title": "training records and the readiness summary starts with nothing held, then reports the trained share and the pass rate from the records on file",
           "file": "tests/sql/readiness.test.ts",
           "status": "passed",
           "suite": "sql"
@@ -3305,6 +4071,12 @@
         {
           "title": "training records and the readiness summary records training for Finance users only, for known modules, with a real date",
           "file": "tests/sql/readiness.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the starting data matches a system that has not gone live holds no training or test session yet and lists the scheduled ones",
+          "file": "tests/sql/seed-state.test.ts",
           "status": "passed",
           "suite": "sql"
         },
@@ -4510,6 +5282,96 @@
       "note": null,
       "tests": [
         {
+          "title": "Council Finance maintains the master list lets an administrator add an organization with its primary contact and records it in the audit log",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list keeps each EIN unique",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list leaves the master list unchanged for analysts, view-only staff and organizations",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list previews a file as new, updated, unchanged and rejected rows with the reason for each rejection, without changing anything",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "Council Finance maintains the master list applies the confirmed import: adds new organizations, updates known ones by EIN, skips rejected rows and audits every change",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the portal's EIN and name checks use the list Finance maintains accepts the organization's name as listed, and rejects the old name once Finance updates the list",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "the portal's EIN and name checks use the list Finance maintains has an organization added to the list in the same query the portal reads from",
+          "file": "tests/sql/master-list.test.ts",
+          "status": "passed",
+          "suite": "sql"
+        },
+        {
+          "title": "master list rows are validated before they reach the list accepts a complete row and normalizes the EIN, phone and email",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list accepts an EIN written with or without the hyphen and rejects anything that is not nine digits",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list requires the name, type, borough, district, address, ZIP code and primary contact",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list checks the district against the borough, and lets a Citywide organization skip the district",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "master list rows are validated before they reach the list checks the type, ZIP code, email and phone",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the master list file is read like a spreadsheet export reads quoted commas, doubled quotes, blank lines and Windows line endings",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the master list file is read like a spreadsheet export matches headers by name in any order and by common spellings",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
+          "title": "the master list file is read like a spreadsheet export names the missing columns and refuses an empty file or one with no organizations",
+          "file": "tests/unit/master-list.test.ts",
+          "status": "passed",
+          "suite": "unit"
+        },
+        {
           "title": "report EIN check accepts the organization's own EIN with or without the dash",
           "file": "tests/unit/report-issues.test.ts",
           "status": "passed",
@@ -4599,9 +5461,9 @@
       "area": "Rules",
       "summary": "Breaches are reported with a remediation plan",
       "route": "/finance/incidents",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tool is built and tested: incidents, notices to the Council and remediation plans are recorded. Reporting a real breach with a remediation plan is a vendor process delivered under contract.",
       "tests": [
         {
           "title": "security incidents notify the Council and track remediation records an incident, queues a notice to every active designated contact, and writes the history",
@@ -4720,9 +5582,9 @@
       "area": "Rules",
       "summary": "Annual structure review with Finance",
       "route": "/finance/reviews",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tool is built and tested: the review is recorded per fiscal year. Holding the review with Finance is a service commitment delivered under contract.",
       "tests": [
         {
           "title": "annual structure review with Finance allows one review per fiscal year",
@@ -4761,9 +5623,9 @@
       "area": "Rules",
       "summary": "Fast post-launch support response",
       "route": "/finance/support",
-      "state": "verified",
+      "state": "supporting",
       "reason": null,
-      "note": null,
+      "note": "The tool is built and tested: the response time is measured against the 24 hour target. Responding fast after launch is a service commitment delivered under contract.",
       "tests": [
         {
           "title": "help requests and the 24 hour response target lets every signed-in role send a request and records an audit event",
