@@ -7,8 +7,7 @@ import { EmptyRow, Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
-import { DELIVERY_OFF_NOTICE, deliveryState, templateLabel } from "@/lib/portal/messages";
-import { emailDeliveryOn } from "@/lib/email";
+import { REDIRECTED_SQL, deliveryNotice, deliveryState, templateLabel } from "@/lib/portal/messages";
 
 export const metadata: Metadata = { title: "Messages" };
 export const runtime = "nodejs";
@@ -23,13 +22,14 @@ type Row = {
   status: string;
   submission_id: string | null;
   reference_no: string | null;
+  redirected: boolean;
 };
 
 export default async function MessagesPage() {
   const user = await requireUser(["cbo_submitter"]);
   const rows = await withClaims(user.id, (tx) =>
     tx.query<Row>(
-      `SELECT o.id, o.subject, o.template, o.to_email, o.created_at, o.status, o.submission_id, s.reference_no
+      `SELECT o.id, o.subject, o.template, o.to_email, o.created_at, o.status, o.submission_id, s.reference_no, ${REDIRECTED_SQL} AS redirected
        FROM outbox o LEFT JOIN submission s ON s.id = o.submission_id
        WHERE o.org_id = $1
        ORDER BY o.created_at DESC`,
@@ -42,19 +42,24 @@ export default async function MessagesPage() {
   const showTo = addresses.size > 1;
   const showDelivery = statuses.size > 1;
   const allSent = statuses.size === 1 && statuses.has("sent");
+  const allRedirected = allSent && rows.every((r) => r.redirected);
   const description =
-    [sharedTo ? `Addressed to ${sharedTo}.` : null, allSent ? "Each one was emailed." : null]
+    [
+      sharedTo ? `Addressed to ${sharedTo}.` : null,
+      allSent ? (allRedirected ? "Each one was emailed to the review inbox." : "Each one was emailed.") : null,
+    ]
       .filter(Boolean)
       .join(" ") || undefined;
+  const notice = deliveryNotice();
   const columns = 4 + (showTo ? 1 : 0) + (showDelivery ? 1 : 0);
   return (
     <>
       <PageHeader eyebrow={user.orgName ?? "Your organization"} title="Messages" description={description} />
-      {emailDeliveryOn() ? null : (
+      {notice ? (
         <p className="mb-6 max-w-[70ch] rounded border border-l-4 border-line border-l-action bg-white px-5 py-4 text-[15px] text-ink">
-          {DELIVERY_OFF_NOTICE}
+          {notice}
         </p>
-      )}
+      ) : null}
       <Card>
         <Table stack>
           <THead>
@@ -94,7 +99,9 @@ export default async function MessagesPage() {
                   </TD>
                   {showDelivery ? (
                     <TD label="Delivery">
-                      <Badge tone={deliveryState(r.status).tone}>{deliveryState(r.status).label}</Badge>
+                      <Badge tone={deliveryState(r.status, r.redirected).tone}>
+                        {deliveryState(r.status, r.redirected).label}
+                      </Badge>
                     </TD>
                   ) : null}
                   <TD label="Related report">

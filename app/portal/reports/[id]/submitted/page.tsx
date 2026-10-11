@@ -8,6 +8,7 @@ import { formatDateTime } from "@/lib/dates";
 import { withClaims } from "@/lib/db";
 import { loadReport } from "@/lib/report/data";
 import { isUuid } from "@/lib/ids";
+import { REDIRECTED_SQL } from "@/lib/portal/messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,10 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
   if (!report) notFound();
   const { header } = report;
   const copy = await withClaims(user.id, (tx) =>
-    tx.one<{ status: string }>("SELECT status FROM outbox WHERE submission_id = $1 AND template = 'submission_confirmation' ORDER BY created_at DESC LIMIT 1", [id])
+    tx.one<{ status: string; redirected: boolean }>(
+      `SELECT o.status, ${REDIRECTED_SQL} AS redirected FROM outbox o WHERE o.submission_id = $1 AND o.template = 'submission_confirmation' ORDER BY o.created_at DESC LIMIT 1`,
+      [id],
+    ),
   );
   if (header.status === "draft" || !header.submittedAt) redirect(`/portal/reports/${id}`);
 
@@ -46,7 +50,12 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
           </Link>
           {copy?.status === "sent" ? (
             <>
-              {" "}and was emailed to <span className="break-all font-semibold">{user.email}</span>
+              {" "}and was emailed to{" "}
+              {copy.redirected ? (
+                "the review inbox"
+              ) : (
+                <span className="break-all font-semibold">{user.email}</span>
+              )}
             </>
           ) : null}
           . Keep your reference number in case you need to contact Council Finance.

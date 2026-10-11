@@ -1,3 +1,5 @@
+import { transportFrom } from "@/lib/email";
+
 const LABELS: Record<string, string> = {
   submission_confirmation: "Submission confirmation",
   return_notice: "Changes requested",
@@ -11,6 +13,17 @@ export function templateLabel(template: string): string {
 export const DELIVERY_OFF_NOTICE =
   "Email delivery is not turned on in this environment. Each message is recorded here.";
 
+export const DELIVERY_REDIRECT_NOTICE =
+  "Messages are delivered to a review inbox in this environment, not to the addresses shown.";
+
+export function deliveryNotice(env: Record<string, string | undefined> = process.env): string | null {
+  const transport = transportFrom(env);
+  if (!transport) return DELIVERY_OFF_NOTICE;
+  return transport.redirectTo ? DELIVERY_REDIRECT_NOTICE : null;
+}
+
+export const REDIRECTED_SQL = "(o.delivered_to IS NOT NULL AND lower(o.delivered_to) <> lower(o.to_email))";
+
 const DELIVERY: Record<string, { label: string; tone: "ok" | "bad" | "neutral" }> = {
   sent: { label: "Emailed", tone: "ok" },
   failed: { label: "Delivery failed", tone: "bad" },
@@ -20,6 +33,7 @@ const DELIVERY: Record<string, { label: string; tone: "ok" | "bad" | "neutral" }
   sending: { label: "Sending", tone: "neutral" },
 };
 
-export function deliveryState(status: string): { label: string; tone: "ok" | "bad" | "neutral" } {
+export function deliveryState(status: string, redirected = false): { label: string; tone: "ok" | "bad" | "neutral" } {
+  if (status === "sent" && redirected) return { label: "Emailed to the review inbox", tone: "ok" };
   return DELIVERY[status] ?? { label: status, tone: "neutral" };
 }

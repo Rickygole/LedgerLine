@@ -14,6 +14,7 @@ type OutboxRow = {
   submission_id: string | null;
   reference_no: string | null;
   full_count: number;
+  redirected: boolean;
 };
 
 export async function listOutbox(
@@ -22,7 +23,8 @@ export async function listOutbox(
 ) {
   const rows = await tx.query<OutboxRow>(
     `SELECT m.id, m.to_email, m.template, m.subject, m.status, m.created_at, m.org_id, o.legal_name AS org_name, m.submission_id, s.reference_no,
-            count(*) OVER ()::int AS full_count
+            count(*) OVER ()::int AS full_count,
+            (m.delivered_to IS NOT NULL AND lower(m.delivered_to) <> lower(m.to_email)) AS redirected
      FROM outbox m
      LEFT JOIN organization o ON o.id = m.org_id
      LEFT JOIN submission s ON s.id = m.submission_id
@@ -61,10 +63,12 @@ export async function loadOutboxMessage(tx: Tx, id: string) {
       created_by_name: string | null;
       sent_at: string | null;
       failure_reason: string | null;
+      delivered_to: string | null;
     }
   >(
-    `SELECT m.id, m.to_email, m.template, m.subject, m.body_text, m.status, m.created_at, m.sent_at, m.failure_reason, m.org_id, o.legal_name AS org_name, m.submission_id, s.reference_no,
-            u.full_name AS created_by_name, 1 AS full_count
+    `SELECT m.id, m.to_email, m.template, m.subject, m.body_text, m.status, m.created_at, m.sent_at, m.failure_reason, m.delivered_to, m.org_id, o.legal_name AS org_name, m.submission_id, s.reference_no,
+            u.full_name AS created_by_name, 1 AS full_count,
+            (m.delivered_to IS NOT NULL AND lower(m.delivered_to) <> lower(m.to_email)) AS redirected
      FROM outbox m
      LEFT JOIN organization o ON o.id = m.org_id
      LEFT JOIN submission s ON s.id = m.submission_id

@@ -1,4 +1,5 @@
 import type { Tx } from "@/lib/db";
+import { REDIRECTED_SQL } from "@/lib/portal/messages";
 import type { Sponsor } from "@/lib/finance/review/types";
 import { ASSIGNMENT_STATE, PERIODS_SQL, SPONSORS_SQL } from "./sql";
 import type { AwardPeriod } from "./initiatives";
@@ -191,8 +192,9 @@ export async function loadOrganization(tx: Tx, orgId: string) {
     subject: string;
     status: string;
     created_at: string;
+    redirected: boolean;
   }>(
-    `SELECT id, to_email, template, subject, status, created_at FROM outbox WHERE org_id = $1 ORDER BY created_at DESC LIMIT 50`,
+    `SELECT o.id, o.to_email, o.template, o.subject, o.status, o.created_at, ${REDIRECTED_SQL} AS redirected FROM outbox o WHERE o.org_id = $1 ORDER BY o.created_at DESC LIMIT 50`,
     [orgId],
   );
   return { org, awards, reports, contacts, team, messages };
