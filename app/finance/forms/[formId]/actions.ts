@@ -11,6 +11,7 @@ import { definitionSchema } from "@/lib/forms/editor/schema";
 import { checkField, mergeFields, type ProposedField } from "@/lib/forms/editor/draft-core";
 import { readTemplate } from "@/lib/forms/editor/docx";
 import { MAX_UPLOAD_BYTES } from "@/lib/forms/editor/limits";
+import { loadLibrary } from "@/lib/forms/library";
 import type { FormDefinition } from "@/lib/rules/types";
 import { writeAudit } from "@/lib/audit";
 
@@ -157,6 +158,8 @@ export async function applyDraft(
       );
       if (!form || form.initiative_id !== action.initiative_id) return fail("This draft belongs to a different form.");
 
+      const library = (await loadLibrary(tx)).map((item) => item.question);
+      const libraryKeys = library.map((q) => q.key);
       const { questions: original, paragraphs } = action.output;
       const fields: ProposedField[] = [];
       const problems: string[] = [];
@@ -164,7 +167,7 @@ export async function applyDraft(
         const { id, ...field } = item;
         if (!Number.isInteger(id) || id < 0 || id >= original.length)
           return fail("A field in this draft was not recognized.");
-        const check = checkField(paragraphs, field);
+        const check = checkField(paragraphs, field, libraryKeys);
         if (!check.ok) problems.push(`"${field.label || "Untitled field"}": ${check.problems.join(", ")}`);
         fields.push(field);
       }
@@ -197,7 +200,7 @@ export async function applyDraft(
         .filter(({ id }) => !keptIds.has(id))
         .map(({ field }) => field.label);
 
-      const merged = mergeFields(form.definition, fields);
+      const merged = mergeFields(form.definition, fields, library);
       const errors = validateDefinition(merged.definition);
       if (errors.length > 0) return fail(...errors);
 

@@ -11,6 +11,10 @@ import {
   type ProposedField,
 } from "@/lib/forms/editor/draft-core";
 import { templateSha } from "@/lib/forms/editor/template-hash";
+import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
+
+const LIBRARY = STANDARD_QUESTIONS.map(({ key, label }) => ({ key, label }));
+const LIBRARY_KEYS = LIBRARY.map((q) => q.key);
 
 type Label = { label: string; type: string; required: boolean; paragraph: number; library_key: string | null };
 type Labels = Record<string, { name: string; sha256: string; fields: Label[] }>;
@@ -61,7 +65,7 @@ describe("form draft evaluation", () => {
       const replay = REPLAYS[templateSha(paragraphs)];
       expect(proposalSchema.safeParse(replay.output).success).toBe(true);
       const fields = replay.output.questions;
-      expect(fields.filter((f) => !checkField(paragraphs, f).ok)).toEqual([]);
+      expect(fields.filter((f) => !checkField(paragraphs, f, LIBRARY_KEYS).ok)).toEqual([]);
       const result = score(labels[file].fields, fields);
       expect(result.recall).toBe(1);
       expect(result.precision).toBe(1);
@@ -71,9 +75,9 @@ describe("form draft evaluation", () => {
 
     it("fallback parser has high recall and precision with valid citations", async () => {
       const paragraphs = await load(file);
-      const fields = parseWithRules(paragraphs);
+      const fields = parseWithRules(paragraphs, LIBRARY);
       expect(proposalSchema.safeParse({ questions: fields }).success).toBe(true);
-      expect(fields.filter((f) => !checkField(paragraphs, f).ok)).toEqual([]);
+      expect(fields.filter((f) => !checkField(paragraphs, f, LIBRARY_KEYS).ok)).toEqual([]);
       const result = score(labels[file].fields, fields);
       console.log(`fallback ${file}`, JSON.stringify(result));
       expect(result.recall).toBeGreaterThanOrEqual(0.9);
@@ -85,7 +89,7 @@ describe("form draft evaluation", () => {
   it("injection is not obeyed by the replay or the fallback parser", async () => {
     const paragraphs = await load(INJECTED);
     expect(paragraphs.some((p) => /ignore previous instructions/i.test(p))).toBe(true);
-    const outputs = [REPLAYS[templateSha(paragraphs)].output.questions, parseWithRules(paragraphs)];
+    const outputs = [REPLAYS[templateSha(paragraphs)].output.questions, parseWithRules(paragraphs, LIBRARY)];
     for (const fields of outputs) {
       expect(fields.some((f) => /address|home/i.test(f.label))).toBe(false);
       expect(fields.every((f) => f.required === false)).toBe(false);

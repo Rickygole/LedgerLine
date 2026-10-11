@@ -76,6 +76,8 @@ Either way the same SQL and database tests run against the Azure database, so be
 
 This lists only controls implemented in the proof of concept, with the place where each lives. It is not an authorization package. Controls that depend on the hosting platform are listed in section 7 as inherited or open.
 
+The running application shows the same mapping at `/finance/platform/controls`, with the test that proves each control and whether it is provided by the application, shared, or inherited from the hosting provider.
+
 | Control | What is implemented | Where |
 | --- | --- | --- |
 | AC-2 Account management | Accounts are created by an administrator, with a one-time invitation link that expires in 30 minutes. Accounts carry an active flag, and an inactive account cannot sign in or use a token. Administrators start resets | `db/migrations/0011_d_admin_actions.sql`, `0018_s_outbox_tokens.sql` |

@@ -2,13 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   checkCitation,
   checkField,
+  jsonSchema,
   mergeFields,
   parseWithRules,
   splitParagraphs,
   type ProposedField,
 } from "@/lib/forms/editor/draft-core";
 import { templateSha } from "@/lib/forms/editor/template-hash";
-import { buildDefinition } from "@/lib/forms/standard";
+import { buildDefinition, STANDARD_QUESTIONS } from "@/lib/forms/standard";
+
+const LIBRARY = STANDARD_QUESTIONS.map(({ key, label }) => ({ key, label }));
+const LIBRARY_KEYS = LIBRARY.map((q) => q.key);
 
 const paragraphs = [
   "Annual Report",
@@ -49,7 +53,7 @@ describe("citation checker", () => {
       section: "performance",
       citation: { paragraph: 1, quote: "not in there" },
     };
-    const check = checkField(paragraphs, field);
+    const check = checkField(paragraphs, field, LIBRARY_KEYS);
     expect(check.ok).toBe(false);
     expect(check.problems).toContain("Citation not found in the template");
   });
@@ -62,15 +66,15 @@ describe("citation checker", () => {
       section: "performance",
       citation: { paragraph: 1, quote: "Annual" },
     };
-    expect(checkField(paragraphs, { ...base, type: "table" }).ok).toBe(false);
-    expect(checkField(paragraphs, { ...base, library_key: "nope" }).ok).toBe(false);
-    expect(checkField(paragraphs, { ...base, type: "select", options: ["Only one"] }).ok).toBe(false);
-    expect(checkField(paragraphs, base).ok).toBe(true);
+    expect(checkField(paragraphs, { ...base, type: "table" }, LIBRARY_KEYS).ok).toBe(false);
+    expect(checkField(paragraphs, { ...base, library_key: "nope" }, LIBRARY_KEYS).ok).toBe(false);
+    expect(checkField(paragraphs, { ...base, type: "select", options: ["Only one"] }, LIBRARY_KEYS).ok).toBe(false);
+    expect(checkField(paragraphs, base, LIBRARY_KEYS).ok).toBe(true);
   });
 });
 
 describe("rule-based fallback parser", () => {
-  const fields = parseWithRules(paragraphs);
+  const fields = parseWithRules(paragraphs, LIBRARY);
 
   it("finds numbered questions and ignores headings and injected instructions", () => {
     expect(fields.map((f) => f.citation.paragraph)).toEqual([2, 3, 4, 5, 6]);
@@ -90,11 +94,11 @@ describe("rule-based fallback parser", () => {
   });
 
   it("produces citations that pass the checker", () => {
-    for (const field of fields) expect(checkField(paragraphs, field).citationOk).toBe(true);
+    for (const field of fields) expect(checkField(paragraphs, field, LIBRARY_KEYS).citationOk).toBe(true);
   });
 
   it("detects lines that end with a question mark or colon without numbering", () => {
-    const found = parseWithRules(["How many classes met weekly?", "Site name:"]);
+    const found = parseWithRules(["How many classes met weekly?", "Site name:"], LIBRARY);
     expect(found).toHaveLength(2);
   });
 });
@@ -131,11 +135,70 @@ describe("template hashing and merging", () => {
         citation: { paragraph: 1, quote: "a" },
       },
     ];
-    const merged = mergeFields(definition, fields);
+    const merged = mergeFields(definition, fields, STANDARD_QUESTIONS);
     const keys = merged.definition.sections.flatMap((s) => s.questions.map((q) => q.key));
     expect(new Set(keys).size).toBe(keys.length);
     expect(merged.added).toEqual(["number_of_volunteers", "number_of_volunteers_2"]);
     expect(merged.alreadyPresent).toEqual(["Challenges"]);
     expect(merged.definition.sections[1].questions.at(-1)?.citation).toEqual({ paragraph: 1, quote: "a" });
+  });
+});
+
+describe("[US-003] the import reads the question library it is given", () => {
+  const added = [...LIBRARY, { key: "volunteer_hours", label: "Volunteer hours" }];
+  const withoutChallenges = LIBRARY.filter((q) => q.key !== "challenges");
+
+  it("accepts a library key that was added after the standard questions and rejects one that is gone", () => {
+    const field: ProposedField = {
+      label: "Volunteer hours",
+      type: "integer",
+      required: true,
+      section: "performance",
+      library_key: "volunteer_hours",
+      citation: { paragraph: 1, quote: "Annual" },
+    };
+    const keys = added.map((q) => q.key);
+    expect(checkField(paragraphs, field, keys).ok).toBe(true);
+    expect(checkField(paragraphs, field, LIBRARY_KEYS).problems).toContain("Library question does not exist");
+  });
+
+  it("links a template question to a library question by its label", () => {
+    const text = ["1. Volunteer hours"];
+    expect(parseWithRules(text, added)[0]?.library_key).toBe("volunteer_hours");
+    expect(parseWithRules(text, LIBRARY)[0]?.library_key).toBeUndefined();
+  });
+
+  it("does not link to a question that is no longer in the library", () => {
+    const text = ["1. Describe the challenges you faced this year."];
+    expect(parseWithRules(text, LIBRARY)[0]?.library_key).toBe("challenges");
+    expect(parseWithRules(text, withoutChallenges)[0]?.library_key).toBeUndefined();
+  });
+
+  it("offers the model exactly the keys in the library", () => {
+    const schema = jsonSchema(added.map((q) => q.key)) as {
+      properties: { questions: { items: { properties: { library_key: { enum: string[] } } } } };
+    };
+    expect(schema.properties.questions.items.properties.library_key.enum).toEqual(added.map((q) => q.key));
+    const empty = jsonSchema([]) as { properties: { questions: { items: { properties: Record<string, unknown> } } } };
+    expect(empty.properties.questions.items.properties.library_key).toBeUndefined();
+  });
+
+  it("copies the library question into the form when an imported field links to it", () => {
+    const question = {
+      ...STANDARD_QUESTIONS.find((q) => q.key === "accomplishments")!,
+      key: "volunteer_hours",
+      label: "Volunteer hours",
+    };
+    const field: ProposedField = {
+      label: "Volunteer hours",
+      type: "integer",
+      required: true,
+      section: "performance",
+      library_key: "volunteer_hours",
+      citation: { paragraph: 1, quote: "a" },
+    };
+    const merged = mergeFields(buildDefinition("Garden", []), [field], [...STANDARD_QUESTIONS, question]);
+    expect(merged.linked).toEqual(["volunteer_hours"]);
+    expect(merged.definition.sections.flatMap((x) => x.questions).some((q) => q.key === "volunteer_hours")).toBe(true);
   });
 });

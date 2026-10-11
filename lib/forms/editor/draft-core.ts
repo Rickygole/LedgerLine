@@ -1,12 +1,11 @@
 import { z } from "zod";
-import { STANDARD_QUESTIONS } from "@/lib/forms/standard";
 import { DRAFTABLE_TYPES, slugKey, uniqueKey } from "@/lib/forms/editor/definition";
 import type { FormDefinition, Question } from "@/lib/rules/types";
 
 export const SECTION_KEYS = ["performance", "narrative", "organization"] as const;
 type DraftSection = (typeof SECTION_KEYS)[number];
 
-export const LIBRARY_KEYS = STANDARD_QUESTIONS.map((q) => q.key);
+export type LibraryRef = { key: string; label: string };
 
 type ProposedColumn = { label: string; type: "text" | "integer" | "currency" | "percent" };
 
@@ -63,37 +62,39 @@ export const proposalSchema = z.object({
   ),
 });
 
-export const JSON_SCHEMA: Record<string, unknown> = {
-  type: "object",
-  additionalProperties: false,
-  required: ["questions"],
-  properties: {
-    questions: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["label", "type", "required", "section", "citation"],
-        properties: {
-          label: { type: "string" },
-          help: { type: "string" },
-          type: { type: "string", enum: DRAFTABLE_TYPES },
-          required: { type: "boolean" },
-          options: { type: "array", items: { type: "string" } },
-          max_words: { type: "integer" },
-          section: { type: "string", enum: [...SECTION_KEYS] },
-          library_key: { type: "string", enum: LIBRARY_KEYS },
-          citation: {
-            type: "object",
-            additionalProperties: false,
-            required: ["paragraph", "quote"],
-            properties: { paragraph: { type: "integer" }, quote: { type: "string" } },
+export function jsonSchema(libraryKeys: readonly string[]): Record<string, unknown> {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["questions"],
+    properties: {
+      questions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["label", "type", "required", "section", "citation"],
+          properties: {
+            label: { type: "string" },
+            help: { type: "string" },
+            type: { type: "string", enum: DRAFTABLE_TYPES },
+            required: { type: "boolean" },
+            options: { type: "array", items: { type: "string" } },
+            max_words: { type: "integer" },
+            section: { type: "string", enum: [...SECTION_KEYS] },
+            ...(libraryKeys.length > 0 ? { library_key: { type: "string", enum: [...libraryKeys] } } : {}),
+            citation: {
+              type: "object",
+              additionalProperties: false,
+              required: ["paragraph", "quote"],
+              properties: { paragraph: { type: "integer" }, quote: { type: "string" } },
+            },
           },
         },
       },
     },
-  },
-};
+  };
+}
 
 export function collapse(text: string): string {
   return text.replace(/\s+/g, " ").trim();
@@ -128,7 +129,7 @@ export function checkCitation(
 
 export type FieldCheck = { ok: boolean; citationOk: boolean; problems: string[] };
 
-export function checkField(paragraphs: string[], field: ProposedField): FieldCheck {
+export function checkField(paragraphs: string[], field: ProposedField, libraryKeys: readonly string[]): FieldCheck {
   const problems: string[] = [];
   const citationOk = checkCitation(paragraphs, field.citation);
   if (!citationOk) problems.push("Citation not found in the template");
@@ -141,7 +142,7 @@ export function checkField(paragraphs: string[], field: ProposedField): FieldChe
       problems.push("A table needs one to eight named columns");
   }
   if (!(SECTION_KEYS as readonly string[]).includes(field.section)) problems.push("Section is not allowed");
-  if (field.library_key !== undefined && !LIBRARY_KEYS.includes(field.library_key))
+  if (field.library_key !== undefined && !libraryKeys.includes(field.library_key))
     problems.push("Library question does not exist");
   if (field.type === "select") {
     const options = (field.options ?? []).map((option) => option.trim());
@@ -335,7 +336,13 @@ function tablePromptLabel(text: string): string {
 
 type Classified = { field: ProposedField; numbered: boolean };
 
-function classify(paragraph: string, index: number, heading: string | undefined, listItem: boolean): Classified | null {
+function classify(
+  paragraph: string,
+  index: number,
+  heading: string | undefined,
+  listItem: boolean,
+  library: LibraryRef[],
+): Classified | null {
   const { body, numbered: wasNumbered } = stripNumber(paragraph);
   const numbered = wasNumbered || listItem;
   const endsLikeQuestion = /[?:]$/.test(body);
@@ -397,8 +404,11 @@ function classify(paragraph: string, index: number, heading: string | undefined,
   if (options) field.options = options;
   const words = maxWords ?? detected.maxWords;
   if (words && detected.type === "textarea") field.max_words = words;
-  const library = LIBRARY_RULES.find(([pattern]) => pattern.test(label));
-  if (library) field.library_key = library[1];
+  const keys = new Set(library.map((item) => item.key));
+  const rule = LIBRARY_RULES.find(([pattern, key]) => keys.has(key) && pattern.test(label));
+  const named = library.find((item) => collapse(item.label).toLowerCase() === label.toLowerCase());
+  const linked = rule?.[1] ?? named?.key;
+  if (linked) field.library_key = linked;
   return { field, numbered };
 }
 
@@ -413,7 +423,11 @@ function isLabelAnswerTable(rows: TemplateCell[][]): boolean {
   return rows.every((row) => /[?:]$/.test(row[0].text.trim()) || row[0].text.trim().split(/\s+/).length >= 2);
 }
 
-export function parseWithRules(paragraphs: string[], structure?: TemplateStructure): ProposedField[] {
+export function parseWithRules(
+  paragraphs: string[],
+  library: LibraryRef[],
+  structure?: TemplateStructure,
+): ProposedField[] {
   const layout = structure ?? structureOf(paragraphs) ?? inferStructure(paragraphs);
   const headingAt = new Map(layout.headings.map((h) => [h.paragraph, h.text]));
   const tableAt = new Map(layout.tables.map((t) => [t.first, t]));
@@ -440,7 +454,7 @@ export function parseWithRules(paragraphs: string[], structure?: TemplateStructu
       if (isLabelAnswerTable(table.rows)) {
         for (const row of table.rows) {
           const cell = row[0];
-          const made = classify(cell.text, (cell.paragraph ?? n) - 1, current, true);
+          const made = classify(cell.text, (cell.paragraph ?? n) - 1, current, true, library);
           if (made) fields.push(withTitle(made.field));
         }
         continue;
@@ -478,7 +492,7 @@ export function parseWithRules(paragraphs: string[], structure?: TemplateStructu
       continue;
     }
     if (inTable.has(n)) continue;
-    const made = classify(paragraph, n - 1, current, listItems.has(n));
+    const made = classify(paragraph, n - 1, current, listItems.has(n), library);
     if (made) fields.push(withTitle(made.field));
   }
   return fields;
@@ -516,7 +530,7 @@ function toQuestion(definition: FormDefinition, field: ProposedField, extraKeys:
 
 type MergeOutcome = { definition: FormDefinition; added: string[]; linked: string[]; alreadyPresent: string[] };
 
-export function mergeFields(definition: FormDefinition, fields: ProposedField[]): MergeOutcome {
+export function mergeFields(definition: FormDefinition, fields: ProposedField[], library: Question[]): MergeOutcome {
   const next: FormDefinition = JSON.parse(JSON.stringify(definition));
   const added: string[] = [];
   const linked: string[] = [];
@@ -551,7 +565,7 @@ export function mergeFields(definition: FormDefinition, fields: ProposedField[])
       ? (next.sections.find((s) => s.kind === "questions" && s.key === field.section) ?? fallbackSection)
       : sectionFor(field);
     if (field.library_key) {
-      const standard = STANDARD_QUESTIONS.find((q) => q.key === field.library_key);
+      const standard = library.find((q) => q.key === field.library_key);
       if (standard && present().has(standard.key)) {
         alreadyPresent.push(field.label);
         continue;
@@ -562,7 +576,11 @@ export function mergeFields(definition: FormDefinition, fields: ProposedField[])
         continue;
       }
     }
-    const question = toQuestion(next, field, []);
+    const question = toQuestion(
+      next,
+      field,
+      library.map((q) => q.key),
+    );
     section.questions.push(question);
     added.push(question.key);
   }
