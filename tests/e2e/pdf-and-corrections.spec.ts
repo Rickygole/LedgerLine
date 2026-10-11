@@ -77,6 +77,7 @@ test.describe("finance", () => {
     await page.getByLabel("Reason").fill("");
     await page.getByRole("button", { name: "Save correction" }).click();
     await expect(page.getByText("Enter a reason. Every correction is recorded with its reason.")).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "Enter a reason. Every correction is recorded" })).toBeVisible();
     await page.getByLabel("Reason").fill("Moved 100 dollars to a new transit line after the site visit");
     await page.getByRole("button", { name: "Save correction" }).click();
     await expect(page.getByText("Correction saved as a new revision.")).toBeVisible();

@@ -219,13 +219,10 @@ function CorrectionForm({
           aria-invalid={state?.error ? true : undefined}
         />
       </div>
-      {state?.error ? (
-        isStale(state.error) ? (
-          <StaleNotice />
-        ) : (
-          <FieldError id="corr-error">{state.error}</FieldError>
-        )
-      ) : null}
+      {state?.error && isStale(state.error) ? <StaleNotice /> : null}
+      <div role="alert" aria-atomic="true">
+        {state?.error && !isStale(state.error) ? <FieldError id="corr-error">{state.error}</FieldError> : null}
+      </div>
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         <Pencil className="h-4 w-4" aria-hidden="true" />
         {pending ? "Saving" : "Save correction"}
