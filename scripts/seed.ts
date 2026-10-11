@@ -1337,7 +1337,18 @@ export async function seed(client: Client, options: { lateDraft: "empty" | "half
       opts.submittedOn ??
       (period.kind === "MY" ? rampDate("2026-01-02", "2026-01-31", 2.2) : rampDate("2026-07-01", "2026-09-30", 2));
     const submittedAt = isoAt(submittedDate, between(9, 18), between(0, 59));
-    const snapshot = buildSnapshot({ formVersionId: initiative.formId, answers: full, budget: lines, attachments: [] });
+    const snapshot = buildSnapshot({
+      formVersionId: initiative.formId,
+      answers: full,
+      budget: lines,
+      attachments: [],
+      subject: {
+        organizationName: org.legal_name,
+        ein: org.ein,
+        initiativeName: initiative.name,
+        awardAmount: opts.assignment.award_amount,
+      },
+    });
     revisionRows.push({
       submission_id: id,
       revision: 1,

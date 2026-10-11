@@ -308,7 +308,19 @@ export async function submitReport(raw: unknown): Promise<SubmitResult> {
       };
 
       const attachments = files.map((file) => ({ path: file.path, filename: file.filename, bytes: Number(file.bytes), mime: file.mime }));
-      const snapshot = buildSnapshot({ formVersionId: report.formVersionId, answers, budget, attachments, certification });
+      const snapshot = buildSnapshot({
+        formVersionId: report.formVersionId,
+        answers,
+        budget,
+        attachments,
+        certification,
+        subject: {
+          organizationName: header.orgName,
+          ein: header.ein,
+          initiativeName: header.initiativeName,
+          awardAmount: header.awardAmount,
+        },
+      });
       const body = plainTextReport({
         title: header.initiativeName,
         referenceNo: header.referenceNo,

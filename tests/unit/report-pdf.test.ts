@@ -1,28 +1,9 @@
-import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { buildDefinition } from "@/lib/forms/standard";
 import { buildReportPdf, pdfFilename } from "@/lib/report/pdf";
 import { buildSnapshot } from "@/lib/snapshot";
 import type { Question } from "@/lib/rules/types";
-
-function pdfText(bytes: Uint8Array): string {
-  const raw = Buffer.from(bytes).toString("latin1");
-  const out: string[] = [];
-  const pattern = /(?<!end)stream\n([\s\S]*?)\nendstream/g;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(raw))) {
-    let body: string;
-    try {
-      body = inflateSync(Buffer.from(match[1], "latin1")).toString("latin1");
-    } catch {
-      continue;
-    }
-    for (const hex of body.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)) {
-      out.push(Buffer.from(hex[1], "hex").toString("latin1"));
-    }
-  }
-  return out.join("\n");
-}
+import { pdfPages, pdfText } from "./pdf-text";
 
 const tableQuestion: Question = {
   key: "activities",
@@ -65,7 +46,7 @@ describe("[US-021] report PDF", () => {
       snapshot,
     });
     expect(Buffer.from(bytes).subarray(0, 5).toString("latin1")).toBe("%PDF-");
-    const text = pdfText(bytes);
+    const text = await pdfText(bytes);
     for (const needle of [
       "Youth Services",
       "LL-26YE-00002",
@@ -115,5 +96,87 @@ describe("[US-021] report PDF", () => {
       snapshot,
     });
     expect(bytes.length).toBeGreaterThan(1000);
+  });
+
+  const base = {
+    initiativeName: "Youth Services",
+    periodLabel: "FY27 Year-End",
+    referenceNo: "LL-26YE-00002",
+    revision: 2,
+    revisionKind: "submit" as const,
+    revisionReason: null,
+    revisionActor: null,
+    submittedAt: "2026-10-01T14:00:00Z",
+    submittedByName: "Maria Santos",
+    orgName: "Harbor Youth Alliance",
+    ein: "12-3456789",
+    awardAmount: 50000,
+  };
+
+  it("reads like an official record with the receipt code, and ends with the certification", async () => {
+    const definition = buildDefinition("Youth Services", []);
+    const snapshot = buildSnapshot({
+      formVersionId: "fv",
+      answers: {},
+      budget: [],
+      attachments: [{ path: "p/a.pdf", filename: "budget-remaining.xlsx", bytes: 2048, mime: "application/pdf" }],
+      certification: {
+        statement: "I certify that this report is accurate.",
+        name: "Maria Santos",
+        title: "Executive Director",
+        certifiedAt: "2026-10-01T14:05:00Z",
+      },
+    });
+    const text = await pdfText(await buildReportPdf({ ...base, receiptCode: "a1b2c3d4e5f6", definition, snapshot }));
+    const lines = text.split("\n");
+    expect(lines[0]).toBe("LedgerLine \u00b7 Submitted copy");
+    expect(lines[1]).toBe("Reference LL-26YE-00002 \u00b7 Revision 2");
+    expect(text).toContain("Receipt code");
+    expect(text).toContain("a1b2c3d4e5f6");
+    const heading = lines.indexOf("Certification");
+    expect(heading).toBeGreaterThan(lines.indexOf("Attachments"));
+    for (const needle of [
+      "I certify that this report is accurate.",
+      "Maria Santos",
+      "Executive Director",
+      "Certified on",
+    ])
+      expect(lines.slice(heading).join("\n")).toContain(needle);
+  });
+
+  it("drops characters the font cannot draw instead of printing question marks", async () => {
+    const definition = buildDefinition("Youth Services", []);
+    const snapshot = buildSnapshot({
+      formVersionId: "fv",
+      answers: { org_legal_name: "Caf\u00e9 \u4e2d\u6587 \ud83d\ude00 Alliance" },
+      budget: [],
+      attachments: [],
+    });
+    const text = await pdfText(
+      await buildReportPdf({ ...base, orgName: "Caf\u00e9 \u4e2d\u6587 \ud83d\ude00 Alliance", definition, snapshot }),
+    );
+    expect(text).toMatch(/Caf\u00e9 +Alliance/);
+    expect(text).not.toContain("?");
+  });
+
+  it("keeps a budget table header with its first row and never splits the Line heading", async () => {
+    const definition = buildDefinition("Youth Services", []);
+    const budget = Array.from({ length: 70 }, (_, index) => ({
+      rowId: String(index + 1),
+      position: index + 1,
+      category: index % 2 ? ("PS" as const) : ("OTPS" as const),
+      description: `Budget line number ${index + 1}`,
+      amount: 100,
+      actual: 90,
+    }));
+    const snapshot = buildSnapshot({ formVersionId: "fv", answers: {}, budget, attachments: [] });
+    const pages = await pdfPages(await buildReportPdf({ ...base, awardAmount: 7000, definition, snapshot }));
+    for (const lines of pages) {
+      const at = lines.indexOf("Approved budget");
+      if (at >= 0) expect(lines.slice(at + 1).some((line) => line.startsWith("Budget line number"))).toBe(true);
+    }
+    const all = pages.flat();
+    expect(all).toContain("Line");
+    expect(all.some((line) => line === "Lin" || line === "e")).toBe(false);
   });
 });

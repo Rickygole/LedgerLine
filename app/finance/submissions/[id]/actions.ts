@@ -18,7 +18,7 @@ import {
   PRESET_CONCERNS,
   type Concern,
 } from "@/lib/finance/review/return-note-core";
-import { buildSnapshot } from "@/lib/snapshot";
+import { buildSnapshot, type SnapshotSubject } from "@/lib/snapshot";
 import { isUuid } from "@/lib/ids";
 import { randomUUID } from "node:crypto";
 import { introducedBlockingIssuesFor } from "@/lib/rules/correction";
@@ -353,7 +353,17 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
         "SELECT path, filename, bytes::text AS bytes, mime FROM attachment WHERE submission_id = $1 AND removed_at IS NULL",
         [id],
       );
+      const earlier = await tx.one<{ subject: SnapshotSubject | null }>(
+        "SELECT snapshot -> 'subject' AS subject FROM submission_revision WHERE submission_id = $1 ORDER BY revision DESC, id DESC LIMIT 1",
+        [id],
+      );
       const snapshot = buildSnapshot({
+        subject: earlier?.subject ?? {
+          organizationName: row.orgName,
+          ein: row.ein,
+          initiativeName: row.initiativeName,
+          awardAmount: row.award,
+        },
         formVersionId: row.formVersionId!,
         answers: {
           ...visibleAnswers(definition, nextAnswers),

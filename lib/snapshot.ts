@@ -3,12 +3,15 @@ import type { Answers, BudgetLine } from "@/lib/rules/types";
 
 type SnapshotAttachment = { path: string; filename: string; bytes: number; mime: string };
 
+export type SnapshotSubject = { organizationName: string; ein: string; initiativeName: string; awardAmount: number };
+
 export type Snapshot = {
   formVersionId: string;
   answers: Answers;
   budget: Omit<BudgetLine, "rowId">[];
   attachments: SnapshotAttachment[];
   certification?: Certification;
+  subject?: SnapshotSubject;
 };
 
 function sortKeys(value: unknown): unknown {
@@ -29,6 +32,7 @@ export function buildSnapshot(input: {
   budget: BudgetLine[];
   attachments: SnapshotAttachment[];
   certification?: Certification;
+  subject?: SnapshotSubject;
 }): Snapshot {
   return sortKeys({
     formVersionId: input.formVersionId,
@@ -44,5 +48,6 @@ export function buildSnapshot(input: {
       })),
     attachments: [...input.attachments].sort((a, b) => a.path.localeCompare(b.path)),
     ...(input.certification ? { certification: input.certification } : {}),
+    ...(input.subject ? { subject: input.subject } : {}),
   }) as Snapshot;
 }
