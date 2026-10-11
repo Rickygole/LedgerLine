@@ -22,6 +22,23 @@ describe("[US-065][US-066] the starting data matches a system that has not gone 
     expect(await count("SELECT count(*)::int AS n FROM readiness_schedule WHERE kind = 'test'")).toBeGreaterThan(0);
     expect(await count("SELECT count(*)::int AS n FROM readiness_schedule WHERE kind = 'training'")).toBeGreaterThan(0);
   });
+
+  it("lists each scheduled session once however many times the data was reseeded", async () => {
+    expect(
+      await count(
+        `SELECT count(*)::int AS n FROM (
+           SELECT kind, scheduled_on, title, audience FROM readiness_schedule GROUP BY 1, 2, 3, 4 HAVING count(*) > 1
+         ) d`,
+      ),
+    ).toBe(0);
+    expect(
+      await count(
+        `SELECT count(*)::int AS n FROM (
+           SELECT period_id, offset_days FROM reminder_rule GROUP BY 1, 2 HAVING count(*) > 1
+         ) d`,
+      ),
+    ).toBe(0);
+  });
 });
 
 describe("[US-058] the starting data has no past security incident", () => {

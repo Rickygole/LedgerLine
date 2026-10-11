@@ -370,7 +370,7 @@ async function reset(client: Client, scene: string) {
   await client.query(`TRUNCATE auth_attempt, audit_event, submission_revision, ai_action, outbox, flag, attachment, budget_line, answer, submission,
     form_version, question, assignment_sponsor, assignment, reporting_period, initiative, app_user, contact, organization, council_member, fiscal_year, app_setting,
     support_message, support_request, incident_event, incident_remediation, security_incident, incident_contact, annual_review_decision, annual_review_participant, annual_review,
-    training_record, uat_defect, uat_session RESTART IDENTITY CASCADE`);
+    training_record, uat_defect, uat_session, readiness_schedule RESTART IDENTITY CASCADE`);
   for (const table of guarded) await client.query(`ALTER TABLE ${table} ENABLE TRIGGER USER`);
   await client.query("INSERT INTO demo_reset (scene) VALUES ($1)", [scene]);
 }
