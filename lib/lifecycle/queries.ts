@@ -218,6 +218,12 @@ export function exportSummary({ matches, exportable }: MatchSummary): string {
   return `${formatCount(matches)} ${plural(matches, "match", "matches")}, ${formatCount(exportable)} submitted ${plural(exportable, "report", "reports")} included in the export`;
 }
 
+export function showingSummary({ matches, exportable }: MatchSummary): string {
+  const showing = `Showing ${formatCount(matches)} ${plural(matches, "report", "reports")}.`;
+  if (exportable === 0) return `${showing} None have been submitted, so the export is empty.`;
+  return `${showing} Export includes the ${formatCount(exportable)} that ${plural(exportable, "has", "have")} been submitted.`;
+}
+
 export async function queryOptions(tx: Tx) {
   const [periods, categories, initiatives, members] = await Promise.all([
     loadPeriods(tx),

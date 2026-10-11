@@ -22,7 +22,7 @@ test("[US-048][US-046] a query says how many of its matches the Excel export inc
 
   await page.getByRole("link", { name: "Open results" }).click();
   await expect(page).toHaveURL(/\/finance\/submissions\?/);
-  await expect(page.getByTestId("export-note")).toContainText(
-    `${matches} matches, ${exportable} submitted reports included in the export`,
+  await expect(page.getByTestId("export-note")).toHaveText(
+    `Showing ${matches} reports. Export includes the ${exportable} that have been submitted.`,
   );
 });
