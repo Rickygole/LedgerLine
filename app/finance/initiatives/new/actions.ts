@@ -8,7 +8,7 @@ import { buildDefinitionFrom } from "@/lib/forms/standard";
 import { loadLibrary } from "@/lib/forms/library";
 import { parseAmount } from "@/lib/rules/money";
 import { actionFailure, type ActionState } from "@/lib/actions";
-import { AGENCIES } from "@/lib/domain";
+import { AGENCIES, normalizeAgency } from "@/lib/domain";
 import { nextInitiativeCode } from "@/lib/finance/admin/initiatives";
 import { isUuid } from "@/lib/ids";
 import { writeAudit } from "@/lib/audit";
@@ -98,7 +98,7 @@ export async function assignOrganizations(_prev: ActionState, formData: FormData
     rows: orgIds.map((orgId, i) => ({
       orgId,
       amount: amounts[i],
-      agency: AGENCIES.includes(agencies[i] as never) ? agencies[i] : "",
+      agency: AGENCIES.includes(normalizeAgency(agencies[i]) as never) ? normalizeAgency(agencies[i]) : "",
     })),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the organizations and try again." };

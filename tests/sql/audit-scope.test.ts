@@ -53,7 +53,6 @@ afterAll(async () => {
   await owner?.end();
 });
 
-
 async function seen(user: string, extra: string[][] = []): Promise<Set<string>> {
   await owner.query("BEGIN");
   try {

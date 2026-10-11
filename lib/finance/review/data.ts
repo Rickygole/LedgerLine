@@ -165,7 +165,7 @@ export async function loadFilterOptions(tx: Tx) {
     "SELECT district, full_name FROM council_member WHERE district IN (SELECT district FROM assignment_sponsor) ORDER BY district",
   );
   const agencies = await tx.query<{ agency: string }>(
-    "SELECT DISTINCT sponsoring_agency AS agency FROM assignment WHERE sponsoring_agency IS NOT NULL ORDER BY 1",
+    "SELECT DISTINCT upper(btrim(sponsoring_agency)) AS agency FROM assignment WHERE btrim(coalesce(sponsoring_agency, '')) <> '' ORDER BY 1",
   );
   return {
     categories: categories.map((c) => c.category),

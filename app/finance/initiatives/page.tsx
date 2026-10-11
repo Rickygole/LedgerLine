@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FINANCE_ROLES, requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { shortDate, todayInNewYork } from "@/lib/dates";
+import { normalizeAgency } from "@/lib/domain";
 import { formatCompactCurrency, formatCount, formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -52,7 +53,8 @@ export default async function InitiativesPage({ searchParams }: { searchParams: 
     const categories = await listCategories(tx);
     const agencies = await listAgencies(tx);
     const category = categories.includes(one(params, "category")) ? one(params, "category") : "";
-    const agency = agencies.includes(one(params, "agency")) ? one(params, "agency") : "";
+    const wanted = normalizeAgency(one(params, "agency"));
+    const agency = agencies.includes(wanted) ? wanted : "";
     const list = await listInitiatives(tx, today, period.id, { q, category, status, agency, page, form });
     const summary = await categorySummary(tx, today, period.id);
     const opens = await tx.one<{ opens_on: string }>(

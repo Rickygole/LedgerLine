@@ -1,3 +1,4 @@
+import { normalizeAgency } from "@/lib/domain";
 import { isUuid } from "@/lib/ids";
 import { counted } from "@/lib/format";
 
@@ -9,12 +10,10 @@ export type AccessScope = { agencies: string[]; initiatives: string[] };
 export type ScopeParse = { ok: true; scope: AccessScope } | { ok: false; error: string };
 
 export function parseScope(agencyValues: unknown[], initiativeValues: unknown[], knownAgencies: string[]): ScopeParse {
-  const known = new Set(knownAgencies);
+  const known = new Set(knownAgencies.map(normalizeAgency));
   const agencies: string[] = [];
   for (const value of agencyValues) {
-    const agency = String(value ?? "")
-      .trim()
-      .toUpperCase();
+    const agency = normalizeAgency(value);
     if (!agency) continue;
     if (!known.has(agency)) return { ok: false, error: `${agency.slice(0, 40)} is not an administering agency.` };
     if (!agencies.includes(agency)) agencies.push(agency);

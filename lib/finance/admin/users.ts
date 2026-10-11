@@ -39,7 +39,7 @@ export async function listUsers(tx: Tx, filters: { q: string; role: string; page
 
 export async function listAgencies(tx: Tx): Promise<string[]> {
   const rows = await tx.query<{ agency: string }>(
-    `SELECT DISTINCT administering_agency AS agency FROM initiative WHERE administering_agency IS NOT NULL ORDER BY 1`,
+    `SELECT DISTINCT upper(btrim(administering_agency)) AS agency FROM initiative WHERE btrim(coalesce(administering_agency, '')) <> '' ORDER BY 1`,
   );
   return rows.map((r) => r.agency);
 }
