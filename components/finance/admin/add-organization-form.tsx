@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { addOrganization } from "@/app/finance/organizations/actions";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { FieldError, Hint, Input, Label, Select } from "@/components/ui/field";
 import { ErrorSummary } from "@/components/finance/admin/error-summary";
 import { ORG_TYPES, REPORT_BOROUGHS } from "@/lib/domain";
@@ -136,10 +136,13 @@ export function AddOrganizationForm() {
           </div>
         </div>
       </fieldset>
-      <div>
+      <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Adding" : "Add organization"}
         </Button>
+        <ButtonLink href="/finance/organizations" variant="ghost">
+          Cancel
+        </ButtonLink>
       </div>
     </form>
   );
