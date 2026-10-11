@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/car
 import { PageHeader } from "@/components/ui/page-header";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/dates";
+import { counted } from "@/lib/format";
 import evidence from "./evidence.json";
 import { RequirementTable, type EvidenceRow } from "./requirement-table";
 
@@ -193,8 +194,8 @@ export default async function TraceabilityPage() {
       </div>
 
       <p className="num mt-6 text-sm font-semibold text-ink">
-        {total("verified")} verified by test, {total("supporting")} supporting tools built, {total("planned")} delivery
-        commitments
+        {total("verified")} verified by test, {counted(total("supporting"), "supporting tool")} built,{" "}
+        {counted(total("planned"), "delivery commitment")}
         {total("demonstrated") > 0 ? `, ${total("demonstrated")} demonstrated` : ""}
         {total("failing") > 0 ? `, ${total("failing")} failing` : ""}.
       </p>

@@ -110,7 +110,7 @@ describe("the starting reports follow the reporting calendar", () => {
   });
 });
 
-describe("[US-021] Maria's pasted budget lines bring her draft to the award", () => {
+describe("[US-025] Maria's pasted budget lines bring her draft to the award", () => {
   it("codes the evaluation consultant as other than personal services and balances to $85,000", async () => {
     const draft = (
       await owner.query(

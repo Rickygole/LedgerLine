@@ -48,7 +48,7 @@ describe("[US-026] table totals calculate automatically", () => {
 
   it("counts negative, parenthesized and signed entries instead of dropping them", () => {
     const question: Question = { ...grants, sumRule: undefined };
-    const value = [
+    const value: Record<string, string>[] = [
       { cost: "100" },
       { cost: "-20" },
       { cost: "(30)" },
