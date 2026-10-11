@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ErrorSummary, problemsTitle } from "@/components/ui/error-summary";
 import { Input, Label, Select } from "@/components/ui/field";
+import { PublishDrafts } from "@/components/forms/publish-drafts";
 import { counted } from "@/lib/format";
 import type { ApplyOutcome } from "@/lib/forms/library";
 
@@ -23,6 +24,7 @@ type Props = {
   questionKey: string;
   questionLabel: string;
   targets: ApplyTarget[];
+  openDrafts: number;
 };
 
 const RESULT_TEXT: Record<ApplyOutcome["result"], string> = {
@@ -35,7 +37,7 @@ const RESULT_TEXT: Record<ApplyOutcome["result"], string> = {
   invalid: "Not applied",
 };
 
-export function ApplyToForms({ questionKey, questionLabel, targets }: Props) {
+export function ApplyToForms({ questionKey, questionLabel, targets, openDrafts }: Props) {
   const years = useMemo(() => [...new Set(targets.map((t) => t.fiscalYear))].sort().reverse(), [targets]);
   const [year, setYear] = useState(years[0] ?? "");
   const [search, setSearch] = useState("");
@@ -77,12 +79,15 @@ export function ApplyToForms({ questionKey, questionLabel, targets }: Props) {
 
   const count = (result: ApplyOutcome["result"]) => outcomes?.filter((o) => o.result === result).length ?? 0;
   const drafts = count("created") + count("updated") + count("added");
+  const draftIds = (outcomes ?? []).flatMap((o) =>
+    o.formId && (o.result === "created" || o.result === "updated" || o.result === "added") ? [o.formId] : [],
+  );
 
   return (
     <Card>
       <CardHeader
         title="Apply to forms"
-        description={`Create a new draft form version with the current "${questionLabel}" for each initiative you select. Published forms and reports already started are never changed. Review and publish each draft from the initiative.`}
+        description={`Create a new draft form version with the current "${questionLabel}" for each initiative you select. Published forms and reports already started are never changed. Review and publish each draft from the initiative, or publish them all at once.`}
       />
       <CardBody className="space-y-4">
         <ErrorSummary
@@ -170,6 +175,15 @@ export function ApplyToForms({ questionKey, questionLabel, targets }: Props) {
             {counted(picked.size, "initiative")} selected
           </span>
         </div>
+        {!outcomes && openDrafts > 0 ? (
+          <div className="space-y-2 border-t border-line-soft pt-4">
+            <p className="text-sm text-ink">
+              {counted(openDrafts, "draft")} with this question {openDrafts === 1 ? "is" : "are"} waiting to be
+              published.
+            </p>
+            <PublishDrafts questionKey={questionKey} formIds={null} count={openDrafts} />
+          </div>
+        ) : null}
         {outcomes ? (
           <div role="status" className="space-y-3 rounded border border-ok/30 bg-ok-bg px-4 py-3 text-sm text-ink">
             <p className="font-semibold text-ok">
@@ -182,6 +196,14 @@ export function ApplyToForms({ questionKey, questionLabel, targets }: Props) {
                 Skipped: {count("unchanged")} already current, {count("missing")} without the question,{" "}
                 {count("no_form")} without a form, {count("invalid")} that would not pass the form checks.
               </p>
+            ) : null}
+            {draftIds.length > 0 ? (
+              <PublishDrafts
+                key={draftIds.join()}
+                questionKey={questionKey}
+                formIds={draftIds}
+                count={draftIds.length}
+              />
             ) : null}
             <ul className="max-h-60 divide-y divide-line-soft overflow-y-auto rounded border border-line bg-white">
               {outcomes.map((o) => (

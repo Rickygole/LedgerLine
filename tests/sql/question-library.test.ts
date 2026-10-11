@@ -3,9 +3,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildDefinition, buildDefinitionFrom, STANDARD_QUESTIONS } from "@/lib/forms/standard";
 import {
   applyToForms,
+  countDraftsWithQuestion,
   createLibraryQuestion,
   loadLibrary,
   loadLibraryQuestion,
+  publishDraftsWithQuestion,
   setLibraryRetired,
   updateLibraryQuestion,
 } from "@/lib/forms/library";
@@ -354,6 +356,110 @@ describe("[US-003] Apply to forms creates new drafts and never changes a publish
             [one],
           ),
         ),
+      ).toBe("42501");
+    });
+  });
+});
+
+describe("[US-003] Publish all drafts made by Apply to forms", () => {
+  it("publishes every draft in one step, keeps pinned reports on their version and audits it", async () => {
+    const picked = await initiatives(3);
+    const before = (
+      await owner.query<{ id: string; initiative_id: string; version: number }>(
+        "SELECT id, initiative_id, version FROM form_version WHERE initiative_id = ANY($1::uuid[]) AND status = 'published'",
+        [picked],
+      )
+    ).rows;
+    const pinned = (
+      await owner.query("SELECT count(*)::int AS n FROM submission s WHERE s.form_version_id = ANY($1::uuid[])", [
+        before.map((r) => r.id),
+      ])
+    ).rows[0].n;
+    await asUser(app, priya, async () => {
+      await updateLibraryQuestion(tx(), {
+        question: reworded("Contact person for this report"),
+        templateSection: "organization",
+      });
+      await applyToForms(tx(), "contact_name", picked, { addIfMissing: false });
+      expect(await countDraftsWithQuestion(tx(), "contact_name")).toBeGreaterThanOrEqual(3);
+      const result = await publishDraftsWithQuestion(tx(), "contact_name", null);
+      if (!("published" in result)) throw new Error("publish failed");
+      expect(result.published).toBeGreaterThanOrEqual(3);
+      expect(result.failed).toEqual([]);
+      expect(await countDraftsWithQuestion(tx(), "contact_name")).toBe(0);
+      for (const row of before) {
+        const rows = (
+          await app.query("SELECT version, status FROM form_version WHERE initiative_id = $1 ORDER BY version DESC", [
+            row.initiative_id,
+          ])
+        ).rows;
+        expect(rows[0]).toEqual({ version: row.version + 1, status: "published" });
+        expect(rows.filter((r) => r.status === "published")).toHaveLength(1);
+        expect((await app.query("SELECT status FROM form_version WHERE id = $1", [row.id])).rows[0].status).toBe(
+          "superseded",
+        );
+      }
+      const stillPinned = (
+        await app.query("SELECT count(*)::int AS n FROM submission s WHERE s.form_version_id = ANY($1::uuid[])", [
+          before.map((r) => r.id),
+        ])
+      ).rows[0].n;
+      expect(stillPinned).toBe(pinned);
+      const published = (
+        await app.query(
+          "SELECT count(*)::int AS n FROM audit_event WHERE entity = 'form_version' AND action = 'publish' AND actor_id = $1",
+          [priya],
+        )
+      ).rows[0].n;
+      expect(published).toBe(result.published);
+      const summary = (
+        await app.query(
+          "SELECT after FROM audit_event WHERE entity = 'question' AND entity_id = 'contact_name' AND action = 'library_publish'",
+        )
+      ).rows[0].after;
+      expect(summary).toMatchObject({ published: result.published, failed: 0 });
+    });
+  });
+
+  it("publishes only the listed drafts and reports a form that fails while the others still publish", async () => {
+    const [one, two, three] = await initiatives(3);
+    await asUser(app, priya, async () => {
+      await updateLibraryQuestion(tx(), {
+        question: reworded("Contact person"),
+        templateSection: "organization",
+      });
+      await applyToForms(tx(), "contact_name", [one, two, three], { addIfMissing: false });
+      const drafts = (
+        await app.query<{ id: string; initiative_id: string }>(
+          "SELECT id, initiative_id FROM form_version WHERE initiative_id = ANY($1::uuid[]) AND status = 'draft'",
+          [[one, two, three]],
+        )
+      ).rows;
+      const idOf = (initiative: string) => drafts.find((d) => d.initiative_id === initiative)!.id;
+      await app.query(
+        `UPDATE form_version SET definition = jsonb_set(definition, '{sections,0,questions}',
+           (definition -> 'sections' -> 0 -> 'questions') ||
+           '[{"key":"bad_pick","label":"Bad pick","type":"select","required":false,"scope":"initiative","options":["Only"]}]'::jsonb)
+         WHERE id = $1`,
+        [idOf(two)],
+      );
+      const partial = await publishDraftsWithQuestion(tx(), "contact_name", [idOf(one), idOf(two)]);
+      if (!("published" in partial)) throw new Error("publish failed");
+      expect(partial.published).toBe(1);
+      expect(partial.failed).toHaveLength(1);
+      expect(partial.failed[0].initiativeId).toBe(two);
+      const status = async (id: string) =>
+        (await app.query("SELECT status FROM form_version WHERE id = $1", [id])).rows[0].status;
+      expect(await status(idOf(one))).toBe("published");
+      expect(await status(idOf(two))).toBe("draft");
+      expect(await status(idOf(three))).toBe("draft");
+    });
+  });
+
+  it("is limited to administrators in the database", async () => {
+    await asUser(app, daniel, async () => {
+      expect(
+        await errorCode(() => app.query("SELECT app.publish_form($1)", ["00000000-0000-0000-0000-000000000000"])),
       ).toBe("42501");
     });
   });

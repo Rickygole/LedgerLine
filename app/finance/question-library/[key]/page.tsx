@@ -8,7 +8,13 @@ import { Badge } from "@/components/ui/status-badge";
 import { ApplyToForms, type ApplyTarget } from "@/components/forms/apply-to-forms";
 import { LibraryQuestionForm } from "@/components/forms/library-question-form";
 import { LibraryRetire } from "@/components/forms/library-retire";
-import { PROTECTED_KEYS, currentFiscalYear, loadLibraryQuestion, usageParts } from "@/lib/forms/library";
+import {
+  PROTECTED_KEYS,
+  countDraftsWithQuestion,
+  currentFiscalYear,
+  loadLibraryQuestion,
+  usageParts,
+} from "@/lib/forms/library";
 import { counted } from "@/lib/format";
 import { formatDateTime, todayInNewYork } from "@/lib/dates";
 
@@ -45,10 +51,11 @@ export default async function LibraryQuestionPage({
            FROM initiative i ORDER BY i.code`,
         )
       : [];
-    return { item, targets, year: await currentFiscalYear(tx, todayInNewYork()) };
+    const openDrafts = admin ? await countDraftsWithQuestion(tx, key) : 0;
+    return { item, targets, openDrafts, year: await currentFiscalYear(tx, todayInNewYork()) };
   });
   if (!data) notFound();
-  const { item, targets, year } = data;
+  const { item, targets, openDrafts, year } = data;
   const usage = usageParts(item.usageByYear, year);
   const usageSentence = `Used by ${usage.current ? `${counted(usage.current.count, "initiative")} in ${usage.current.year}` : "no initiatives"}`;
   const priorUsage = usage.prior.map((p) => `${p.count} in ${p.year}`).join(", ");
@@ -103,7 +110,12 @@ export default async function LibraryQuestionPage({
           locked={retired}
         />
         {admin && !retired ? (
-          <ApplyToForms questionKey={item.question.key} questionLabel={item.question.label} targets={applyTargets} />
+          <ApplyToForms
+            questionKey={item.question.key}
+            questionLabel={item.question.label}
+            targets={applyTargets}
+            openDrafts={openDrafts}
+          />
         ) : null}
         {admin ? (
           <LibraryRetire
