@@ -150,6 +150,33 @@ test("[US-045][US-057] a correction after acceptance needs a reason and leaves a
   ).toBeVisible();
 });
 
+test("[US-045] the correction value box only takes numbers for a numeric question", async ({ page }) => {
+  await page.goto(`/finance/submissions/${submissionId}`);
+  await page.getByText("Correct an answer", { exact: true }).click();
+  await page.getByLabel("Question").selectOption({ label: "Number of program sites" });
+  const value = page.getByLabel("New value");
+  await value.fill("");
+  await value.pressSequentially("ab1c2d");
+  await expect(value).toHaveValue("12");
+  await page.getByLabel("Question").selectOption({ label: "Report contact title" });
+  await page.getByLabel("New value").fill("Director of Programs");
+  await expect(page.getByLabel("New value")).toHaveValue("Director of Programs");
+});
+
+test("[US-045] the organization sees Council Finance as the author of a correction", async ({ browser }) => {
+  const context = await browser.newContext({
+    baseURL: test.info().project.use.baseURL,
+    storageState: authFile("maria"),
+  });
+  const page = await context.newPage();
+  await page.goto(`/portal/reports/${submissionId}`);
+  const corrected = page.getByText("Corrected by", { exact: true });
+  await expect(corrected).toBeVisible();
+  await expect(corrected.locator("xpath=following-sibling::*[1]")).toHaveText("Council Finance");
+  await expect(page.getByText("Not recorded")).toHaveCount(0);
+  await context.close();
+});
+
 test("[US-046][US-047] submitted data downloads as Excel and as CSV for the filtered list, for finance staff only", async ({
   page,
   browser,

@@ -6,8 +6,10 @@ import { addFlagAction, correctionAction, transitionAction } from "@/app/finance
 import { RequestUpdate } from "@/components/finance/review/request-update";
 import { StaleNotice, isStale } from "@/components/finance/review/stale-notice";
 import type { ActionResult, ActionState } from "@/lib/actions";
+import { NumericInput } from "@/components/report/numeric-input";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
+import type { NumericKind } from "@/lib/rules/numeric-input";
 import type { Concern } from "@/lib/finance/review/return-note-core";
 import {
   BudgetEditor,
@@ -18,6 +20,8 @@ import {
 } from "@/components/finance/review/correction-editors";
 
 export type { CorrectableQuestion };
+
+const NUMERIC_TYPES = ["integer", "number", "currency", "percent"];
 
 function draftFor(question: CorrectableQuestion | undefined): string {
   if (!question) return "";
@@ -199,12 +203,22 @@ function CorrectionForm({
       ) : (
         <div>
           <Label htmlFor="corr-value">New value</Label>
-          <Input
-            id="corr-value"
-            aria-required="true"
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-          />
+          {selected && NUMERIC_TYPES.includes(selected.type) ? (
+            <NumericInput
+              id="corr-value"
+              kind={selected.type as NumericKind}
+              aria-required="true"
+              value={value}
+              onValueChange={setValue}
+            />
+          ) : (
+            <Input
+              id="corr-value"
+              aria-required="true"
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+            />
+          )}
         </div>
       )}
       <div>

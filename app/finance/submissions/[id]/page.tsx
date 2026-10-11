@@ -98,6 +98,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           kind: "value",
           key: q.key,
           label: q.label,
+          type: q.type,
           current: value === null || value === undefined ? "" : String(value),
         });
       }

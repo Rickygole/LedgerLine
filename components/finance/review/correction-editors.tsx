@@ -14,7 +14,7 @@ export type TableRowDraft = Record<string, string>;
 export type BudgetLineDraft = { rowId: string; category: "PS" | "OTPS"; description: string; amount: string };
 
 export type CorrectableQuestion =
-  | { kind: "value"; key: string; label: string; current: string }
+  | { kind: "value"; key: string; label: string; current: string; type: string }
   | { kind: "table"; key: string; label: string; columns: TableColumnInfo[]; rows: TableRowDraft[]; maxRows: number }
   | { kind: "budget"; key: string; label: string; lines: BudgetLineDraft[]; maxLines: number };
 
