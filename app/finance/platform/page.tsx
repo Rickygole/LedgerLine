@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/status-badge";
 import { ButtonLink } from "@/components/ui/button";
-import { formatCount } from "@/lib/format";
+import { formatCount, plural } from "@/lib/format";
 import { Stat } from "@/components/ui/stat";
 import { Table, THead, TH, TR, TD } from "@/components/ui/table";
 import { Timeline, type Milestone } from "@/components/finance/lifecycle/timeline";
@@ -203,10 +203,23 @@ export default async function PlatformPage() {
                   hint={health.database.latencyMs === null ? "No response" : `${health.database.latencyMs} ms`}
                 />
                 <Stat
-                  label="Database version"
-                  value={health.migrations.applied}
+                  label="Database schema"
+                  value={
+                    <>
+                      {formatCount(health.migrations.applied)}{" "}
+                      <span className="text-lg font-semibold tracking-normal text-ink-2">
+                        {plural(health.migrations.applied, "migration", "migrations")} applied
+                      </span>
+                    </>
+                  }
                   tone={health.migrations.ok ? "ok" : "bad"}
-                  hint={health.migrations.latest ?? "None applied"}
+                  hint={
+                    health.migrations.latest ? (
+                      <span className="break-words">Latest: {health.migrations.latest}</span>
+                    ) : (
+                      "None applied"
+                    )
+                  }
                 />
                 <Stat
                   label="Build"
