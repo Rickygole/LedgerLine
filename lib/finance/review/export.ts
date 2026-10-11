@@ -209,7 +209,7 @@ function readmeSheet(meta: ExportMeta): XLSX.WorkSheet {
     ["Sheet", "What it contains"],
     [
       "Submissions",
-      "One row per submitted report. Drafts and reports returned to the organization are not included. Fixed columns first, then one column per question key found in the answers.",
+      "One row per submitted report, including reports with changes requested. Drafts and reports never started are not included. Fixed columns first, then one column per question key found in the answers.",
     ],
     [
       "Budget lines",
