@@ -31,7 +31,7 @@ import {
   sameJson,
 } from "@/lib/finance/review/correction-input";
 import type { AnswerValue } from "@/lib/rules/types";
-import { identityProblem } from "@/lib/rules/identity";
+import { formatEin, identityProblem } from "@/lib/rules/identity";
 import { VARIANCE_NOTE_KEY } from "@/lib/rules/spend";
 import { validateSubmission, visibleAnswers } from "@/lib/rules/validate";
 import { writeAudit } from "@/lib/audit";
@@ -319,12 +319,13 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
         before = { question_key: key, value: was };
         after = { question_key: key, value: parsed.value };
       } else {
-        if (String(row.answers[key] ?? "") === value)
+        const entered = question!.type === "ein" ? formatEin(value) : value;
+        if (String(row.answers[key] ?? "") === entered)
           return "The new value is the same as the current value. Enter a different value to correct.";
-        nextAnswers = { ...row.answers, [key]: value };
-        answerWrite = { [key]: value };
+        nextAnswers = { ...row.answers, [key]: entered };
+        answerWrite = { [key]: entered };
         before = { question_key: key, value: row.answers[key] ?? null };
-        after = { question_key: key, value };
+        after = { question_key: key, value: entered };
       }
 
       if (!isBudget) {
@@ -393,7 +394,7 @@ export async function correctionAction(_prev: ActionState, formData: FormData): 
       await tx.query("SELECT app.correct_answer($1, $2, $3::jsonb, $4, $5::jsonb)", [
         id,
         key,
-        JSON.stringify(value),
+        JSON.stringify(answerWrite ? answerWrite[key] : value),
         reason,
         JSON.stringify(snapshot),
       ]);

@@ -11,6 +11,8 @@ import { questionSchema } from "@/lib/forms/editor/schema";
 import {
   applyToForms,
   createLibraryQuestion,
+  publishDraftsWithQuestion,
+  type PublishAllResult,
   setLibraryRetired,
   updateLibraryQuestion,
   type ApplyOutcome,
@@ -102,5 +104,24 @@ export async function applyLibraryQuestion(
     return { ok: true, outcomes: result.outcomes };
   } catch (error) {
     return failFrom("apply_library_question_failed", error);
+  }
+}
+
+export async function publishLibraryDrafts(
+  key: string,
+  formIds: string[] | null,
+): Promise<({ ok: true } & PublishAllResult) | Failure> {
+  const user = await requireUser(["finance_admin"]);
+  const ids = formIds ? [...new Set(formIds)].filter(isUuid) : null;
+  if (ids && ids.length === 0) return { ok: false, errors: ["There are no drafts to publish."] };
+  try {
+    const result = await withClaims(user.id, (tx) => publishDraftsWithQuestion(tx, key, ids));
+    if ("errors" in result) return { ok: false, errors: result.errors };
+    revalidatePath("/finance/initiatives");
+    revalidatePath("/finance/question-library");
+    revalidatePath(`/finance/question-library/${key}`);
+    return { ok: true, ...result };
+  } catch (error) {
+    return failFrom("publish_library_drafts_failed", error);
   }
 }

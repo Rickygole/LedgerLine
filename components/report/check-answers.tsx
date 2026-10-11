@@ -4,6 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/status-badge";
 import { formatCurrency, plural } from "@/lib/format";
 import { displayScalar, questionLabel, tableRows } from "@/lib/report/format";
+import { columnTotals, totalWithGoal } from "@/lib/report/table-totals";
 import { formatBytes } from "@/lib/report/upload-rules";
 import type { AttachmentItem } from "@/lib/report/types";
 import type { Answers, BudgetLine, FormDefinition, Question } from "@/lib/rules/types";
@@ -40,12 +41,13 @@ function ChangeLink({
   );
 }
 
-function AnswerValue({ question, answers }: { question: Question; answers: Answers }) {
+function AnswerValue({ question, answers, award }: { question: Question; answers: Answers; award: number }) {
   const value = answers[question.key];
   if (question.type === "table") {
     const rows = tableRows(question, value);
     if (rows.length === 0) return <span className="text-muted">No rows</span>;
     const columns = question.columns ?? [];
+    const totals = columnTotals(question, value, award).filter((total) => total.entries > 0);
     return (
       <ul className="space-y-0.5">
         {rows.map((row, index) => (
@@ -53,6 +55,11 @@ function AnswerValue({ question, answers }: { question: Question; answers: Answe
             {row.map((cell, i) => (columns[i] ? `${columns[i].label}: ${cell || "blank"}` : cell)).join(", ")}
           </li>
         ))}
+        {totals.length > 0 ? (
+          <li className="font-semibold">
+            Total: {totals.map((total) => `${total.label}: ${totalWithGoal(total)}`).join(", ")}
+          </li>
+        ) : null}
       </ul>
     );
   }
@@ -209,7 +216,7 @@ export function CheckAnswers({
                   <div key={question.key} className={ROW}>
                     <dt className="font-semibold text-ink">{questionLabel(question.label)}</dt>
                     <dd className="text-ink">
-                      <AnswerValue question={question} answers={answers} />
+                      <AnswerValue question={question} answers={answers} award={award} />
                     </dd>
                     <dd>
                       <ChangeLink

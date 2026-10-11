@@ -19,7 +19,8 @@ import {
   parseFilters,
   withoutEmptyParams,
 } from "@/lib/finance/review/filters";
-import { applyFilters, countBuckets, paginate, sortByUrgency } from "@/lib/finance/review/derive";
+import { applyFilters, countBuckets, isExportable, paginate, sortByUrgency } from "@/lib/finance/review/derive";
+import { exportSummary } from "@/lib/lifecycle/queries";
 import type { Filters } from "@/lib/finance/review/types";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { orgTypeLabel, statusLabel } from "@/lib/domain";
@@ -209,6 +210,11 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
       </Card>
       <p className="mt-3 text-sm text-muted">
         <span className="num">{formatCount(matched.length)}</span> {plural(matched.length, "report", "reports")}
+        <span data-testid="export-note">
+          {" "}
+          ·{" "}
+          {exportSummary({ matches: matched.length, exportable: matched.filter((r) => isExportable(r.status)).length })}
+        </span>
       </p>
     </>
   );

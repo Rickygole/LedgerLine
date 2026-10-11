@@ -123,6 +123,49 @@ test.describe("as an administrator", () => {
     expect(audit.n).toBe(1);
   });
 
+  test("[US-003] Publish all drafts publishes what Apply to forms created in one confirmed step", async ({ page }) => {
+    const picked = await ownerQuery<{ id: string; name: string; version: number; form_id: string }>(
+      `SELECT i.id, i.name, f.version, f.id AS form_id FROM initiative i
+       JOIN form_version f ON f.initiative_id = i.id AND f.status = 'published'
+       WHERE i.fiscal_year_id = 'FY27' AND i.status = 'active'
+         AND NOT EXISTS (SELECT 1 FROM form_version d WHERE d.initiative_id = i.id AND d.status = 'draft')
+       ORDER BY i.code LIMIT 2`,
+    );
+    expect(picked).toHaveLength(2);
+    await page.goto(`/finance/question-library/${key}`);
+    await expect(page.getByText(/1 draft with this question is waiting to be published/)).toBeVisible();
+    await page.getByLabel("Fiscal year").selectOption("FY27");
+    for (const row of picked) {
+      await page.getByLabel("Find an initiative").fill(row.name);
+      await page.getByRole("checkbox", { name: new RegExp(row.name) }).check();
+    }
+    await page.getByLabel("Also add the question to forms that do not have it").check();
+    await page.getByRole("button", { name: "Apply to 2 forms" }).click();
+    await expect(page.getByText(/2 new drafts created/)).toBeVisible();
+    await page.getByRole("button", { name: "Publish all 2 drafts" }).click();
+    const dialog = page.getByRole("dialog", { name: "Publish 2 drafts?" });
+    await expect(dialog).toContainText("2 forms will get a new version.");
+    await expect(dialog).toContainText("Reports already started keep their version.");
+    await dialog.getByRole("button", { name: "Yes, publish 2 drafts" }).click();
+    await expect(page.getByText("2 forms published as a new version.")).toBeVisible();
+    for (const row of picked) {
+      const versions = await ownerQuery<{ version: number; status: string }>(
+        "SELECT version, status FROM form_version WHERE initiative_id = $1 AND status IN ('published', 'draft') ORDER BY version",
+        [row.id],
+      );
+      expect(versions).toEqual([{ version: row.version + 1, status: "published" }]);
+      const [old] = await ownerQuery<{ status: string }>("SELECT status FROM form_version WHERE id = $1", [
+        row.form_id,
+      ]);
+      expect(old.status).toBe("superseded");
+    }
+    const [audit] = await ownerQuery<{ n: number }>(
+      "SELECT count(*)::int AS n FROM audit_event WHERE entity = 'question' AND entity_id = $1 AND action = 'library_publish'",
+      [key],
+    );
+    expect(audit.n).toBe(1);
+  });
+
   test("[US-003] the form editor's Add from library reads the database library and honors a retired question", async ({
     page,
   }) => {
@@ -177,6 +220,7 @@ test.describe("as view-only Finance staff", () => {
     await expect(page.getByText("Only finance administrators can change the question library.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Save question" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Apply to/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Publish all/ })).toHaveCount(0);
     const response = await page.goto("/finance/question-library/new");
     expect(response?.status()).toBe(403);
   });

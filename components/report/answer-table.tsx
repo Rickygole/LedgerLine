@@ -1,7 +1,15 @@
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import type { Question } from "@/lib/rules/types";
 
-export function AnswerTable({ columns, rows }: { columns: NonNullable<Question["columns"]>; rows: string[][] }) {
+export function AnswerTable({
+  columns,
+  rows,
+  totals,
+}: {
+  columns: NonNullable<Question["columns"]>;
+  rows: string[][];
+  totals?: string[] | null;
+}) {
   const primary = columns.findIndex((column) => column.type === "text");
   return (
     <div className="overflow-hidden rounded-md border border-line">
@@ -35,6 +43,27 @@ export function AnswerTable({ columns, rows }: { columns: NonNullable<Question["
             </TR>
           ))}
         </tbody>
+        {totals ? (
+          <tfoot className="border-t border-line bg-surface/60">
+            <tr className="max-md:flex-wrap">
+              {columns.map((column, cellIndex) => {
+                const cell = totals[cellIndex] ?? "";
+                const numeric = column.type !== "text";
+                return (
+                  <TD
+                    key={column.key}
+                    align={numeric ? "right" : "left"}
+                    primary={cellIndex === primary}
+                    label={cellIndex === primary || cell === "" ? undefined : column.label}
+                    className="font-bold max-md:w-full"
+                  >
+                    {cell === "" ? null : <span>{cell}</span>}
+                  </TD>
+                );
+              })}
+            </tr>
+          </tfoot>
+        ) : null}
       </Table>
     </div>
   );

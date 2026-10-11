@@ -265,6 +265,7 @@ export async function setLibraryRetired(
 
 export type ApplyOutcome = {
   initiativeId: string;
+  formId?: string;
   name: string;
   result: "created" | "updated" | "added" | "unchanged" | "missing" | "no_form" | "invalid";
   version: number | null;
@@ -380,7 +381,12 @@ export async function applyToForms(
         note: `${verb} the library question "${item.question.label}" in the open draft`,
         after: { question_key: key, initiative_id: initiativeId, version: draft.version },
       });
-      outcomes.push({ ...base, result: applied.change === "added" ? "added" : "updated", version: draft.version });
+      outcomes.push({
+        ...base,
+        formId: draft.id,
+        result: applied.change === "added" ? "added" : "updated",
+        version: draft.version,
+      });
       continue;
     }
     const next = await tx.one<{ next: number }>(
@@ -399,7 +405,7 @@ export async function applyToForms(
       note: `Created a draft from version ${source.version}. ${verb} the library question "${item.question.label}"`,
       after: { question_key: key, initiative_id: initiativeId, version: next!.next, copied_from: source.version },
     });
-    outcomes.push({ ...base, result: "created", version: next!.next });
+    outcomes.push({ ...base, formId: created!.id, result: "created", version: next!.next });
   }
   const count = (result: ApplyOutcome["result"]) => outcomes.filter((o) => o.result === result).length;
   await writeAudit(tx, {
@@ -417,4 +423,69 @@ export async function applyToForms(
     },
   });
   return { outcomes };
+}
+
+const DRAFTS_WITH_QUESTION = `SELECT f.id, f.version, f.initiative_id, i.name
+  FROM form_version f JOIN initiative i ON i.id = f.initiative_id
+  WHERE f.status = 'draft' AND i.retired_on IS NULL
+    AND jsonb_path_exists(f.definition, '$.sections[*].questions[*] ? (@.key == $k)', jsonb_build_object('k', $1::text))`;
+
+export async function countDraftsWithQuestion(tx: Tx, key: string): Promise<number> {
+  const row = await tx.one<{ n: number }>(`SELECT count(*)::int AS n FROM (${DRAFTS_WITH_QUESTION}) d`, [key]);
+  return row?.n ?? 0;
+}
+
+class PublishProblem extends Error {}
+
+export type PublishFailure = { initiativeId: string; name: string; reason: string };
+
+export type PublishAllResult = {
+  published: number;
+  failed: PublishFailure[];
+};
+
+export async function publishDraftsWithQuestion(
+  tx: Tx,
+  key: string,
+  formIds: string[] | null,
+): Promise<{ errors: string[] } | PublishAllResult> {
+  const item = await loadLibraryQuestion(tx, key);
+  if (!item) return { errors: ["That library question was not found."] };
+  const drafts = await tx.query<{ id: string; version: number; initiative_id: string; name: string }>(
+    `${DRAFTS_WITH_QUESTION}${formIds ? " AND f.id = ANY($2::uuid[])" : ""} ORDER BY i.code FOR UPDATE OF f`,
+    formIds ? [key, formIds] : [key],
+  );
+  if (drafts.length === 0) return { errors: ["There are no drafts with this question to publish."] };
+  const failed: PublishFailure[] = [];
+  let published = 0;
+  for (const draft of drafts) {
+    await tx.query("SAVEPOINT publish_one");
+    try {
+      const form = await tx.one<{ definition: FormDefinition }>("SELECT definition FROM form_version WHERE id = $1", [
+        draft.id,
+      ]);
+      const problems = form ? validateDefinition(form.definition) : ["That form version was not found."];
+      if (problems.length > 0) throw new PublishProblem(problems[0]);
+      await tx.one("SELECT app.publish_form($1) AS version", [draft.id]);
+      await tx.query("RELEASE SAVEPOINT publish_one");
+      published += 1;
+    } catch (error) {
+      await tx.query("ROLLBACK TO SAVEPOINT publish_one");
+      await tx.query("RELEASE SAVEPOINT publish_one");
+      if (!(error instanceof PublishProblem) && (error as { code?: string }).code === "42501") throw error;
+      failed.push({
+        initiativeId: draft.initiative_id,
+        name: draft.name,
+        reason: error instanceof PublishProblem ? error.message : "It could not be published.",
+      });
+    }
+  }
+  await writeAudit(tx, {
+    entity: "question",
+    entityId: key,
+    action: "library_publish",
+    note: `${published} of ${drafts.length} drafts published`,
+    after: { published, failed: failed.length, question_key: key },
+  });
+  return { published, failed };
 }

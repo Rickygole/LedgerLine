@@ -92,6 +92,42 @@ describe("[US-016] opening the start page does not create a draft", () => {
   });
 });
 
+describe("[US-034][BR-024] a new report fills in the organization details that are on file", () => {
+  it("prefills the contact from the organization's primary contact and leaves nothing for the submitter to retype", async () => {
+    const answers = Object.fromEntries(
+      (await owner.query("SELECT question_key, value FROM answer WHERE submission_id = $1", [created])).rows.map(
+        (row) => [row.question_key, row.value],
+      ),
+    );
+    const primary = (
+      await owner.query(
+        `SELECT c.full_name, c.title, c.email, c.phone, o.legal_name, o.ein
+         FROM contact c JOIN organization o ON o.id = c.org_id
+         WHERE c.is_primary AND c.org_id = (SELECT org_id FROM app_user WHERE id = $1)`,
+        [maria],
+      )
+    ).rows[0];
+    expect(answers).toMatchObject({
+      org_legal_name: primary.legal_name,
+      org_ein: primary.ein,
+      contact_name: primary.full_name,
+      contact_title: primary.title,
+      contact_email: primary.email,
+    });
+    if (primary.phone) expect(answers.contact_phone).toBe(primary.phone);
+  });
+
+  it("leaves the seeded draft alone", async () => {
+    const seeded = (
+      await owner.query(
+        `SELECT count(*)::int AS lines, sum(b.amount)::float AS total
+         FROM budget_line b JOIN submission s ON s.id = b.submission_id WHERE s.reference_no = 'LL-26YE-00002'`,
+      )
+    ).rows[0];
+    expect(seeded).toEqual({ lines: 11, total: 71401 });
+  });
+});
+
 describe("[BR-009][US-016] a report is only started for a period the initiative owes", () => {
   let crossAssignment: string | null = null;
   let crossPeriod: string | null = null;

@@ -100,6 +100,11 @@ export const AUDIT_ACTIONS: Record<string, ActionWords> = {
     alone: "applied a library question to a form",
     verb: "applied a library question to",
   },
+  library_publish: {
+    label: "Library question drafts published",
+    alone: "published the drafts for a library question",
+    verb: "published the drafts for the library question",
+  },
   rename: { label: "Initiative renamed", alone: "renamed an initiative", verb: "renamed" },
   retire: { label: "Initiative retired", alone: "retired an initiative", verb: "retired" },
   required_report_added: {

@@ -7,13 +7,14 @@ import { formatDate } from "@/lib/dates";
 import { one, type SearchParams } from "@/lib/finance/admin/params";
 import {
   cleanParams,
-  countMatches,
   describe,
+  exportSummary,
   enteredParams,
   exportHref,
   listSaved,
   queryOptions,
   resultsHref,
+  summarizeMatches,
   validateParams,
 } from "@/lib/lifecycle/queries";
 import { PageHeader } from "@/components/ui/page-header";
@@ -31,12 +32,19 @@ export const metadata: Metadata = { title: "Saved queries" };
 export default async function QueriesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser(FINANCE_ROLES);
   const raw = await searchParams;
-  const { options, params, entered, errors, count, saved } = await withClaims(user.id, async (tx) => {
+  const { options, params, entered, errors, summary, saved } = await withClaims(user.id, async (tx) => {
     const options = await queryOptions(tx);
     const params = cleanParams(raw, options.periods);
     const errors = validateParams(raw, options.periods);
-    const count = Object.keys(errors).length > 0 ? null : await countMatches(tx, params);
-    return { options, params, entered: enteredParams(raw, options.periods), errors, count, saved: await listSaved(tx) };
+    const summary = Object.keys(errors).length > 0 ? null : await summarizeMatches(tx, params);
+    return {
+      options,
+      params,
+      entered: enteredParams(raw, options.periods),
+      errors,
+      summary,
+      saved: await listSaved(tx),
+    };
   });
   const lines = describe(params, options.members);
   const problems = Object.values(errors);
@@ -91,8 +99,13 @@ export default async function QueriesPage({ searchParams }: { searchParams: Prom
                   aria-live="polite"
                   data-testid="match-count"
                 >
-                  {count ?? "None"}
+                  {summary?.matches ?? "None"}
                 </p>
+                {summary ? (
+                  <p className="mt-1 text-sm text-muted" data-testid="export-note">
+                    {exportSummary(summary)}
+                  </p>
+                ) : null}
               </div>
               <div>
                 <p className="mb-1.5 text-xs text-muted">Criteria</p>

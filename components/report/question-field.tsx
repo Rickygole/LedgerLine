@@ -3,6 +3,7 @@
 import { FieldError, Hint, Input, Label, OptionalMark, Select, Textarea } from "@/components/ui/field";
 import { questionLabel } from "@/lib/report/format";
 import { cn } from "@/lib/cn";
+import { formatEin } from "@/lib/rules/identity";
 import { wordCount } from "@/lib/rules/validate";
 import type { AnswerValue, Question } from "@/lib/rules/types";
 import { NumericInput } from "./numeric-input";
@@ -48,6 +49,7 @@ export function QuestionField({
   onBlur,
   error,
   disabled,
+  award,
 }: {
   question: Question;
   value: AnswerValue | undefined;
@@ -55,6 +57,7 @@ export function QuestionField({
   onBlur: () => void;
   error?: string;
   disabled?: boolean;
+  award?: number;
 }) {
   const id = `q-${question.key}`;
   const hintId = `${id}-hint`;
@@ -159,6 +162,7 @@ export function QuestionField({
         onBlur={onBlur}
         describedBy={describedBy}
         invalid={Boolean(error)}
+        award={award}
       />
     );
   } else {
@@ -200,7 +204,11 @@ export function QuestionField({
             aria-describedby={describedBy}
             disabled={disabled}
             onChange={(event) => onChange(event.target.value)}
-            onBlur={onBlur}
+            onBlur={() => {
+              if (question.type === "ein" && asText(value) !== formatEin(asText(value)))
+                onChange(formatEin(asText(value)));
+              onBlur();
+            }}
           />
         )}
         {question.type === "percent" ? (

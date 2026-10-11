@@ -1,7 +1,14 @@
 import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Tx } from "@/lib/db";
-import { cleanParams, countMatches, resultsHref, toSearch } from "@/lib/lifecycle/queries";
+import {
+  cleanParams,
+  countMatches,
+  exportSummary,
+  resultsHref,
+  summarizeMatches,
+  toSearch,
+} from "@/lib/lifecycle/queries";
 import { appUrl, connect, ownerUrl, userId } from "./helpers";
 
 let owner: Client;
@@ -83,5 +90,33 @@ describe("[US-048] finance builds queries from selected criteria", () => {
     expect(params).toEqual({ period: "FY26-YE", status: "accepted" });
     expect(toSearch(params)).toBe("period=FY26-YE&status=accepted");
     expect(resultsHref(params)).toBe("/finance/submissions?period=FY26-YE&status=accepted");
+  });
+});
+
+describe("[US-048][US-046] a query says how many of its matches the export includes", () => {
+  async function summary(params: Record<string, string>) {
+    await app.query("BEGIN");
+    try {
+      await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: daniel })]);
+      return await summarizeMatches(asTx(app), cleanParams({ period: PERIOD, ...params }, periods));
+    } finally {
+      await app.query("ROLLBACK");
+    }
+  }
+
+  it("counts only submitted, in review, returned and accepted reports as exportable", async () => {
+    const all = await summary({});
+    expect(all.matches).toBe(await expected("true"));
+    expect(all.exportable).toBe(await expected("s.status IN ('submitted', 'under_review', 'returned', 'accepted')"));
+    expect(all.exportable).toBeLessThan(all.matches);
+  });
+
+  it("matches the exportable count for a single status and says so in words", async () => {
+    const accepted = await summary({ status: "accepted" });
+    expect(accepted.exportable).toBe(accepted.matches);
+    expect(exportSummary({ matches: 15, exportable: 13 })).toBe(
+      "15 matches, 13 submitted reports included in the export",
+    );
+    expect(exportSummary({ matches: 1, exportable: 1 })).toBe("1 match, 1 submitted report included in the export");
   });
 });

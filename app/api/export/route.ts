@@ -14,6 +14,7 @@ import {
 import { STATUS_OPTIONS } from "@/lib/domain";
 import { FLAG_LABEL, filtersToParams, parseFilters } from "@/lib/finance/review/filters";
 import { budgetTotals, visibleAnswers } from "@/lib/rules/validate";
+import { normalizeEinAnswers } from "@/lib/rules/identity";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
 import { contractLabel, fundingLabel } from "@/lib/finance/awards";
 import { plural } from "@/lib/format";
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
     contractStatus: contractLabel(row.contractStatus),
     contractNumber: row.contractNumber ?? "",
     contractRegisteredOn: row.contractRegisteredOn ?? "",
-    answers: row.definition ? visibleAnswers(row.definition, row.answers) : {},
+    answers: row.definition ? normalizeEinAnswers(row.definition, visibleAnswers(row.definition, row.answers)) : {},
     budget: row.budget.map(({ position, category, description, amount, actual }) => ({
       position,
       category,

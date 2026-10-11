@@ -1,11 +1,16 @@
 import { formatDate, formatDateTime, formatTime, isToday, todayInNewYork } from "@/lib/dates";
 import { parseAmount } from "@/lib/rules/money";
+import { formatEin } from "@/lib/rules/identity";
 import { formatCount, formatCurrency } from "@/lib/format";
 import { balanceMessage, budgetTotals, isVisible } from "@/lib/rules/validate";
 import type { AnswerValue, Answers, FormDefinition, Question } from "@/lib/rules/types";
 import type { Certification } from "@/lib/rules/certify";
 import { VARIANCE_NOTE_KEY, spendSummary } from "@/lib/rules/spend";
 import { formatBytes } from "./upload-rules";
+import { cellText } from "./cell-text";
+import { columnTotals, totalWithGoal } from "./table-totals";
+
+export { cellText };
 
 export function displayScalar(question: Question, value: AnswerValue | undefined): string {
   if (value === null || value === undefined || Array.isArray(value)) return "";
@@ -17,22 +22,12 @@ export function displayScalar(question: Question, value: AnswerValue | undefined
   }
   if (question.type === "percent") return text.endsWith("%") ? text : `${text}%`;
   if (question.type === "date") return formatDate(text);
+  if (question.type === "ein") return formatEin(text);
   if (question.type === "integer" || question.type === "number") {
     const n = Number(text.replace(/,/g, ""));
     return Number.isFinite(n) ? formatCount(n) : text;
   }
   return text;
-}
-
-export function cellText(type: string, raw: unknown): string {
-  const text = String(raw ?? "").trim();
-  if (text === "" || type === "text") return text;
-  if (type === "currency") {
-    const amount = parseAmount(text);
-    return amount === null ? text : formatCurrency(amount, { cents: "auto" });
-  }
-  if (type === "percent") return text.endsWith("%") ? text : `${text}%`;
-  return formatCount(text);
 }
 
 export function tableRows(question: Question, value: AnswerValue | undefined): string[][] {
@@ -110,6 +105,9 @@ export function plainTextReport(input: SummaryInput): string {
         rows.forEach((row, index) =>
           lines.push(`  ${index + 1}. ${row.map((cell, i) => `${headers[i]}: ${cell || "not provided"}`).join("; ")}`),
         );
+        const totals = columnTotals(question, value, input.awardAmount).filter((total) => total.entries > 0);
+        if (rows.length > 0 && totals.length > 0)
+          lines.push(`  Total: ${totals.map((total) => `${total.label}: ${totalWithGoal(total)}`).join("; ")}`);
         continue;
       }
       const shown = displayScalar(question, value);
