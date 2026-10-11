@@ -37,3 +37,18 @@ describe("[US-003] a form cannot have two questions with the same label", () => 
     expect(validateDefinition(base)).toEqual([]);
   });
 });
+
+describe("[US-003] library usage is counted for the current fiscal year", () => {
+  it("leads with the current year and lists earlier years after it", async () => {
+    const { usageParts } = await import("@/lib/forms/library");
+    expect(usageParts({ FY26: 175, FY27: 175 }, "FY27")).toEqual({
+      current: { year: "FY27", count: 175 },
+      prior: [{ year: "FY26", count: 175 }],
+    });
+    expect(usageParts({ FY26: 3 }, "FY27")).toEqual({
+      current: { year: "FY27", count: 0 },
+      prior: [{ year: "FY26", count: 3 }],
+    });
+    expect(usageParts({}, null)).toEqual({ current: null, prior: [] });
+  });
+});

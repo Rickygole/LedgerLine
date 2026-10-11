@@ -11,6 +11,7 @@ export type LibraryItem = LibraryEntry & {
   updatedAt: string;
   updatedBy: string | null;
   formsUsing: number;
+  usageByYear: Record<string, number>;
 };
 
 type LibraryRow = {
@@ -32,6 +33,7 @@ type LibraryRow = {
   updated_at: string;
   updated_by_name: string | null;
   forms_using: number;
+  usage_by_year: Record<string, number> | null;
 };
 
 const SELECT = `SELECT q.question_key, q.label, q.help, q.field_type, q.required, q.options, q.max_length, q.max_words,
@@ -39,7 +41,13 @@ const SELECT = `SELECT q.question_key, q.label, q.help, q.field_type, q.required
        q.retired_at::text, q.updated_at::text, u.full_name AS updated_by_name,
        (SELECT count(DISTINCT f.initiative_id)::int FROM form_version f
          WHERE f.status IN ('published', 'draft')
-           AND jsonb_path_exists(f.definition, '$.sections[*].questions[*] ? (@.key == $k)', jsonb_build_object('k', q.question_key))) AS forms_using
+           AND jsonb_path_exists(f.definition, '$.sections[*].questions[*] ? (@.key == $k)', jsonb_build_object('k', q.question_key))) AS forms_using,
+       (SELECT jsonb_object_agg(y.fy, y.n) FROM (
+          SELECT i.fiscal_year_id AS fy, count(DISTINCT f.initiative_id)::int AS n
+          FROM form_version f JOIN initiative i ON i.id = f.initiative_id
+          WHERE f.status IN ('published', 'draft')
+            AND jsonb_path_exists(f.definition, '$.sections[*].questions[*] ? (@.key == $k)', jsonb_build_object('k', q.question_key))
+          GROUP BY i.fiscal_year_id) y) AS usage_by_year
 FROM question q LEFT JOIN app_user u ON u.id = q.updated_by
 WHERE q.scope = 'standard'`;
 
@@ -71,7 +79,26 @@ function rowToItem(row: LibraryRow): LibraryItem {
     updatedAt: row.updated_at,
     updatedBy: row.updated_by_name,
     formsUsing: row.forms_using,
+    usageByYear: row.usage_by_year ?? {},
   };
+}
+
+export async function currentFiscalYear(tx: Tx, today: string): Promise<string | null> {
+  const row =
+    (await tx.one<{ id: string }>("SELECT id FROM fiscal_year WHERE $1::date BETWEEN starts_on AND ends_on", [today])) ??
+    (await tx.one<{ id: string }>("SELECT id FROM fiscal_year ORDER BY starts_on DESC LIMIT 1"));
+  return row?.id ?? null;
+}
+
+export function usageParts(
+  usageByYear: Record<string, number>,
+  current: string | null,
+): { current: { year: string; count: number } | null; prior: { year: string; count: number }[] } {
+  const prior = Object.entries(usageByYear)
+    .filter(([year]) => year !== current)
+    .map(([year, count]) => ({ year, count }))
+    .sort((a, b) => b.year.localeCompare(a.year));
+  return { current: current ? { year: current, count: usageByYear[current] ?? 0 } : null, prior };
 }
 
 export async function loadLibrary(tx: Tx, options: { includeRetired?: boolean } = {}): Promise<LibraryItem[]> {

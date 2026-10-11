@@ -47,6 +47,15 @@ test.describe("as an administrator", () => {
     const [row] = await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM question WHERE scope = 'standard'");
     expect(row.n).toBeGreaterThanOrEqual(15);
     await expect(page.getByRole("link", { name: "Add a question" })).toBeVisible();
+    const legal = page.getByRole("row", { name: /Organization legal name/ });
+    await expect(legal).toContainText(/\d+ in FY27/);
+    await expect(legal).toContainText(/\d+ in FY26/);
+    const [fy27] = await ownerQuery<{ n: number }>(
+      `SELECT count(DISTINCT f.initiative_id)::int AS n FROM form_version f JOIN initiative i ON i.id = f.initiative_id
+       WHERE i.fiscal_year_id = 'FY27' AND f.status IN ('published', 'draft')
+         AND jsonb_path_exists(f.definition, '$.sections[*].questions[*] ? (@.key == "org_legal_name")')`,
+    );
+    await expect(legal).toContainText(`${fy27.n} in FY27`);
   });
 
   test("[US-003] an administrator adds a library question and then changes its wording", async ({ page }) => {
