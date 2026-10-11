@@ -315,7 +315,7 @@ describe("pagination and parameters", () => {
 });
 
 describe("[US-046][US-047] export scope", () => {
-  it("includes every submitted report, including those with an update requested", () => {
+  it("includes every submitted report, including those with changes requested", () => {
     for (const status of ["submitted", "under_review", "returned", "accepted"]) expect(isExportable(status)).toBe(true);
     for (const status of [null, "draft"]) expect(isExportable(status)).toBe(false);
   });

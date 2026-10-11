@@ -1,6 +1,6 @@
 const LABELS: Record<string, string> = {
   submission_confirmation: "Submission confirmation",
-  return_notice: "Update requested",
+  return_notice: "Changes requested",
   acceptance_notice: "Report accepted",
 };
 

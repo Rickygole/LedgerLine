@@ -73,15 +73,15 @@ test("[US-044] an analyst requests an update with a note, the organization resub
   browser,
 }) => {
   await page.goto(`/finance/submissions/${submissionId}`);
-  await page.getByRole("button", { name: "Request an update" }).click();
-  await expect(page.getByRole("dialog", { name: /Request an update/ })).toBeVisible();
+  await page.getByRole("button", { name: "Request changes" }).click();
+  await expect(page.getByRole("dialog", { name: /Request changes/ })).toBeVisible();
   await page.getByLabel("Note to the organization").fill("");
   await page.getByRole("button", { name: "Send request" }).click();
   await expect(page.getByText(/Write a note before sending/)).toBeVisible();
   await page.getByLabel("Note to the organization").fill(NOTE);
   await page.getByRole("button", { name: "Send request" }).click();
   await expect(
-    page.getByText(/Update requested at \d{1,2}:\d{2} [AP]M\. .+ will see the note in Messages/),
+    page.getByText(/Changes requested at \d{1,2}:\d{2} [AP]M\. .+ will see the note in Messages/),
   ).toBeVisible();
 
   const [row] = await ownerQuery<{ status: string }>("SELECT status FROM submission WHERE id = $1", [submissionId]);

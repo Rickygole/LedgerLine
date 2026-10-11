@@ -26,6 +26,6 @@ export const BUCKET_LABEL: Record<Bucket, string> = {
   missing: "Missing",
   submitted: "Submitted",
   in_review: "In review",
-  returned: "Update requested",
+  returned: "Changes requested",
   accepted: "Accepted",
 };
