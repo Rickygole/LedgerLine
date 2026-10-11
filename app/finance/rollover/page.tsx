@@ -141,7 +141,7 @@ export default async function RolloverPage({ searchParams }: { searchParams: Pro
               description={`What will be offered for carry forward into ${to || "the new year"}.`}
             />
             <CardBody>
-              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 min-[1440px]:grid-cols-4">
                 <Stat label="Initiatives" value={summary.initiatives} icon={Layers} hint={`Active in ${from}`} />
                 <Stat label="Organizations" value={summary.organizations} icon={Users} hint="With at least one award" />
                 <Stat
