@@ -225,6 +225,8 @@ describe("[US-041] filters", () => {
     expect(applyFilters(rows, { q: "harborview" })).toHaveLength(1);
     expect(applyFilters(rows, { q: "1040217" })).toHaveLength(1);
     expect(applyFilters(rows, { q: "00-1109729" })[0].borough).toBe("Brooklyn");
+    expect(applyFilters(rows, { q: "00 1109729" })[0].borough).toBe("Brooklyn");
+    expect(applyFilters(rows, { q: " 00 - 1109729 " })[0].borough).toBe("Brooklyn");
   });
 
   it("[US-041] finds a report by reference number, contract number or initiative", () => {
