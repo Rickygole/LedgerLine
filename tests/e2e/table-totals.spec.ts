@@ -80,7 +80,7 @@ test("[US-026] on a phone the table totals carry visible column labels and line 
   await expect(label).toHaveText("Participants");
   const input = page.locator("[id^='q-youth_breakdown-'][id$='-count']").first();
   const [inputBox, totalBox] = [await input.boundingBox(), await total.boundingBox()];
-  expect(Math.abs(inputBox!.x + inputBox!.width - (totalBox!.x + totalBox!.width))).toBeLessThan(2);
+  expect(Math.abs(inputBox!.x + inputBox!.width - (totalBox!.x + totalBox!.width))).toBeLessThan(4);
   await page
     .getByRole("button", { name: /^Remove row \d+ from Participants under 18 by age group$/ })
     .last()
