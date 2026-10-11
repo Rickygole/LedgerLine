@@ -151,7 +151,7 @@ export function validateRow(raw: MasterRow): { row: CleanRow } | { problems: Par
   else if (!borough) problems.borough = `The borough must be one of ${REPORT_BOROUGHS.join(", ")}.`;
 
   let district: number | null = null;
-  const districtText = raw.council_district.trim();
+  const districtText = raw.council_district.trim().replace(/^citywide$/i, "");
   if (districtText === "") {
     if (borough && borough !== CITYWIDE) problems.council_district = "Enter the Council district, from 1 to 51.";
   } else if (!/^\d{1,2}$/.test(districtText) || Number(districtText) < 1 || Number(districtText) > 51) {
