@@ -108,7 +108,9 @@ export async function nextInitiativeCode(tx: Tx, fiscalYearId: string): Promise<
 }
 
 export async function listCategories(tx: Tx) {
-  const rows = await tx.query<{ category: string }>(`SELECT DISTINCT category FROM initiative WHERE app.scope_open() OR app.in_scope(id) ORDER BY category`);
+  const rows = await tx.query<{ category: string }>(
+    `SELECT DISTINCT category FROM initiative WHERE app.scope_open() OR app.in_scope(id) ORDER BY category`,
+  );
   return rows.map((r) => r.category);
 }
 
