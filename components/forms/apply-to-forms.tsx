@@ -179,7 +179,7 @@ export function ApplyToForms({ questionKey, questionLabel, targets, openDrafts }
           <div className="space-y-2 border-t border-line-soft pt-4">
             <p className="text-sm text-ink">
               {counted(openDrafts, "draft")} with this question {openDrafts === 1 ? "is" : "are"} waiting to be
-              published.
+              published, including any started by other people.
             </p>
             <PublishDrafts questionKey={questionKey} formIds={null} count={openDrafts} />
           </div>
