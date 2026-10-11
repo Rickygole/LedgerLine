@@ -2,10 +2,10 @@ import type { Tx } from "@/lib/db";
 import { CONTRACT_STATUSES, FUNDING_SOURCES } from "@/lib/finance/awards";
 import { loadPeriods, loadReportRows } from "@/lib/finance/review/data";
 import { ORG_TYPES, REPORT_BOROUGHS, STATUS_OPTIONS } from "@/lib/domain";
-import { applyFilters, BUCKET_ORDER } from "@/lib/finance/review/derive";
+import { applyFilters, BUCKET_ORDER, isExportable } from "@/lib/finance/review/derive";
 import { defaultPeriodId, parseFilters } from "@/lib/finance/review/filters";
 import { BUCKET_LABEL, type Bucket } from "@/lib/reporting";
-import { formatCurrency } from "@/lib/format";
+import { formatCount, formatCurrency, plural } from "@/lib/format";
 
 export const BUCKET_OPTIONS = BUCKET_ORDER.map((value) => ({ value, label: BUCKET_LABEL[value] }));
 
@@ -199,13 +199,23 @@ export function describe(params: QueryParams, members: MemberOption[] = []): str
   return lines;
 }
 
-export async function countMatches(tx: Tx, params: QueryParams): Promise<number> {
+export type MatchSummary = { matches: number; exportable: number };
+
+export async function summarizeMatches(tx: Tx, params: QueryParams): Promise<MatchSummary> {
   const periods = await loadPeriods(tx);
   const filters = parseFilters(params, periods);
   const period = periods.find((p) => p.id === filters.period);
-  if (!period) return 0;
-  const rows = await loadReportRows(tx, period);
-  return applyFilters(rows, filters).length;
+  if (!period) return { matches: 0, exportable: 0 };
+  const rows = applyFilters(await loadReportRows(tx, period), filters);
+  return { matches: rows.length, exportable: rows.filter((row) => isExportable(row.status)).length };
+}
+
+export async function countMatches(tx: Tx, params: QueryParams): Promise<number> {
+  return (await summarizeMatches(tx, params)).matches;
+}
+
+export function exportSummary({ matches, exportable }: MatchSummary): string {
+  return `${formatCount(matches)} ${plural(matches, "match", "matches")}, ${formatCount(exportable)} submitted ${plural(exportable, "report", "reports")} included in the export`;
 }
 
 export async function queryOptions(tx: Tx) {
