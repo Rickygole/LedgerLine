@@ -142,9 +142,13 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           label="Waiting for review"
           value={counts.submitted}
           sub={
-            next?.submittedAt
-              ? `Oldest submitted ${formatShortDate(next.submittedAt)}`
-              : "Submitted, review not started"
+            next?.submittedAt ? (
+              <>
+                Oldest submitted <span className="whitespace-nowrap">{formatShortDate(next.submittedAt)}</span>
+              </>
+            ) : (
+              "Submitted, review not started"
+            )
           }
           action={{ href: list({ bucket: "submitted" }), label: "Open review queue" }}
         />

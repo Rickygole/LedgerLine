@@ -56,7 +56,9 @@ export function Stat({
       {caption ? <p className="mt-1.5 text-sm leading-5 text-muted">{caption}</p> : null}
       {action ? (
         <p className="mt-auto pt-3">
-          <ArrowLink href={action.href}>{action.label}</ArrowLink>
+          <ArrowLink href={action.href} className="gap-1">
+            {action.label}
+          </ArrowLink>
         </p>
       ) : null}
     </div>
