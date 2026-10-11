@@ -37,7 +37,8 @@ export async function listInitiatives(tx: Tx, today: string, periodId: string, f
      ) fv ON true
      JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id AND (rp.initiative_id IS NULL OR rp.initiative_id = i.id)
      LEFT JOIN ay ON ay.initiative_id = i.id
-     WHERE ($3 = '' OR i.name ILIKE $4 OR i.code ILIKE $4)
+     WHERE (app.scope_open() OR app.in_scope(i.id))
+       AND ($3 = '' OR i.name ILIKE $4 OR i.code ILIKE $4)
        AND ($5 = '' OR i.category = $5)
        AND ($6 = '' OR i.status = $6)
        AND ($7 = '' OR upper(btrim(i.administering_agency)) = upper(btrim($7)))
@@ -75,6 +76,7 @@ export async function categorySummary(tx: Tx, today: string, periodId: string) {
      per_cat AS (
        SELECT i.category, count(*)::int AS initiatives, sum(i.total_funding) AS funding
        FROM initiative i JOIN reporting_period rp ON rp.id = $2 AND rp.fiscal_year_id = i.fiscal_year_id AND (rp.initiative_id IS NULL OR rp.initiative_id = i.id)
+       WHERE app.scope_open() OR app.in_scope(i.id)
        GROUP BY i.category
      ),
      per_assign AS (
@@ -93,7 +95,7 @@ export async function categorySummary(tx: Tx, today: string, periodId: string) {
 
 export async function listAgencies(tx: Tx) {
   const rows = await tx.query<{ agency: string }>(
-    `SELECT DISTINCT upper(btrim(administering_agency)) AS agency FROM initiative WHERE btrim(coalesce(administering_agency, '')) <> '' ORDER BY 1`,
+    `SELECT DISTINCT upper(btrim(administering_agency)) AS agency FROM initiative WHERE btrim(coalesce(administering_agency, '')) <> '' AND (app.scope_open() OR app.in_scope(id)) ORDER BY 1`,
   );
   return rows.map((r) => r.agency);
 }
@@ -106,7 +108,7 @@ export async function nextInitiativeCode(tx: Tx, fiscalYearId: string): Promise<
 }
 
 export async function listCategories(tx: Tx) {
-  const rows = await tx.query<{ category: string }>(`SELECT DISTINCT category FROM initiative ORDER BY category`);
+  const rows = await tx.query<{ category: string }>(`SELECT DISTINCT category FROM initiative WHERE app.scope_open() OR app.in_scope(id) ORDER BY category`);
   return rows.map((r) => r.category);
 }
 
@@ -180,7 +182,7 @@ type FormVersionRow = {
 
 export async function loadInitiative(tx: Tx, id: string) {
   const initiative = await tx.one<InitiativeDetail>(
-    `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status, administering_agency, retired_on::text, retired_reason FROM initiative WHERE id = $1`,
+    `SELECT id, code, name, category, description, fiscal_year_id, total_funding, status, administering_agency, retired_on::text, retired_reason FROM initiative WHERE id = $1 AND (app.scope_open() OR app.in_scope(id))`,
     [id],
   );
   if (!initiative) return null;

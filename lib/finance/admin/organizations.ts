@@ -58,7 +58,8 @@ export async function listOrganizations(
               count(ay.id) FILTER (WHERE ay.period_status = 'accepted')::int AS accepted,
               count(ay.id) FILTER (WHERE ay.is_missing)::int AS missing
        FROM organization o LEFT JOIN ay ON ay.org_id = o.id
-       WHERE ($3 = '' OR o.legal_name ILIKE $4 OR o.ein ILIKE $4)
+       WHERE (app.scope_open() OR app.in_scope_org(o.id))
+         AND ($3 = '' OR o.legal_name ILIKE $4 OR o.ein ILIKE $4)
          AND ($5 = '' OR o.borough = $5)
          AND ($6 = '' OR o.org_type = $6)
        GROUP BY o.id
@@ -135,7 +136,7 @@ type OrgReport = {
 export async function loadOrganization(tx: Tx, orgId: string) {
   const org = await tx.one<OrgProfile>(
     `SELECT id, ein, legal_name, dba_name, org_type, borough, council_district, address_line, city, state, postal_code, phone, website, mission, founded_year, annual_budget
-     FROM organization WHERE id = $1`,
+     FROM organization WHERE id = $1 AND (app.scope_open() OR app.in_scope_org(id))`,
     [orgId],
   );
   if (!org) return null;
