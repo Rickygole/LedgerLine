@@ -1,6 +1,13 @@
 import { logError } from "@/lib/ops/log";
 import { withClaims, type Tx } from "@/lib/db";
-import { sendEmail, transportFrom, type OutgoingEmail, type SendResult, type Transport } from "@/lib/email";
+import {
+  heldReminderReason,
+  sendEmail,
+  transportFrom,
+  type OutgoingEmail,
+  type SendResult,
+  type Transport,
+} from "@/lib/email";
 
 export type Claimed = {
   id: string;
@@ -18,12 +25,16 @@ export type OutboxStore = {
     status: "sent" | "failed" | "held" | "recorded",
     providerId: string | null,
     reason: string | null,
+    deliveredTo?: string | null,
   ): Promise<string | null>;
 };
 
 type DispatchSummary = Record<"sent" | "held" | "recorded" | "retry" | "failed", number>;
 
 const NEVER_EMAILED = new Set(["password_reset", "password_set"]);
+const BULK = new Set(["reminder"]);
+
+export type ReminderBudget = { used: number };
 
 export async function dispatch(
   store: OutboxStore,
@@ -31,17 +42,27 @@ export async function dispatch(
   options: {
     submissionId?: string | null;
     limit?: number;
+    budget?: ReminderBudget;
     send?: (transport: Transport, message: OutgoingEmail) => Promise<SendResult>;
   } = {},
 ): Promise<DispatchSummary> {
   const summary: DispatchSummary = { sent: 0, held: 0, recorded: 0, retry: 0, failed: 0 };
   const send = options.send ?? ((t, m) => sendEmail(t, m));
+  const budget = options.budget ?? { used: 0 };
   const rows = await store.claim(options.submissionId ?? null, options.limit ?? 25);
   for (const row of rows) {
     if (!transport || NEVER_EMAILED.has(row.template)) {
       await store.finish(row.id, "recorded", null, null);
       summary.recorded += 1;
       continue;
+    }
+    if (transport.redirectTo && BULK.has(row.template)) {
+      if (budget.used >= transport.reminderLimit) {
+        await store.finish(row.id, "held", null, heldReminderReason(transport));
+        summary.held += 1;
+        continue;
+      }
+      budget.used += 1;
     }
     const result = await send(transport, { to: row.to_email, subject: row.subject, text: row.body_text }).catch(
       (error: unknown): SendResult => ({
@@ -50,10 +71,10 @@ export async function dispatch(
       }),
     );
     if (result.status === "sent") {
-      await store.finish(row.id, "sent", result.providerId, null);
+      await store.finish(row.id, "sent", result.providerId, null, result.deliveredTo);
       summary.sent += 1;
     } else if (result.status === "held") {
-      await store.finish(row.id, "held", null, null);
+      await store.finish(row.id, "held", null, result.reason ?? null);
       summary.held += 1;
     } else {
       const next = await store.finish(row.id, "failed", null, result.reason);
@@ -70,12 +91,13 @@ function dbStore(tx: Tx): OutboxStore {
         submissionId,
         limit,
       ]),
-    async finish(id, status, providerId, reason) {
-      const row = await tx.one<{ next: string | null }>("SELECT app.finish_outbox($1, $2, $3, $4) AS next", [
+    async finish(id, status, providerId, reason, deliveredTo = null) {
+      const row = await tx.one<{ next: string | null }>("SELECT app.finish_outbox($1, $2, $3, $4, $5) AS next", [
         id,
         status,
         providerId,
         reason,
+        deliveredTo,
       ]);
       return row?.next ?? null;
     },
@@ -89,15 +111,16 @@ export async function dispatchFor(
   const transport = transportFrom();
   const limit = Math.min(options.limit ?? 25, 100);
   const total: DispatchSummary = { sent: 0, held: 0, recorded: 0, retry: 0, failed: 0 };
+  const budget: ReminderBudget = { used: 0 };
   try {
     for (let round = 0; round < (options.rounds ?? 1); round += 1) {
       const claimed = await withClaims(userId, (tx) => dbStore(tx).claim(options.submissionId ?? null, limit));
       const store: OutboxStore = {
         claim: async () => claimed,
-        finish: (id, status, providerId, reason) =>
-          withClaims(userId, (tx) => dbStore(tx).finish(id, status, providerId, reason)),
+        finish: (id, status, providerId, reason, deliveredTo) =>
+          withClaims(userId, (tx) => dbStore(tx).finish(id, status, providerId, reason, deliveredTo)),
       };
-      const summary = await dispatch(store, transport, { submissionId: options.submissionId, limit });
+      const summary = await dispatch(store, transport, { submissionId: options.submissionId, limit, budget });
       for (const key of Object.keys(total) as (keyof DispatchSummary)[]) total[key] += summary[key];
       if (claimed.length < limit) break;
     }

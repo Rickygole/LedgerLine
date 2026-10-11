@@ -451,7 +451,9 @@ export default async function OrganizationProfile({
                     <TD className="whitespace-nowrap">{templateLabel(m.template)}</TD>
                     <TD>{m.to_email}</TD>
                     <TD>
-                      <Badge tone={deliveryState(m.status).tone}>{deliveryState(m.status).label}</Badge>
+                      <Badge tone={deliveryState(m.status, m.redirected).tone}>
+                        {deliveryState(m.status, m.redirected).label}
+                      </Badge>
                     </TD>
                     <TD>{formatDateTime(m.created_at)}</TD>
                   </TR>

@@ -31,7 +31,11 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
           { label: "Outbox", href: "/finance/outbox" },
           { label: "Message" },
         ]}
-        meta={<Badge tone={deliveryState(message.status).tone}>{deliveryState(message.status).label}</Badge>}
+        meta={
+          <Badge tone={deliveryState(message.status, message.redirected).tone}>
+            {deliveryState(message.status, message.redirected).label}
+          </Badge>
+        }
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -51,6 +55,7 @@ export default async function OutboxMessagePage({ params }: { params: Promise<{ 
                 { label: "Template", value: templateLabel(message.template) },
                 { label: "Created", value: formatDateTime(message.created_at) },
                 { label: "Emailed", value: message.sent_at ? formatDateTime(message.sent_at) : "Not emailed" },
+                ...(message.redirected ? [{ label: "Delivered to", value: message.delivered_to }] : []),
                 ...(message.failure_reason ? [{ label: "Delivery note", value: message.failure_reason }] : []),
                 { label: "Created by", value: message.created_by_name ?? "System" },
                 {

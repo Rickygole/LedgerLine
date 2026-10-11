@@ -8,7 +8,7 @@ import { requireUser } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDateTime } from "@/lib/dates";
 import { Badge } from "@/components/ui/status-badge";
-import { deliveryState, templateLabel } from "@/lib/portal/messages";
+import { REDIRECTED_SQL, deliveryState, templateLabel } from "@/lib/portal/messages";
 import { isUuid } from "@/lib/ids";
 
 export const metadata: Metadata = { title: "Message" };
@@ -25,6 +25,7 @@ type Row = {
   status: string;
   submission_id: string | null;
   reference_no: string | null;
+  redirected: boolean;
 };
 
 export default async function MessageDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +34,7 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
   if (!isUuid(id)) notFound();
   const row = await withClaims(user.id, (tx) =>
     tx.one<Row>(
-      `SELECT o.id, o.subject, o.template, o.to_email, o.body_text, o.created_at, o.status, o.submission_id, s.reference_no
+      `SELECT o.id, o.subject, o.template, o.to_email, o.body_text, o.created_at, o.status, o.submission_id, s.reference_no, ${REDIRECTED_SQL} AS redirected
        FROM outbox o LEFT JOIN submission s ON s.id = o.submission_id
        WHERE o.id = $1 AND o.org_id = $2`,
       [id, user.orgId],
@@ -62,7 +63,11 @@ export default async function MessageDetail({ params }: { params: Promise<{ id: 
               { label: "To", value: <span className="break-all">{row.to_email}</span> },
               {
                 label: "Delivery",
-                value: <Badge tone={deliveryState(row.status).tone}>{deliveryState(row.status).label}</Badge>,
+                value: (
+                  <Badge tone={deliveryState(row.status, row.redirected).tone}>
+                    {deliveryState(row.status, row.redirected).label}
+                  </Badge>
+                ),
               },
             ]}
           />

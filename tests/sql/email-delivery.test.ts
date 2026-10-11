@@ -1,6 +1,6 @@
 import type { Client } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { connect, ownerUrl, userId } from "./helpers";
+import { appUrl, connect, ownerUrl, userId } from "./helpers";
 
 vi.mock("server-only", () => ({}));
 
@@ -36,7 +36,10 @@ async function queueRow(to = "maria@example.org", template = "submission_confirm
 
 async function state(id: string) {
   return (
-    await owner.query("SELECT status, provider_id, sent_at, failure_reason, attempts FROM outbox WHERE id = $1", [id])
+    await owner.query(
+      "SELECT status, provider_id, sent_at, failure_reason, attempts, delivered_to FROM outbox WHERE id = $1",
+      [id],
+    )
   ).rows[0];
 }
 
@@ -141,5 +144,64 @@ describe("[US-052] reminder emails go through the same delivery path", () => {
     const id = await queueRow("maria@example.org", "reminder");
     await run();
     expect(await state(id)).toMatchObject({ status: "sent", provider_id: "msg_fake_reminder" });
+  });
+});
+
+describe("[US-020][BR-014] the review inbox records where a message went", () => {
+  it("records the recipient as the delivery address when there is no redirect", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_fake");
+    vi.stubEnv("EMAIL_FROM", "onboarding@resend.dev");
+    vi.stubEnv("EMAIL_ALLOWLIST", "");
+    vi.stubEnv("EMAIL_REDIRECT_TO", "");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ id: "msg_plain" }), { status: 200 })),
+    );
+    const id = await queueRow();
+    await run();
+    expect(await state(id)).toMatchObject({ status: "sent", delivered_to: "maria@example.org" });
+  });
+
+  it("records the review inbox, sends the intended address in the body and holds reminders over the limit", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_fake");
+    vi.stubEnv("EMAIL_FROM", "onboarding@resend.dev");
+    vi.stubEnv("EMAIL_ALLOWLIST", "");
+    vi.stubEnv("EMAIL_REDIRECT_TO", "owner@example.com");
+    vi.stubEnv("EMAIL_REDIRECT_REMINDER_LIMIT", "1");
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: "msg_redirect" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const confirmation = await queueRow();
+    const first = await queueRow("maria@example.org", "reminder");
+    const second = await queueRow("maria@example.org", "reminder");
+    await run();
+    expect(await state(confirmation)).toMatchObject({ status: "sent", delivered_to: "owner@example.com" });
+    const states = [await state(first), await state(second)];
+    expect(states.filter((s) => s.status === "sent")).toHaveLength(1);
+    const held = states.find((s) => s.status === "held")!;
+    expect(held).toMatchObject({
+      delivered_to: null,
+      failure_reason: "Held: only 1 reminder per run go to the review inbox.",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
+    expect(body.to).toEqual(["owner@example.com"]);
+    expect(body.text.split("\n")[0]).toBe("Sent to the review inbox. Intended for: maria@example.org");
+  });
+
+  it("keeps the four argument call working and defaults the delivery address to the recipient", async () => {
+    const id = await queueRow();
+    await owner.query("UPDATE outbox SET status = 'sending', attempts = 1 WHERE id = $1", [id]);
+    const app = await connect(appUrl());
+    try {
+      await app.query("BEGIN");
+      await app.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: maria })]);
+      const next = (await app.query("SELECT app.finish_outbox($1, 'sent', 'msg_old', NULL) AS next", [id])).rows[0]
+        .next;
+      await app.query("COMMIT");
+      expect(next).toBe("sent");
+    } finally {
+      await app.end();
+    }
+    expect(await state(id)).toMatchObject({ status: "sent", delivered_to: "maria@example.org" });
   });
 });

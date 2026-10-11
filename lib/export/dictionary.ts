@@ -281,6 +281,8 @@ export const TABLES: Record<string, TableDoc> = {
       attempts: "How many times delivery has been tried.",
       sent_at: "When the mail provider accepted the message. Empty unless the status is sent.",
       provider_id: "Identifier the mail provider gave the message. Empty unless the status is sent.",
+      delivered_to:
+        "Address the provider was asked to deliver to. It differs from the recipient address when messages go to a review inbox. Empty unless the status is sent.",
       failure_reason: "Why the last delivery attempt failed or why the message was held.",
       claimed_at: "When the system last picked the message up for delivery.",
     },

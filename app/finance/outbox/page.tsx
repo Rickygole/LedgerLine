@@ -10,8 +10,7 @@ import { Input, Select } from "@/components/ui/field";
 import { Table, THead, TH, TR, TD, EmptyRow } from "@/components/ui/table";
 import { FilterBar, FilterField } from "@/components/finance/admin/filter-bar";
 import { Pagination } from "@/components/finance/admin/pagination";
-import { DELIVERY_OFF_NOTICE, deliveryState } from "@/lib/portal/messages";
-import { emailDeliveryOn } from "@/lib/email";
+import { deliveryNotice, deliveryState } from "@/lib/portal/messages";
 import { listOutbox, outboxFilterOptions, templateLabel } from "@/lib/finance/admin/outbox";
 import { one, pageNumber, PAGE_SIZE, type SearchParams, isoDate } from "@/lib/finance/admin/params";
 
@@ -34,6 +33,7 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
     return { options, template, org, ...list };
   });
 
+  const notice = deliveryNotice();
   const base = "/finance/outbox";
   const kept = { template: data.template, org: data.org, from, to };
 
@@ -44,11 +44,9 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
         description="Every message LedgerLine has generated, including confirmations, requests for changes, reminders and password resets."
         crumbs={[{ label: "Dashboard", href: "/finance" }, { label: "Outbox" }]}
       />
-      {emailDeliveryOn() ? null : (
-        <p className="mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink">
-          {DELIVERY_OFF_NOTICE}
-        </p>
-      )}
+      {notice ? (
+        <p className="mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink">{notice}</p>
+      ) : null}
       <Card>
         <FilterBar action={base} clearHref={base} active={[data.template, data.org, from, to].some(Boolean)}>
           <FilterField label="Template" htmlFor="template">
@@ -121,7 +119,9 @@ export default async function OutboxPage({ searchParams }: { searchParams: Promi
                     )}
                   </TD>
                   <TD label="Status">
-                    <Badge tone={deliveryState(m.status).tone}>{deliveryState(m.status).label}</Badge>
+                    <Badge tone={deliveryState(m.status, m.redirected).tone}>
+                      {deliveryState(m.status, m.redirected).label}
+                    </Badge>
                   </TD>
                   <TD className="min-w-28" label="Created">
                     <span>{formatDateTime(m.created_at)}</span>
