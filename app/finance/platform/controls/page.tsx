@@ -42,7 +42,7 @@ export default async function SecurityControlsPage() {
           />
           <CardBody className="p-0">
             <Table density="compact" stack tableClassName="md:table-fixed">
-              <colgroup>
+              <colgroup className="max-md:hidden">
                 <col className="w-[15%]" />
                 <col className="w-[37%]" />
                 <col className="w-[20%]" />
