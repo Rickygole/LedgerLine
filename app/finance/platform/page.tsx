@@ -305,6 +305,11 @@ export default async function PlatformPage() {
                 A complete control mapping and a System Security Plan would be delivered with the production
                 environment.
               </p>
+              <div className="mt-3">
+                <ButtonLink href="/finance/platform/controls" variant="secondary" size="sm">
+                  <ShieldAlert className="h-4 w-4" aria-hidden="true" /> See every security control and its test
+                </ButtonLink>
+              </div>
             </div>
           </CardBody>
         </Card>

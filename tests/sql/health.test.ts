@@ -1,5 +1,5 @@
 import { readdirSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getHealth } from "@/lib/ops/health";
 import { appUrl, connect } from "./helpers";
 
@@ -49,5 +49,23 @@ describe("[US-062] health check reads the database and the migration version", (
     } finally {
       await app.end();
     }
+  });
+});
+
+describe("[US-053] the system reports that it is hosted outside Council servers", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("declares the hosting provider and reports onCouncilServers false in the health payload", async () => {
+    vi.stubEnv("HOSTING_PROVIDER", "Vercel");
+    vi.stubEnv("HOSTING_REGION", "iad1");
+    vi.stubEnv("HOSTED_ON_COUNCIL_SERVERS", "");
+    const payload = JSON.parse(JSON.stringify(await getHealth()));
+    expect(payload.hosting).toEqual({ provider: "Vercel", region: "iad1", declared: true, onCouncilServers: false });
+  });
+
+  it("reports Council servers only when the deployment says so", async () => {
+    vi.stubEnv("HOSTING_PROVIDER", "Vercel");
+    vi.stubEnv("HOSTED_ON_COUNCIL_SERVERS", "true");
+    expect((await getHealth()).hosting.onCouncilServers).toBe(true);
   });
 });
