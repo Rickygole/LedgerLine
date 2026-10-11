@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { retirementText } from "@/components/finance/lifecycle/lineage-note";
+import { retirementText } from "@/lib/lifecycle/retirement";
 
 const link = { kind: "retired", fiscal_year_id: "FY27", other_id: null } as never;
 
