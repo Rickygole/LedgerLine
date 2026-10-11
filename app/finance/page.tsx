@@ -131,7 +131,10 @@ export default async function FinanceDashboard({ searchParams }: { searchParams:
           value={counts.missing}
           tone={counts.missing > 0 ? "bad" : "neutral"}
           sub="Past due, nothing submitted"
-          action={{ href: list({ bucket: "missing" }), label: canReview ? "Chase missing reports" : "View missing reports" }}
+          action={{
+            href: list({ bucket: "missing" }),
+            label: canReview ? "Chase missing reports" : "View missing reports",
+          }}
         />
         <Stat
           className="rounded-none border-0"

@@ -230,11 +230,22 @@ describe("audit action vocabulary", () => {
     const queued = auditPhrase(row({ entity: "reporting_period", entity_id: "FY26-YE", action: "reminders_queued" }));
     expect(`${queued.verb} ${queued.subject}`).toBe("queued reminders for FY26-YE");
     const labeled = auditPhrase(
-      row({ entity: "reporting_period", entity_id: "FY26-YE", action: "reminders_queued", period_label: "FY26 Year-End" }),
+      row({
+        entity: "reporting_period",
+        entity_id: "FY26-YE",
+        action: "reminders_queued",
+        period_label: "FY26 Year-End",
+      }),
     );
     expect(`${labeled.verb} ${labeled.subject}`).toBe("queued reminders for FY26 Year-End");
     const exportLabeled = auditPhrase(
-      row({ entity: "export", entity_id: "FY26-YE", action: "export", period_label: "FY26 Year-End", after: { rows: 3 } }),
+      row({
+        entity: "export",
+        entity_id: "FY26-YE",
+        action: "export",
+        period_label: "FY26 Year-End",
+        after: { rows: 3 },
+      }),
     );
     expect(exportLabeled.subject).toBe("FY26 Year-End submissions (3 rows)");
   });

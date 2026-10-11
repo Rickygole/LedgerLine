@@ -292,10 +292,7 @@ export default async function PlatformPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader
-              title="Data ownership and export"
-              description="The Council owns all system data."
-            />
+            <CardHeader title="Data ownership and export" description="The Council owns all system data." />
             <CardBody className="space-y-3 text-sm">
               <p>
                 Every record, answer, attachment and audit event belongs to the Council. None of it is stored in a
@@ -324,10 +321,7 @@ export default async function PlatformPage() {
           </Card>
 
           <Card>
-            <CardHeader
-              title="Retention"
-              description="Submitted data is kept permanently."
-            />
+            <CardHeader title="Retention" description="Submitted data is kept permanently." />
             <CardBody className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <Stat

@@ -93,7 +93,12 @@ test.describe("as an administrator", () => {
     await page.getByRole("button", { name: "Retire initiative" }).click();
     await dialog.getByRole("button", { name: "Yes, retire it" }).click();
     await expect(page.getByText(/This initiative is retired as of/)).toBeVisible();
-    await expect(page.locator("main").getByText(/Retired on .+ by .+\. Reason: The program ended mid-year/).first()).toBeVisible();
+    await expect(
+      page
+        .locator("main")
+        .getByText(/Retired on .+ by .+\. Reason: The program ended mid-year/)
+        .first(),
+    ).toBeVisible();
     await expect(page.getByText(/Retired at the rollover/)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Edit form (creates a draft)" })).toHaveCount(0);
     await expect(page.getByRole("note")).toContainText("Reason: The program ended mid-year");

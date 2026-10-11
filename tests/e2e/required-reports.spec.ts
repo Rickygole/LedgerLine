@@ -157,7 +157,9 @@ test.describe("as an administrator", () => {
     try {
       const portal = await org.newPage();
       await portal.goto(`/portal/reports/new?assignment=${target.assignment}&period=${removedId}`);
-      await expect(portal.getByRole("heading", { name: "This initiative is no longer accepting reports" })).toBeVisible();
+      await expect(
+        portal.getByRole("heading", { name: "This initiative is no longer accepting reports" }),
+      ).toBeVisible();
       await expect(portal.getByRole("button", { name: "Start report" })).toHaveCount(0);
     } finally {
       await ownerQuery("UPDATE initiative SET retired_on = NULL, retired_reason = NULL WHERE id = $1", [initiativeId]);

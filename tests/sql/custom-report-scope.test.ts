@@ -17,7 +17,9 @@ beforeAll(async () => {
   app = await connect(appUrl());
   priya = await userId(owner, "priya.raman");
   initiative = (
-    await owner.query("SELECT id FROM initiative WHERE fiscal_year_id = 'FY27' AND status = 'active' ORDER BY code LIMIT 1")
+    await owner.query(
+      "SELECT id FROM initiative WHERE fiscal_year_id = 'FY27' AND status = 'active' ORDER BY code LIMIT 1",
+    )
   ).rows[0].id;
 });
 
@@ -40,9 +42,10 @@ function asTx(client: Client): Tx {
 describe("[US-002] a custom report stays on its own initiative", () => {
   it("keeps per-initiative reports out of every shared period list", async () => {
     const id = await asUser(app, priya, async () => {
-      const added = await app.query("SELECT app.add_custom_report($1, 'Scope check report', NULL, NULL, '2027-03-31') AS id", [
-        initiative,
-      ]);
+      const added = await app.query(
+        "SELECT app.add_custom_report($1, 'Scope check report', NULL, NULL, '2027-03-31') AS id",
+        [initiative],
+      );
       const created = added.rows[0].id as string;
       const shared = await loadPeriods(asTx(app));
       const reminders = await listPeriods(asTx(app));

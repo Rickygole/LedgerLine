@@ -36,7 +36,25 @@ describe("[US-033][BR-023] master list rows are validated before they reach the 
   });
 
   it("rejects an EIN whose first two digits the IRS does not issue", () => {
-    for (const prefix of ["00", "07", "08", "09", "17", "18", "19", "28", "29", "49", "69", "70", "78", "79", "89", "96", "97"])
+    for (const prefix of [
+      "00",
+      "07",
+      "08",
+      "09",
+      "17",
+      "18",
+      "19",
+      "28",
+      "29",
+      "49",
+      "69",
+      "70",
+      "78",
+      "79",
+      "89",
+      "96",
+      "97",
+    ])
       expect(problems({ ein: `${prefix}-3456789` }).ein, prefix).toBe(
         "That EIN does not start with a prefix the IRS issues. Check the first two digits.",
       );

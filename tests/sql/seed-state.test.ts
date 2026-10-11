@@ -122,7 +122,9 @@ describe("[US-021] Maria's pasted budget lines bring her draft to the award", ()
     ).rows[0];
     expect(draft.lines).toBe(11);
     expect(draft.total).toBe(71401);
-    const consultant = MARIA_REMAINING_BUDGET.find(([, description]) => description === "Program evaluation consultant");
+    const consultant = MARIA_REMAINING_BUDGET.find(
+      ([, description]) => description === "Program evaluation consultant",
+    );
     expect(consultant?.[0]).toBe("OTPS");
     const pasted = MARIA_REMAINING_BUDGET.reduce((sum, [, , amount]) => sum + amount, 0);
     expect(draft.total + pasted).toBe(85000);

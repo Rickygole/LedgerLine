@@ -69,7 +69,9 @@ export function offsetFor(dueOn: string, today: string): number {
 }
 
 export async function listPeriods(tx: Tx): Promise<PeriodOption[]> {
-  return tx.query<PeriodOption>("SELECT id, label, due_on::text FROM reporting_period WHERE initiative_id IS NULL ORDER BY due_on");
+  return tx.query<PeriodOption>(
+    "SELECT id, label, due_on::text FROM reporting_period WHERE initiative_id IS NULL ORDER BY due_on",
+  );
 }
 
 export async function listRules(tx: Tx, periodId: string): Promise<RuleRow[]> {

@@ -85,8 +85,9 @@ function rowToItem(row: LibraryRow): LibraryItem {
 
 export async function currentFiscalYear(tx: Tx, today: string): Promise<string | null> {
   const row =
-    (await tx.one<{ id: string }>("SELECT id FROM fiscal_year WHERE $1::date BETWEEN starts_on AND ends_on", [today])) ??
-    (await tx.one<{ id: string }>("SELECT id FROM fiscal_year ORDER BY starts_on DESC LIMIT 1"));
+    (await tx.one<{ id: string }>("SELECT id FROM fiscal_year WHERE $1::date BETWEEN starts_on AND ends_on", [
+      today,
+    ])) ?? (await tx.one<{ id: string }>("SELECT id FROM fiscal_year ORDER BY starts_on DESC LIMIT 1"));
   return row?.id ?? null;
 }
 

@@ -22,7 +22,11 @@ describe("form definitions keep the budget rules", () => {
 describe("[US-003] a form cannot have two questions with the same label", () => {
   const base = buildDefinition("Test report", []);
   const first = base.sections.find((section) => section.kind === "questions")!;
-  const duplicate = { ...first.questions[1], key: "copy_of_second", label: `  ${first.questions[0].label.toUpperCase()} ` };
+  const duplicate = {
+    ...first.questions[1],
+    key: "copy_of_second",
+    label: `  ${first.questions[0].label.toUpperCase()} `,
+  };
 
   it("refuses a repeated label ignoring case and spacing", () => {
     const sections = base.sections.map((section) =>

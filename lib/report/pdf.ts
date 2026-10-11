@@ -72,7 +72,10 @@ class Writer {
 
   clean(text: string): string {
     let out = "";
-    for (const char of text.replace(/\r\n?/g, "\n").replace(/\t/g, " ").replace(/\u00a0/g, " ")) {
+    for (const char of text
+      .replace(/\r\n?/g, "\n")
+      .replace(/\t/g, " ")
+      .replace(/\u00a0/g, " ")) {
       const code = char.codePointAt(0) as number;
       if (code === 10 || this.charset.has(code)) out += char;
     }
