@@ -290,6 +290,7 @@ export const TABLES: Record<string, TableDoc> = {
     columns: {
       period_id: "Reporting period the counter belongs to (reporting_period.id).",
       last_value: "Highest reference number issued so far in the period.",
+      code: "Short code used in the reference numbers of a custom report. Empty for the standard reports.",
     },
   },
   question: {
