@@ -5,7 +5,7 @@ import { FINANCE_ROLES, requireUser, roleLabel, type Role } from "@/lib/auth";
 import { withClaims } from "@/lib/db";
 import { formatDate, formatDateTime, nowDate } from "@/lib/dates";
 import { platformFacts } from "@/lib/lifecycle/platform";
-import { getHealth, hostingInfo } from "@/lib/ops/health";
+import { getHealth, hostingInfo, type Hosting } from "@/lib/ops/health";
 import { listSupport, supportState } from "@/lib/ops/support";
 import { listIncidents } from "@/lib/ops/incidents";
 import { loadReadiness } from "@/lib/ops/readiness";
@@ -127,6 +127,13 @@ const MILESTONES: Milestone[] = [
   },
 ];
 
+function hostingLine(hosting: Hosting): string {
+  const provider = hosting.declared ? hosting.provider : "";
+  const region = hosting.region === "Not declared" ? "" : hosting.region;
+  if (!provider && !region) return "Hosting: not declared";
+  return `Hosting: ${provider || "provider not declared"}, ${region || "region not declared"}`;
+}
+
 export default async function PlatformPage() {
   const user = await requireUser(FINANCE_ROLES);
   const isAdmin = user.role === "finance_admin";
@@ -155,6 +162,7 @@ export default async function PlatformPage() {
   });
   const health = isAdmin ? await getHealth() : null;
   const hosting = health?.hosting ?? hostingInfo();
+  const fullCommit = (process.env.BUILD_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || "").trim() || null;
   const financeUsers = facts.usersByRole.filter((r) => r.role !== "cbo_submitter").reduce((sum, r) => sum + r.n, 0);
 
   return (
@@ -202,8 +210,19 @@ export default async function PlatformPage() {
                 />
                 <Stat
                   label="Build"
-                  value={health.build.commit ?? "Not recorded"}
-                  hint={`Hosting: ${health.hosting.provider}, ${health.hosting.region}`}
+                  value={
+                    health.build.commit ? (
+                      <span
+                        className="block truncate font-mono"
+                        title={fullCommit?.startsWith(health.build.commit) ? fullCommit : health.build.commit}
+                      >
+                        {health.build.commit.slice(0, 7)}
+                      </span>
+                    ) : (
+                      "Not recorded"
+                    )
+                  }
+                  hint={hostingLine(health.hosting)}
                 />
               </div>
               <p className="mt-3 text-sm text-muted">
@@ -416,7 +435,14 @@ export default async function PlatformPage() {
                   key={r.role}
                   label={roleLabel(r.role as Role)}
                   value={formatCount(r.n)}
-                  hint="Active accounts"
+                  hint={
+                    <>
+                      Accounts
+                      <span className="num block">
+                        {formatCount(r.active)} active, {formatCount(r.invited)} invited
+                      </span>
+                    </>
+                  }
                   icon={Users2}
                 />
               ))}
