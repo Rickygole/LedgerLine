@@ -132,7 +132,7 @@ describe("[US-042] flag evidence", () => {
   it("shows the total against the award for an unbalanced draft", () => {
     const r = row({ submissionId: "s1", status: "draft", answers: completeAnswers, budget: budget(91750) });
     const flag = r.flags.find((f) => f.reason === "unbalanced");
-    expect(flag?.evidence).toBe("Budget total $91,750.00 is $1,750.00 over the $90,000.00 award.");
+    expect(flag?.evidence).toBe("Budget total $91,750 is $1,750 over the $90,000 award.");
   });
 
   it("does not flag a draft with no budget lines as unbalanced", () => {

@@ -88,9 +88,10 @@ function flagsForRow(input: {
     const balance = balanceMessage(total, input.award);
     if (!balance.balanced) {
       const diff = Math.round((total - input.award) * 100) / 100;
+      const cents = Math.round(Math.abs(diff)) === 0;
       flags.push({
         reason: "unbalanced",
-        evidence: `Budget total ${formatCurrency(total, { cents: true })} is ${formatCurrency(Math.abs(diff), { cents: true })} ${diff > 0 ? "over" : "under"} the ${formatCurrency(input.award, { cents: true })} award.`,
+        evidence: `Budget total ${formatCurrency(total, { cents })} is ${formatCurrency(Math.abs(diff), { cents })} ${diff > 0 ? "over" : "under"} the ${formatCurrency(input.award, { cents })} award.`,
       });
     }
   }
