@@ -43,7 +43,7 @@ export default async function QuestionLibraryPage() {
         }
       />
       <Card>
-        <Table density="compact">
+        <Table density="compact" stack>
           <THead>
             <tr>
               <TH>Question</TH>
@@ -60,20 +60,32 @@ export default async function QuestionLibraryPage() {
             ) : (
               items.map(({ question, templateSection, formsUsing, retiredAt }) => (
                 <TR key={question.key}>
-                  <TD className="min-w-[16rem]">
+                  <TD className="min-w-[16rem]" primary>
                     <Link
                       href={`/finance/question-library/${question.key}`}
-                      className="font-semibold text-link underline underline-offset-2 hover:text-link-hover"
+                      className="font-semibold text-link underline-offset-2 hover:text-link-hover hover:underline"
                     >
                       {question.label}
                     </Link>
-                    <span className="block font-mono text-[13px] text-muted">{question.key}</span>
+                    <span className="block whitespace-nowrap font-mono text-xs font-normal text-muted">
+                      {question.key}
+                    </span>
                   </TD>
-                  <TD className="whitespace-nowrap">{TYPE_LABEL[question.type]}</TD>
-                  <TD>{question.required ? "Required" : "Optional"}</TD>
-                  <TD>{sectionTitle(templateSection) ?? <span className="text-muted">Not included</span>}</TD>
-                  <TD align="right">{counted(formsUsing, "initiative")}</TD>
-                  <TD>{retiredAt ? <Badge>Retired</Badge> : <Badge tone="ok">Active</Badge>}</TD>
+                  <TD className="whitespace-nowrap" label="Answer type">
+                    <span>{TYPE_LABEL[question.type]}</span>
+                  </TD>
+                  <TD label="Required">
+                    <span>{question.required ? "Required" : "Optional"}</span>
+                  </TD>
+                  <TD label="In new forms">
+                    <span>{sectionTitle(templateSection) ?? <span className="text-muted">Not included</span>}</span>
+                  </TD>
+                  <TD align="right" label="Initiatives using it">
+                    <span>{counted(formsUsing, "initiative")}</span>
+                  </TD>
+                  <TD label="Status">
+                    <span>{retiredAt ? <Badge>Retired</Badge> : <Badge tone="ok">Active</Badge>}</span>
+                  </TD>
                 </TR>
               ))
             )}
