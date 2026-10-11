@@ -117,6 +117,8 @@ test.describe("as an administrator", () => {
     const before = (await ownerQuery<{ n: number }>("SELECT count(*)::int AS n FROM organization"))[0].n;
 
     await page.goto("/finance/organizations/import");
+    await expect(page.getByRole("button", { name: "Preview import" })).toBeDisabled();
+    await expect(page.getByText(/Preview is off until there is a list to check/)).toBeVisible();
     await page.getByLabel("Or paste the list").fill(csv);
     await page.getByRole("button", { name: "Preview import" }).click();
 

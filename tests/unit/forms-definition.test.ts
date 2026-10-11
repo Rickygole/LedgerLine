@@ -18,3 +18,22 @@ describe("form definitions keep the budget rules", () => {
     ).toContain(message);
   });
 });
+
+describe("[US-003] a form cannot have two questions with the same label", () => {
+  const base = buildDefinition("Test report", []);
+  const first = base.sections.find((section) => section.kind === "questions")!;
+  const duplicate = { ...first.questions[1], key: "copy_of_second", label: `  ${first.questions[0].label.toUpperCase()} ` };
+
+  it("refuses a repeated label ignoring case and spacing", () => {
+    const sections = base.sections.map((section) =>
+      section === first ? { ...section, questions: [...section.questions, duplicate] } : section,
+    );
+    expect(validateDefinition({ ...base, sections })).toContain(
+      `Two questions are labeled "${duplicate.label.trim()}". Give each question its own label.`,
+    );
+  });
+
+  it("accepts a form where every label is its own", () => {
+    expect(validateDefinition(base)).toEqual([]);
+  });
+});

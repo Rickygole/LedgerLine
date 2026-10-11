@@ -66,6 +66,9 @@ test("[US-052] Add to outbox asks for confirmation with the number of organizati
     [today],
   );
   expect(body[0].body_text.startsWith(`Hello ${body[0].full_name},`)).toBe(true);
+  await page.goto("/finance/audit?action=reminders_queued");
+  await expect(page.getByText(/queued reminders for FY\d{2} (Mid-Year|Year-End)/).first()).toBeVisible();
+  await expect(page.getByText(/queued reminders for FY\d{2}-[A-Z]+/)).toHaveCount(0);
   await context.close();
 });
 

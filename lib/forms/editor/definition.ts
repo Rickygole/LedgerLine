@@ -181,6 +181,7 @@ export function validateDefinition(definition: FormDefinition): string[] {
   const errors: string[] = [];
   if (!definition.title.trim()) errors.push("The form needs a title.");
   const seen = new Set<string>();
+  const labels = new Map<string, string>();
   const order: Question[] = [];
   for (const section of definition.sections) {
     if (!section.title.trim()) errors.push("Every section needs a title.");
@@ -190,6 +191,12 @@ export function validateDefinition(definition: FormDefinition): string[] {
       if (!/^[a-z][a-z0-9_]{1,59}$/.test(question.key)) errors.push(`"${name}" has an invalid key.`);
       if (seen.has(question.key)) errors.push(`The key "${question.key}" is used more than once.`);
       seen.add(question.key);
+      const labelKey = question.label.trim().replace(/\s+/g, " ").toLowerCase();
+      if (labelKey) {
+        if (labels.has(labelKey) && labels.get(labelKey) !== question.key)
+          errors.push(`Two questions are labeled "${name}". Give each question its own label.`);
+        labels.set(labelKey, question.key);
+      }
       errors.push(...questionProblems(question));
       if (question.visibleWhen) {
         const target = order.find((earlier) => earlier.key === question.visibleWhen?.key);

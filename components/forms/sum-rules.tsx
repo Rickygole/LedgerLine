@@ -37,15 +37,21 @@ export function SumRules({ definition, editable, onChange }: Props) {
   const awardOk = kind !== "award" || chosen.every((question) => question.type === "currency");
   const amount = Number(value);
   const valueOk = kind === "award" || (value.trim() !== "" && Number.isFinite(amount) && amount >= 0);
+  const valueMessage =
+    kind === "award" || valueOk
+      ? null
+      : Number.isFinite(amount) && value.trim() !== "" && amount < 0
+        ? "A sum rule cannot add up to a negative number. Enter zero or more."
+        : "Enter a number of zero or more.";
   const hint =
-    chosen.length < 2
-      ? "Choose at least two questions."
-      : !sameType
-        ? "Choose questions with the same answer type."
-        : !awardOk
-          ? "Only dollar amount questions can add up to the award."
-          : !valueOk
-            ? "Enter a number of zero or more."
+    valueMessage && chosen.length >= 2
+      ? valueMessage
+      : chosen.length < 2
+        ? "Choose at least two questions."
+        : !sameType
+          ? "Choose questions with the same answer type."
+          : !awardOk
+            ? "Only dollar amount questions can add up to the award."
             : null;
 
   function add() {
@@ -160,7 +166,13 @@ export function SumRules({ definition, editable, onChange }: Props) {
                     Add sum rule
                   </Button>
                 </div>
-                {hint && picked.length > 0 ? <p className="text-sm text-muted">{hint}</p> : null}
+                {valueMessage ? (
+                  <p role="alert" className="text-sm font-semibold text-bad">
+                    {valueMessage}
+                  </p>
+                ) : hint && picked.length > 0 ? (
+                  <p className="text-sm text-muted">{hint}</p>
+                ) : null}
               </>
             )}
           </div>
