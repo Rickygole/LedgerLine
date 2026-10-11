@@ -15,11 +15,19 @@ export function isSummable(type: string): type is Summable {
 
 export function numberOf(raw: unknown): number | null {
   if (raw === null || raw === undefined) return null;
-  const text = String(raw)
-    .trim()
-    .replace(/[$,%\s]/g, "");
+  let text = String(raw).replace(/[$,%\s]/g, "");
+  let negative = false;
+  if (/^\(.*\)$/.test(text)) {
+    negative = true;
+    text = text.slice(1, -1);
+  }
+  if (text.startsWith("-")) {
+    negative = !negative;
+    text = text.slice(1);
+  }
   if (text === "" || !/^(\d+\.?\d*|\.\d+)$/.test(text)) return null;
-  return Number(text);
+  const value = Number(text);
+  return negative && value !== 0 ? -value : value;
 }
 
 function show(type: string, value: number): string {
