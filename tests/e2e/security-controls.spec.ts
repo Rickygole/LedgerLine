@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { authFile } from "./support/app";
 
 const STATEMENT =
-  "These are application controls. The application does not hold a FedRAMP authorization itself. It inherits one from the authorized government cloud it runs on, Azure Government, and the agency issues the authority to operate after its own security assessment before go-live.";
+  "These are application controls. The application does not hold a FedRAMP authorization itself. In production it runs in an authorized government cloud, Azure Government or AWS GovCloud as the Council selects, and inherits that provider's authorization. The agency issues the authority to operate after its own security assessment before go-live.";
 
 for (const [who, label] of [
   ["priya", "an administrator"],

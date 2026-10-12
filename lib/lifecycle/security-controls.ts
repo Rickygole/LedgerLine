@@ -11,7 +11,7 @@ export type SecurityControl = {
 };
 
 export const CONTROLS_STATEMENT =
-  "These are application controls. The application does not hold a FedRAMP authorization itself. It inherits one from the authorized government cloud it runs on, Azure Government, and the agency issues the authority to operate after its own security assessment before go-live.";
+  "These are application controls. The application does not hold a FedRAMP authorization itself. In production it runs in an authorized government cloud, Azure Government or AWS GovCloud as the Council selects, and inherits that provider's authorization. The agency issues the authority to operate after its own security assessment before go-live.";
 
 export const SECURITY_CONTROLS: SecurityControl[] = [
   {

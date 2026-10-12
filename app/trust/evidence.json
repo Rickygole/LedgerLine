@@ -3852,7 +3852,7 @@
       "route": "/finance/platform",
       "state": "supporting",
       "reason": null,
-      "note": "Delivery commitment, not claimed as met. The application does not hold a FedRAMP authorization itself. It inherits one from the authorized government cloud it runs on, Azure Government, and the agency issues the authority to operate after its own security assessment before go-live. The application controls it implements, with the file and test for each, are listed on the Security controls page.",
+      "note": "Delivery commitment, not claimed as met. The application does not hold a FedRAMP authorization itself. In production it runs in an authorized government cloud, Azure Government or AWS GovCloud as the Council selects, and inherits that provider's authorization. The agency issues the authority to operate after its own security assessment before go-live. The application controls it implements, with the file and test for each, are listed on the Security controls page.",
       "tests": [
         {
           "title": "the security control mapping points at real files and tests names a file that exists for every place and every test it cites",

@@ -29,7 +29,7 @@ describe("[US-054][BR-026] the security control mapping points at real files and
 
   it("states that these are application controls and that the agency issues the authority to operate", () => {
     expect(CONTROLS_STATEMENT).toBe(
-      "These are application controls. The application does not hold a FedRAMP authorization itself. It inherits one from the authorized government cloud it runs on, Azure Government, and the agency issues the authority to operate after its own security assessment before go-live.",
+      "These are application controls. The application does not hold a FedRAMP authorization itself. In production it runs in an authorized government cloud, Azure Government or AWS GovCloud as the Council selects, and inherits that provider's authorization. The agency issues the authority to operate after its own security assessment before go-live.",
     );
   });
 
