@@ -170,8 +170,15 @@ function submissionsSheet(submissions: ExportSubmission[], numericKeys: Set<stri
       if (cell) sheet[XLSX.utils.encode_cell({ r, c })] = cell;
     });
   });
-  const widths = header.map((name, c) => ({
-    wch: Math.min(48, Math.max(name.length + 2, c === 2 || c === 3 ? 32 : 14)),
+  const wide: Record<string, number> = {
+    organization: 32,
+    initiative: 32,
+    submitted_at: 18,
+    council_members: 34,
+    contract_registered_on: 22,
+  };
+  const widths = header.map((name) => ({
+    wch: Math.min(48, Math.max(name.length + 2, wide[name] ?? 14)),
   }));
   sheet["!cols"] = widths;
   setRange(sheet, submissions.length + 1, header.length);

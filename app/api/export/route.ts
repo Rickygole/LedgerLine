@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     borough: row.borough,
     period: row.periodId,
     fiscalYear: result.period.fiscalYearId,
-    status: row.status ?? "not_started",
+    status: STATUS_OPTIONS.find((s) => s.value === row.status)?.label ?? row.status ?? "",
     award: row.award,
     submittedAt: row.submittedAt,
     budgetTotal: budgetTotals(row.budget).total,
