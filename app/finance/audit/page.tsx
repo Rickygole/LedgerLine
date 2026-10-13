@@ -135,7 +135,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                       </TD>
                       <TD className="max-w-xl align-top">
                         <AuditSentence row={row} />
-                        {row.note ? <p className="mt-1 text-muted">Note: {row.note}</p> : null}
+                        {row.note && row.action !== "library_apply" && row.action !== "library_publish" ? <p className="mt-1 text-muted">Note: {row.note}</p> : null}
                       </TD>
                       <TD className="align-top">{row.org_name ?? <span className="sr-only">None</span>}</TD>
                       <TD className="align-top">

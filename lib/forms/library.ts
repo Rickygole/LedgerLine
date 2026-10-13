@@ -412,7 +412,7 @@ export async function applyToForms(
     entity: "question",
     entityId: key,
     action: "library_apply",
-    note: `${outcomes.length} initiatives selected`,
+    note: `"${item.question.label}" to ${outcomes.length} ${outcomes.length === 1 ? "initiative" : "initiatives"}`,
     after: {
       drafts_created: count("created"),
       drafts_updated: count("updated") + count("added"),
@@ -485,7 +485,7 @@ export async function publishDraftsWithQuestion(
     entity: "question",
     entityId: key,
     action: "library_publish",
-    note: `${published} of ${drafts.length} drafts published`,
+    note: `"${item.question.label}": ${published} of ${drafts.length} ${drafts.length === 1 ? "draft" : "drafts"} published`,
     after: { published, failed: failed.length, question_key: key },
   });
   return { published, failed };
